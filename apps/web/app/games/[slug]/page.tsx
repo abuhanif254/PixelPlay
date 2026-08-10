@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation';
 import { gamesRegistry } from '@pixelplay/games/registry';
 import { Star, Maximize2, Share2, Heart, Flag } from 'lucide-react';
 
+export const runtime = 'edge';
+
 interface GamePageProps {
   params: {
     slug: string;
