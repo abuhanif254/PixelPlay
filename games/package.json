@@ -1,0 +1,20 @@
+{
+  "name": "@pixelplay/games",
+  "version": "0.1.0",
+  "private": true,
+  "main": "registry.ts",
+  "scripts": {
+    "generate-registry": "node scripts/generate-registry.mjs"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "lucide-react": "^0.344.0",
+    "next": "14.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "typescript": "^5.0.0"
+  }
+}

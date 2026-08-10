@@ -5,16 +5,16 @@ import { HorizontalScroll } from '@/components/HorizontalScroll';
 import GameCard from '@/components/GameCard';
 import CategoryCard from '@/components/CategoryCard';
 import BlogPreviewCard from '@/components/BlogPreviewCard';
+import { gamesRegistry } from '@pixelplay/games/registry';
+import Link from 'next/link';
 
 export default function HomePage() {
-  const dummyGames = [
-    { title: "Neon Snake", rating: 4.8 },
-    { title: "Tic Tac Toe Pro", rating: 4.5 },
-    { title: "Sudoku Master", rating: 4.9 },
-    { title: "Space Shooter", rating: 4.7 },
-    { title: "Chess AI", rating: 4.6 },
-    { title: "Solitaire Classic", rating: 4.4 },
-  ];
+  // Convert registry object to an array for rendering
+  const gamesList = Object.entries(gamesRegistry).map(([slug, game]) => ({
+    slug,
+    title: game.config.title,
+    rating: game.config.rating || 4.5,
+  }));
 
   const categories = [
     { title: "Puzzle", icon: Puzzle, count: 120 },
@@ -34,9 +34,11 @@ export default function HomePage() {
         <section>
           <SectionHeader title="🎯 Continue Playing" />
           <HorizontalScroll>
-            {dummyGames.slice(0, 4).map((game, i) => (
+            {gamesList.map((game, i) => (
               <div key={i} className="min-w-[280px]">
-                <GameCard title={game.title} rating={game.rating} />
+                <Link href={`/games/${game.slug}`}>
+                  <GameCard title={game.title} rating={game.rating} />
+                </Link>
               </div>
             ))}
           </HorizontalScroll>
@@ -46,8 +48,10 @@ export default function HomePage() {
         <section>
           <SectionHeader title="🔥 Trending Games" actionText="See all" />
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {dummyGames.map((game, i) => (
-               <GameCard key={i} title={game.title} rating={game.rating} />
+            {gamesList.map((game, i) => (
+               <Link href={`/games/${game.slug}`} key={i}>
+                 <GameCard title={game.title} rating={game.rating} />
+               </Link>
             ))}
           </div>
         </section>
@@ -72,16 +76,6 @@ export default function HomePage() {
             <div className="md:col-span-1 h-64">
                <GameCard title="Cyberpunk Racing" rating={4.9} featured={true} />
             </div>
-          </div>
-        </section>
-
-        {/* New Games */}
-        <section>
-          <SectionHeader title="🎮 Recently Added" />
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {dummyGames.reverse().map((game, i) => (
-               <GameCard key={i} title={game.title} rating={game.rating} />
-            ))}
           </div>
         </section>
 
