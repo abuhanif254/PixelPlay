@@ -1,0 +1,10 @@
+{
+  "title": "Neon Snake",
+  "category": "Arcade",
+  "rating": 4.8,
+  "description": "The classic snake game, reimagined with neon graphics and smooth controls.",
+  "controls": {
+    "ArrowKeys": "Move Snake",
+    "Space": "Pause"
+  }
+}
