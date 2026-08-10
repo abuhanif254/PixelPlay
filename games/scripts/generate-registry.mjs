@@ -39,7 +39,7 @@ gameFolders.forEach((slug) => {
     registryContent += `  "${slug}": {
     config: ${JSON.stringify(configObj, null, 6).trim()},
     // Note: We use ssr: false because game engines rely on the browser's window and canvas
-    component: dynamic(() => import('./${slug}/Game').then(mod => mod.default || mod.Game || mod), { ssr: false })
+    component: dynamic(() => import('./${slug}/Game'), { ssr: false })
   },
 `;
   }

@@ -25,6 +25,6 @@ export const gamesRegistry: Record<string, { config: GameConfig, component: any 
       }
 },
     // Note: We use ssr: false because game engines rely on the browser's window and canvas
-    component: dynamic(() => import('./snake/Game').then(mod => mod.default || mod.Game || mod), { ssr: false })
+    component: dynamic(() => import('./snake/Game'), { ssr: false })
   },
 };
