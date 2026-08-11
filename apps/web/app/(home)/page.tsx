@@ -127,7 +127,7 @@ export default function HomePage() {
         <ScrollReveal delay={0.1}>
           <section aria-labelledby="trending-games-heading">
             <div id="trending-games-heading" className="sr-only">Trending Games</div>
-            <SectionHeader title="🔥 Trending Games" actionText="See all" />
+            <SectionHeader title="🔥 Trending Games" subtitle="Most played games right now" actionText="View All ->" />
             <TrendingGamesFilter games={gamesList} />
           </section>
         </ScrollReveal>
