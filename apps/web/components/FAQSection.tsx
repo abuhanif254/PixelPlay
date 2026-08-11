@@ -29,8 +29,8 @@ export default function FAQSection({ faqs }: FAQSectionProps) {
               key={index} 
               className={`rounded-xl border transition-colors duration-200 overflow-hidden ${
                 isOpen 
-                  ? 'bg-white dark:bg-gray-800 border-primary/30 dark:border-primary/30 shadow-md shadow-primary/5' 
-                  : 'bg-gray-50 dark:bg-gray-900/50 border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700'
+                  ? 'bg-white dark:bg-white/10 border-primary/30 dark:border-primary/30 shadow-md shadow-primary/5' 
+                  : 'bg-gray-50 dark:bg-[#12132A] border-black/5 dark:border-white/5 hover:border-black/10 dark:hover:border-white/10'
               }`}
             >
               <button
