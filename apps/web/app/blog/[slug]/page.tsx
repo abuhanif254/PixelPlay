@@ -4,10 +4,11 @@ import { getAllPosts, getPostBySlug } from '@/lib/blog';
 import { constructMetadata, siteConfig } from '@/lib/seo';
 import Link from 'next/link';
 import { ArrowLeft, Clock } from 'lucide-react';
-
+interface BlogPostPageProps {
+  params: {
+    slug: string;
   };
 }
-
 export const runtime = 'edge';
 
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
