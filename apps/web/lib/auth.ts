@@ -1,7 +1,7 @@
-import { NextAuthOptions } from "next-auth";
+import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
-export const authOptions: NextAuthOptions = {
+export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     CredentialsProvider({
       name: "Mock Login",
@@ -32,5 +32,6 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     }
-  }
-};
+  },
+  secret: "super-secret-pixelplay-auth-key-change-in-prod"
+});
