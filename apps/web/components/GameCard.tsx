@@ -9,10 +9,10 @@ interface GameCardProps {
   featured?: boolean;
 }
 
-export default function GameCard({ title, imageUrl, rating }: GameCardProps) {
+export default function GameCard({ title, imageUrl, rating, featured }: GameCardProps) {
   return (
-    <div className="group relative overflow-hidden rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/20 hover:-translate-y-1">
-      <div className="aspect-video w-full bg-gray-100 dark:bg-gray-800 relative overflow-hidden">
+    <div className={`group relative overflow-hidden rounded-xl bg-gray-50 dark:bg-gray-900 border ${featured ? 'border-primary/50 shadow-primary/10' : 'border-gray-200 dark:border-gray-800'} transition-all duration-300 hover:shadow-[0_0_25px_rgba(79,70,229,0.25)] hover:border-primary/40 hover:-translate-y-1`}>
+      <div className={`${featured ? 'aspect-[21/9]' : 'aspect-video'} w-full bg-gray-100 dark:bg-gray-800 relative overflow-hidden`}>
         {imageUrl ? (
           <img src={imageUrl} alt={title} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110" />
         ) : (
@@ -21,19 +21,25 @@ export default function GameCard({ title, imageUrl, rating }: GameCardProps) {
           </div>
         )}
         
+        {featured && (
+          <div className="absolute top-3 left-3 bg-primary/90 backdrop-blur text-white text-xs font-bold px-3 py-1 rounded-full shadow-[0_0_10px_rgba(79,70,229,0.5)]">
+            Editor's Pick
+          </div>
+        )}
+        
         {/* Hover Overlay */}
         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-sm">
-          <button className="bg-primary text-black dark:text-white p-4 rounded-full transform scale-50 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-300 delay-75 shadow-lg shadow-primary/30 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-gray-900">
+          <button className="bg-primary text-white p-4 rounded-full transform scale-50 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-300 delay-75 shadow-[0_0_20px_rgba(79,70,229,0.6)] hover:bg-accent hover:shadow-[0_0_20px_rgba(34,197,94,0.6)] focus:outline-none">
             <Play className="w-6 h-6 fill-current" />
           </button>
         </div>
       </div>
       
       <div className="p-4 relative z-10">
-        <h3 className="text-lg font-bold text-black dark:text-white mb-1 truncate">{title}</h3>
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1 truncate">{title}</h3>
         <div className="flex items-center text-warning">
-          <Star className="w-4 h-4 fill-current mr-1" />
-          <span className="text-sm font-medium">{rating ? rating.toFixed(1) : 'New'}</span>
+          <Star className="w-4 h-4 fill-current mr-1 drop-shadow-[0_0_3px_rgba(245,158,11,0.5)]" />
+          <span className="text-sm font-medium drop-shadow-sm">{rating ? rating.toFixed(1) : 'New'}</span>
         </div>
       </div>
     </div>

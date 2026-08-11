@@ -12,6 +12,7 @@ import Link from 'next/link';
 import RecentGames from '@/components/RecentGames';
 
 import { TrendingGamesFilter } from '@/components/TrendingGamesFilter';
+import { ScrollReveal } from '@/components/ScrollReveal';
 
 export const metadata: Metadata = {
   title: 'Home',
@@ -67,51 +68,61 @@ export default function HomePage() {
 
       <div className="container mx-auto px-4 md:px-8 space-y-16">
         {/* Continue Playing (Dynamic from localStorage) */}
-        <RecentGames />
+        <ScrollReveal>
+          <RecentGames />
+        </ScrollReveal>
 
         {/* Trending Games */}
-        <section aria-labelledby="trending-games-heading">
-          <div id="trending-games-heading" className="sr-only">Trending Games</div>
-          <SectionHeader title="🔥 Trending Games" actionText="See all" />
-          <TrendingGamesFilter games={gamesList} />
-        </section>
+        <ScrollReveal delay={0.1}>
+          <section aria-labelledby="trending-games-heading">
+            <div id="trending-games-heading" className="sr-only">Trending Games</div>
+            <SectionHeader title="🔥 Trending Games" actionText="See all" />
+            <TrendingGamesFilter games={gamesList} />
+          </section>
+        </ScrollReveal>
 
         {/* Categories */}
-        <section aria-labelledby="categories-heading">
-          <div id="categories-heading" className="sr-only">Popular Categories</div>
-          <SectionHeader title="🧩 Popular Categories" actionText="Explore" />
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {categories.map((cat, i) => (
-               <CategoryCard key={i} name={cat.title} icon={cat.icon} gameCount={cat.count} />
-            ))}
-          </div>
-        </section>
+        <ScrollReveal delay={0.1}>
+          <section aria-labelledby="categories-heading">
+            <div id="categories-heading" className="sr-only">Popular Categories</div>
+            <SectionHeader title="🧩 Popular Categories" actionText="Explore" />
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              {categories.map((cat, i) => (
+                 <CategoryCard key={i} name={cat.title} icon={cat.icon} gameCount={cat.count} />
+              ))}
+            </div>
+          </section>
+        </ScrollReveal>
 
         {/* Featured / Editor's Picks */}
-        <section aria-labelledby="editors-picks-heading">
-          <div id="editors-picks-heading" className="sr-only">Editor's Picks</div>
-          <SectionHeader title="⭐ Editor's Picks" subtitle="Hand-picked gems for you" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="md:col-span-1 h-64">
-               <GameCard title="Ultimate Chess" rating={5.0} featured={true} />
+        <ScrollReveal delay={0.2}>
+          <section aria-labelledby="editors-picks-heading">
+            <div id="editors-picks-heading" className="sr-only">Editor's Picks</div>
+            <SectionHeader title="⭐ Editor's Picks" subtitle="Hand-picked gems for you" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="md:col-span-1 h-64">
+                 <GameCard title="Ultimate Chess" rating={5.0} featured={true} />
+              </div>
+              <div className="md:col-span-1 h-64">
+                 <GameCard title="Cyberpunk Racing" rating={4.9} featured={true} />
+              </div>
             </div>
-            <div className="md:col-span-1 h-64">
-               <GameCard title="Cyberpunk Racing" rating={4.9} featured={true} />
-            </div>
-          </div>
-        </section>
+          </section>
+        </ScrollReveal>
 
         {/* Blog Section for SEO */}
-        <section aria-labelledby="guides-heading">
-          <div id="guides-heading" className="sr-only">Latest Guides and News</div>
-          <SectionHeader title="📖 Latest Guides & News" actionText="Read more" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <BlogPreviewCard title="Top 10 Puzzle Games" date="Aug 10, 2026" readTime="5 min read" excerpt="Discover the best brain teasers to play directly in your browser." />
-            <BlogPreviewCard title="Best Browser Games" date="Aug 8, 2026" readTime="8 min read" excerpt="A definitive list of HTML5 games that you shouldn't miss." />
-            <BlogPreviewCard title="Brain Games for Focus" date="Aug 5, 2026" readTime="4 min read" excerpt="How strategy games improve your cognitive abilities." />
-            <BlogPreviewCard title="How to Play Sudoku" date="Aug 2, 2026" readTime="6 min read" excerpt="Master the classic number puzzle with these easy tips." />
-          </div>
-        </section>
+        <ScrollReveal delay={0.2}>
+          <section aria-labelledby="guides-heading">
+            <div id="guides-heading" className="sr-only">Latest Guides and News</div>
+            <SectionHeader title="📖 Latest Guides & News" actionText="Read more" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <BlogPreviewCard title="Top 10 Puzzle Games" date="Aug 10, 2026" readTime="5 min read" excerpt="Discover the best brain teasers to play directly in your browser." />
+              <BlogPreviewCard title="Best Browser Games" date="Aug 8, 2026" readTime="8 min read" excerpt="A definitive list of HTML5 games that you shouldn't miss." />
+              <BlogPreviewCard title="Brain Games for Focus" date="Aug 5, 2026" readTime="4 min read" excerpt="How strategy games improve your cognitive abilities." />
+              <BlogPreviewCard title="How to Play Sudoku" date="Aug 2, 2026" readTime="6 min read" excerpt="Master the classic number puzzle with these easy tips." />
+            </div>
+          </section>
+        </ScrollReveal>
       </div>
     </div>
   );
