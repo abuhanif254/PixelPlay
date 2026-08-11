@@ -13,6 +13,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.8,
   }));
 
+  // Extract unique categories
+  const categories = new Set<string>();
+  Object.values(gamesRegistry).forEach(game => {
+    if (game.config.category) {
+      categories.add(game.config.category);
+    }
+  });
+
+  const categoryUrls = Array.from(categories).map(category => ({
+    url: `${baseUrl}/categories/${category.toLowerCase().replace(/\s+/g, '-')}`,
+    lastModified: new Date(),
+    changeFrequency: 'daily' as const,
+    priority: 0.9,
+  }));
+
   // Define static routes
   const staticRoutes = [
     '',
@@ -24,5 +39,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: route === '' ? 1.0 : 0.7,
   }));
 
-  return [...staticRoutes, ...gameUrls];
+  return [...staticRoutes, ...categoryUrls, ...gameUrls];
 }
