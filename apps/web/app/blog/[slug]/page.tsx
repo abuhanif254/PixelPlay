@@ -11,6 +11,8 @@ interface BlogPostPageProps {
   };
 }
 
+export const dynamicParams = false;
+
 export async function generateStaticParams() {
   const posts = await getAllPosts();
   return posts.map((post) => ({

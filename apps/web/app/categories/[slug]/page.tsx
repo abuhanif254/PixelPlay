@@ -25,6 +25,8 @@ function getCategories() {
   }));
 }
 
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return getCategories().map(cat => ({
     slug: cat.slug,
