@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Menu, X, Sun, Moon, User, ChevronDown, Gamepad2 } from 'lucide-react';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
+import { SearchBar } from './SearchBar';
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -22,15 +23,8 @@ export default function Navbar() {
           <span className="font-bold text-xl tracking-tight hidden sm:block">PixelPlay</span>
         </Link>
         {/* Search */}
-        <div className="flex-1 max-w-xl hidden md:flex items-center relative">
-          <div className="absolute left-3 text-black/50 dark:text-white/50">
-            <Search className="w-4 h-4" />
-          </div>
-          <input 
-            type="text" 
-            placeholder="Search games..." 
-            className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-          />
+        <div className="flex-1 max-w-xl hidden md:flex items-center">
+          <SearchBar />
         </div>
         {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-6">
@@ -92,13 +86,8 @@ export default function Navbar() {
             className="md:hidden border-t border-black/10 dark:border-white/10 bg-background overflow-hidden"
           >
             <div className="p-4 flex flex-col gap-4">
-              <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-black/50 dark:text-white/50" />
-                <input 
-                  type="text" 
-                  placeholder="Search games..." 
-                  className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-                />
+              <div className="relative z-50">
+                <SearchBar />
               </div>
               <Link href="/categories" className="py-2 text-sm font-medium border-b border-black/5 dark:border-white/5">Categories</Link>
               <Link href="/new" className="py-2 text-sm font-medium border-b border-black/5 dark:border-white/5 text-accent">New Games</Link>

@@ -9,6 +9,10 @@ import BlogPreviewCard from '@/components/BlogPreviewCard';
 import { gamesRegistry } from '@pixelplay/games/registry';
 import Link from 'next/link';
 
+import RecentGames from '@/components/RecentGames';
+
+import { TrendingGamesFilter } from '@/components/TrendingGamesFilter';
+
 export const metadata: Metadata = {
   title: 'Home',
   description: 'Discover trending HTML5 games, popular categories, and editor\'s picks on PixelPlay.',
@@ -20,6 +24,8 @@ export default function HomePage() {
     slug,
     title: game.config.title,
     rating: game.config.rating || 4.5,
+    category: game.config.category || 'Arcade',
+    image: game.config.image,
   }));
 
   const categories = [
@@ -60,32 +66,14 @@ export default function HomePage() {
       <HeroSection />
 
       <div className="container mx-auto px-4 md:px-8 space-y-16">
-        {/* Continue Playing */}
-        <section aria-labelledby="continue-playing-heading">
-          <div id="continue-playing-heading" className="sr-only">Continue Playing</div>
-          <SectionHeader title="🎯 Continue Playing" />
-          <HorizontalScroll>
-            {gamesList.map((game, i) => (
-              <div key={i} className="min-w-[280px]">
-                <Link href={`/games/${game.slug}`} aria-label={`Play ${game.title}`}>
-                  <GameCard title={game.title} rating={game.rating} />
-                </Link>
-              </div>
-            ))}
-          </HorizontalScroll>
-        </section>
+        {/* Continue Playing (Dynamic from localStorage) */}
+        <RecentGames />
 
         {/* Trending Games */}
         <section aria-labelledby="trending-games-heading">
           <div id="trending-games-heading" className="sr-only">Trending Games</div>
           <SectionHeader title="🔥 Trending Games" actionText="See all" />
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {gamesList.map((game, i) => (
-               <Link href={`/games/${game.slug}`} key={i} aria-label={`Play ${game.title}`}>
-                 <GameCard title={game.title} rating={game.rating} />
-               </Link>
-            ))}
-          </div>
+          <TrendingGamesFilter games={gamesList} />
         </section>
 
         {/* Categories */}
