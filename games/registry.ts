@@ -9,7 +9,12 @@ export interface GameConfig {
   rating?: number;
   description?: string;
   image?: string;
-  controls?: Record<string, string>;
+  history?: string;
+  strategy?: string;
+  tips?: string[];
+  keyboardControls?: Record<string, string>;
+  touchControls?: Record<string, string>;
+  faqs?: {q: string, a: string}[];
 }
 
 export const gamesRegistry: Record<string, { config: GameConfig, component: any }> = {
@@ -19,10 +24,32 @@ export const gamesRegistry: Record<string, { config: GameConfig, component: any 
       "category": "Arcade",
       "rating": 4.8,
       "description": "The classic snake game, reimagined with neon graphics and smooth controls.",
-      "controls": {
+      "history": "Snake is a video game genre where the player maneuvers a growing line that becomes a primary obstacle to itself. The concept originated in the 1976 arcade game Blockade, and the ease of implementing Snake has led to hundreds of versions.",
+      "strategy": "Stay near the edges when the snake gets long and plan a clear exit route. Avoid trapping yourself in corners.",
+      "tips": [
+            "Take your time, there is no time limit.",
+            "Try to move in a zig-zag pattern when running out of space."
+      ],
+      "keyboardControls": {
             "ArrowKeys": "Move Snake",
             "Space": "Pause"
-      }
+      },
+      "touchControls": {
+            "Swipe Up": "Move Up",
+            "Swipe Down": "Move Down",
+            "Swipe Left": "Move Left",
+            "Swipe Right": "Move Right"
+      },
+      "faqs": [
+            {
+                  "q": "What happens when you eat an apple?",
+                  "a": "Your snake grows longer by one segment and your score increases."
+            },
+            {
+                  "q": "Can I hit the walls?",
+                  "a": "No, hitting the walls or your own tail will result in a game over."
+            }
+      ]
 },
     // Note: We use ssr: false because game engines rely on the browser's window and canvas
     component: dynamic(() => import('./snake/Game'), { ssr: false })
