@@ -7,8 +7,41 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Browser Games Platform',
-  description: 'Play the best free online browser games.',
+  title: {
+    default: 'PixelPlay | Best Free Online Browser Games',
+    template: '%s | PixelPlay Games',
+  },
+  description: 'Play the best free online browser games instantly. No downloads required. Join millions of players worldwide on PixelPlay.',
+  keywords: ['browser games', 'free games', 'online games', 'html5 games', 'play now'],
+  authors: [{ name: 'PixelPlay Team' }],
+  creator: 'PixelPlay',
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://pixelplay.com',
+    title: 'PixelPlay | Best Free Online Browser Games',
+    description: 'Play the best free online browser games instantly. No downloads required.',
+    siteName: 'PixelPlay Games',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'PixelPlay | Best Free Online Browser Games',
+    description: 'Play the best free online browser games instantly. No downloads required.',
+    creator: '@pixelplay',
+  },
+};
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'PixelPlay Games',
+  url: 'https://pixelplay.com',
+  description: 'Play the best free online browser games instantly.',
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: 'https://pixelplay.com/search?q={search_term_string}',
+    'query-input': 'required name=search_term_string'
+  }
 };
 
 import { ThemeProvider } from '@/components/ThemeProvider';
@@ -20,6 +53,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className={`${inter.className} bg-background text-foreground antialiased min-h-screen flex flex-col`}>
         <ThemeProvider
           attribute="class"

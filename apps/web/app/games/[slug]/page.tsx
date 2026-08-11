@@ -70,7 +70,7 @@ export default function GamePage({ params }: GamePageProps) {
 
       {/* 3. Play Button & Game Canvas Section */}
       <section>
-        <GamePlayer title={config.title} image={config.image}>
+        <GamePlayer title={config.title} slug={slug} image={config.image}>
           <GameComponent />
         </GamePlayer>
       </section>

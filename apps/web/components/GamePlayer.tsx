@@ -3,15 +3,23 @@
 import React, { useState } from 'react';
 import { Play, Maximize2, RotateCcw, Pause, Volume2, Share2, Heart } from 'lucide-react';
 import Image from 'next/image';
+import { useRecentGames } from '@/hooks/useRecentGames';
 
 interface GamePlayerProps {
   children: React.ReactNode;
   title: string;
+  slug: string;
   image?: string;
 }
 
-export default function GamePlayer({ children, title, image }: GamePlayerProps) {
+export default function GamePlayer({ children, title, slug, image }: GamePlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const { addRecentGame } = useRecentGames();
+
+  const handlePlay = () => {
+    setIsPlaying(true);
+    addRecentGame(slug);
+  };
 
   return (
     <div className="w-full flex flex-col gap-4">
@@ -31,7 +39,7 @@ export default function GamePlayer({ children, title, image }: GamePlayerProps) 
             
             <div className="relative z-10 flex flex-col items-center gap-6">
               <button 
-                onClick={() => setIsPlaying(true)}
+                onClick={handlePlay}
                 className="group relative flex items-center justify-center w-24 h-24 rounded-full bg-primary text-white hover:scale-105 transition-all duration-300 shadow-xl shadow-primary/30"
               >
                 <div className="absolute inset-0 rounded-full bg-primary animate-ping opacity-20"></div>
