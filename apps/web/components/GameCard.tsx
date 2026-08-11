@@ -5,7 +5,7 @@ import { Play, Star } from 'lucide-react';
 interface GameCardProps {
   title: string;
   imageUrl?: string;
-  rating: number;
+  rating?: number;
   featured?: boolean;
 }
 
@@ -33,7 +33,7 @@ export default function GameCard({ title, imageUrl, rating }: GameCardProps) {
         <h3 className="text-lg font-bold text-black dark:text-white mb-1 truncate">{title}</h3>
         <div className="flex items-center text-warning">
           <Star className="w-4 h-4 fill-current mr-1" />
-          <span className="text-sm font-medium">{rating.toFixed(1)}</span>
+          <span className="text-sm font-medium">{rating ? rating.toFixed(1) : 'New'}</span>
         </div>
       </div>
     </div>
