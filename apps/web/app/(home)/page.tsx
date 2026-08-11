@@ -16,6 +16,7 @@ import HomeSEOText from '@/components/HomeSEOText';
 import HomeFAQ from '@/components/HomeFAQ';
 import PopularSearches from '@/components/PopularSearches';
 import { homepageFaqs, gameCollections } from '@/lib/constants';
+import { getAllPosts } from '@/lib/blog';
 import dynamic from 'next/dynamic';
 
 const CollectionCard = dynamic(() => import('@/components/CollectionCard'));
@@ -29,7 +30,9 @@ export const metadata: Metadata = {
   description: 'Discover trending HTML5 games, popular categories, and editor\'s picks on PixelPlay.',
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  const blogPosts = await getAllPosts();
+
   // Convert registry object to an array for rendering
   const gamesList = Object.entries(gamesRegistry).map(([slug, game]) => ({
     slug,
@@ -230,12 +233,24 @@ export default function HomePage() {
         <ScrollReveal delay={0.2}>
           <section aria-labelledby="guides-heading">
             <div id="guides-heading" className="sr-only">Latest Guides and News</div>
-            <SectionHeader title="📖 Latest Guides & News" actionText="Read more" />
+            <SectionHeader 
+              title="📖 Latest Guides & News" 
+              actionText="Read more" 
+              actionHref="/blog"
+            />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <BlogPreviewCard title="Top 10 Puzzle Games" date="Aug 10, 2026" readTime="5 min read" excerpt="Discover the best brain teasers to play directly in your browser." />
-              <BlogPreviewCard title="Best Browser Games" date="Aug 8, 2026" readTime="8 min read" excerpt="A definitive list of HTML5 games that you shouldn't miss." />
-              <BlogPreviewCard title="Brain Games for Focus" date="Aug 5, 2026" readTime="4 min read" excerpt="How strategy games improve your cognitive abilities." />
-              <BlogPreviewCard title="How to Play Sudoku" date="Aug 2, 2026" readTime="6 min read" excerpt="Master the classic number puzzle with these easy tips." />
+              {blogPosts.slice(0, 4).map(post => (
+                <BlogPreviewCard 
+                  key={post.slug}
+                  title={post.title} 
+                  date={new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} 
+                  readTime={post.readTime} 
+                  excerpt={post.excerpt}
+                  imageUrl={post.imageUrl}
+                  category={post.category}
+                  slug={post.slug}
+                />
+              ))}
             </div>
           </section>
         </ScrollReveal>
