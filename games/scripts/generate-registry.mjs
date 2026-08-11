@@ -22,7 +22,12 @@ export interface GameConfig {
   rating?: number;
   description?: string;
   image?: string;
-  controls?: Record<string, string>;
+  history?: string;
+  strategy?: string;
+  tips?: string[];
+  keyboardControls?: Record<string, string>;
+  touchControls?: Record<string, string>;
+  faqs?: {q: string, a: string}[];
 }
 
 export const gamesRegistry: Record<string, { config: GameConfig, component: any }> = {
