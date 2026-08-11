@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Play, Star } from 'lucide-react';
+import Image from 'next/image';
 
 interface GameCardProps {
   title: string;
@@ -14,7 +15,13 @@ export default function GameCard({ title, imageUrl, rating, featured }: GameCard
     <div className={`group relative overflow-hidden rounded-xl bg-gray-50 dark:bg-gray-900 border ${featured ? 'border-primary/50 shadow-primary/10' : 'border-gray-200 dark:border-gray-800'} transition-all duration-300 hover:shadow-[0_0_25px_rgba(79,70,229,0.25)] hover:border-primary/40 hover:-translate-y-1`}>
       <div className={`${featured ? 'aspect-[21/9]' : 'aspect-video'} w-full bg-gray-100 dark:bg-gray-800 relative overflow-hidden`}>
         {imageUrl ? (
-          <img src={imageUrl} alt={title} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110" />
+          <Image 
+            src={imageUrl} 
+            alt={title} 
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-110" 
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-gray-500">
             <span className="text-sm uppercase tracking-widest font-semibold">No Image</span>
