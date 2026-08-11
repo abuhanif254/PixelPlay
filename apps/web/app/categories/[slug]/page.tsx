@@ -25,13 +25,7 @@ function getCategories() {
   }));
 }
 
-export const dynamicParams = false;
-
-export function generateStaticParams() {
-  return getCategories().map(cat => ({
-    slug: cat.slug,
-  }));
-}
+export const runtime = 'edge';
 
 export function generateMetadata({ params }: CategoryPageProps): Metadata {
   const category = getCategories().find(c => c.slug === params.slug);

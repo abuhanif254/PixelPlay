@@ -5,20 +5,10 @@ import { constructMetadata, siteConfig } from '@/lib/seo';
 import Link from 'next/link';
 import { ArrowLeft, Clock } from 'lucide-react';
 
-interface BlogPostPageProps {
-  params: {
-    slug: string;
   };
 }
 
-export const dynamicParams = false;
-
-export async function generateStaticParams() {
-  const posts = await getAllPosts();
-  return posts.map((post) => ({
-    slug: post.slug,
-  }));
-}
+export const runtime = 'edge';
 
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
   const post = await getPostBySlug(params.slug);
