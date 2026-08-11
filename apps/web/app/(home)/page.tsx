@@ -13,6 +13,10 @@ import RecentGames from '@/components/RecentGames';
 
 import { TrendingGamesFilter } from '@/components/TrendingGamesFilter';
 import { ScrollReveal } from '@/components/ScrollReveal';
+import HomeSEOText from '@/components/HomeSEOText';
+import HomeFAQ from '@/components/HomeFAQ';
+import PopularSearches from '@/components/PopularSearches';
+import { homepageFaqs } from '@/lib/constants';
 
 export const metadata: Metadata = {
   title: 'Home',
@@ -40,21 +44,36 @@ export default function HomePage() {
 
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'CollectionPage',
-    name: 'PixelPlay Game Collection',
-    description: 'A collection of the best free browser games.',
-    url: 'https://pixelplay.com',
-    hasPart: gamesList.map(game => ({
-      '@type': 'SoftwareApplication',
-      name: game.title,
-      applicationCategory: 'Game',
-      operatingSystem: 'Any',
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: game.rating,
-        ratingCount: 100 // placeholder
+    '@graph': [
+      {
+        '@type': 'CollectionPage',
+        name: 'PixelPlay Game Collection',
+        description: 'A collection of the best free browser games.',
+        url: 'https://pixelplay.com',
+        hasPart: gamesList.map(game => ({
+          '@type': 'SoftwareApplication',
+          name: game.title,
+          applicationCategory: 'Game',
+          operatingSystem: 'Any',
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: game.rating,
+            ratingCount: 100
+          }
+        }))
+      },
+      {
+        '@type': 'FAQPage',
+        mainEntity: homepageFaqs.map(faq => ({
+          '@type': 'Question',
+          name: faq.q,
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: faq.a
+          }
+        }))
       }
-    }))
+    ]
   };
 
   return (
@@ -86,7 +105,7 @@ export default function HomePage() {
           <section aria-labelledby="categories-heading">
             <div id="categories-heading" className="sr-only">Popular Categories</div>
             <SectionHeader title="🧩 Popular Categories" actionText="Explore" />
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {categories.map((cat, i) => (
                  <CategoryCard key={i} name={cat.title} icon={cat.icon} gameCount={cat.count} />
               ))}
@@ -99,7 +118,7 @@ export default function HomePage() {
           <section aria-labelledby="editors-picks-heading">
             <div id="editors-picks-heading" className="sr-only">Editor's Picks</div>
             <SectionHeader title="⭐ Editor's Picks" subtitle="Hand-picked gems for you" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               <div className="md:col-span-1 h-64">
                  <GameCard title="Ultimate Chess" rating={5.0} featured={true} />
               </div>
@@ -115,11 +134,32 @@ export default function HomePage() {
           <section aria-labelledby="guides-heading">
             <div id="guides-heading" className="sr-only">Latest Guides and News</div>
             <SectionHeader title="📖 Latest Guides & News" actionText="Read more" />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               <BlogPreviewCard title="Top 10 Puzzle Games" date="Aug 10, 2026" readTime="5 min read" excerpt="Discover the best brain teasers to play directly in your browser." />
               <BlogPreviewCard title="Best Browser Games" date="Aug 8, 2026" readTime="8 min read" excerpt="A definitive list of HTML5 games that you shouldn't miss." />
               <BlogPreviewCard title="Brain Games for Focus" date="Aug 5, 2026" readTime="4 min read" excerpt="How strategy games improve your cognitive abilities." />
               <BlogPreviewCard title="How to Play Sudoku" date="Aug 2, 2026" readTime="6 min read" excerpt="Master the classic number puzzle with these easy tips." />
+            </div>
+          </section>
+        </ScrollReveal>
+
+        {/* SEO Text Block */}
+        <ScrollReveal delay={0.2}>
+          <section className="bg-gray-50 dark:bg-gray-800/50 rounded-3xl p-8 md:p-12 border border-black/5 dark:border-white/5" aria-labelledby="seo-text-heading">
+            <div id="seo-text-heading" className="sr-only">About PixelPlay</div>
+            <HomeSEOText />
+          </section>
+        </ScrollReveal>
+
+        {/* Popular Searches & FAQ */}
+        <ScrollReveal delay={0.3}>
+          <section className="grid md:grid-cols-12 gap-12" aria-labelledby="faq-search-heading">
+            <div id="faq-search-heading" className="sr-only">FAQs and Popular Searches</div>
+            <div className="md:col-span-8">
+              <HomeFAQ />
+            </div>
+            <div className="md:col-span-4">
+              <PopularSearches />
             </div>
           </section>
         </ScrollReveal>

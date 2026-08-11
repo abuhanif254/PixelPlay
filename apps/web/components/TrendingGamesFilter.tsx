@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import GameCard from '@/components/GameCard';
+import GameCardSkeleton from '@/components/GameCardSkeleton';
+import { useInView } from 'react-intersection-observer';
 
 interface GameItem {
   slug: string;
@@ -19,6 +21,11 @@ interface TrendingGamesFilterProps {
 export function TrendingGamesFilter({ games }: TrendingGamesFilterProps) {
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [visibleCount, setVisibleCount] = useState<number>(12);
+  const [isLoading, setIsLoading] = useState(false);
+  const { ref, inView } = useInView({
+    threshold: 0,
+    rootMargin: '200px',
+  });
 
   // Extract unique categories from games
   const categories = ['All', ...Array.from(new Set(games.map(g => g.category)))];
@@ -28,6 +35,19 @@ export function TrendingGamesFilter({ games }: TrendingGamesFilterProps) {
     : games.filter(g => g.category === activeCategory);
 
   const visibleGames = filteredGames.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredGames.length;
+
+  useEffect(() => {
+    if (inView && hasMore && !isLoading) {
+      setIsLoading(true);
+      // Simulate network request for skeletons to show
+      const timer = setTimeout(() => {
+        setVisibleCount(prev => prev + 12);
+        setIsLoading(false);
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [inView, hasMore, isLoading]);
 
   const handleCategoryChange = (cat: string) => {
     setActiveCategory(cat);
@@ -42,11 +62,12 @@ export function TrendingGamesFilter({ games }: TrendingGamesFilterProps) {
           <button
             key={cat}
             onClick={() => handleCategoryChange(cat)}
-            className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
+            className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
               activeCategory === cat 
                 ? 'bg-primary text-white shadow-md shadow-primary/20' 
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
             }`}
+            aria-pressed={activeCategory === cat}
           >
             {cat}
           </button>
@@ -54,10 +75,10 @@ export function TrendingGamesFilter({ games }: TrendingGamesFilterProps) {
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-12 gap-4">
         {visibleGames.length > 0 ? (
           visibleGames.map((game, i) => (
-            <Link href={`/games/${game.slug}`} key={`${game.slug}-${i}`} aria-label={`Play ${game.title}`}>
+            <Link href={`/games/${game.slug}`} key={`${game.slug}-${i}`} aria-label={`Play ${game.title}`} className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-2xl block">
               <GameCard title={game.title} rating={game.rating} imageUrl={game.image} />
             </Link>
           ))
@@ -66,17 +87,21 @@ export function TrendingGamesFilter({ games }: TrendingGamesFilterProps) {
             No trending games found for this category.
           </div>
         )}
+        
+        {/* Loading Skeletons */}
+        {isLoading && (
+          <>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <GameCardSkeleton key={`skeleton-${i}`} />
+            ))}
+          </>
+        )}
       </div>
 
-      {/* Load More Button */}
-      {visibleCount < filteredGames.length && (
-        <div className="flex justify-center mt-8">
-          <button
-            onClick={() => setVisibleCount(prev => prev + 12)}
-            className="px-6 py-2.5 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm"
-          >
-            Load More Games
-          </button>
+      {/* Infinite Scroll Trigger */}
+      {hasMore && (
+        <div ref={ref} className="h-10 w-full flex items-center justify-center">
+          {!isLoading && <span className="sr-only">Scroll for more</span>}
         </div>
       )}
     </div>
