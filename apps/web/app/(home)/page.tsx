@@ -14,8 +14,9 @@ import RecentGames from '@/components/RecentGames';
 import { TrendingGamesFilter } from '@/components/TrendingGamesFilter';
 import { ScrollReveal } from '@/components/ScrollReveal';
 import HomeSEOText from '@/components/HomeSEOText';
-import HomeFAQ, { homepageFaqs } from '@/components/HomeFAQ';
+import HomeFAQ from '@/components/HomeFAQ';
 import PopularSearches from '@/components/PopularSearches';
+import { homepageFaqs } from '@/lib/constants';
 
 export const metadata: Metadata = {
   title: 'Home',
