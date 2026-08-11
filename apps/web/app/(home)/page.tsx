@@ -114,8 +114,8 @@ export default function HomePage() {
             <SectionHeader title="✨ New Arrivals" actionText="View Latest" />
             <HorizontalScroll>
               {gamesList.slice(0, 5).map((game, i) => (
-                <div key={i} className="w-64 flex-none shrink-0 border border-primary/20 rounded-2xl relative overflow-hidden h-48">
-                  <div className="absolute top-2 left-2 bg-accent text-black text-xs font-bold px-2 py-1 rounded-full z-10 shadow-sm">NEW</div>
+                <div key={i} className="w-64 flex-none shrink-0 relative">
+                  <div className="absolute top-2 left-2 bg-accent text-black text-xs font-bold px-2 py-1 rounded-full z-10 shadow-sm pointer-events-none">NEW</div>
                   <GameCard title={game.title} rating={game.rating} category={game.category} slug={game.slug} />
                 </div>
               ))}
@@ -151,9 +151,9 @@ export default function HomePage() {
             <section aria-labelledby="top-rated-heading">
               <div id="top-rated-heading" className="sr-only">Top Rated Games</div>
               <SectionHeader title="🏆 Hall of Fame" actionText="Highest Rated" />
-              <div className="space-y-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                  {gamesList.slice(0, 3).map((game, i) => (
-                   <div key={i} className="h-32"><GameCard title={game.title} rating={4.9} category={game.category} slug={game.slug} /></div>
+                   <GameCard key={i} title={game.title} rating={4.9} category={game.category} slug={game.slug} />
                  ))}
               </div>
             </section>
@@ -161,9 +161,9 @@ export default function HomePage() {
             <section aria-labelledby="multiplayer-heading">
               <div id="multiplayer-heading" className="sr-only">Multiplayer Games</div>
               <SectionHeader title="⚔️ Multiplayer Chaos" actionText="Play with Friends" />
-              <div className="space-y-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                  {gamesList.slice(0, 3).map((game, i) => (
-                   <div key={i} className="h-32"><GameCard title={`${game.title} Online`} rating={game.rating} category={game.category} slug={game.slug} /></div>
+                   <GameCard key={i} title={`${game.title} Online`} rating={game.rating} category={game.category} slug={game.slug} />
                  ))}
               </div>
             </section>
@@ -175,11 +175,11 @@ export default function HomePage() {
           <section aria-labelledby="editors-picks-heading">
             <div id="editors-picks-heading" className="sr-only">Editor's Picks</div>
             <SectionHeader title="⭐ Editor's Picks" subtitle="Hand-picked gems for you" />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              <div className="md:col-span-1 h-64">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="md:col-span-1">
                  <GameCard title="Ultimate Chess" rating={5.0} />
               </div>
-              <div className="md:col-span-1 h-64">
+              <div className="md:col-span-1">
                  <GameCard title="Cyberpunk Racing" rating={4.9} />
               </div>
             </div>
@@ -220,7 +220,7 @@ export default function HomePage() {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {gamesList.slice(0, 4).map((game, i) => (
-                <div key={i} className="h-48"><GameCard title={game.title} rating={game.rating} category={game.category} slug={game.slug} /></div>
+                <GameCard key={i} title={game.title} rating={game.rating} category={game.category} slug={game.slug} />
               ))}
             </div>
           </section>
