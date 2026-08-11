@@ -92,7 +92,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex flex-col gap-12 pb-20 bg-[#0A0B1A] min-h-screen text-white">
+    <div className="flex flex-col gap-12 pb-20 bg-white dark:bg-[#0A0B1A] min-h-screen text-gray-900 dark:text-white">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

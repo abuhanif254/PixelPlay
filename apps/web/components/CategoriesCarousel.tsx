@@ -32,12 +32,12 @@ export const CategoriesCarousel: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 md:px-8 -mt-8 relative z-20">
-      <div className="bg-[#13142B] border border-white/5 rounded-3xl p-4 flex items-center shadow-2xl">
+      <div className="bg-white dark:bg-[#13142B] border border-black/5 dark:border-white/5 rounded-3xl p-4 flex items-center shadow-2xl">
         
         {/* Left Arrow */}
         <button 
           onClick={() => scroll('left')}
-          className="w-10 h-10 shrink-0 flex items-center justify-center rounded-full bg-black/20 hover:bg-black/40 text-gray-400 transition-colors mr-2"
+          className="w-10 h-10 shrink-0 flex items-center justify-center rounded-full bg-black/5 dark:bg-black/20 hover:bg-black/10 dark:hover:bg-black/40 text-gray-500 dark:text-gray-400 transition-colors mr-2"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
@@ -54,7 +54,7 @@ export const CategoriesCarousel: React.FC = () => {
               className="flex flex-col items-center justify-center min-w-[60px] group gap-2"
             >
               <cat.icon className={`w-8 h-8 ${cat.color} group-hover:-translate-y-1 transition-transform`} />
-              <span className="text-xs font-semibold text-gray-400 group-hover:text-white transition-colors">
+              <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
                 {cat.name}
               </span>
             </Link>
@@ -64,7 +64,7 @@ export const CategoriesCarousel: React.FC = () => {
         {/* Right Arrow */}
         <button 
           onClick={() => scroll('right')}
-          className="w-10 h-10 shrink-0 flex items-center justify-center rounded-full bg-black/20 hover:bg-black/40 text-gray-400 transition-colors ml-2"
+          className="w-10 h-10 shrink-0 flex items-center justify-center rounded-full bg-black/5 dark:bg-black/20 hover:bg-black/10 dark:hover:bg-black/40 text-gray-500 dark:text-gray-400 transition-colors ml-2"
         >
           <ChevronRight className="w-5 h-5" />
         </button>

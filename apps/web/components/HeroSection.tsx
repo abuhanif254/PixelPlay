@@ -7,7 +7,7 @@ import Link from 'next/link';
 
 export const HeroSection: React.FC = () => {
   return (
-    <section className="relative w-full min-h-[700px] pt-32 pb-20 bg-[#0A0B1A] text-white overflow-hidden">
+    <section className="relative w-full min-h-[700px] pt-32 pb-20 bg-gray-50 dark:bg-[#0A0B1A] text-gray-900 dark:text-white overflow-hidden">
       
       {/* Star Particles Background */}
       <div className="absolute inset-0 pointer-events-none z-0 opacity-50">
@@ -39,19 +39,19 @@ export const HeroSection: React.FC = () => {
             </h1>
 
             {/* Description */}
-            <p className="text-gray-400 text-lg md:text-xl max-w-lg mb-10 leading-relaxed">
+            <p className="text-gray-600 dark:text-gray-400 text-lg md:text-xl max-w-lg mb-10 leading-relaxed">
               Discover thousands of free browser games. No downloads, no installs – just click and play instantly!
             </p>
 
             {/* Hero Search Bar */}
-            <div className="w-full max-w-xl relative flex items-center bg-[#13142B] border border-white/5 rounded-full p-2 mb-6 focus-within:border-[#6366F1]/50 transition-colors shadow-2xl">
+            <div className="w-full max-w-xl relative flex items-center bg-white dark:bg-[#13142B] border border-black/5 dark:border-white/5 rounded-full p-2 mb-6 focus-within:border-[#6366F1]/50 transition-colors shadow-2xl">
               <div className="pl-4 pr-2">
                 <Search className="w-5 h-5 text-gray-500" />
               </div>
               <input 
                 type="text" 
                 placeholder="Search games..." 
-                className="bg-transparent text-white placeholder-gray-500 w-full focus:outline-none text-lg py-3"
+                className="bg-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 w-full focus:outline-none text-lg py-3"
               />
               <button className="bg-[#6366F1] hover:bg-[#4F46E5] text-white font-bold py-3 px-8 rounded-full transition-colors shrink-0">
                 Search
@@ -65,7 +65,7 @@ export const HeroSection: React.FC = () => {
                 <Link 
                   key={tag} 
                   href={`/search?q=${tag.toLowerCase()}`}
-                  className="px-4 py-1.5 rounded-full bg-white/5 border border-white/5 text-gray-300 text-xs font-medium hover:bg-white/10 hover:text-white transition-colors"
+                  className="px-4 py-1.5 rounded-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 text-gray-600 dark:text-gray-300 text-xs font-medium hover:bg-black/10 dark:hover:bg-white/10 hover:text-black dark:hover:text-white transition-colors"
                 >
                   {tag}
                 </Link>
@@ -79,7 +79,7 @@ export const HeroSection: React.FC = () => {
                   <Gamepad2 className="w-6 h-6 fill-current" />
                 </div>
                 <div>
-                  <div className="text-xl font-bold text-white">1000+</div>
+                  <div className="text-xl font-bold text-gray-900 dark:text-white">1000+</div>
                   <div className="text-sm text-gray-500 font-medium">Games</div>
                 </div>
               </div>
@@ -89,7 +89,7 @@ export const HeroSection: React.FC = () => {
                   <Users className="w-6 h-6 fill-current" />
                 </div>
                 <div>
-                  <div className="text-xl font-bold text-white">500K+</div>
+                  <div className="text-xl font-bold text-gray-900 dark:text-white">500K+</div>
                   <div className="text-sm text-gray-500 font-medium">Players</div>
                 </div>
               </div>
@@ -99,7 +99,7 @@ export const HeroSection: React.FC = () => {
                   <Star className="w-6 h-6 fill-current" />
                 </div>
                 <div>
-                  <div className="text-xl font-bold text-white">4.8/5</div>
+                  <div className="text-xl font-bold text-gray-900 dark:text-white">4.8/5</div>
                   <div className="text-sm text-gray-500 font-medium">User Rating</div>
                 </div>
               </div>
@@ -124,7 +124,7 @@ export const HeroSection: React.FC = () => {
                 priority
               />
               {/* Overlay gradient to blend edges if the generated image isn't perfectly transparent */}
-              <div className="absolute inset-0 rounded-full shadow-[inset_0_0_100px_100px_#0A0B1A]" style={{mixBlendMode: 'multiply'}} />
+              <div className="absolute inset-0 rounded-full shadow-[inset_0_0_100px_100px_#f9fafb] dark:shadow-[inset_0_0_100px_100px_#0A0B1A]" style={{mixBlendMode: 'multiply'}} />
             </div>
           </div>
         </div>
