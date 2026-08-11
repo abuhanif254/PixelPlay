@@ -116,7 +116,7 @@ export default function HomePage() {
               {gamesList.slice(0, 5).map((game, i) => (
                 <div key={i} className="w-64 flex-none shrink-0 border border-primary/20 rounded-2xl relative overflow-hidden h-48">
                   <div className="absolute top-2 left-2 bg-accent text-black text-xs font-bold px-2 py-1 rounded-full z-10 shadow-sm">NEW</div>
-                  <GameCard title={game.title} rating={game.rating} />
+                  <GameCard title={game.title} rating={game.rating} category={game.category} slug={game.slug} />
                 </div>
               ))}
             </HorizontalScroll>
@@ -153,7 +153,7 @@ export default function HomePage() {
               <SectionHeader title="🏆 Hall of Fame" actionText="Highest Rated" />
               <div className="space-y-4">
                  {gamesList.slice(0, 3).map((game, i) => (
-                   <div key={i} className="h-32"><GameCard title={game.title} rating={4.9} /></div>
+                   <div key={i} className="h-32"><GameCard title={game.title} rating={4.9} category={game.category} slug={game.slug} /></div>
                  ))}
               </div>
             </section>
@@ -163,7 +163,7 @@ export default function HomePage() {
               <SectionHeader title="⚔️ Multiplayer Chaos" actionText="Play with Friends" />
               <div className="space-y-4">
                  {gamesList.slice(0, 3).map((game, i) => (
-                   <div key={i} className="h-32"><GameCard title={`${game.title} Online`} rating={game.rating} /></div>
+                   <div key={i} className="h-32"><GameCard title={`${game.title} Online`} rating={game.rating} category={game.category} slug={game.slug} /></div>
                  ))}
               </div>
             </section>
@@ -220,7 +220,7 @@ export default function HomePage() {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {gamesList.slice(0, 4).map((game, i) => (
-                <div key={i} className="h-48"><GameCard title={game.title} rating={game.rating} /></div>
+                <div key={i} className="h-48"><GameCard title={game.title} rating={game.rating} category={game.category} slug={game.slug} /></div>
               ))}
             </div>
           </section>

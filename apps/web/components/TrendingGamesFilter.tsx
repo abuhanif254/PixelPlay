@@ -79,7 +79,7 @@ export function TrendingGamesFilter({ games }: TrendingGamesFilterProps) {
         {visibleGames.length > 0 ? (
           visibleGames.map((game, i) => (
             <div key={`${game.slug}-${i}`} className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366F1] rounded-2xl block">
-              <GameCard title={game.title} rating={game.rating} imageUrl={game.image} category={game.category} slug={`/games/${game.slug}`} />
+              <GameCard title={game.title} rating={game.rating} imageUrl={game.image} category={game.category} slug={game.slug} />
             </div>
           ))
         ) : (
