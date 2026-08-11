@@ -25,7 +25,7 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
       className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-4"
     >
       <div>
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+        <h2 className="text-fluid-2xl md:text-fluid-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
           {title}
         </h2>
         {subtitle && (

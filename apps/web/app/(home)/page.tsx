@@ -86,7 +86,7 @@ export default function HomePage() {
           <section aria-labelledby="categories-heading">
             <div id="categories-heading" className="sr-only">Popular Categories</div>
             <SectionHeader title="🧩 Popular Categories" actionText="Explore" />
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {categories.map((cat, i) => (
                  <CategoryCard key={i} name={cat.title} icon={cat.icon} gameCount={cat.count} />
               ))}
@@ -99,7 +99,7 @@ export default function HomePage() {
           <section aria-labelledby="editors-picks-heading">
             <div id="editors-picks-heading" className="sr-only">Editor's Picks</div>
             <SectionHeader title="⭐ Editor's Picks" subtitle="Hand-picked gems for you" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               <div className="md:col-span-1 h-64">
                  <GameCard title="Ultimate Chess" rating={5.0} featured={true} />
               </div>
@@ -115,7 +115,7 @@ export default function HomePage() {
           <section aria-labelledby="guides-heading">
             <div id="guides-heading" className="sr-only">Latest Guides and News</div>
             <SectionHeader title="📖 Latest Guides & News" actionText="Read more" />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               <BlogPreviewCard title="Top 10 Puzzle Games" date="Aug 10, 2026" readTime="5 min read" excerpt="Discover the best brain teasers to play directly in your browser." />
               <BlogPreviewCard title="Best Browser Games" date="Aug 8, 2026" readTime="8 min read" excerpt="A definitive list of HTML5 games that you shouldn't miss." />
               <BlogPreviewCard title="Brain Games for Focus" date="Aug 5, 2026" readTime="4 min read" excerpt="How strategy games improve your cognitive abilities." />

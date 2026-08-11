@@ -54,7 +54,7 @@ export function TrendingGamesFilter({ games }: TrendingGamesFilterProps) {
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-12 gap-4">
         {visibleGames.length > 0 ? (
           visibleGames.map((game, i) => (
             <Link href={`/games/${game.slug}`} key={`${game.slug}-${i}`} aria-label={`Play ${game.title}`}>

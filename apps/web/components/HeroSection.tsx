@@ -47,10 +47,10 @@ export const HeroSection: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 text-white drop-shadow-lg">
+          <h1 className="text-fluid-3xl md:text-fluid-4xl font-extrabold tracking-tight mb-4 text-white drop-shadow-lg">
             Unleash Your Next <span className="text-accent drop-shadow-[0_0_15px_rgba(34,197,94,0.5)]">Adventure</span>
           </h1>
-          <p className="text-lg md:text-xl text-gray-200 max-w-2xl mx-auto drop-shadow">
+          <p className="text-fluid-base md:text-fluid-lg text-gray-200 max-w-2xl mx-auto drop-shadow">
             Discover thousands of free browser games. No downloads, no waiting. Just play directly in your browser.
           </p>
         </motion.div>
