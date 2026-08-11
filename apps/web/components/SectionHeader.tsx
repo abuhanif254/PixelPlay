@@ -2,18 +2,21 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 
 interface SectionHeaderProps {
   title: string;
   subtitle?: string;
   actionText?: string;
+  actionHref?: string;
   onActionClick?: () => void;
 }
 
 export const SectionHeader: React.FC<SectionHeaderProps> = ({ 
   title, 
   subtitle, 
-  actionText, 
+  actionText,
+  actionHref,
   onActionClick 
 }) => {
   return (
@@ -36,12 +39,21 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
       </div>
       
       {actionText && (
-        <button 
-          onClick={onActionClick}
-          className="text-accent hover:text-accent/80 font-medium text-sm md:text-base transition-colors whitespace-nowrap"
-        >
-          {actionText} &rarr;
-        </button>
+        actionHref ? (
+          <Link 
+            href={actionHref}
+            className="text-accent hover:text-accent/80 font-medium text-sm md:text-base transition-colors whitespace-nowrap"
+          >
+            {actionText} &rarr;
+          </Link>
+        ) : (
+          <button 
+            onClick={onActionClick}
+            className="text-accent hover:text-accent/80 font-medium text-sm md:text-base transition-colors whitespace-nowrap"
+          >
+            {actionText} &rarr;
+          </button>
+        )
       )}
     </motion.div>
   );
