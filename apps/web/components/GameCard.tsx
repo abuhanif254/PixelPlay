@@ -1,54 +1,58 @@
-
 import React from 'react';
 import { Play, Star } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 interface GameCardProps {
   title: string;
   imageUrl?: string;
   rating?: number;
-  featured?: boolean;
+  category?: string;
+  slug?: string;
 }
 
-export default function GameCard({ title, imageUrl, rating, featured }: GameCardProps) {
+export default function GameCard({ title, imageUrl, rating = 4.5, category = 'Action', slug = '#' }: GameCardProps) {
   return (
-    <div className={`group relative overflow-hidden rounded-xl bg-gray-50 dark:bg-gray-900 border ${featured ? 'border-primary/50 shadow-primary/10' : 'border-gray-200 dark:border-gray-800'} transition-all duration-300 hover:shadow-[0_0_25px_rgba(79,70,229,0.25)] hover:border-primary/40 hover:-translate-y-1`}>
-      <div className={`${featured ? 'aspect-[21/9]' : 'aspect-video'} w-full bg-gray-100 dark:bg-gray-800 relative overflow-hidden`}>
-        {imageUrl ? (
-          <Image 
-            src={imageUrl} 
-            alt={title} 
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-110" 
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-gray-500">
-            <span className="text-sm uppercase tracking-widest font-semibold">No Image</span>
-          </div>
-        )}
+    <Link href={slug.startsWith('#') ? slug : `/games/${slug}`} className="block group">
+      <div className="flex flex-col bg-white dark:bg-[#13142B] border border-black/5 dark:border-white/5 rounded-2xl p-3 transition-transform duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-[#6366F1]/20">
         
-        {featured && (
-          <div className="absolute top-3 left-3 bg-primary/90 backdrop-blur text-white text-xs font-bold px-3 py-1 rounded-full shadow-[0_0_10px_rgba(79,70,229,0.5)]">
-            Editor's Pick
+        {/* Image Container */}
+        <div className="relative aspect-square w-full rounded-xl overflow-hidden mb-3 bg-gray-100 dark:bg-[#0A0B1A]">
+          {imageUrl ? (
+            <Image 
+              src={imageUrl} 
+              alt={title} 
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-105" 
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-gray-600 font-bold uppercase tracking-widest text-xs">
+              No Image
+            </div>
+          )}
+
+          {/* Overlapping Play Button */}
+          <div className="absolute -bottom-1 -right-1 p-2 bg-white dark:bg-[#13142B] rounded-tl-2xl">
+            <div className="w-10 h-10 bg-gray-200 dark:bg-[#25274D] border border-black/10 dark:border-white/10 rounded-full flex items-center justify-center text-gray-700 dark:text-white group-hover:bg-[#6366F1] group-hover:border-[#6366F1] group-hover:text-white transition-colors shadow-lg shadow-black/10 dark:shadow-black/50">
+              <Play className="w-4 h-4 fill-current ml-0.5" />
+            </div>
           </div>
-        )}
+        </div>
         
-        {/* Hover Overlay */}
-        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-sm">
-          <button className="bg-primary text-white p-4 rounded-full transform scale-50 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-300 delay-75 shadow-[0_0_20px_rgba(79,70,229,0.6)] hover:bg-accent hover:shadow-[0_0_20px_rgba(34,197,94,0.6)] focus:outline-none">
-            <Play className="w-6 h-6 fill-current" />
-          </button>
+        {/* Metadata */}
+        <div className="flex items-end justify-between px-1 pb-1">
+          <div className="flex flex-col">
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-0.5 truncate max-w-[120px]">{title}</h3>
+            <span className="text-xs text-gray-500 font-medium">{category}</span>
+          </div>
+          <div className="flex items-center text-yellow-500 gap-1 mb-0.5">
+            <Star className="w-3.5 h-3.5 fill-current" />
+            <span className="text-xs font-bold text-gray-900 dark:text-white">{rating.toFixed(1)}</span>
+          </div>
         </div>
+        
       </div>
-      
-      <div className="p-4 relative z-10">
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1 truncate">{title}</h3>
-        <div className="flex items-center text-warning">
-          <Star className="w-4 h-4 fill-current mr-1 drop-shadow-[0_0_3px_rgba(245,158,11,0.5)]" />
-          <span className="text-sm font-medium drop-shadow-sm">{rating ? rating.toFixed(1) : 'New'}</span>
-        </div>
-      </div>
-    </div>
+    </Link>
   );
 }

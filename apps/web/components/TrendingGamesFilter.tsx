@@ -78,9 +78,9 @@ export function TrendingGamesFilter({ games }: TrendingGamesFilterProps) {
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-12 gap-4">
         {visibleGames.length > 0 ? (
           visibleGames.map((game, i) => (
-            <Link href={`/games/${game.slug}`} key={`${game.slug}-${i}`} aria-label={`Play ${game.title}`} className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-2xl block">
-              <GameCard title={game.title} rating={game.rating} imageUrl={game.image} />
-            </Link>
+            <div key={`${game.slug}-${i}`} className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366F1] rounded-2xl block">
+              <GameCard title={game.title} rating={game.rating} imageUrl={game.image} category={game.category} slug={game.slug} />
+            </div>
           ))
         ) : (
           <div className="col-span-full py-12 text-center text-gray-500">

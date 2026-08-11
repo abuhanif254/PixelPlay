@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { Puzzle, Gamepad2, Grid, Swords, Car, Brain } from 'lucide-react';
 import { HeroSection } from '@/components/HeroSection';
+import { CategoriesCarousel } from '@/components/CategoriesCarousel';
 import { SectionHeader } from '@/components/SectionHeader';
 import { HorizontalScroll } from '@/components/HorizontalScroll';
 import GameCard from '@/components/GameCard';
@@ -8,16 +9,21 @@ import CategoryCard from '@/components/CategoryCard';
 import BlogPreviewCard from '@/components/BlogPreviewCard';
 import { gamesRegistry } from '@pixelplay/games/registry';
 import Link from 'next/link';
-
 import RecentGames from '@/components/RecentGames';
-
 import { TrendingGamesFilter } from '@/components/TrendingGamesFilter';
 import { ScrollReveal } from '@/components/ScrollReveal';
 import HomeSEOText from '@/components/HomeSEOText';
 import HomeFAQ from '@/components/HomeFAQ';
 import PopularSearches from '@/components/PopularSearches';
-import { homepageFaqs } from '@/lib/constants';
+import { homepageFaqs, gameCollections } from '@/lib/constants';
+import dynamic from 'next/dynamic';
 
+const CollectionCard = dynamic(() => import('@/components/CollectionCard'));
+const ReviewTicker = dynamic(() => import('@/components/ReviewTicker'));
+const LeaderboardPreview = dynamic(() => import('@/components/LeaderboardPreview'));
+const DeviceCompatibility = dynamic(() => import('@/components/DeviceCompatibility'));
+const DeveloperSpotlight = dynamic(() => import('@/components/DeveloperSpotlight'));
+const UpcomingGames = dynamic(() => import('@/components/UpcomingGames'));
 export const metadata: Metadata = {
   title: 'Home',
   description: 'Discover trending HTML5 games, popular categories, and editor\'s picks on PixelPlay.',
@@ -72,18 +78,28 @@ export default function HomePage() {
             text: faq.a
           }
         }))
+      },
+      {
+        '@type': 'ItemList',
+        name: 'Curated Game Collections',
+        itemListElement: gameCollections.map((col, idx) => ({
+          '@type': 'ListItem',
+          position: idx + 1,
+          url: `https://pixelplay.com${col.href}`
+        }))
       }
     ]
   };
 
   return (
-    <div className="flex flex-col gap-12 pb-20">
+    <div className="flex flex-col gap-12 pb-20 bg-white dark:bg-[#0A0B1A] min-h-screen text-gray-900 dark:text-white">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       
       <HeroSection />
+      <CategoriesCarousel />
 
       <div className="container mx-auto px-4 md:px-8 space-y-16">
         {/* Continue Playing (Dynamic from localStorage) */}
@@ -91,11 +107,27 @@ export default function HomePage() {
           <RecentGames />
         </ScrollReveal>
 
+        {/* New Arrivals */}
+        <ScrollReveal delay={0.1}>
+          <section aria-labelledby="new-arrivals-heading">
+            <div id="new-arrivals-heading" className="sr-only">New Arrivals</div>
+            <SectionHeader title="✨ New Arrivals" actionText="View Latest" />
+            <HorizontalScroll>
+              {gamesList.slice(0, 5).map((game, i) => (
+                <div key={i} className="w-64 flex-none shrink-0 relative">
+                  <div className="absolute top-2 left-2 bg-accent text-black text-xs font-bold px-2 py-1 rounded-full z-10 shadow-sm pointer-events-none">NEW</div>
+                  <GameCard title={game.title} rating={game.rating} category={game.category} slug={game.slug} />
+                </div>
+              ))}
+            </HorizontalScroll>
+          </section>
+        </ScrollReveal>
+
         {/* Trending Games */}
         <ScrollReveal delay={0.1}>
           <section aria-labelledby="trending-games-heading">
             <div id="trending-games-heading" className="sr-only">Trending Games</div>
-            <SectionHeader title="🔥 Trending Games" actionText="See all" />
+            <SectionHeader title="🔥 Trending Games" subtitle="Most played games right now" actionText="View All ->" />
             <TrendingGamesFilter games={gamesList} />
           </section>
         </ScrollReveal>
@@ -113,18 +145,83 @@ export default function HomePage() {
           </section>
         </ScrollReveal>
 
+        {/* Top Rated & Multiplayer */}
+        <ScrollReveal delay={0.2}>
+          <div className="grid lg:grid-cols-2 gap-12">
+            <section aria-labelledby="top-rated-heading">
+              <div id="top-rated-heading" className="sr-only">Top Rated Games</div>
+              <SectionHeader title="🏆 Hall of Fame" actionText="Highest Rated" />
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                 {gamesList.slice(0, 3).map((game, i) => (
+                   <GameCard key={i} title={game.title} rating={4.9} category={game.category} slug={game.slug} />
+                 ))}
+              </div>
+            </section>
+            
+            <section aria-labelledby="multiplayer-heading">
+              <div id="multiplayer-heading" className="sr-only">Multiplayer Games</div>
+              <SectionHeader title="⚔️ Multiplayer Chaos" actionText="Play with Friends" />
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                 {gamesList.slice(0, 3).map((game, i) => (
+                   <GameCard key={i} title={`${game.title} Online`} rating={game.rating} category={game.category} slug={game.slug} />
+                 ))}
+              </div>
+            </section>
+          </div>
+        </ScrollReveal>
+
         {/* Featured / Editor's Picks */}
         <ScrollReveal delay={0.2}>
           <section aria-labelledby="editors-picks-heading">
             <div id="editors-picks-heading" className="sr-only">Editor's Picks</div>
             <SectionHeader title="⭐ Editor's Picks" subtitle="Hand-picked gems for you" />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              <div className="md:col-span-1 h-64">
-                 <GameCard title="Ultimate Chess" rating={5.0} featured={true} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="md:col-span-1">
+                 <GameCard title="Ultimate Chess" rating={5.0} />
               </div>
-              <div className="md:col-span-1 h-64">
-                 <GameCard title="Cyberpunk Racing" rating={4.9} featured={true} />
+              <div className="md:col-span-1">
+                 <GameCard title="Cyberpunk Racing" rating={4.9} />
               </div>
+            </div>
+          </section>
+        </ScrollReveal>
+
+        {/* Curated Collections */}
+        <ScrollReveal delay={0.2}>
+          <section aria-labelledby="collections-heading">
+            <div id="collections-heading" className="sr-only">Curated Collections</div>
+            <SectionHeader title="📚 Curated Collections" actionText="Browse All" />
+            <div className="grid md:grid-cols-3 gap-6">
+              {gameCollections.map((col, i) => (
+                <CollectionCard key={i} title={col.title} description={col.description} imageUrls={col.imageUrls} href={col.href} />
+              ))}
+            </div>
+          </section>
+        </ScrollReveal>
+
+        {/* Games by Device */}
+        <ScrollReveal delay={0.3}>
+          <section aria-labelledby="device-heading">
+            <div id="device-heading" className="sr-only">Device Compatibility</div>
+            <DeviceCompatibility />
+          </section>
+        </ScrollReveal>
+
+        {/* Genre Deep Dive */}
+        <ScrollReveal delay={0.2}>
+          <section aria-labelledby="genre-action-heading">
+            <div id="genre-action-heading" className="sr-only">Action Games Hub</div>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="p-3 bg-primary/10 rounded-xl text-primary"><Swords className="w-8 h-8" /></div>
+              <div>
+                <h2 className="text-2xl font-outfit font-bold">Action Games Hub</h2>
+                <p className="text-gray-500 text-sm">Jump into the most thrilling combat and adventure games.</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {gamesList.slice(0, 4).map((game, i) => (
+                <GameCard key={i} title={game.title} rating={game.rating} category={game.category} slug={game.slug} />
+              ))}
             </div>
           </section>
         </ScrollReveal>
@@ -141,6 +238,20 @@ export default function HomePage() {
               <BlogPreviewCard title="How to Play Sudoku" date="Aug 2, 2026" readTime="6 min read" excerpt="Master the classic number puzzle with these easy tips." />
             </div>
           </section>
+        </ScrollReveal>
+
+        {/* Community & Live Data Grid */}
+        <ScrollReveal delay={0.3}>
+          <div className="grid lg:grid-cols-12 gap-8">
+            <div className="lg:col-span-8 flex flex-col gap-8">
+              <ReviewTicker />
+              <DeveloperSpotlight />
+            </div>
+            <div className="lg:col-span-4 flex flex-col gap-8">
+              <LeaderboardPreview />
+              <UpcomingGames />
+            </div>
+          </div>
         </ScrollReveal>
 
         {/* SEO Text Block */}

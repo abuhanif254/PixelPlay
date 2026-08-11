@@ -65,9 +65,9 @@ export default function SEOContent({ config }: SEOContentProps) {
                 <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">Keyboard Controls</h4>
                 <div className="flex flex-col gap-3">
                   {Object.entries(config.keyboardControls).map(([key, action]) => (
-                    <div key={key} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800">
+                    <div key={key} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-[#12132A] border border-black/5 dark:border-white/5">
                       <span className="font-medium text-gray-700 dark:text-gray-300">{action}</span>
-                      <kbd className="px-3 py-1.5 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm font-mono font-bold shadow-sm dark:shadow-none text-gray-900 dark:text-white">
+                      <kbd className="px-3 py-1.5 rounded-lg bg-white dark:bg-white/10 border border-black/10 dark:border-white/10 text-sm font-mono font-bold shadow-sm dark:shadow-none text-gray-900 dark:text-white">
                         {key}
                       </kbd>
                     </div>
@@ -82,7 +82,7 @@ export default function SEOContent({ config }: SEOContentProps) {
                 <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">Touch Controls</h4>
                 <div className="flex flex-col gap-3">
                   {Object.entries(config.touchControls).map(([key, action]) => (
-                    <div key={key} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800">
+                    <div key={key} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-[#12132A] border border-black/5 dark:border-white/5">
                       <span className="font-medium text-gray-700 dark:text-gray-300">{action}</span>
                       <span className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-sm font-bold">
                         {key}

@@ -24,7 +24,7 @@ export default function GamePlayer({ children, title, slug, image }: GamePlayerP
   return (
     <div className="w-full flex flex-col gap-4">
       {/* Game Container */}
-      <div className="w-full aspect-video md:aspect-[21/9] lg:aspect-[24/9] bg-black rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden relative shadow-2xl flex items-center justify-center">
+      <div className="w-full aspect-video md:aspect-[21/9] lg:aspect-[24/9] bg-[#0A0B1A] rounded-2xl border border-black/10 dark:border-white/10 overflow-hidden relative shadow-2xl flex items-center justify-center">
         {!isPlaying ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/90 z-20">
             {/* Optional blurred background image if provided */}
@@ -63,19 +63,19 @@ export default function GamePlayer({ children, title, slug, image }: GamePlayerP
       </div>
 
       {/* Action Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800">
+      <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-white dark:bg-[#12132A] border border-black/5 dark:border-white/5 shadow-xl">
         
         {/* Game Controls */}
         <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-200/50 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300 font-medium">
+          <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-gray-700 dark:text-gray-300 font-medium">
             <RotateCcw size={18} />
             <span className="hidden sm:inline">Restart</span>
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-200/50 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300 font-medium">
+          <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-gray-700 dark:text-gray-300 font-medium">
             <Pause size={18} />
             <span className="hidden sm:inline">Pause</span>
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-200/50 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300 font-medium">
+          <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-gray-700 dark:text-gray-300 font-medium">
             <Volume2 size={18} />
             <span className="hidden sm:inline">Sound</span>
           </button>
@@ -83,7 +83,7 @@ export default function GamePlayer({ children, title, slug, image }: GamePlayerP
 
         {/* Social / Meta Controls */}
         <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-200/50 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300 font-medium">
+          <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-gray-700 dark:text-gray-300 font-medium">
             <Share2 size={18} />
             <span className="hidden sm:inline">Share</span>
           </button>
@@ -91,7 +91,7 @@ export default function GamePlayer({ children, title, slug, image }: GamePlayerP
             <Heart size={18} />
             <span className="hidden sm:inline">Favorite</span>
           </button>
-          <button className="flex items-center justify-center p-2 rounded-lg bg-gray-200/50 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300 sm:hidden">
+          <button className="flex items-center justify-center p-2 rounded-lg bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-gray-700 dark:text-gray-300 sm:hidden">
              <Maximize2 size={18} />
           </button>
         </div>
