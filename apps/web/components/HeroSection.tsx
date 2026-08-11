@@ -1,189 +1,133 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Compass, ChevronRight, Star } from 'lucide-react';
-import Link from 'next/link';
+import React from 'react';
+import { Search, Zap, Gamepad2, Users, Star } from 'lucide-react';
 import Image from 'next/image';
-
-const featuredGames = [
-  {
-    id: 1,
-    title: 'Cyberpunk Racing',
-    subtitle: 'The Ultimate Drift Experience',
-    description: 'Race through neon-lit streets in the most visually stunning HTML5 racing game ever created. Customize your ride and dominate the global leaderboards.',
-    image: 'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?q=80&w=2070&auto=format&fit=crop',
-    rating: 4.9,
-    genre: 'Racing',
-    slug: 'cyberpunk-racing',
-    logoText: 'CYBERPUNK',
-    logoAccent: 'RACING'
-  },
-  {
-    id: 2,
-    title: 'Galactic Defense',
-    subtitle: 'Protect The Outer Rim',
-    description: 'Command a fleet of starships and defend humanity against waves of alien invaders in this strategic masterpiece.',
-    image: 'https://images.unsplash.com/photo-1614729939124-03290b56c9ce?q=80&w=2070&auto=format&fit=crop',
-    rating: 4.8,
-    genre: 'Strategy',
-    slug: 'galactic-defense',
-    logoText: 'GALACTIC',
-    logoAccent: 'DEFENSE'
-  },
-  {
-    id: 3,
-    title: 'Neon Snake',
-    subtitle: 'Classic Mechanics. Modern Aesthetic.',
-    description: 'The classic game reimagined with mind-bending particle effects, power-ups, and intense multiplayer arenas.',
-    image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070&auto=format&fit=crop',
-    rating: 4.7,
-    genre: 'Arcade',
-    slug: 'neon-snake',
-    logoText: 'NEON',
-    logoAccent: 'SNAKE'
-  }
-];
+import Link from 'next/link';
 
 export const HeroSection: React.FC = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  // Auto-advance carousel
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % featuredGames.length);
-    }, 6000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const activeGame = featuredGames[currentIndex];
-
   return (
-    <section className="relative w-full h-[80vh] min-h-[600px] max-h-[800px] flex items-center overflow-hidden bg-black text-white">
-      {/* Background Image Carousel */}
-      <AnimatePresence mode="popLayout">
-        <motion.div
-          key={currentIndex}
-          initial={{ opacity: 0, scale: 1.05 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 1, ease: "easeInOut" }}
-          className="absolute inset-0 z-0"
-        >
-          <Image 
-            src={activeGame.image} 
-            alt={activeGame.title}
-            fill
-            className="object-cover opacity-60"
-            priority
-          />
-        </motion.div>
-      </AnimatePresence>
-
-      {/* Cinematic Overlays */}
-      <div className="absolute inset-0 z-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
-      <div className="absolute inset-0 z-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
-
-      {/* Floating Particles (Framer Motion) */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <motion.div
-          animate={{ y: [0, -30, 0], opacity: [0.2, 0.5, 0.2] }}
-          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[20%] left-[10%] w-[400px] h-[400px] rounded-full bg-primary/20 blur-[120px]"
-        />
-        <motion.div
-          animate={{ y: [0, 50, 0], opacity: [0.1, 0.3, 0.1] }}
-          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          className="absolute bottom-[20%] right-[10%] w-[500px] h-[500px] rounded-full bg-accent/20 blur-[150px]"
-        />
+    <section className="relative w-full min-h-[700px] pt-32 pb-20 bg-[#0A0B1A] text-white overflow-hidden">
+      
+      {/* Star Particles Background */}
+      <div className="absolute inset-0 pointer-events-none z-0 opacity-50">
+        <div className="absolute top-20 left-[10%] w-1 h-1 bg-white rounded-full shadow-[0_0_10px_2px_white]" />
+        <div className="absolute top-40 left-[40%] w-1.5 h-1.5 bg-blue-300 rounded-full shadow-[0_0_12px_2px_#93c5fd]" />
+        <div className="absolute top-80 left-[5%] w-1 h-1 bg-white rounded-full shadow-[0_0_8px_1px_white]" />
+        <div className="absolute top-32 right-[20%] w-2 h-2 bg-yellow-300 rounded-full shadow-[0_0_15px_3px_#fde047]" />
+        <div className="absolute top-60 right-[10%] w-1 h-1 bg-white rounded-full shadow-[0_0_10px_2px_white]" />
+        <div className="absolute bottom-20 right-[30%] w-1.5 h-1.5 bg-purple-400 rounded-full shadow-[0_0_12px_2px_#c084fc]" />
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 md:px-8 h-full flex flex-col justify-center mt-12">
-        <div className="max-w-3xl">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentIndex}
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 30 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-            >
-              {/* Meta Tags */}
-              <div className="flex items-center gap-3 mb-6 text-sm font-bold tracking-widest uppercase">
-                <span className="px-3 py-1 bg-primary/20 text-primary border border-primary/30 rounded-full backdrop-blur-md">
-                  {activeGame.genre}
-                </span>
-                <span className="flex items-center gap-1 text-warning">
-                  <Star className="w-4 h-4 fill-current" /> {activeGame.rating}
-                </span>
+      <div className="container mx-auto px-4 md:px-8 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          
+          {/* Left Column: Content */}
+          <div className="flex flex-col items-start">
+            {/* Trust Badge */}
+            <div className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20 px-4 py-1.5 rounded-full mb-8">
+              <Zap className="w-4 h-4 text-yellow-500 fill-current" />
+              <span className="text-yellow-500 text-xs font-bold tracking-wide">
+                100% Free • No Downloads • Instant Play
+              </span>
+            </div>
+
+            {/* Title */}
+            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-[1.1]">
+              Play Amazing <br />
+              <span className="text-[#8B5CF6]">Games</span> Online
+            </h1>
+
+            {/* Description */}
+            <p className="text-gray-400 text-lg md:text-xl max-w-lg mb-10 leading-relaxed">
+              Discover thousands of free browser games. No downloads, no installs – just click and play instantly!
+            </p>
+
+            {/* Hero Search Bar */}
+            <div className="w-full max-w-xl relative flex items-center bg-[#13142B] border border-white/5 rounded-full p-2 mb-6 focus-within:border-[#6366F1]/50 transition-colors shadow-2xl">
+              <div className="pl-4 pr-2">
+                <Search className="w-5 h-5 text-gray-500" />
+              </div>
+              <input 
+                type="text" 
+                placeholder="Search games..." 
+                className="bg-transparent text-white placeholder-gray-500 w-full focus:outline-none text-lg py-3"
+              />
+              <button className="bg-[#6366F1] hover:bg-[#4F46E5] text-white font-bold py-3 px-8 rounded-full transition-colors shrink-0">
+                Search
+              </button>
+            </div>
+
+            {/* Popular Searches */}
+            <div className="flex flex-wrap items-center gap-3 mb-12">
+              <span className="text-gray-500 text-sm font-medium">Popular Searches:</span>
+              {['Snake', '2048', 'Minecraft', 'Car Games', 'Puzzle'].map(tag => (
+                <Link 
+                  key={tag} 
+                  href={`/search?q=${tag.toLowerCase()}`}
+                  className="px-4 py-1.5 rounded-full bg-white/5 border border-white/5 text-gray-300 text-xs font-medium hover:bg-white/10 hover:text-white transition-colors"
+                >
+                  {tag}
+                </Link>
+              ))}
+            </div>
+
+            {/* Stats Row */}
+            <div className="flex flex-wrap items-center gap-8 md:gap-12">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400">
+                  <Gamepad2 className="w-6 h-6 fill-current" />
+                </div>
+                <div>
+                  <div className="text-xl font-bold text-white">1000+</div>
+                  <div className="text-sm text-gray-500 font-medium">Games</div>
+                </div>
               </div>
 
-              {/* Title */}
-              <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-4 leading-none">
-                {activeGame.logoText} <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">{activeGame.logoAccent}</span>
-              </h1>
-              
-              <h2 className="text-xl md:text-2xl text-gray-300 font-medium mb-6">
-                {activeGame.subtitle}
-              </h2>
-
-              <p className="text-base md:text-lg text-gray-400 mb-10 max-w-xl leading-relaxed">
-                {activeGame.description}
-              </p>
-
-              {/* CTAs */}
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link href={`/games/${activeGame.slug}`} className="focus:outline-none">
-                  <motion.button 
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="flex items-center justify-center gap-3 px-10 py-5 bg-gradient-to-r from-primary to-accent text-white font-bold rounded-full hover:shadow-[0_0_40px_rgba(79,70,229,0.5)] transition-all w-full sm:w-auto text-lg group"
-                  >
-                    <Play className="w-6 h-6 fill-current group-hover:scale-110 transition-transform" />
-                    Play Now
-                  </motion.button>
-                </Link>
-                <Link href="/categories" className="focus:outline-none">
-                  <motion.button 
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="flex items-center justify-center gap-3 px-10 py-5 bg-white/10 backdrop-blur-md border border-white/20 text-white font-bold rounded-full hover:bg-white/20 transition-all w-full sm:w-auto text-lg"
-                  >
-                    <Compass className="w-6 h-6" />
-                    Explore All
-                  </motion.button>
-                </Link>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center text-purple-400">
+                  <Users className="w-6 h-6 fill-current" />
+                </div>
+                <div>
+                  <div className="text-xl font-bold text-white">500K+</div>
+                  <div className="text-sm text-gray-500 font-medium">Players</div>
+                </div>
               </div>
-            </motion.div>
-          </AnimatePresence>
+
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-yellow-500/20 flex items-center justify-center text-yellow-400">
+                  <Star className="w-6 h-6 fill-current" />
+                </div>
+                <div>
+                  <div className="text-xl font-bold text-white">4.8/5</div>
+                  <div className="text-sm text-gray-500 font-medium">User Rating</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: 3D Visuals */}
+          <div className="relative w-full h-[600px] hidden lg:flex items-center justify-center">
+            {/* Glowing Rings Background */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="absolute w-[400px] h-[400px] rounded-full border border-purple-500/20 shadow-[0_0_100px_30px_rgba(139,92,246,0.15)] animate-[spin_20s_linear_infinite]" />
+              <div className="absolute w-[550px] h-[550px] rounded-full border border-blue-500/10 shadow-[0_0_100px_30px_rgba(59,130,246,0.1)] animate-[spin_30s_linear_infinite_reverse]" />
+            </div>
+            
+            {/* 3D Generated Controller Image */}
+            <div className="relative w-[120%] h-[120%] z-10 -mr-20">
+              <Image 
+                src="/hero_controller.jpg" 
+                alt="3D Gaming Controller"
+                fill
+                className="object-contain drop-shadow-[0_0_50px_rgba(99,102,241,0.5)]"
+                priority
+              />
+              {/* Overlay gradient to blend edges if the generated image isn't perfectly transparent */}
+              <div className="absolute inset-0 rounded-full shadow-[inset_0_0_100px_100px_#0A0B1A]" style={{mixBlendMode: 'multiply'}} />
+            </div>
+          </div>
         </div>
-      </div>
-
-      {/* Interactive Thumbnails */}
-      <div className="absolute bottom-8 right-4 md:right-8 z-20 flex gap-3">
-        {featuredGames.map((game, idx) => (
-          <button
-            key={game.id}
-            onClick={() => setCurrentIndex(idx)}
-            className={`relative w-16 h-16 md:w-24 md:h-24 rounded-2xl overflow-hidden border-2 transition-all duration-300 ${
-              currentIndex === idx 
-                ? 'border-primary shadow-[0_0_20px_rgba(79,70,229,0.5)] scale-110 z-10' 
-                : 'border-white/20 opacity-50 hover:opacity-100 hover:border-white/50'
-            }`}
-          >
-            <Image 
-              src={game.image} 
-              alt={game.title}
-              fill
-              className="object-cover"
-            />
-            {currentIndex === idx && (
-              <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                <Play className="w-8 h-8 text-white fill-current opacity-80" />
-              </div>
-            )}
-          </button>
-        ))}
       </div>
     </section>
   );

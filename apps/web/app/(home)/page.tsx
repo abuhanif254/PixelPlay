@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { Puzzle, Gamepad2, Grid, Swords, Car, Brain } from 'lucide-react';
 import { HeroSection } from '@/components/HeroSection';
+import { CategoriesCarousel } from '@/components/CategoriesCarousel';
 import { SectionHeader } from '@/components/SectionHeader';
 import { HorizontalScroll } from '@/components/HorizontalScroll';
 import GameCard from '@/components/GameCard';
@@ -8,9 +9,7 @@ import CategoryCard from '@/components/CategoryCard';
 import BlogPreviewCard from '@/components/BlogPreviewCard';
 import { gamesRegistry } from '@pixelplay/games/registry';
 import Link from 'next/link';
-
 import RecentGames from '@/components/RecentGames';
-
 import { TrendingGamesFilter } from '@/components/TrendingGamesFilter';
 import { ScrollReveal } from '@/components/ScrollReveal';
 import HomeSEOText from '@/components/HomeSEOText';
@@ -93,13 +92,14 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex flex-col gap-12 pb-20">
+    <div className="flex flex-col gap-12 pb-20 bg-[#0A0B1A] min-h-screen text-white">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       
       <HeroSection />
+      <CategoriesCarousel />
 
       <div className="container mx-auto px-4 md:px-8 space-y-16">
         {/* Continue Playing (Dynamic from localStorage) */}
@@ -177,10 +177,10 @@ export default function HomePage() {
             <SectionHeader title="⭐ Editor's Picks" subtitle="Hand-picked gems for you" />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               <div className="md:col-span-1 h-64">
-                 <GameCard title="Ultimate Chess" rating={5.0} featured={true} />
+                 <GameCard title="Ultimate Chess" rating={5.0} />
               </div>
               <div className="md:col-span-1 h-64">
-                 <GameCard title="Cyberpunk Racing" rating={4.9} featured={true} />
+                 <GameCard title="Cyberpunk Racing" rating={4.9} />
               </div>
             </div>
           </section>
