@@ -1,9 +1,22 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Search, SlidersHorizontal, ChevronDown, RefreshCcw, ChevronLeft, ChevronRight, LayoutGrid, List } from 'lucide-react';
 import GameCard from '@/components/GameCard';
 import NewsletterBanner from '@/components/NewsletterBanner';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+
+// Custom hook for debouncing values
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debouncedValue;
+}
 
 const CATEGORIES = [
   { name: 'All Games', count: 523 },
@@ -22,15 +35,66 @@ const DIFFICULTIES = ['All Levels', 'Easy', 'Medium', 'Hard', 'Expert'];
 const FEATURES = ['2 Players', 'Multiplayer', 'Mobile Friendly', 'No Time Limit', 'Leaderboard', 'Achievements'];
 
 export default function AllGamesClient({ initialGames }: { initialGames: any[] }) {
-  const [activeCategory, setActiveCategory] = useState('All Games');
-  const [activeDiff, setActiveDiff] = useState('All Levels');
-  const [activeFeatures, setActiveFeatures] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // Initialize state from URL params
+  const [activeCategory, setActiveCategory] = useState(searchParams.get('category') || 'All Games');
+  const [activeDiff, setActiveDiff] = useState(searchParams.get('difficulty') || 'All Levels');
+  const [activeFeatures, setActiveFeatures] = useState<string[]>(searchParams.get('features')?.split(',') || []);
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  // Sync state changes to URL
+  const updateUrl = useCallback((updates: Record<string, string | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value) {
+        params.set(key, value);
+      } else {
+        params.delete(key);
+      }
+    });
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [searchParams, pathname, router]);
+
+  // When debounced search changes, update URL
+  useEffect(() => {
+    updateUrl({ q: debouncedSearchQuery || null });
+  }, [debouncedSearchQuery, updateUrl]);
+
+  const handleCategoryChange = (cat: string) => {
+    setActiveCategory(cat);
+    updateUrl({ category: cat === 'All Games' ? null : cat });
+  };
+
+  const handleDiffChange = (diff: string) => {
+    setActiveDiff(diff);
+    updateUrl({ difficulty: diff === 'All Levels' ? null : diff });
+  };
+
+  const toggleFeature = (feature: string) => {
+    const newFeatures = activeFeatures.includes(feature) 
+      ? activeFeatures.filter(f => f !== feature) 
+      : [...activeFeatures, feature];
+    setActiveFeatures(newFeatures);
+    updateUrl({ features: newFeatures.length > 0 ? newFeatures.join(',') : null });
+  };
+
+  const resetFilters = () => {
+    setActiveCategory('All Games');
+    setActiveDiff('All Levels');
+    setActiveFeatures([]);
+    setSearchQuery('');
+    router.push(pathname, { scroll: false }); // Clear all query params
+  };
+
   const [displayGames, setDisplayGames] = useState<any[]>([]);
 
   useEffect(() => {
-    // Duplicate the initial games to create a grid of 15 items for the exact UI mockup
+    // In a real app, this is where we would filter `initialGames` based on activeCategory, searchQuery, etc.
     const mocked = Array.from({ length: 15 }).map((_, i) => {
       const baseGame = initialGames[i % initialGames.length] || { title: 'Unknown', category: 'Arcade', slug: '#' };
       
@@ -54,24 +118,11 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
         mockPlays: playsStr,
         mockRating: parseFloat(rating),
         id: i,
-        isNew: i === 0 // 2048 has the NEW badge
+        isNew: i === 0
       };
     });
     setDisplayGames(mocked);
-  }, [initialGames]);
-
-  const toggleFeature = (feature: string) => {
-    setActiveFeatures(prev => 
-      prev.includes(feature) ? prev.filter(f => f !== feature) : [...prev, feature]
-    );
-  };
-
-  const resetFilters = () => {
-    setActiveCategory('All Games');
-    setActiveDiff('All Levels');
-    setActiveFeatures([]);
-    setSearchQuery('');
-  };
+  }, [initialGames, activeCategory, activeDiff, activeFeatures, debouncedSearchQuery]);
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 xl:gap-8">
@@ -109,7 +160,7 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
             {CATEGORIES.map((cat) => (
               <li key={cat.name}>
                 <button
-                  onClick={() => setActiveCategory(cat.name)}
+                  onClick={() => handleCategoryChange(cat.name)}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13px] transition-all ${
                     activeCategory === cat.name 
                       ? 'bg-[#6366F1] text-white font-bold shadow-md shadow-[#6366F1]/20' 
@@ -138,7 +189,7 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
                   type="checkbox" 
                   id={`diff-${diff}`} 
                   checked={activeDiff === diff}
-                  onChange={() => setActiveDiff(diff)}
+                  onChange={() => handleDiffChange(diff)}
                   className="w-4 h-4 rounded bg-[#111228] border border-gray-600 accent-[#6366F1] cursor-pointer"
                 />
                 <label htmlFor={`diff-${diff}`} className="ml-3 text-[13px] text-gray-300 cursor-pointer hover:text-white">
