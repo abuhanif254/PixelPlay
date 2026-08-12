@@ -130,8 +130,18 @@ export default function GamePage({ params }: GamePageProps) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(videoGameSchema) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      {faqSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+      )}
       <div className="bg-[#05050F] min-h-screen text-white pt-24 pb-12">
         <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-7xl">
           
