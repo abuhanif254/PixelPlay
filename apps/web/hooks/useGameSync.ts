@@ -1,31 +1,39 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
-
-// Mock hook for cloud syncing.
-// In a real application, this would detect when a user logs in
-// and push their local favorites and recent games up to Supabase/Firebase.
+import { createClient } from '@/lib/supabase/client';
 
 export function useGameSync() {
-  const { data: session, status } = useSession();
+  const [user, setUser] = useState<any>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSynced, setLastSynced] = useState<Date | null>(null);
+  const supabase = createClient();
 
   useEffect(() => {
-    if (status === 'authenticated' && session?.user) {
+    supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, [supabase.auth]);
+
+  useEffect(() => {
+    if (user) {
       const syncData = async () => {
         setIsSyncing(true);
         try {
           // Read local data
-          const recentGames = localStorage.getItem('pixelplay_recent_games');
+          const recentGames = JSON.parse(localStorage.getItem('pixelplay_recent_games') || '[]');
           
-          // Mock API call to cloud
-          // await fetch('/api/user/sync', {
-          //   method: 'POST',
-          //   body: JSON.stringify({ recentGames }),
-          // });
+          if (recentGames.length > 0) {
+            // Upsert to Supabase table
+            await supabase.from('user_games').upsert({
+              user_id: user.id,
+              recent_games: recentGames,
+              updated_at: new Date().toISOString()
+            });
+          }
 
-          console.log('[Cloud Sync] Successfully synced data for', session?.user?.name);
+          console.log('[Cloud Sync] Successfully synced data for', user.email);
           setLastSynced(new Date());
         } catch (error) {
           console.error('[Cloud Sync] Failed to sync data', error);
@@ -34,14 +42,9 @@ export function useGameSync() {
         }
       };
 
-      // Sync on initial auth load
       syncData();
-      
-      // Optionally setup an interval for periodic syncs
-      // const interval = setInterval(syncData, 5 * 60 * 1000); // 5 minutes
-      // return () => clearInterval(interval);
     }
-  }, [status, session]);
+  }, [user, supabase]);
 
   return { isSyncing, lastSynced };
 }

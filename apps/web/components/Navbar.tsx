@@ -6,15 +6,31 @@ import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { usePathname } from 'next/navigation';
 
+import { createClient } from '@/lib/supabase/client';
+
 export default function Navbar() {
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
+  const [user, setUser] = useState<any>(null);
+  const supabase = createClient();
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    
+    // Check active session
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [supabase.auth]);
 
   const navLinks = [
     { name: 'Home', href: '/' },
@@ -129,13 +145,23 @@ export default function Navbar() {
             </button>
             
             {/* Sign In Button */}
-            <Link 
-              href="/login" 
-              className="hidden sm:flex items-center gap-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white text-sm font-bold hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all"
-            >
-              <User className="w-4 h-4" />
-              Sign In
-            </Link>
+            {user ? (
+              <Link 
+                href="/profile" 
+                className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 dark:bg-white/5 text-gray-900 dark:text-white text-sm font-bold hover:bg-gray-200 dark:hover:bg-white/10 transition-all border border-black/5 dark:border-white/5"
+              >
+                <User className="w-4 h-4 text-primary" />
+                Profile
+              </Link>
+            ) : (
+              <Link 
+                href="/login" 
+                className="hidden sm:flex items-center gap-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white text-sm font-bold hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all"
+              >
+                <User className="w-4 h-4" />
+                Sign In
+              </Link>
+            )}
           </div>
         </div>
       </nav>
