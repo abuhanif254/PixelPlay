@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { Gamepad2, ArrowRight, Github } from 'lucide-react';
+export const runtime = 'edge';
+
 import { login, signup } from './actions';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
