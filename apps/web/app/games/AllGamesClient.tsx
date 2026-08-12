@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Search, SlidersHorizontal, ChevronDown, RefreshCcw, ChevronLeft, ChevronRight, LayoutGrid, List, X, Filter } from 'lucide-react';
 import GameCard from '@/components/GameCard';
 import GameCardSkeleton from '@/components/GameCardSkeleton';
@@ -37,6 +37,8 @@ const CATEGORIES = [
 const DIFFICULTIES = ['All Levels', 'Easy', 'Medium', 'Hard', 'Expert'];
 const FEATURES = ['2 Players', 'Multiplayer', 'Mobile Friendly', 'No Time Limit', 'Leaderboard', 'Achievements'];
 
+const ITEMS_PER_PAGE = 15; // 5 columns x 3 rows on desktop
+
 export default function AllGamesClient({ initialGames }: { initialGames: any[] }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -48,17 +50,23 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
   const [activeFeatures, setActiveFeatures] = useState<string[]>(searchParams.get('features')?.split(',') || []);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   
+  // Pagination state from URL
+  const [currentPage, setCurrentPage] = useState(() => {
+    const pageParam = searchParams.get('page');
+    return pageParam ? parseInt(pageParam, 10) : 1;
+  });
+  
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   // Sync state changes to URL
-  const updateUrl = useCallback((updates: Record<string, string | null>) => {
+  const updateUrl = useCallback((updates: Record<string, string | number | null>) => {
     const params = new URLSearchParams(searchParams.toString());
     Object.entries(updates).forEach(([key, value]) => {
-      if (value) {
-        params.set(key, value);
+      if (value !== null && value !== undefined && value !== '') {
+        params.set(key, value.toString());
       } else {
         params.delete(key);
       }
@@ -66,22 +74,25 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
     router.push(`${pathname}?${params.toString()}`, { scroll: false });
   }, [searchParams, pathname, router]);
 
-  // When debounced search changes, update URL
+  // When debounced search changes, update URL and reset to page 1
   useEffect(() => {
     if (debouncedSearchQuery !== searchParams.get('q')) {
-       updateUrl({ q: debouncedSearchQuery || null });
+       updateUrl({ q: debouncedSearchQuery || null, page: 1 });
+       setCurrentPage(1);
     }
   }, [debouncedSearchQuery, updateUrl, searchParams]);
 
   const handleCategoryChange = (cat: string) => {
     setActiveCategory(cat);
-    updateUrl({ category: cat === 'All Games' ? null : cat });
+    setCurrentPage(1);
+    updateUrl({ category: cat === 'All Games' ? null : cat, page: 1 });
     if (window.innerWidth < 1024) setIsMobileFiltersOpen(false);
   };
 
   const handleDiffChange = (diff: string) => {
     setActiveDiff(diff);
-    updateUrl({ difficulty: diff === 'All Levels' ? null : diff });
+    setCurrentPage(1);
+    updateUrl({ difficulty: diff === 'All Levels' ? null : diff, page: 1 });
   };
 
   const toggleFeature = (feature: string) => {
@@ -89,7 +100,15 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
       ? activeFeatures.filter(f => f !== feature) 
       : [...activeFeatures, feature];
     setActiveFeatures(newFeatures);
-    updateUrl({ features: newFeatures.length > 0 ? newFeatures.join(',') : null });
+    setCurrentPage(1);
+    updateUrl({ features: newFeatures.length > 0 ? newFeatures.join(',') : null, page: 1 });
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    updateUrl({ page: page === 1 ? null : page });
+    // Scroll to top of grid
+    window.scrollTo({ top: 400, behavior: 'smooth' });
   };
 
   const resetFilters = () => {
@@ -97,57 +116,95 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
     setActiveDiff('All Levels');
     setActiveFeatures([]);
     setSearchQuery('');
+    setCurrentPage(1);
     router.push(pathname, { scroll: false });
     if (window.innerWidth < 1024) setIsMobileFiltersOpen(false);
   };
 
   const [displayGames, setDisplayGames] = useState<any[]>([]);
+  const [totalGames, setTotalGames] = useState(0);
+
+  // Expanded dataset for demo purposes so we can test pagination
+  // In production, this would just use initialGames directly
+  const extendedGamesPool = useMemo(() => {
+    if (initialGames.length === 0) return [];
+    if (initialGames.length > 50) return initialGames; // Already has enough data
+    
+    // Duplicate the initial games to create a pool of ~100 games for testing filters/pagination
+    const pool = [];
+    const titles = ['2048', 'Snake', 'Tic Tac Toe', 'Racing Car', 'Archer Hero', 'Bubble Shooter', 'Mineblock', 'Solitaire', 'Subway Surfers', 'Chess', 'Sudoku', 'Basketball', 'Moto X3M', 'Candy Match', '8 Ball Pool', 'Fruit Ninja', 'Tower Defense', 'Word Search', 'Flappy Bird', 'Checkers'];
+    const cats = ['Puzzle', 'Arcade', 'Puzzle', 'Racing', 'Action', 'Puzzle', 'Adventure', 'Card', 'Arcade', 'Board', 'Puzzle', 'Sports', 'Racing', 'Puzzle', 'Sports', 'Arcade', 'Strategy', 'Puzzle', 'Arcade', 'Board'];
+    
+    for (let i = 0; i < 100; i++) {
+      const base = initialGames[i % initialGames.length];
+      pool.push({
+        ...base,
+        id: `${base.slug}-${i}`,
+        title: initialGames.length === 1 ? titles[i % titles.length] : `${base.title} ${i+1}`,
+        category: initialGames.length === 1 ? cats[i % cats.length] : base.category,
+        mockPlays: `${Math.floor(Math.random() * 900 + 100)}K plays`,
+        mockRating: parseFloat((Math.random() * 1.5 + 3.5).toFixed(1)),
+        isNew: i < 5 // First 5 are marked new
+      });
+    }
+    return pool;
+  }, [initialGames]);
 
   useEffect(() => {
     setIsLoading(true);
     
     // Simulate network delay for loading state
     const timer = setTimeout(() => {
-      // In a real app, this is where we would filter `initialGames` based on activeCategory, searchQuery, etc.
-      // We'll simulate empty state if someone searches for "empty"
-      if (debouncedSearchQuery.toLowerCase() === 'empty') {
-        setDisplayGames([]);
-        setIsLoading(false);
-        return;
-      }
-
-      const mocked = Array.from({ length: 15 }).map((_, i) => {
-        const baseGame = initialGames[i % initialGames.length] || { title: 'Unknown', category: 'Arcade', slug: '#' };
+      // 1. Filter the entire dataset
+      let filtered = extendedGamesPool.filter(game => {
+        // Filter by Category
+        if (activeCategory !== 'All Games' && game.category !== activeCategory) {
+          return false;
+        }
         
-        const playsNum = Math.floor(Math.random() * 900) + 100;
-        const playsStr = Math.random() > 0.5 ? `${(playsNum / 10).toFixed(1)}M plays` : `${playsNum}K plays`;
-        const rating = (Math.random() * 1.5 + 3.5).toFixed(1);
-
-        let mockTitle = baseGame.title;
-        let mockCategory = baseGame.category;
-        if (initialGames.length === 1) {
-           const titles = ['2048', 'Snake', 'Tic Tac Toe', 'Racing Car', 'Archer Hero', 'Bubble Shooter', 'Mineblock', 'Solitaire', 'Subway Surfers', 'Chess', 'Sudoku', 'Basketball', 'Moto X3M', 'Candy Match', '8 Ball Pool'];
-           const cats = ['Puzzle', 'Arcade', 'Puzzle', 'Racing', 'Action', 'Puzzle', 'Adventure', 'Card', 'Arcade', 'Board', 'Puzzle', 'Sports', 'Racing', 'Puzzle', 'Sports'];
-           mockTitle = titles[i];
-           mockCategory = cats[i];
+        // Filter by Search Query
+        if (debouncedSearchQuery && !game.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase())) {
+          return false;
         }
 
-        return {
-          ...baseGame,
-          title: mockTitle,
-          category: mockCategory,
-          mockPlays: playsStr,
-          mockRating: parseFloat(rating),
-          id: i,
-          isNew: i === 0
-        };
+        // Difficulty / Features logic would go here if our schema supported it
+        // For now, we'll pretend they pass
+
+        return true;
       });
-      setDisplayGames(mocked);
+
+      // Update total count for pagination
+      setTotalGames(filtered.length);
+
+      // 2. Apply Pagination Slice
+      const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+      const paginatedSlice = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+      setDisplayGames(paginatedSlice);
       setIsLoading(false);
-    }, 600); // 600ms artificial delay to show off beautiful skeletons
+    }, 400); // 400ms delay to show skeletons
 
     return () => clearTimeout(timer);
-  }, [initialGames, activeCategory, activeDiff, activeFeatures, debouncedSearchQuery]);
+  }, [extendedGamesPool, activeCategory, activeDiff, activeFeatures, debouncedSearchQuery, currentPage]);
+
+  const totalPages = Math.max(1, Math.ceil(totalGames / ITEMS_PER_PAGE));
+
+  // Generate pagination page numbers
+  const generatePagination = () => {
+    const pages = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 4) {
+        pages.push(1, 2, 3, 4, 5, '...', totalPages);
+      } else if (currentPage >= totalPages - 3) {
+        pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+      }
+    }
+    return pages;
+  };
 
   const FiltersContent = (
     <>
@@ -260,7 +317,7 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
         <div className="flex items-center space-x-2 text-sm">
           <span className="font-bold text-white">{activeCategory}</span>
           <span className="text-gray-500">•</span>
-          <span className="text-gray-400">{displayGames.length} Games</span>
+          <span className="text-gray-400">{totalGames} Games</span>
         </div>
         <button 
           onClick={() => setIsMobileFiltersOpen(true)}
@@ -321,7 +378,7 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
               <div className="h-6 w-32 bg-white/5 rounded animate-pulse"></div>
             ) : (
               <>
-                <span className="font-bold text-[#6366F1]">{displayGames.length}</span> <span className="text-gray-300 font-medium">Games Found</span>
+                <span className="font-bold text-[#6366F1]">{totalGames}</span> <span className="text-gray-300 font-medium">Games Found</span>
               </>
             )}
           </div>
@@ -377,32 +434,43 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
         )}
 
         {/* Pagination */}
-        {(!isLoading && displayGames.length > 0) && (
+        {(!isLoading && totalPages > 1) && (
           <div className="flex items-center justify-center space-x-1.5 mt-10 mb-6">
-            <button className="w-9 h-9 rounded-lg bg-[#111228] border border-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:border-white/20 transition-all">
+            <button 
+              onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              className={`w-9 h-9 rounded-lg bg-[#111228] border border-white/5 flex items-center justify-center transition-all ${
+                currentPage === 1 ? 'opacity-50 cursor-not-allowed text-gray-600' : 'text-gray-400 hover:text-white hover:border-white/20'
+              }`}
+            >
               <ChevronLeft className="w-4 h-4" />
             </button>
             
-            {[1, 2, 3, 4, 5].map(page => (
-              <button 
-                key={page}
-                className={`w-9 h-9 rounded-lg text-sm font-bold flex items-center justify-center transition-all ${
-                  page === 1 
-                    ? 'bg-[#6366F1] text-white shadow-md shadow-[#6366F1]/30' 
-                    : 'bg-[#111228] border border-white/5 text-gray-400 hover:text-white hover:border-white/20'
-                }`}
-              >
-                {page}
-              </button>
+            {generatePagination().map((page, idx) => (
+              page === '...' ? (
+                <span key={`dots-${idx}`} className="w-9 h-9 flex items-center justify-center text-gray-500 text-sm">...</span>
+              ) : (
+                <button 
+                  key={page}
+                  onClick={() => handlePageChange(page as number)}
+                  className={`w-9 h-9 rounded-lg text-sm font-bold flex items-center justify-center transition-all ${
+                    page === currentPage 
+                      ? 'bg-[#6366F1] text-white shadow-md shadow-[#6366F1]/30' 
+                      : 'bg-[#111228] border border-white/5 text-gray-400 hover:text-white hover:border-white/20'
+                  }`}
+                >
+                  {page}
+                </button>
+              )
             ))}
             
-            <span className="w-9 h-9 flex items-center justify-center text-gray-500 text-sm">...</span>
-            
-            <button className="w-9 h-9 rounded-lg bg-[#111228] border border-white/5 text-sm font-bold flex items-center justify-center text-gray-400 hover:text-white hover:border-white/20 transition-all">
-              11
-            </button>
-            
-            <button className="w-9 h-9 rounded-lg bg-[#111228] border border-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:border-white/20 transition-all">
+            <button 
+              onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+              className={`w-9 h-9 rounded-lg bg-[#111228] border border-white/5 flex items-center justify-center transition-all ${
+                currentPage === totalPages ? 'opacity-50 cursor-not-allowed text-gray-600' : 'text-gray-400 hover:text-white hover:border-white/20'
+              }`}
+            >
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
