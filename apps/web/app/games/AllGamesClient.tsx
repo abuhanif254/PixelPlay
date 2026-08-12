@@ -1,10 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, SlidersHorizontal, ChevronDown, RefreshCcw, ChevronLeft, ChevronRight, LayoutGrid, List } from 'lucide-react';
+import { Search, SlidersHorizontal, ChevronDown, RefreshCcw, ChevronLeft, ChevronRight, LayoutGrid, List, X, Filter } from 'lucide-react';
 import GameCard from '@/components/GameCard';
+import GameCardSkeleton from '@/components/GameCardSkeleton';
+import EmptyState from '@/components/EmptyState';
 import NewsletterBanner from '@/components/NewsletterBanner';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Custom hook for debouncing values
 function useDebounce<T>(value: T, delay: number): T {
@@ -45,6 +48,9 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
   const [activeFeatures, setActiveFeatures] = useState<string[]>(searchParams.get('features')?.split(',') || []);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   // Sync state changes to URL
@@ -62,12 +68,15 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
 
   // When debounced search changes, update URL
   useEffect(() => {
-    updateUrl({ q: debouncedSearchQuery || null });
-  }, [debouncedSearchQuery, updateUrl]);
+    if (debouncedSearchQuery !== searchParams.get('q')) {
+       updateUrl({ q: debouncedSearchQuery || null });
+    }
+  }, [debouncedSearchQuery, updateUrl, searchParams]);
 
   const handleCategoryChange = (cat: string) => {
     setActiveCategory(cat);
     updateUrl({ category: cat === 'All Games' ? null : cat });
+    if (window.innerWidth < 1024) setIsMobileFiltersOpen(false);
   };
 
   const handleDiffChange = (diff: string) => {
@@ -88,147 +97,218 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
     setActiveDiff('All Levels');
     setActiveFeatures([]);
     setSearchQuery('');
-    router.push(pathname, { scroll: false }); // Clear all query params
+    router.push(pathname, { scroll: false });
+    if (window.innerWidth < 1024) setIsMobileFiltersOpen(false);
   };
 
   const [displayGames, setDisplayGames] = useState<any[]>([]);
 
   useEffect(() => {
-    // In a real app, this is where we would filter `initialGames` based on activeCategory, searchQuery, etc.
-    const mocked = Array.from({ length: 15 }).map((_, i) => {
-      const baseGame = initialGames[i % initialGames.length] || { title: 'Unknown', category: 'Arcade', slug: '#' };
-      
-      const playsNum = Math.floor(Math.random() * 900) + 100;
-      const playsStr = Math.random() > 0.5 ? `${(playsNum / 10).toFixed(1)}M plays` : `${playsNum}K plays`;
-      const rating = (Math.random() * 1.5 + 3.5).toFixed(1);
-
-      let mockTitle = baseGame.title;
-      let mockCategory = baseGame.category;
-      if (initialGames.length === 1) {
-         const titles = ['2048', 'Snake', 'Tic Tac Toe', 'Racing Car', 'Archer Hero', 'Bubble Shooter', 'Mineblock', 'Solitaire', 'Subway Surfers', 'Chess', 'Sudoku', 'Basketball', 'Moto X3M', 'Candy Match', '8 Ball Pool'];
-         const cats = ['Puzzle', 'Arcade', 'Puzzle', 'Racing', 'Action', 'Puzzle', 'Adventure', 'Card', 'Arcade', 'Board', 'Puzzle', 'Sports', 'Racing', 'Puzzle', 'Sports'];
-         mockTitle = titles[i];
-         mockCategory = cats[i];
+    setIsLoading(true);
+    
+    // Simulate network delay for loading state
+    const timer = setTimeout(() => {
+      // In a real app, this is where we would filter `initialGames` based on activeCategory, searchQuery, etc.
+      // We'll simulate empty state if someone searches for "empty"
+      if (debouncedSearchQuery.toLowerCase() === 'empty') {
+        setDisplayGames([]);
+        setIsLoading(false);
+        return;
       }
 
-      return {
-        ...baseGame,
-        title: mockTitle,
-        category: mockCategory,
-        mockPlays: playsStr,
-        mockRating: parseFloat(rating),
-        id: i,
-        isNew: i === 0
-      };
-    });
-    setDisplayGames(mocked);
+      const mocked = Array.from({ length: 15 }).map((_, i) => {
+        const baseGame = initialGames[i % initialGames.length] || { title: 'Unknown', category: 'Arcade', slug: '#' };
+        
+        const playsNum = Math.floor(Math.random() * 900) + 100;
+        const playsStr = Math.random() > 0.5 ? `${(playsNum / 10).toFixed(1)}M plays` : `${playsNum}K plays`;
+        const rating = (Math.random() * 1.5 + 3.5).toFixed(1);
+
+        let mockTitle = baseGame.title;
+        let mockCategory = baseGame.category;
+        if (initialGames.length === 1) {
+           const titles = ['2048', 'Snake', 'Tic Tac Toe', 'Racing Car', 'Archer Hero', 'Bubble Shooter', 'Mineblock', 'Solitaire', 'Subway Surfers', 'Chess', 'Sudoku', 'Basketball', 'Moto X3M', 'Candy Match', '8 Ball Pool'];
+           const cats = ['Puzzle', 'Arcade', 'Puzzle', 'Racing', 'Action', 'Puzzle', 'Adventure', 'Card', 'Arcade', 'Board', 'Puzzle', 'Sports', 'Racing', 'Puzzle', 'Sports'];
+           mockTitle = titles[i];
+           mockCategory = cats[i];
+        }
+
+        return {
+          ...baseGame,
+          title: mockTitle,
+          category: mockCategory,
+          mockPlays: playsStr,
+          mockRating: parseFloat(rating),
+          id: i,
+          isNew: i === 0
+        };
+      });
+      setDisplayGames(mocked);
+      setIsLoading(false);
+    }, 600); // 600ms artificial delay to show off beautiful skeletons
+
+    return () => clearTimeout(timer);
   }, [initialGames, activeCategory, activeDiff, activeFeatures, debouncedSearchQuery]);
 
-  return (
-    <div className="flex flex-col lg:flex-row gap-6 xl:gap-8">
-      
-      {/* Left Sidebar Filters */}
-      <div className="w-full lg:w-[260px] shrink-0 space-y-7">
-        
-        <div className="flex items-center justify-between">
-          <button className="flex items-center space-x-2 text-sm font-bold text-gray-300 hover:text-white transition-colors bg-[#111228] px-4 py-2.5 rounded-xl border border-white/5 w-full shadow-sm">
-            <SlidersHorizontal className="w-4 h-4" />
-            <span>Hide Filters</span>
-            <span className="flex-1 text-right">✕</span>
-          </button>
-        </div>
-
-        {/* Search */}
-        <div>
-          <h3 className="text-[13px] font-bold text-gray-400 mb-3 uppercase tracking-wider">Search Games</h3>
-          <div className="relative">
-            <input 
-              type="text" 
-              placeholder="Search games..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#111228] border border-white/5 rounded-xl py-3 pl-4 pr-10 text-white text-sm focus:outline-none focus:border-[#6366F1] transition-colors"
-            />
-            <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-          </div>
-        </div>
-
-        {/* Categories */}
-        <div>
-          <h3 className="text-[13px] font-bold text-gray-400 mb-3 uppercase tracking-wider">Categories</h3>
-          <ul className="space-y-1">
-            {CATEGORIES.map((cat) => (
-              <li key={cat.name}>
-                <button
-                  onClick={() => handleCategoryChange(cat.name)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13px] transition-all ${
-                    activeCategory === cat.name 
-                      ? 'bg-[#6366F1] text-white font-bold shadow-md shadow-[#6366F1]/20' 
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <span>{cat.name}</span>
-                  <span className={activeCategory === cat.name ? 'text-white' : 'text-gray-600'}>{cat.count}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-          <button className="flex items-center space-x-1 text-[#6366F1] text-[13px] font-bold mt-2 px-3 hover:text-[#818cf8] transition-colors">
-            <span>Show More</span>
-            <ChevronDown className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Difficulty */}
-        <div>
-          <h3 className="text-[13px] font-bold text-gray-400 mb-3 uppercase tracking-wider">Difficulty</h3>
-          <ul className="space-y-3 px-1">
-            {DIFFICULTIES.map((diff) => (
-              <li key={diff} className="flex items-center">
-                <input 
-                  type="checkbox" 
-                  id={`diff-${diff}`} 
-                  checked={activeDiff === diff}
-                  onChange={() => handleDiffChange(diff)}
-                  className="w-4 h-4 rounded bg-[#111228] border border-gray-600 accent-[#6366F1] cursor-pointer"
-                />
-                <label htmlFor={`diff-${diff}`} className="ml-3 text-[13px] text-gray-300 cursor-pointer hover:text-white">
-                  {diff}
-                </label>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Features */}
-        <div>
-          <h3 className="text-[13px] font-bold text-gray-400 mb-3 uppercase tracking-wider">Features</h3>
-          <ul className="space-y-3 px-1">
-            {FEATURES.map((feat) => (
-              <li key={feat} className="flex items-center">
-                <input 
-                  type="checkbox" 
-                  id={`feat-${feat}`} 
-                  checked={activeFeatures.includes(feat)}
-                  onChange={() => toggleFeature(feat)}
-                  className="w-4 h-4 rounded bg-[#111228] border border-gray-600 accent-[#6366F1] cursor-pointer"
-                />
-                <label htmlFor={`feat-${feat}`} className="ml-3 text-[13px] text-gray-300 cursor-pointer hover:text-white">
-                  {feat}
-                </label>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <button 
-          onClick={resetFilters}
-          className="w-full flex items-center justify-center space-x-2 py-3 mt-4 rounded-xl border border-[#6366F1]/30 text-[#6366F1] text-[13px] font-bold hover:bg-[#6366F1]/10 transition-colors"
-        >
-          <RefreshCcw className="w-4 h-4" />
-          <span>Reset Filters</span>
+  const FiltersContent = (
+    <>
+      <div className="hidden lg:flex items-center justify-between">
+        <button className="flex items-center space-x-2 text-sm font-bold text-gray-300 hover:text-white transition-colors bg-[#111228] px-4 py-2.5 rounded-xl border border-white/5 w-full shadow-sm">
+          <SlidersHorizontal className="w-4 h-4" />
+          <span>Hide Filters</span>
+          <span className="flex-1 text-right">✕</span>
         </button>
+      </div>
 
+      {/* Search */}
+      <div>
+        <h3 className="text-[13px] font-bold text-gray-400 mb-3 uppercase tracking-wider">Search Games</h3>
+        <div className="relative">
+          <input 
+            type="text" 
+            placeholder="Search games..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-[#111228] border border-white/5 rounded-xl py-3 pl-4 pr-10 text-white text-sm focus:outline-none focus:border-[#6366F1] transition-colors"
+          />
+          <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+        </div>
+      </div>
+
+      {/* Categories */}
+      <div>
+        <h3 className="text-[13px] font-bold text-gray-400 mb-3 uppercase tracking-wider">Categories</h3>
+        <ul className="space-y-1 max-h-[40vh] lg:max-h-none overflow-y-auto pr-2 custom-scrollbar">
+          {CATEGORIES.map((cat) => (
+            <li key={cat.name}>
+              <button
+                onClick={() => handleCategoryChange(cat.name)}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13px] transition-all ${
+                  activeCategory === cat.name 
+                    ? 'bg-[#6366F1] text-white font-bold shadow-md shadow-[#6366F1]/20' 
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <span>{cat.name}</span>
+                <span className={activeCategory === cat.name ? 'text-white' : 'text-gray-600'}>{cat.count}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+        <button className="flex items-center space-x-1 text-[#6366F1] text-[13px] font-bold mt-2 px-3 hover:text-[#818cf8] transition-colors">
+          <span>Show More</span>
+          <ChevronDown className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Difficulty */}
+      <div>
+        <h3 className="text-[13px] font-bold text-gray-400 mb-3 uppercase tracking-wider">Difficulty</h3>
+        <ul className="space-y-3 px-1">
+          {DIFFICULTIES.map((diff) => (
+            <li key={diff} className="flex items-center">
+              <input 
+                type="checkbox" 
+                id={`diff-${diff}`} 
+                checked={activeDiff === diff}
+                onChange={() => handleDiffChange(diff)}
+                className="w-4 h-4 rounded bg-[#111228] border border-gray-600 accent-[#6366F1] cursor-pointer"
+              />
+              <label htmlFor={`diff-${diff}`} className="ml-3 text-[13px] text-gray-300 cursor-pointer hover:text-white">
+                {diff}
+              </label>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Features */}
+      <div>
+        <h3 className="text-[13px] font-bold text-gray-400 mb-3 uppercase tracking-wider">Features</h3>
+        <ul className="space-y-3 px-1">
+          {FEATURES.map((feat) => (
+            <li key={feat} className="flex items-center">
+              <input 
+                type="checkbox" 
+                id={`feat-${feat}`} 
+                checked={activeFeatures.includes(feat)}
+                onChange={() => toggleFeature(feat)}
+                className="w-4 h-4 rounded bg-[#111228] border border-gray-600 accent-[#6366F1] cursor-pointer"
+              />
+              <label htmlFor={`feat-${feat}`} className="ml-3 text-[13px] text-gray-300 cursor-pointer hover:text-white">
+                {feat}
+              </label>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <button 
+        onClick={resetFilters}
+        className="w-full flex items-center justify-center space-x-2 py-3 mt-4 rounded-xl border border-[#6366F1]/30 text-[#6366F1] text-[13px] font-bold hover:bg-[#6366F1]/10 transition-colors"
+      >
+        <RefreshCcw className="w-4 h-4" />
+        <span>Reset Filters</span>
+      </button>
+    </>
+  );
+
+  return (
+    <div className="flex flex-col lg:flex-row gap-6 xl:gap-8 relative">
+      
+      {/* Mobile Filters Toggle */}
+      <div className="lg:hidden flex items-center justify-between bg-[#111228] border border-white/5 p-4 rounded-xl">
+        <div className="flex items-center space-x-2 text-sm">
+          <span className="font-bold text-white">{activeCategory}</span>
+          <span className="text-gray-500">•</span>
+          <span className="text-gray-400">{displayGames.length} Games</span>
+        </div>
+        <button 
+          onClick={() => setIsMobileFiltersOpen(true)}
+          className="flex items-center space-x-2 bg-[#6366F1] text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md shadow-[#6366F1]/20"
+        >
+          <Filter className="w-4 h-4" />
+          <span>Filters</span>
+        </button>
+      </div>
+
+      {/* Mobile Filters Drawer (Bottom Sheet) */}
+      <AnimatePresence>
+        {isMobileFiltersOpen && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileFiltersOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+            />
+            <motion.div 
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-x-0 bottom-0 top-[10vh] bg-[#0A0B1A] border-t border-white/10 z-50 rounded-t-3xl p-6 lg:hidden flex flex-col shadow-2xl"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-white font-outfit">Filters</h2>
+                <button 
+                  onClick={() => setIsMobileFiltersOpen(false)}
+                  className="p-2 bg-white/5 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto space-y-7 pb-8 custom-scrollbar pr-2">
+                {FiltersContent}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Desktop Sidebar Filters */}
+      <div className="hidden lg:block w-[260px] shrink-0 space-y-7 sticky top-24 self-start max-h-[calc(100vh-120px)] overflow-y-auto custom-scrollbar pr-2">
+        {FiltersContent}
       </div>
 
       {/* Right Content Area */}
@@ -237,7 +317,13 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
         {/* Top Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 pb-4 border-b border-white/5 gap-4">
           <div className="text-lg">
-            <span className="font-bold text-[#6366F1]">523</span> <span className="text-gray-300 font-medium">Games Found</span>
+            {isLoading ? (
+              <div className="h-6 w-32 bg-white/5 rounded animate-pulse"></div>
+            ) : (
+              <>
+                <span className="font-bold text-[#6366F1]">{displayGames.length}</span> <span className="text-gray-300 font-medium">Games Found</span>
+              </>
+            )}
           </div>
           
           <div className="flex items-center space-x-4">
@@ -264,51 +350,63 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
           </div>
         </div>
 
-        {/* Game Grid - EXACTLY 5 columns on desktop */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5 flex-1">
-          {displayGames.map((game) => (
-            <GameCard 
-              key={game.id}
-              title={game.title}
-              category={game.category}
-              slug={game.slug}
-              plays={game.mockPlays}
-              rating={game.mockRating}
-              imageUrl={game.image}
-              isNew={game.isNew}
-            />
-          ))}
-        </div>
+        {/* Game Grid */}
+        {!isLoading && displayGames.length === 0 ? (
+          <EmptyState onReset={resetFilters} />
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5 flex-1">
+            {isLoading ? (
+              Array.from({ length: 15 }).map((_, idx) => (
+                <GameCardSkeleton key={idx} />
+              ))
+            ) : (
+              displayGames.map((game) => (
+                <GameCard 
+                  key={game.id}
+                  title={game.title}
+                  category={game.category}
+                  slug={game.slug}
+                  plays={game.mockPlays}
+                  rating={game.mockRating}
+                  imageUrl={game.image}
+                  isNew={game.isNew}
+                />
+              ))
+            )}
+          </div>
+        )}
 
         {/* Pagination */}
-        <div className="flex items-center justify-center space-x-1.5 mt-10 mb-6">
-          <button className="w-9 h-9 rounded-lg bg-[#111228] border border-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:border-white/20 transition-all">
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          
-          {[1, 2, 3, 4, 5].map(page => (
-            <button 
-              key={page}
-              className={`w-9 h-9 rounded-lg text-sm font-bold flex items-center justify-center transition-all ${
-                page === 1 
-                  ? 'bg-[#6366F1] text-white shadow-md shadow-[#6366F1]/30' 
-                  : 'bg-[#111228] border border-white/5 text-gray-400 hover:text-white hover:border-white/20'
-              }`}
-            >
-              {page}
+        {(!isLoading && displayGames.length > 0) && (
+          <div className="flex items-center justify-center space-x-1.5 mt-10 mb-6">
+            <button className="w-9 h-9 rounded-lg bg-[#111228] border border-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:border-white/20 transition-all">
+              <ChevronLeft className="w-4 h-4" />
             </button>
-          ))}
-          
-          <span className="w-9 h-9 flex items-center justify-center text-gray-500 text-sm">...</span>
-          
-          <button className="w-9 h-9 rounded-lg bg-[#111228] border border-white/5 text-sm font-bold flex items-center justify-center text-gray-400 hover:text-white hover:border-white/20 transition-all">
-            11
-          </button>
-          
-          <button className="w-9 h-9 rounded-lg bg-[#111228] border border-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:border-white/20 transition-all">
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
+            
+            {[1, 2, 3, 4, 5].map(page => (
+              <button 
+                key={page}
+                className={`w-9 h-9 rounded-lg text-sm font-bold flex items-center justify-center transition-all ${
+                  page === 1 
+                    ? 'bg-[#6366F1] text-white shadow-md shadow-[#6366F1]/30' 
+                    : 'bg-[#111228] border border-white/5 text-gray-400 hover:text-white hover:border-white/20'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+            
+            <span className="w-9 h-9 flex items-center justify-center text-gray-500 text-sm">...</span>
+            
+            <button className="w-9 h-9 rounded-lg bg-[#111228] border border-white/5 text-sm font-bold flex items-center justify-center text-gray-400 hover:text-white hover:border-white/20 transition-all">
+              11
+            </button>
+            
+            <button className="w-9 h-9 rounded-lg bg-[#111228] border border-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:border-white/20 transition-all">
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
 
         <NewsletterBanner />
 
