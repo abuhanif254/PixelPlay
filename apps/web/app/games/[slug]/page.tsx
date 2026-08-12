@@ -61,22 +61,60 @@ export default function GamePage({ params }: GamePageProps) {
   const { config, component: GameComponent } = game;
 
   // JSON-LD Structured Data
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'VideoGame',
-    name: config.title,
-    description: config.description,
-    genre: config.category,
-    playMode: 'SinglePlayer',
-    applicationCategory: 'BrowserGame',
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: config.rating || 5.0,
-      bestRating: 5.0,
-      ratingCount: Math.floor(Math.random() * 1000) + 100, // Dummy data
-    },
-    image: config.image,
+  const videoGameSchema = {
+    "@context": "https://schema.org",
+    "@type": "VideoGame",
+    "name": config.title,
+    "description": config.description || `Play ${config.title} online for free.`,
+    "genre": config.category,
+    "playMode": "SinglePlayer",
+    "applicationCategory": "Game",
+    "operatingSystem": "Web Browser",
+    "aggregateRating": config.rating ? {
+      "@type": "AggregateRating",
+      "ratingValue": config.rating,
+      "bestRating": "5",
+      "ratingCount": Math.floor(Math.random() * 5000) + 100 // Mock data
+    } : undefined
   };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://pixelplay.vercel.app/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": `${config.category} Games`,
+        "item": `https://pixelplay.vercel.app/games?category=${config.category}`
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": config.title,
+        "item": `https://pixelplay.vercel.app/games/${slug}`
+      }
+    ]
+  };
+
+  const faqSchema = config.faqs && config.faqs.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": config.faqs.map((faq: any) => ({
+      "@type": "Question",
+      "name": faq.q,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": faq.a
+      }
+    }))
+  } : null;
 
   // Grab some dummy related games
   const registryArray = Object.entries(gamesRegistry);
@@ -238,7 +276,7 @@ export default function GamePage({ params }: GamePageProps) {
                   
                   <div className="flex flex-col gap-1">
                     <span className="text-gray-500 font-medium">Developer</span>
-                    <span className="text-gray-300">PixelPlay</span>
+                    <span className="text-gray-300">{config.developer || 'PixelPlay'}</span>
                   </div>
                   
                   <div className="flex flex-col gap-1">
@@ -248,17 +286,17 @@ export default function GamePage({ params }: GamePageProps) {
 
                   <div className="flex flex-col gap-1">
                     <span className="text-gray-500 font-medium">Released</span>
-                    <span className="text-gray-300">Aug 2026</span>
+                    <span className="text-gray-300">{config.releaseDate || 'Aug 2026'}</span>
                   </div>
 
                   <div className="flex flex-col gap-1">
                     <span className="text-gray-500 font-medium">Platform</span>
-                    <span className="text-gray-300">Browser</span>
+                    <span className="text-gray-300">{config.platform || 'Browser'}</span>
                   </div>
 
                   <div className="flex flex-col gap-1">
                     <span className="text-gray-500 font-medium">Rating</span>
-                    <span className="text-gray-300">4.6 / 5</span>
+                    <span className="text-gray-300">{config.rating || '4.6'} / 5</span>
                   </div>
 
                   <div className="flex flex-col gap-1">

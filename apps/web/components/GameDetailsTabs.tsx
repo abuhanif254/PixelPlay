@@ -3,6 +3,9 @@
 import React from 'react';
 import Link from 'next/link';
 import GameCardSmall from './GameCardSmall';
+import GameMedia from './GameMedia';
+import GameReviews from './GameReviews';
+import GameTags from './GameTags';
 
 interface GameDetailsTabsProps {
   config: any; // GameConfig
@@ -12,8 +15,9 @@ interface GameDetailsTabsProps {
 export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTabsProps) {
   const TABS = [
     { id: 'about', label: 'About' },
+    { id: 'media', label: 'Media' },
     { id: 'tips', label: 'Tips & Tricks' },
-    { id: 'features', label: 'Features' },
+    { id: 'reviews', label: 'Reviews' },
     { id: 'faq', label: 'FAQ' },
   ];
 
@@ -63,6 +67,13 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
               )}
             </div>
 
+            {/* Media Section */}
+            <GameMedia 
+              title={config.title} 
+              trailerUrl={config.trailerUrl} 
+              screenshots={config.screenshots} 
+            />
+
             <div className="w-full h-px bg-white/5 my-8" />
 
             {/* Tips Section */}
@@ -82,6 +93,9 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
               )}
             </div>
 
+            {/* Reviews Section */}
+            <GameReviews title={config.title} rating={config.rating} />
+
             <div className="w-full h-px bg-white/5 my-8" />
 
             {/* FAQ Section */}
@@ -97,7 +111,6 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                       </div>
-                      {/* For exact visual matching, we leave the first one unexpanded or act like a standard accordion. In the image it's just collapsed rows. */}
                     </div>
                   ))}
                 </div>
@@ -112,11 +125,14 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
               </div>
             </div>
 
+            {/* Tags Section */}
+            <GameTags tags={config.tags} category={config.category} />
+
           </div>
 
         </div>
 
-        {/* Right Column - Related Games */}
+        {/* Right Column - Related Games (Will move later or keep as sidebar and add carousel below) */}
         <div className="lg:col-span-4">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-base font-bold text-white font-outfit">Related Games</h3>

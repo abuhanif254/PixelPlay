@@ -15,6 +15,12 @@ export interface GameConfig {
   keyboardControls?: Record<string, string>;
   touchControls?: Record<string, string>;
   faqs?: {q: string, a: string}[];
+  tags?: string[];
+  screenshots?: string[];
+  trailerUrl?: string;
+  developer?: string;
+  releaseDate?: string;
+  platform?: string;
 }
 
 export const gamesRegistry: Record<string, { config: GameConfig, component: any }> = {
@@ -49,7 +55,22 @@ export const gamesRegistry: Record<string, { config: GameConfig, component: any 
                   "q": "Can I hit the walls?",
                   "a": "No, hitting the walls or your own tail will result in a game over."
             }
-      ]
+      ],
+      "tags": [
+            "Arcade",
+            "Classic",
+            "Retro",
+            "Skill",
+            "HTML5"
+      ],
+      "screenshots": [
+            "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=800",
+            "https://images.unsplash.com/photo-1552820728-8b83bb6b773f?auto=format&fit=crop&q=80&w=800"
+      ],
+      "trailerUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      "developer": "PixelPlay Studios",
+      "releaseDate": "August 2026",
+      "platform": "Browser (Desktop, Mobile)"
 },
     // Note: We use ssr: false because game engines rely on the browser's window and canvas
     component: dynamic(() => import('./snake/Game'), { ssr: false })
