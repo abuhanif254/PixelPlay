@@ -123,7 +123,7 @@ export default async function LoginPage({
 
             <div className="mt-6">
               <button
-                onClick={() => {}}
+                type="button"
                 className="w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-xl text-sm font-medium text-white bg-white/5 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/20 focus:ring-offset-[#111228] transition-all"
               >
                 <Github className="w-5 h-5" />
