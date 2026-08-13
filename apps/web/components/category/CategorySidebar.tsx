@@ -3,22 +3,20 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Filter } from 'lucide-react';
 
-export default function CategorySidebar() {
+export default function CategorySidebar({ currentSlug }: { currentSlug?: string }) {
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('All Levels');
   const [selectedSort, setSelectedSort] = useState<string>('Most Popular');
 
   const categories = [
-    { name: 'All Categories', count: null, icon: '🗂️' },
-    { name: 'Puzzle Games', count: 125, icon: '🧩', active: true },
-    { name: 'Action Games', count: 98, icon: '⚔️' },
-    { name: 'Racing Games', count: 67, icon: '🏎️' },
-    { name: 'Adventure Games', count: 56, icon: '🗺️' },
-    { name: 'Arcade Games', count: 82, icon: '👾' },
-    { name: 'Board Games', count: 43, icon: '🎲' },
-    { name: 'Card Games', count: 38, icon: '🃏' },
-    { name: 'Strategy Games', count: 41, icon: '♟️' },
-    { name: 'Sports Games', count: 32, icon: '🏅' },
-    { name: 'Kids Games', count: 29, icon: '👶' },
+    { name: 'All Categories', slug: 'all', count: null, icon: '🗂️' },
+    { name: 'Puzzle Games', slug: 'puzzle-games', count: 125, icon: '🧩' },
+    { name: 'Action Games', slug: 'action-games', count: 98, icon: '⚔️' },
+    { name: 'Racing Games', slug: 'racing-games', count: 67, icon: '🏎️' },
+    { name: 'Adventure Games', slug: 'adventure-games', count: 56, icon: '🗺️' },
+    { name: 'Arcade Games', slug: 'arcade-games', count: 82, icon: '👾' },
+    { name: 'Board Games', slug: 'board-games', count: 43, icon: '🎲' },
+    { name: 'Strategy Games', slug: 'strategy-games', count: 41, icon: '♟️' },
+    { name: 'Sports Games', slug: 'sports-games', count: 32, icon: '🏅' },
   ];
 
   const difficulties = [
@@ -43,25 +41,28 @@ export default function CategorySidebar() {
       {/* Categories */}
       <div className="flex flex-col gap-1">
         <h4 className="font-bold text-white mb-2 px-1">Categories</h4>
-        {categories.map((cat, idx) => (
-          <Link
-            key={idx}
-            href={`/categories/${cat.name.toLowerCase().replace(/\s+/g, '-')}`}
-            className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
-              cat.active 
-                ? 'bg-[#6366F1]/20 text-[#6366F1] font-bold' 
-                : 'text-gray-400 hover:text-white hover:bg-white/5 font-medium'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-base">{cat.icon}</span>
-              {cat.name}
-            </div>
-            {cat.count !== null && (
-              <span className={cat.active ? 'text-[#6366F1]' : 'text-gray-500 text-xs'}>{cat.count}</span>
-            )}
-          </Link>
-        ))}
+        {categories.map((cat, idx) => {
+          const isActive = currentSlug === cat.slug;
+          return (
+            <Link
+              key={idx}
+              href={`/categories/${cat.slug}`}
+              className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
+                isActive 
+                  ? 'bg-[#6366F1]/20 text-[#6366F1] font-bold' 
+                  : 'text-gray-400 hover:text-white hover:bg-white/5 font-medium'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-base">{cat.icon}</span>
+                {cat.name}
+              </div>
+              {cat.count !== null && (
+                <span className={isActive ? 'text-[#6366F1]' : 'text-gray-500 text-xs'}>{cat.count}</span>
+              )}
+            </Link>
+          );
+        })}
         <button className="w-full mt-3 py-2 border border-white/10 hover:border-[#6366F1] text-[#6366F1] hover:text-white hover:bg-[#6366F1] text-xs font-bold rounded-lg transition-all">
           View All Categories
         </button>

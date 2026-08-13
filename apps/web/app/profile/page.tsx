@@ -1,103 +1,74 @@
-import { redirect } from 'next/navigation';
+import React from 'react';
+import { Metadata } from 'next';
+import ProfileSidebar from '@/components/profile/ProfileSidebar';
+import ProfileHero from '@/components/profile/ProfileHero';
+import ProfileGameRow from '@/components/profile/ProfileGameRow';
+import ProfileAchievements from '@/components/profile/ProfileAchievements';
+import ProfileStats from '@/components/profile/ProfileStats';
+import ProfileActivity from '@/components/profile/ProfileActivity';
+import ProfileCollections from '@/components/profile/ProfileCollections';
+
+export const metadata: Metadata = {
+  title: 'Profile | PixelPlay',
+  description: 'Your player profile dashboard.',
+};
+
 export const runtime = 'edge';
 
-import { createClient } from '@/lib/supabase/server';
-import { LogOut, User, Gamepad2, Settings, Trophy } from 'lucide-react';
-import Link from 'next/link';
-import { logout } from './actions';
+// Mock data for game rows
+const recentGames = [
+  { title: '2048', meta: '2 hours ago', image: 'https://images.unsplash.com/photo-1614680376593-902f74cf0d41?q=80&w=200&auto=format&fit=crop' },
+  { title: 'Sudoku', meta: 'Yesterday', image: 'https://images.unsplash.com/photo-1579621970795-87facc2f976d?q=80&w=200&auto=format&fit=crop' },
+  { title: 'Snake', meta: 'Yesterday', image: 'https://images.unsplash.com/photo-1518063319789-7217e3706b32?q=80&w=200&auto=format&fit=crop' },
+  { title: 'Block Puzzle', meta: '2 days ago', image: 'https://images.unsplash.com/photo-1611996575749-79a3a250f948?q=80&w=200&auto=format&fit=crop' },
+  { title: 'Tic Tac Toe', meta: '3 days ago', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=200&auto=format&fit=crop' },
+];
 
-export default async function ProfilePage() {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+const favoriteGames = [
+  { title: 'Chess', rating: '4.8', image: 'https://images.unsplash.com/photo-1529699211952-734e80c4d42b?q=80&w=200&auto=format&fit=crop', isFavorite: true },
+  { title: 'Minesweeper', rating: '4.6', image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=200&auto=format&fit=crop', isFavorite: true },
+  { title: 'Word Search', rating: '4.5', image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?q=80&w=200&auto=format&fit=crop', isFavorite: true },
+  { title: 'Solitaire', rating: '4.7', image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=200&auto=format&fit=crop', isFavorite: true },
+  { title: 'Sudoku', rating: '4.6', image: 'https://images.unsplash.com/photo-1579621970795-87facc2f976d?q=80&w=200&auto=format&fit=crop', isFavorite: true },
+];
 
-  if (!user) {
-    redirect('/login');
-  }
-
-  // Placeholder for user games fetch from Supabase
-  const savedGames: any[] = [];
-  
+export default function ProfilePage() {
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0A0B1A] pt-12 pb-24 text-gray-900 dark:text-white">
-      <div className="container mx-auto px-4 md:px-8 max-w-6xl">
-        <header className="mb-12 flex flex-col md:flex-row justify-between items-start md:items-center">
-          <div className="flex items-center space-x-6">
-            <div className="w-24 h-24 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center shadow-lg shadow-primary/20 border-4 border-[#111228]">
-              <User className="w-10 h-10 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl md:text-4xl font-outfit font-extrabold tracking-tight">
-                Player Profile
-              </h1>
-              <p className="text-gray-500 dark:text-gray-400 mt-1">
-                {user.email}
-              </p>
-            </div>
-          </div>
-          
-          <div className="mt-6 md:mt-0 flex items-center space-x-4">
-            <button className="flex items-center space-x-2 bg-gray-100 dark:bg-[#111228] px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-200 dark:hover:bg-white/5 transition-colors border border-transparent dark:border-white/5">
-              <Settings className="w-4 h-4" />
-              <span>Settings</span>
-            </button>
-            <form action={logout}>
-              <button className="flex items-center space-x-2 bg-danger/10 text-danger px-4 py-2 rounded-xl text-sm font-medium hover:bg-danger/20 transition-colors border border-danger/20">
-                <LogOut className="w-4 h-4" />
-                <span>Sign Out</span>
-              </button>
-            </form>
-          </div>
-        </header>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
-            <section className="bg-gray-50 dark:bg-[#111228]/50 p-6 rounded-3xl border border-gray-100 dark:border-white/5">
-              <h2 className="text-2xl font-outfit font-bold mb-6 flex items-center">
-                <Gamepad2 className="w-6 h-6 mr-3 text-primary" />
-                Recent Games
-              </h2>
-              {savedGames.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {savedGames.map((game, i) => (
-                    <div key={i} className="bg-white dark:bg-[#0A0B1A] p-4 rounded-2xl border border-gray-100 dark:border-white/5 flex items-center space-x-4">
-                       {/* Mock Game Card */}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12 bg-white dark:bg-[#0A0B1A] rounded-2xl border border-gray-100 dark:border-white/5">
-                  <p className="text-gray-500 dark:text-gray-400 mb-4">No recent games found.</p>
-                  <Link href="/" className="inline-flex items-center space-x-2 text-primary font-bold hover:text-accent transition-colors">
-                    <span>Explore Games</span>
-                  </Link>
-                </div>
-              )}
-            </section>
-          </div>
-          
-          <div className="space-y-8">
-            <section className="bg-gray-50 dark:bg-[#111228]/50 p-6 rounded-3xl border border-gray-100 dark:border-white/5">
-              <h2 className="text-2xl font-outfit font-bold mb-6 flex items-center">
-                <Trophy className="w-6 h-6 mr-3 text-accent" />
-                Statistics
-              </h2>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center p-4 bg-white dark:bg-[#0A0B1A] rounded-xl border border-gray-100 dark:border-white/5">
-                  <span className="text-gray-500 dark:text-gray-400">Games Played</span>
-                  <span className="font-bold text-lg">0</span>
-                </div>
-                <div className="flex justify-between items-center p-4 bg-white dark:bg-[#0A0B1A] rounded-xl border border-gray-100 dark:border-white/5">
-                  <span className="text-gray-500 dark:text-gray-400">Total Playtime</span>
-                  <span className="font-bold text-lg">0h</span>
-                </div>
-                <div className="flex justify-between items-center p-4 bg-white dark:bg-[#0A0B1A] rounded-xl border border-gray-100 dark:border-white/5">
-                  <span className="text-gray-500 dark:text-gray-400">Achievements</span>
-                  <span className="font-bold text-lg">0/100</span>
-                </div>
-              </div>
-            </section>
+    <div className="min-h-screen bg-[#05050F] text-white pt-24 pb-20">
+      <div className="container mx-auto px-4 xl:px-8 max-w-[1600px] flex flex-col lg:flex-row gap-8">
+        
+        {/* Left Sidebar */}
+        <div className="hidden lg:block relative">
+          <div className="sticky top-24">
+            <ProfileSidebar />
           </div>
         </div>
+
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col gap-6 w-full overflow-hidden">
+          
+          <ProfileHero />
+
+          {/* Row: Recently Played & Favorite Games */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <ProfileGameRow title="Recently Played" games={recentGames.slice(0, 4)} viewAllLink="/profile/recent" />
+            <ProfileGameRow title="Favorite Games" games={favoriteGames.slice(0, 4)} viewAllLink="/profile/favorites" />
+          </div>
+
+          {/* Row: Achievements & Game Stats */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <ProfileAchievements />
+            <ProfileStats />
+          </div>
+
+          {/* Row: Activity Feed & Collections */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <ProfileActivity />
+            <ProfileCollections />
+          </div>
+
+        </div>
+
       </div>
     </div>
   );
