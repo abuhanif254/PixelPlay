@@ -1,43 +1,41 @@
+import React from 'react';
 import { Metadata } from 'next';
-import { getAllPosts } from '@/lib/blog';
-import { constructMetadata } from '@/lib/seo';
-import BlogPreviewCard from '@/components/BlogPreviewCard';
+import BlogHero from '@/components/blog/BlogHero';
+import FeaturedArticles from '@/components/blog/FeaturedArticles';
+import LatestArticles from '@/components/blog/LatestArticles';
+import BlogSidebar from '@/components/blog/BlogSidebar';
 
-export const metadata: Metadata = constructMetadata({
-  title: 'Blog & News',
-  description: 'Read the latest guides, tips, and industry news about browser gaming.',
-  path: '/blog',
-});
+export const metadata: Metadata = {
+  title: 'Blog & Guides | PixelPlay Games',
+  description: 'Tips, guides, news and strategies to level up your gaming experience on PixelPlay.',
+};
 
-export default async function BlogIndexPage() {
-  const posts = await getAllPosts();
-
+export default function BlogPage() {
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0A0B1A] pt-12 pb-24">
-      <div className="container mx-auto px-4 md:px-8">
-        <div className="max-w-4xl mx-auto mb-16 text-center">
-          <h1 className="text-4xl md:text-6xl font-outfit font-extrabold text-gray-900 dark:text-white tracking-tight mb-6">
-            The <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">PlayHub</span> Blog
-          </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-400">
-            Insights, strategies, and the latest news in the world of browser gaming.
-          </p>
+    <div className="min-h-screen bg-[#05050F] text-white pt-24 pb-20">
+      <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-[1400px]">
+        
+        {/* Top Hero Section */}
+        <BlogHero />
+
+        {/* Main Layout Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+          
+          {/* Main Content Column */}
+          <div className="lg:col-span-8 flex flex-col gap-12">
+            <FeaturedArticles />
+            <LatestArticles />
+          </div>
+
+          {/* Sidebar Column */}
+          <div className="lg:col-span-4">
+            <div className="sticky top-24">
+              <BlogSidebar />
+            </div>
+          </div>
+          
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {posts.map((post) => (
-            <BlogPreviewCard
-              key={post.slug}
-              title={post.title}
-              excerpt={post.excerpt}
-              date={post.date}
-              readTime={post.readTime}
-              category={post.category}
-              imageUrl={post.imageUrl}
-              slug={post.slug}
-            />
-          ))}
-        </div>
       </div>
     </div>
   );

@@ -47,6 +47,7 @@ const jsonLd = {
 };
 
 import { ThemeProvider } from '@/components/ThemeProvider';
+import Script from 'next/script';
 
 export default function RootLayout({
   children,
@@ -60,8 +61,18 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+        {/* Monetag Push Notifications Script (Placeholder Zone ID) */}
+        <meta name="monetag" content="mock-verification-code" />
       </head>
       <body className={`${inter.className} bg-background text-foreground antialiased min-h-screen flex flex-col`}>
+        {/* Monetag Script tag injected outside of head for better performance often recommended by Monetag */}
+        <Script 
+          src="https://alwingulla.com/88/tag.min.js" 
+          data-zone="mock-zone-id" 
+          data-cfasync="false" 
+          async 
+          strategy="afterInteractive"
+        />
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

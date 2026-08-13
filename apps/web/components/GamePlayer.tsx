@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
-import { Play, Maximize2, RotateCcw, Pause, Volume2, Share2, Heart } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Play, Maximize2, Sun, Volume2, VolumeX, RotateCcw, RotateCw, HelpCircle } from 'lucide-react';
 import Image from 'next/image';
 import { useRecentGames } from '@/hooks/useRecentGames';
 
@@ -14,6 +14,8 @@ interface GamePlayerProps {
 
 export default function GamePlayer({ children, title, slug, image }: GamePlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   const { addRecentGame } = useRecentGames();
 
   const handlePlay = () => {
@@ -21,81 +23,111 @@ export default function GamePlayer({ children, title, slug, image }: GamePlayerP
     addRecentGame(slug);
   };
 
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement && containerRef.current) {
+      containerRef.current.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else if (document.fullscreenElement) {
+      document.exitFullscreen();
+    }
+  };
+
   return (
-    <div className="w-full flex flex-col gap-4">
-      {/* Game Container */}
-      <div className="w-full aspect-video md:aspect-[21/9] lg:aspect-[24/9] bg-[#0A0B1A] rounded-2xl border border-black/10 dark:border-white/10 overflow-hidden relative shadow-2xl flex items-center justify-center">
-        {!isPlaying ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/90 z-20">
-            {/* Optional blurred background image if provided */}
-            {image && (
-              <Image 
-                src={image} 
-                alt={title} 
-                fill 
-                className="object-cover opacity-30 blur-sm" 
-              />
-            )}
-            
-            <div className="relative z-10 flex flex-col items-center gap-6">
-              <button 
-                onClick={handlePlay}
-                className="group relative flex items-center justify-center w-24 h-24 rounded-full bg-primary text-white hover:scale-105 transition-all duration-300 shadow-xl shadow-primary/30"
-              >
-                <div className="absolute inset-0 rounded-full bg-primary animate-ping opacity-20"></div>
-                <Play size={40} className="ml-2 group-hover:scale-110 transition-transform" />
-              </button>
-              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide">
-                Play {title}
-              </h2>
-            </div>
-          </div>
-        ) : (
-          <>
-            {children}
-            
-            {/* Inner Fullscreen Button Overlay (Optional for full immersion) */}
-            <button className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/80 text-white rounded-lg backdrop-blur-sm transition-colors z-10">
-              <Maximize2 size={20} />
+    <div 
+      ref={containerRef}
+      className="w-full relative bg-[#111228] rounded-2xl border border-white/5 overflow-hidden shadow-2xl min-h-[400px] md:min-h-[500px]"
+    >
+      {!isPlaying ? (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0A0B1A]/90 z-20">
+          {image && (
+            <Image 
+              src={image} 
+              alt={title} 
+              fill 
+              className="object-cover opacity-20 blur-md" 
+            />
+          )}
+          
+          <div className="relative z-10 flex flex-col items-center gap-6">
+            <button 
+              onClick={handlePlay}
+              className="group relative flex items-center justify-center w-20 h-20 md:w-24 md:h-24 rounded-full bg-[#6366F1] text-white hover:scale-105 transition-all duration-300 shadow-[0_0_40px_rgba(99,102,241,0.4)]"
+            >
+              <div className="absolute inset-0 rounded-full bg-[#6366F1] animate-ping opacity-20"></div>
+              <Play size={36} className="ml-2 group-hover:scale-110 transition-transform" />
             </button>
-          </>
-        )}
-      </div>
-
-      {/* Action Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-white dark:bg-[#12132A] border border-black/5 dark:border-white/5 shadow-xl">
-        
-        {/* Game Controls */}
-        <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-gray-700 dark:text-gray-300 font-medium">
-            <RotateCcw size={18} />
-            <span className="hidden sm:inline">Restart</span>
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-gray-700 dark:text-gray-300 font-medium">
-            <Pause size={18} />
-            <span className="hidden sm:inline">Pause</span>
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-gray-700 dark:text-gray-300 font-medium">
-            <Volume2 size={18} />
-            <span className="hidden sm:inline">Sound</span>
-          </button>
+            <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide font-outfit drop-shadow-md">
+              Play {title}
+            </h2>
+          </div>
         </div>
+      ) : (
+        <div className="w-full h-full flex flex-col md:flex-row p-4 md:p-6 gap-6 relative z-10">
+          
+          {/* Game Canvas Area (Left Side) */}
+          <div className="flex-1 flex items-center justify-center bg-[#0A0B1A]/50 rounded-xl border border-white/5 overflow-hidden min-h-[400px]">
+            {children}
+          </div>
+          
+          {/* Internal Game Controls Sidebar (Right Side) */}
+          <div className="w-full md:w-64 flex flex-col gap-4 shrink-0">
+            
+            {/* Score & Best Box */}
+            <div className="flex bg-[#0A0B1A] border border-white/5 rounded-xl overflow-hidden divide-x divide-white/5">
+              <div className="flex-1 py-3 flex flex-col items-center justify-center">
+                <span className="text-[10px] font-bold text-gray-500 tracking-widest mb-0.5">SCORE</span>
+                <span className="text-xl font-bold text-white font-outfit">2048</span>
+              </div>
+              <div className="flex-1 py-3 flex flex-col items-center justify-center">
+                <span className="text-[10px] font-bold text-gray-500 tracking-widest mb-0.5">BEST</span>
+                <span className="text-xl font-bold text-white font-outfit">4096</span>
+              </div>
+            </div>
 
-        {/* Social / Meta Controls */}
-        <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-gray-700 dark:text-gray-300 font-medium">
-            <Share2 size={18} />
-            <span className="hidden sm:inline">Share</span>
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors text-primary font-medium">
-            <Heart size={18} />
-            <span className="hidden sm:inline">Favorite</span>
-          </button>
-          <button className="flex items-center justify-center p-2 rounded-lg bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-gray-700 dark:text-gray-300 sm:hidden">
-             <Maximize2 size={18} />
-          </button>
+            {/* Main Action Buttons */}
+            <button className="w-full py-3.5 bg-[#6366F1] hover:bg-[#5457DF] text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors shadow-lg shadow-[#6366F1]/20">
+              <RotateCw size={16} />
+              New Game
+            </button>
+
+            <button className="w-full py-3 bg-transparent border border-white/10 hover:bg-white/5 text-gray-300 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors">
+              <RotateCcw size={16} />
+              Undo
+            </button>
+
+            <button className="w-full py-3 bg-transparent border border-white/10 hover:bg-white/5 text-gray-300 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors mb-auto">
+              <HelpCircle size={16} />
+              How to Play
+            </button>
+            
+            {/* Universal Toolbar (Bottom Area) */}
+            <div className="flex items-center justify-between gap-2 mt-4 pt-4 border-t border-white/5">
+              <button 
+                onClick={toggleFullscreen}
+                className="flex-1 py-3 flex items-center justify-center bg-transparent border border-white/10 hover:bg-white/5 text-gray-400 hover:text-white rounded-xl transition-all"
+                title="Fullscreen"
+              >
+                <Maximize2 size={16} />
+              </button>
+              <button 
+                className="flex-1 py-3 flex items-center justify-center bg-transparent border border-white/10 hover:bg-white/5 text-gray-400 hover:text-white rounded-xl transition-all"
+                title="Theme Toggle"
+              >
+                <Sun size={16} />
+              </button>
+              <button 
+                onClick={() => setIsMuted(!isMuted)}
+                className="flex-1 py-3 flex items-center justify-center bg-transparent border border-white/10 hover:bg-white/5 text-gray-400 hover:text-white rounded-xl transition-all"
+                title="Toggle Sound"
+              >
+                {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+              </button>
+            </div>
+
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -28,6 +28,12 @@ export interface GameConfig {
   keyboardControls?: Record<string, string>;
   touchControls?: Record<string, string>;
   faqs?: {q: string, a: string}[];
+  tags?: string[];
+  screenshots?: string[];
+  trailerUrl?: string;
+  developer?: string;
+  releaseDate?: string;
+  platform?: string;
 }
 
 export const gamesRegistry: Record<string, { config: GameConfig, component: any }> = {
