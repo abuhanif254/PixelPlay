@@ -1,127 +1,56 @@
+import React from 'react';
 import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
-import { gamesRegistry } from '@pixelplay/games/registry';
-import { constructMetadata, siteConfig } from '@/lib/seo';
-import GameCard from '@/components/GameCard';
+import CategoryHero from '@/components/category/CategoryHero';
+import CategorySidebar from '@/components/category/CategorySidebar';
+import CategoryGameGrid from '@/components/category/CategoryGameGrid';
+import CategoryInfoBanner from '@/components/category/CategoryInfoBanner';
+import CategoryFAQ from '@/components/category/CategoryFAQ';
+import CategoryCollections from '@/components/category/CategoryCollections';
 
-interface CategoryPageProps {
-  params: {
-    slug: string;
-  };
-}
+export const metadata: Metadata = {
+  title: 'Puzzle Games | PixelPlay',
+  description: 'Challenge your mind with our collection of the best puzzle games.',
+};
 
-// Extract unique categories and format them
-function getCategories() {
-  const categories = new Set<string>();
-  Object.values(gamesRegistry).forEach(game => {
-    if (game.config.category) {
-      categories.add(game.config.category);
-    }
-  });
+export default function CategoryPage({ params }: { params: { slug: string } }) {
+  // In a real app, you would fetch category data using the slug
+  // const categoryData = await fetchCategory(params.slug);
   
-  return Array.from(categories).map(category => ({
-    name: category,
-    slug: category.toLowerCase().replace(/\s+/g, '-'),
-  }));
-}
-
-export const runtime = 'edge';
-
-export function generateMetadata({ params }: CategoryPageProps): Metadata {
-  const category = getCategories().find(c => c.slug === params.slug);
-  
-  if (!category) {
-    return {};
-  }
-
-  const title = `Free ${category.name} Games`;
-  const description = `Play the best free online ${category.name} games on ${siteConfig.name}. Discover top-rated browser games carefully curated for you.`;
-
-  return constructMetadata({
-    title,
-    description,
-    path: `/categories/${params.slug}`,
-  });
-}
-
-export default function CategoryPage({ params }: CategoryPageProps) {
-  const category = getCategories().find(c => c.slug === params.slug);
-  
-  if (!category) {
-    notFound();
-  }
-
-  // Filter games by category
-  const games = Object.entries(gamesRegistry)
-    .filter(([_, game]) => game.config.category === category.name)
-    .map(([slug, game]) => ({
-      slug,
-      title: game.config.title,
-      rating: game.config.rating || 4.5,
-      category: game.config.category,
-      image: game.config.image,
-    }));
-
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'CollectionPage',
-    name: `Free ${category.name} Games`,
-    description: `A collection of the best free ${category.name} games playable directly in your browser.`,
-    url: `${siteConfig.url}/categories/${category.slug}`,
-    hasPart: games.map(game => ({
-      '@type': 'SoftwareApplication',
-      name: game.title,
-      applicationCategory: 'Game',
-      operatingSystem: 'Any',
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: game.rating,
-        ratingCount: Math.floor(Math.random() * 500) + 50 // Mock count for SEO
-      }
-    }))
-  };
-
   return (
-    <div className="flex flex-col gap-12 pb-20 bg-white dark:bg-[#0A0B1A] min-h-screen text-gray-900 dark:text-white pt-8">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+    <div className="min-h-screen bg-[#05050F] text-white pt-20 pb-20">
       
-      <div className="container mx-auto px-4 md:px-8">
-        {/* Category Header */}
-        <div className="mb-12 border-b border-black/5 dark:border-white/5 pb-8">
-          <h1 className="text-4xl md:text-5xl font-outfit font-extrabold mb-4 text-gray-900 dark:text-white tracking-tight">
-            Best <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">{category.name}</span> Games
-          </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl leading-relaxed">
-            Dive into our curated collection of free online {category.name.toLowerCase()} games. No downloads, no registration required. Just click and play directly in your browser!
-          </p>
-        </div>
+      {/* Hero Section */}
+      <CategoryHero />
 
-        {/* Games Grid */}
-        <section aria-labelledby="games-grid-heading">
-          <div id="games-grid-heading" className="sr-only">All {category.name} Games</div>
+      <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-[1400px]">
+        
+        {/* 12 Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative">
           
-          {games.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-              {games.map((game, i) => (
-                <GameCard 
-                  key={i} 
-                  title={game.title} 
-                  rating={game.rating} 
-                  category={game.category} 
-                  slug={game.slug}
-                  imageUrl={game.image}
-                />
-              ))}
+          {/* Left Sidebar (3 cols) */}
+          <div className="hidden lg:block lg:col-span-3 relative">
+            <div className="sticky top-24">
+              <CategorySidebar />
             </div>
-          ) : (
-            <div className="text-center py-20 bg-gray-50 dark:bg-[#12132A] rounded-3xl border border-black/5 dark:border-white/5">
-              <p className="text-xl text-gray-500 dark:text-gray-400">More {category.name} games are coming soon!</p>
+          </div>
+
+          {/* Main Content (9 cols) */}
+          <div className="col-span-1 lg:col-span-9 flex flex-col">
+            <CategoryGameGrid />
+            <CategoryInfoBanner />
+            
+            {/* Bottom Section Layout (FAQ left, Collections right/below) */}
+            <div className="flex flex-col xl:flex-row gap-8">
+              <div className="xl:w-1/2">
+                <CategoryFAQ />
+              </div>
+              <div className="xl:w-1/2">
+                <CategoryCollections />
+              </div>
             </div>
-          )}
-        </section>
+          </div>
+
+        </div>
       </div>
     </div>
   );
