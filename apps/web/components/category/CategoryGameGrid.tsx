@@ -2,8 +2,9 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { LayoutGrid, List } from 'lucide-react';
+import { CategoryData } from '@/lib/mockCategories';
 
-export default function CategoryGameGrid() {
+export default function CategoryGameGrid({ category }: { category: CategoryData }) {
   const [activeTag, setActiveTag] = useState('All');
   
   const tags = ['All', 'Logic', 'Math', 'Matching', 'Word', 'Brain', 'Physics', 'Classic'];
@@ -37,8 +38,13 @@ export default function CategoryGameGrid() {
       {/* Top Header Row */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-bold font-outfit text-white">Puzzle Games</h2>
-          <span className="text-xs font-bold text-[#6366F1] bg-[#6366F1]/10 px-2.5 py-1 rounded-md">125 Games Found</span>
+          <h2 className="text-2xl font-bold font-outfit text-white">{category.title}</h2>
+          <span 
+            className="text-xs font-bold px-2.5 py-1 rounded-md"
+            style={{ backgroundColor: `${category.color}1A`, color: category.color }} // 1A is ~10% opacity
+          >
+            {category.stats.games} Games Found
+          </span>
         </div>
         
         <div className="flex items-center gap-4">
@@ -51,7 +57,10 @@ export default function CategoryGameGrid() {
             </select>
           </div>
           <div className="flex items-center gap-1 bg-[#111228] border border-white/10 rounded-lg p-1">
-            <button className="p-1.5 rounded-md bg-[#6366F1] text-white">
+            <button 
+              className="p-1.5 rounded-md text-white"
+              style={{ backgroundColor: category.color }}
+            >
               <LayoutGrid size={16} />
             </button>
             <button className="p-1.5 rounded-md text-gray-500 hover:text-white transition-colors">
@@ -69,9 +78,10 @@ export default function CategoryGameGrid() {
             onClick={() => setActiveTag(tag)}
             className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${
               activeTag === tag
-                ? 'bg-[#6366F1] text-white'
+                ? 'text-white'
                 : 'bg-transparent border border-white/10 text-gray-400 hover:text-white hover:border-white/30'
             }`}
+            style={activeTag === tag ? { backgroundColor: category.color } : {}}
           >
             {tag}
           </button>
@@ -81,7 +91,7 @@ export default function CategoryGameGrid() {
       {/* 6-Column Game Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 mb-8">
         {games.map((game, i) => (
-          <Link href={`/games/${game.title.toLowerCase().replace(/\s+/g, '-')}`} key={i} className="flex flex-col group cursor-pointer relative overflow-hidden rounded-xl border border-white/5 bg-[#111228]/50 hover:bg-[#111228] transition-all hover:-translate-y-1 hover:shadow-xl hover:border-[#6366F1]/30">
+          <Link href={`/games/${game.title.toLowerCase().replace(/\s+/g, '-')}`} key={i} className="flex flex-col group cursor-pointer relative overflow-hidden rounded-xl border border-white/5 bg-[#111228]/50 hover:bg-[#111228] transition-all hover:-translate-y-1 hover:shadow-xl" style={{ ':hover': { borderColor: `${category.color}4D` } } as any}>
             {/* Image Box */}
             <div className="relative aspect-square w-full overflow-hidden rounded-t-xl bg-gray-800">
               <img src={game.image} alt={game.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-90 group-hover:opacity-100" />
@@ -93,7 +103,10 @@ export default function CategoryGameGrid() {
 
               {/* Hover Play Button */}
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <div className="w-10 h-10 rounded-full bg-[#6366F1] flex items-center justify-center text-white pl-1 shadow-[0_0_15px_rgba(99,102,241,0.5)] scale-75 group-hover:scale-100 transition-transform duration-300">
+                <div 
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-white pl-1 scale-75 group-hover:scale-100 transition-transform duration-300"
+                  style={{ backgroundColor: category.color, boxShadow: `0 0 15px ${category.color}80` }}
+                >
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                 </div>
               </div>
@@ -116,7 +129,7 @@ export default function CategoryGameGrid() {
 
       {/* Load More Button */}
       <div className="flex justify-center w-full">
-        <button className="flex items-center gap-2 px-8 py-3 bg-transparent border border-white/10 hover:border-[#6366F1] text-gray-400 hover:text-white text-sm font-bold rounded-xl transition-all">
+        <button className="flex items-center gap-2 px-8 py-3 bg-transparent border border-white/10 hover:border-white/30 text-gray-400 hover:text-white text-sm font-bold rounded-xl transition-all">
           <svg className="w-4 h-4 animate-spin-slow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
