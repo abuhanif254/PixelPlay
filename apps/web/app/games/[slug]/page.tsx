@@ -5,6 +5,7 @@ import { Star, ChevronRight, Heart, Clock, ArrowUp, ArrowDown, ArrowLeft, ArrowR
 import Link from 'next/link';
 import GamePlayer from '@/components/GamePlayer';
 import GameDetailsTabs from '@/components/GameDetailsTabs';
+import AdBanner from '@/components/AdBanner';
 import { Metadata, ResolvingMetadata } from 'next';
 
 export const runtime = 'edge';
@@ -209,7 +210,15 @@ export default function GamePage({ params }: GamePageProps) {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 mb-10">
             
             {/* Left Column: Player Area */}
-            <div className="lg:col-span-8">
+            <div className="lg:col-span-8 flex flex-col gap-6">
+              {/* Leaderboard Ad Above Game */}
+              <div className="hidden md:flex justify-center w-full">
+                <AdBanner id="mock-leaderboard-id" width={728} height={90} className="w-full max-w-[728px]" />
+              </div>
+              <div className="flex md:hidden justify-center w-full">
+                <AdBanner id="mock-mobile-banner-id" width={320} height={50} />
+              </div>
+
               <GamePlayer title={config.title} slug={slug} image={config.image}>
                 <GameComponent />
               </GamePlayer>
@@ -218,6 +227,11 @@ export default function GamePage({ params }: GamePageProps) {
             {/* Right Column: Game Info Sidebar */}
             <div className="lg:col-span-4 flex flex-col gap-6">
               
+              {/* Sidebar Ad */}
+              <div className="hidden lg:flex justify-center w-full">
+                <AdBanner id="mock-sidebar-id" width={300} height={250} />
+              </div>
+
               {/* How to Play Box */}
               <div className="bg-[#111228] border border-white/5 rounded-2xl p-6 shadow-xl">
                 <h3 className="text-lg font-bold font-outfit text-white mb-4">How to Play</h3>
@@ -322,6 +336,12 @@ export default function GamePage({ params }: GamePageProps) {
 
           {/* Bottom Interactive Tabs Area */}
           <GameDetailsTabs config={config} relatedGames={relatedGames} />
+
+          {/* Bottom Ad Banner */}
+          <div className="flex justify-center w-full mt-12">
+            <AdBanner id="mock-bottom-banner-id" width={728} height={90} className="hidden md:flex" />
+            <AdBanner id="mock-bottom-mobile-id" width={320} height={50} className="flex md:hidden" />
+          </div>
 
         </div>
       </div>
