@@ -4,7 +4,7 @@ import Link from 'next/link';
 interface Game {
   title: string;
   image: string;
-  meta: string;
+  meta?: string;
   rating?: string;
   isFavorite?: boolean;
 }
