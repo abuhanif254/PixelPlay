@@ -12,6 +12,8 @@ export const metadata: Metadata = {
   description: 'Challenge your mind with our collection of the best puzzle games.',
 };
 
+export const runtime = 'edge';
+
 export default function CategoryPage({ params }: { params: { slug: string } }) {
   // In a real app, you would fetch category data using the slug
   // const categoryData = await fetchCategory(params.slug);
