@@ -91,7 +91,7 @@ export default function Navbar() {
                           {['Action', 'Adventure', 'Arcade', 'Board', 'Puzzle', 'Racing', 'Sports', 'Strategy'].map((cat) => (
                             <Link 
                               key={cat} 
-                              href={`/category/${cat.toLowerCase()}`}
+                              href={`/categories/${cat.toLowerCase()}-games`}
                               className="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 hover:bg-black/5 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-white transition-colors"
                             >
                               {cat}
