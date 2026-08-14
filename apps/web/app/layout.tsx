@@ -71,7 +71,7 @@ export default function RootLayout({
           data-zone="mock-zone-id" 
           data-cfasync="false" 
           async 
-          strategy="afterInteractive"
+          strategy="lazyOnload"
         />
         <ThemeProvider
           attribute="class"

@@ -12,7 +12,7 @@ export default function Footer() {
           
           {/* Brand */}
           <div className="space-y-4">
-            <Link href="/" className="flex items-center gap-2">
+            <Link href="/" aria-label="PixelPlay Homepage" title="Go to PixelPlay Homepage" className="flex items-center gap-2">
               <Gamepad2 className="w-8 h-8 text-primary" />
               <span className="font-bold text-2xl tracking-tight">PixelPlay</span>
             </Link>
@@ -24,6 +24,8 @@ export default function Footer() {
                 <motion.a 
                   key={i}
                   href="#"
+                  aria-label={['Twitter', 'GitHub', 'YouTube'][i]}
+                  title={['Twitter', 'GitHub', 'YouTube'][i]}
                   whileHover={{ y: -3 }}
                   className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center text-black/70 dark:text-white/70 hover:bg-primary/20 hover:text-primary transition-colors"
                 >
@@ -39,7 +41,7 @@ export default function Footer() {
             <ul className="space-y-3">
               {['Browse Games', 'New Releases', 'Top Rated', 'Categories', 'Developers'].map((link) => (
                 <li key={link}>
-                  <Link href="#" className="text-sm text-black/60 dark:text-white/60 hover:text-primary transition-colors flex items-center gap-2 group">
+                  <Link href="#" title={link} className="text-sm text-black/60 dark:text-white/60 hover:text-primary transition-colors flex items-center gap-2 group">
                     <span className="w-1.5 h-1.5 rounded-full bg-black/20 dark:bg-white/20 group-hover:bg-primary transition-colors" />
                     {link}
                   </Link>
@@ -53,7 +55,7 @@ export default function Footer() {
             <ul className="space-y-3">
               {['Help Center', 'Terms of Service', 'Privacy Policy', 'Cookie Policy', 'Contact Us'].map((link) => (
                 <li key={link}>
-                  <Link href="#" className="text-sm text-black/60 dark:text-white/60 hover:text-primary transition-colors flex items-center gap-2 group">
+                  <Link href="#" title={link} className="text-sm text-black/60 dark:text-white/60 hover:text-primary transition-colors flex items-center gap-2 group">
                     <span className="w-1.5 h-1.5 rounded-full bg-black/20 dark:bg-white/20 group-hover:bg-primary transition-colors" />
                     {link}
                   </Link>
@@ -81,6 +83,7 @@ export default function Footer() {
               <motion.button 
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
+                aria-label="Subscribe to newsletter"
                 className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-lg py-2.5 text-sm transition-colors shadow-lg shadow-primary/20"
               >
                 Subscribe Now
