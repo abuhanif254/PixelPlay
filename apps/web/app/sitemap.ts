@@ -39,5 +39,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: route === '' ? 1.0 : 0.7,
   }));
 
-  return [...staticRoutes, ...categoryUrls, ...gameUrls];
+  // Mock blog urls for sitemap until a CMS or DB is connected
+  const blogSlugs = [
+    'top-10-adventure-games-2024',
+    'beginners-guide-rpg-games',
+    'improve-reflexes-action-games'
+  ];
+
+  const blogUrls = blogSlugs.map(slug => ({
+    url: `${baseUrl}/blog/${slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.6,
+  }));
+
+  return [...staticRoutes, ...categoryUrls, ...gameUrls, ...blogUrls];
 }

@@ -25,18 +25,18 @@ export default function CategoryFAQ() {
 
   return (
     <div className="flex flex-col flex-1">
-      <h3 className="text-xl font-bold font-outfit text-white mb-6">Frequently Asked Questions</h3>
+      <h3 className="text-xl font-bold font-outfit text-gray-900 dark:text-white mb-6">Frequently Asked Questions</h3>
       <div className="flex flex-col gap-3">
         {faqs.map((faq, index) => (
           <div 
             key={index} 
-            className={`border border-white/5 rounded-xl overflow-hidden transition-colors ${openIndex === index ? 'bg-[#111228] border-white/10' : 'bg-transparent hover:bg-white/5'}`}
+            className={`border border-gray-200 dark:border-white/5 rounded-xl overflow-hidden transition-colors ${openIndex === index ? 'bg-white dark:bg-[#111228] border-gray-300 dark:border-white/10' : 'bg-transparent hover:bg-gray-50 dark:hover:bg-white/5'}`}
           >
             <button 
               className="w-full px-6 py-4 flex items-center justify-between text-left"
               onClick={() => setOpenIndex(openIndex === index ? null : index)}
             >
-              <span className="text-sm font-bold text-gray-300">{faq.q}</span>
+              <span className="text-sm font-bold text-gray-800 dark:text-gray-300">{faq.q}</span>
               <svg 
                 className={`w-4 h-4 text-gray-500 transition-transform duration-300 ${openIndex === index ? 'rotate-180 text-[#6366F1]' : ''}`} 
                 fill="none" viewBox="0 0 24 24" stroke="currentColor"
@@ -48,7 +48,7 @@ export default function CategoryFAQ() {
             <div 
               className={`px-6 overflow-hidden transition-all duration-300 ease-in-out ${openIndex === index ? 'max-h-40 pb-4 opacity-100' : 'max-h-0 opacity-0'}`}
             >
-              <p className="text-sm text-gray-500 leading-relaxed">
+              <p className="text-sm text-gray-600 dark:text-gray-500 leading-relaxed">
                 {faq.a}
               </p>
             </div>

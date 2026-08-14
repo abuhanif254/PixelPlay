@@ -3,8 +3,8 @@ import Link from 'next/link';
 
 export default function AuthorCard() {
   return (
-    <div className="bg-transparent border border-white/5 rounded-2xl p-6 shadow-xl mb-6">
-      <h3 className="text-xl font-bold font-outfit text-white mb-6">About the Author</h3>
+    <div className="bg-white dark:bg-transparent border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-sm dark:shadow-xl mb-6">
+      <h3 className="text-xl font-bold font-outfit text-gray-900 dark:text-white mb-6">About the Author</h3>
       
       <div className="flex items-start gap-4 mb-4">
         <div className="w-16 h-16 rounded-full bg-[#6366F1] flex items-center justify-center shrink-0">
@@ -15,16 +15,16 @@ export default function AuthorCard() {
         </div>
         <div className="flex flex-col">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-white font-bold text-lg">PlayHub Team</span>
+            <span className="text-gray-900 dark:text-white font-bold text-lg">PlayHub Team</span>
             <span className="text-blue-500 text-sm">✔</span>
           </div>
-          <p className="text-gray-400 text-sm leading-relaxed">
+          <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
             We're a team of passionate gamers and writers who love sharing tips, guides, and the latest gaming news.
           </p>
         </div>
       </div>
       
-      <Link href="#" className="flex items-center justify-center w-full py-3 bg-[#111228] hover:bg-white/5 border border-white/10 text-gray-300 hover:text-white text-sm font-bold rounded-xl transition-all">
+      <Link href="#" className="flex items-center justify-center w-full py-3 bg-gray-50 dark:bg-[#111228] hover:bg-gray-100 dark:hover:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white text-sm font-bold rounded-xl transition-all shadow-sm dark:shadow-none">
         View All Posts
       </Link>
     </div>

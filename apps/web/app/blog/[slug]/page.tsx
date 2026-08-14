@@ -29,12 +29,84 @@ export async function generateMetadata(
   return {
     title: 'Top 10 Adventure Games You Should Play in 2024 | PixelPlay',
     description: 'Explore our handpicked list of the best adventure games that deliver epic stories, stunning worlds, and unforgettable moments.',
+    keywords: ['adventure games', 'top 10 games', 'pixelplay blog', 'gaming news', 'guides'],
+    alternates: {
+      canonical: `https://pixelplay.com/blog/${slug}`,
+    },
+    openGraph: {
+      title: 'Top 10 Adventure Games You Should Play in 2024 | PixelPlay',
+      description: 'Explore our handpicked list of the best adventure games that deliver epic stories, stunning worlds, and unforgettable moments.',
+      url: `https://pixelplay.com/blog/${slug}`,
+      siteName: 'PixelPlay Games',
+      images: [
+        {
+          url: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1200&auto=format&fit=crop',
+          width: 1200,
+          height: 630,
+          alt: 'The Legend of Zelda: Tears of the Kingdom landscape',
+        },
+      ],
+      type: 'article',
+      publishedTime: '2024-05-12T00:00:00.000Z',
+      authors: ['PlayHub Team'],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: 'Top 10 Adventure Games You Should Play in 2024 | PixelPlay',
+      description: 'Explore our handpicked list of the best adventure games that deliver epic stories, stunning worlds, and unforgettable moments.',
+      images: ['https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1200&auto=format&fit=crop'],
+    },
   };
 }
 
 export default function SingleArticlePage({ params }: Props) {
   return (
-    <div className="min-h-screen bg-[#05050F] text-white pt-24 pb-20">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#05050F] text-gray-900 dark:text-white pt-24 pb-20 transition-colors">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify([
+            {
+              "@context": "https://schema.org",
+              "@type": "BlogPosting",
+              "headline": "Top 10 Adventure Games You Should Play in 2024",
+              "image": [
+                "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1200&auto=format&fit=crop"
+              ],
+              "datePublished": "2024-05-12T08:00:00+08:00",
+              "dateModified": "2024-05-12T08:00:00+08:00",
+              "author": [{
+                  "@type": "Organization",
+                  "name": "PlayHub Team"
+              }]
+            },
+            {
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://pixelplay.com/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Blog",
+                  "item": "https://pixelplay.com/blog"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Top 10 Adventure Games You Should Play in 2024",
+                  "item": `https://pixelplay.com/blog/${params.slug}`
+                }
+              ]
+            }
+          ])
+        }}
+      />
       <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-[1200px]">
         
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">

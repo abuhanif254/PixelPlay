@@ -16,12 +16,12 @@ export default function LeaderboardHero() {
     <div className="w-full flex flex-col mb-8">
       
       {/* Header and Podium Graphic Area */}
-      <div className="relative w-full h-48 md:h-64 bg-gradient-to-r from-transparent to-[#6366F1]/10 rounded-2xl mb-6 overflow-hidden flex items-center p-8 border border-white/5">
+      <div className="relative w-full h-48 md:h-64 bg-gradient-to-r from-transparent to-[#6366F1]/10 rounded-2xl mb-6 overflow-hidden flex items-center p-8 border border-gray-200 dark:border-white/5 shadow-sm">
         <div className="relative z-10 flex flex-col max-w-lg">
-          <h1 className="text-4xl md:text-5xl font-extrabold font-outfit text-white mb-2 flex items-center gap-3">
+          <h1 className="text-4xl md:text-5xl font-extrabold font-outfit text-gray-900 dark:text-white mb-2 flex items-center gap-3">
             Leaderboard 🏆
           </h1>
-          <p className="text-gray-400 text-sm md:text-base">
+          <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">
             Compete with players around the world and become the ultimate champion!
           </p>
         </div>
@@ -56,8 +56,8 @@ export default function LeaderboardHero() {
             onClick={() => setActiveFilter(filter.name)}
             className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all border ${
               activeFilter === filter.name
-                ? 'bg-[#1A1B3B] border-[#6366F1]/50 text-white shadow-[0_0_15px_rgba(99,102,241,0.2)]'
-                : 'bg-transparent border-white/5 text-gray-400 hover:text-white hover:border-white/20'
+                ? 'bg-white dark:bg-[#1A1B3B] border-gray-200 dark:border-[#6366F1]/50 text-[#6366F1] dark:text-white shadow-[0_0_15px_rgba(99,102,241,0.1)] dark:shadow-[0_0_15px_rgba(99,102,241,0.2)]'
+                : 'bg-transparent border-gray-200 dark:border-white/5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-300 dark:hover:border-white/20 hover:bg-gray-50 dark:hover:bg-transparent'
             }`}
           >
             {filter.icon}

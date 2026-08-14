@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 export default function LeaderboardPage() {
   return (
-    <div className="min-h-screen bg-[#05050F] text-white pt-24 pb-20">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#05050F] text-gray-900 dark:text-white pt-24 pb-20 transition-colors">
       <div className="container mx-auto px-4 xl:px-8 max-w-[1400px]">
         
         {/* 12 Column Layout */}

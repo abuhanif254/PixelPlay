@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function RelatedPostsWidget() {
   const posts = [
@@ -30,23 +31,25 @@ export default function RelatedPostsWidget() {
   ];
 
   return (
-    <div className="bg-transparent border border-white/5 rounded-2xl p-6 shadow-xl mb-6">
-      <h3 className="text-xl font-bold font-outfit text-white mb-6">Related Posts</h3>
+    <div className="bg-white dark:bg-transparent border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-sm dark:shadow-xl mb-6">
+      <h3 className="text-xl font-bold font-outfit text-gray-900 dark:text-white mb-6">Related Posts</h3>
       <div className="flex flex-col gap-5">
         {posts.map((post, i) => (
           <Link key={i} href="#" className="flex gap-4 group">
-            <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-gray-800">
-              <img 
+            <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-gray-800 relative">
+              <Image 
                 src={post.image} 
                 alt={post.title} 
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                fill
+                sizes="64px"
+                className="object-cover transition-transform duration-500 group-hover:scale-110" 
               />
             </div>
             <div className="flex flex-col justify-center">
               <span className="inline-block px-1.5 py-0.5 bg-[#6366F1]/20 text-[#6366F1] text-[9px] font-bold rounded uppercase tracking-wider w-fit mb-1">
                 {post.category}
               </span>
-              <h4 className="text-sm font-bold text-gray-300 leading-tight group-hover:text-[#6366F1] transition-colors mb-1 line-clamp-2">
+              <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 leading-tight group-hover:text-[#6366F1] transition-colors mb-1 line-clamp-2">
                 {post.title}
               </h4>
               <span className="text-xs text-gray-500">{post.date}</span>

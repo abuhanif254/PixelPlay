@@ -45,7 +45,7 @@ export default function LeaderboardSidebar() {
             className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
               activeMenu === item.name 
                 ? 'bg-[#6366F1]/10 text-[#6366F1]' 
-                : 'text-gray-400 hover:text-white hover:bg-white/5'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5'
             }`}
           >
             {item.icon}
@@ -58,7 +58,7 @@ export default function LeaderboardSidebar() {
       <div className="flex flex-col gap-1">
         <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 px-3">By Game</h4>
         {games.map((game) => (
-          <Link href={`/leaderboard/game/${game.name.toLowerCase().replace(/\s+/g, '-')}`} key={game.name} className="flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
+          <Link href={`/leaderboard/game/${game.name.toLowerCase().replace(/\s+/g, '-')}`} key={game.name} className="flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">
             <div className={`w-5 h-5 rounded flex items-center justify-center ${game.color}`}>
               <Gamepad2 size={12} className="text-white" />
             </div>
@@ -75,18 +75,18 @@ export default function LeaderboardSidebar() {
         <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1 px-3">Top Players</h4>
         <div className="flex flex-col gap-3 px-2">
           {topPlayers.map((player) => (
-            <div key={player.name} className="flex items-center justify-between p-2 rounded-xl hover:bg-white/5 transition-colors cursor-pointer">
+            <div key={player.name} className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition-colors cursor-pointer">
               <div className="flex items-center gap-3">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs ${player.color}`}>
                   {player.initial}
                 </div>
-                <span className="text-sm font-medium text-gray-300">{player.name}</span>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{player.name}</span>
               </div>
-              <span className="text-xs font-bold text-gray-400">{player.score}</span>
+              <span className="text-xs font-bold text-gray-500 dark:text-gray-400">{player.score}</span>
             </div>
           ))}
         </div>
-        <Link href="#" className="flex items-center justify-center w-full py-2.5 mt-2 bg-transparent border border-white/10 hover:border-[#6366F1] text-gray-400 hover:text-white text-sm font-bold rounded-xl transition-all">
+        <Link href="#" className="flex items-center justify-center w-full py-2.5 mt-2 bg-transparent border border-gray-200 dark:border-white/10 hover:border-[#6366F1] hover:bg-gray-50 dark:hover:bg-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm font-bold rounded-xl transition-all">
           View Full Leaderboard
         </Link>
       </div>

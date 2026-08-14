@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export default function ArticleCTA() {
   return (
-    <div className="w-full bg-[#1A1B3B] border border-[#6366F1]/30 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 mb-10 overflow-hidden relative">
+    <div className="w-full bg-indigo-50 dark:bg-[#1A1B3B] border border-indigo-200 dark:border-[#6366F1]/30 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 mb-10 overflow-hidden relative shadow-sm dark:shadow-none">
       {/* Glow effect */}
       <div className="absolute right-0 top-1/2 -translate-y-1/2 w-64 h-64 bg-[#6366F1]/20 blur-[80px] rounded-full pointer-events-none" />
 
@@ -15,8 +15,8 @@ export default function ArticleCTA() {
           </svg>
         </div>
         <div className="flex flex-col">
-          <h4 className="text-xl font-bold font-outfit text-white mb-1">Love Adventure Games?</h4>
-          <p className="text-gray-400 text-sm">Browse more than 500+ games in our collection.</p>
+          <h4 className="text-xl font-bold font-outfit text-gray-900 dark:text-white mb-1">Love Adventure Games?</h4>
+          <p className="text-gray-600 dark:text-gray-400 text-sm">Browse more than 500+ games in our collection.</p>
         </div>
       </div>
 

@@ -20,10 +20,10 @@ export default function LeaderboardTable() {
   ];
 
   return (
-    <div className="w-full bg-[#1A1B3B] border border-white/5 rounded-2xl overflow-hidden shadow-xl flex flex-col mb-10">
+    <div className="w-full bg-white dark:bg-[#1A1B3B] border border-gray-200 dark:border-white/5 rounded-2xl overflow-hidden shadow-xl flex flex-col mb-10">
       
       {/* Table Header */}
-      <div className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-white/5 text-xs font-bold text-gray-500 uppercase tracking-widest bg-black/20">
+      <div className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-gray-200 dark:border-white/5 text-xs font-bold text-gray-500 uppercase tracking-widest bg-gray-50 dark:bg-black/20">
         <div className="col-span-1">Rank</div>
         <div className="col-span-3">Player</div>
         <div className="col-span-2 text-center">Games Played</div>
@@ -35,17 +35,17 @@ export default function LeaderboardTable() {
       {/* Table Body */}
       <div className="flex flex-col">
         {players.map((player, index) => (
-          <div key={player.rank} className={`grid grid-cols-12 gap-4 px-6 py-4 items-center transition-colors hover:bg-white/5 ${index !== players.length - 1 ? 'border-b border-white/5' : ''}`}>
-            <div className="col-span-1 font-medium text-gray-400">{player.rank}</div>
+          <div key={player.rank} className={`grid grid-cols-12 gap-4 px-6 py-4 items-center transition-colors hover:bg-gray-50 dark:hover:bg-white/5 ${index !== players.length - 1 ? 'border-b border-gray-200 dark:border-white/5' : ''}`}>
+            <div className="col-span-1 font-medium text-gray-600 dark:text-gray-400">{player.rank}</div>
             
             <div className="col-span-3 flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-[#6366F1]/20 overflow-hidden shrink-0">
                 <img src={player.avatar} alt={player.name} className="w-full h-full object-cover" />
               </div>
-              <span className="font-bold text-gray-200 truncate">{player.name}</span>
+              <span className="font-bold text-gray-900 dark:text-gray-200 truncate">{player.name}</span>
             </div>
             
-            <div className="col-span-2 text-center font-medium text-gray-400">
+            <div className="col-span-2 text-center font-medium text-gray-600 dark:text-gray-400">
               {player.gamesPlayed}
             </div>
             
@@ -57,7 +57,7 @@ export default function LeaderboardTable() {
             </div>
 
             <div className="col-span-1">
-              <span className="px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-xs text-gray-300 truncate inline-block max-w-full">
+              <span className="px-2.5 py-1 rounded-md bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-xs text-gray-700 dark:text-gray-300 truncate inline-block max-w-full">
                 {player.topGame}
               </span>
             </div>
@@ -82,15 +82,15 @@ export default function LeaderboardTable() {
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-center gap-2 py-6 border-t border-white/5">
+      <div className="flex items-center justify-center gap-2 py-6 border-t border-gray-200 dark:border-white/5">
         <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#6366F1] text-white font-bold text-sm">1</button>
-        <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5 text-gray-400 hover:text-white font-bold text-sm transition-colors">2</button>
-        <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5 text-gray-400 hover:text-white font-bold text-sm transition-colors">3</button>
-        <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5 text-gray-400 hover:text-white font-bold text-sm transition-colors">4</button>
-        <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5 text-gray-400 hover:text-white font-bold text-sm transition-colors">5</button>
+        <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-bold text-sm transition-colors">2</button>
+        <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-bold text-sm transition-colors">3</button>
+        <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-bold text-sm transition-colors">4</button>
+        <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-bold text-sm transition-colors">5</button>
         <span className="text-gray-500 mx-1">...</span>
-        <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5 text-gray-400 hover:text-white font-bold text-sm transition-colors">50</button>
-        <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5 text-gray-400 hover:text-white font-bold text-sm transition-colors">
+        <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-bold text-sm transition-colors">50</button>
+        <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-bold text-sm transition-colors">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
         </button>
       </div>

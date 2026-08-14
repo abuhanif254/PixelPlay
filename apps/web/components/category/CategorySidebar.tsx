@@ -40,7 +40,7 @@ export default function CategorySidebar({ currentSlug }: { currentSlug?: string 
       
       {/* Categories */}
       <div className="flex flex-col gap-1">
-        <h4 className="font-bold text-white mb-2 px-1">Categories</h4>
+        <h4 className="font-bold text-gray-900 dark:text-white mb-2 px-1">Categories</h4>
         {categories.map((cat, idx) => {
           const isActive = currentSlug === cat.slug;
           return (
@@ -50,7 +50,7 @@ export default function CategorySidebar({ currentSlug }: { currentSlug?: string 
               className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
                 isActive 
                   ? 'bg-[#6366F1]/20 text-[#6366F1] font-bold' 
-                  : 'text-gray-400 hover:text-white hover:bg-white/5 font-medium'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 font-medium'
               }`}
             >
               <div className="flex items-center gap-3">
@@ -63,14 +63,14 @@ export default function CategorySidebar({ currentSlug }: { currentSlug?: string 
             </Link>
           );
         })}
-        <button className="w-full mt-3 py-2 border border-white/10 hover:border-[#6366F1] text-[#6366F1] hover:text-white hover:bg-[#6366F1] text-xs font-bold rounded-lg transition-all">
+        <button className="w-full mt-3 py-2 border border-gray-200 dark:border-white/10 hover:border-[#6366F1] text-[#6366F1] hover:text-white hover:bg-[#6366F1] text-xs font-bold rounded-lg transition-all">
           View All Categories
         </button>
       </div>
 
       {/* Filter Games */}
       <div className="flex flex-col gap-4">
-        <h4 className="font-bold text-white px-1">Filter Games</h4>
+        <h4 className="font-bold text-gray-900 dark:text-white px-1">Filter Games</h4>
         
         {/* Difficulty */}
         <div className="flex flex-col gap-2">
@@ -80,7 +80,7 @@ export default function CategorySidebar({ currentSlug }: { currentSlug?: string 
               <div className="relative flex items-center justify-center w-4 h-4">
                 <input 
                   type="checkbox" 
-                  className="appearance-none w-4 h-4 border border-gray-600 rounded bg-[#111228] checked:bg-[#6366F1] checked:border-[#6366F1] transition-colors cursor-pointer"
+                  className="appearance-none w-4 h-4 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-[#111228] checked:bg-[#6366F1] checked:border-[#6366F1] transition-colors cursor-pointer"
                   checked={selectedDifficulty === diff.name}
                   onChange={() => setSelectedDifficulty(diff.name)}
                 />
@@ -90,9 +90,9 @@ export default function CategorySidebar({ currentSlug }: { currentSlug?: string 
                   </svg>
                 )}
               </div>
-              <span className={`text-sm transition-colors flex-1 flex justify-between ${selectedDifficulty === diff.name ? 'text-white font-bold' : 'text-gray-400 group-hover:text-gray-300'}`}>
+              <span className={`text-sm transition-colors flex-1 flex justify-between ${selectedDifficulty === diff.name ? 'text-gray-900 dark:text-white font-bold' : 'text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-300'}`}>
                 {diff.name}
-                {diff.count && <span className="text-gray-600 text-xs font-normal">({diff.count})</span>}
+                {diff.count && <span className="text-gray-500 dark:text-gray-600 text-xs font-normal">({diff.count})</span>}
               </span>
             </label>
           ))}
@@ -106,10 +106,10 @@ export default function CategorySidebar({ currentSlug }: { currentSlug?: string 
               <div className="relative flex items-center justify-center w-4 h-4">
                 <input 
                   type="checkbox" 
-                  className="appearance-none w-4 h-4 border border-gray-600 rounded bg-[#111228] checked:bg-[#6366F1] checked:border-[#6366F1] transition-colors cursor-pointer"
+                  className="appearance-none w-4 h-4 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-[#111228] checked:bg-[#6366F1] checked:border-[#6366F1] transition-colors cursor-pointer"
                 />
               </div>
-              <span className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">{feat}</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-300 transition-colors">{feat}</span>
             </label>
           ))}
         </div>
@@ -117,14 +117,14 @@ export default function CategorySidebar({ currentSlug }: { currentSlug?: string 
 
       {/* Sort By */}
       <div className="flex flex-col gap-2">
-        <h4 className="font-bold text-white px-1 mb-2">Sort By</h4>
+        <h4 className="font-bold text-gray-900 dark:text-white px-1 mb-2">Sort By</h4>
         {sorts.map((sort, idx) => (
           <label key={idx} className="flex items-center gap-3 px-1 cursor-pointer group">
             <div className="relative flex items-center justify-center w-4 h-4">
               <input 
                 type="radio" 
                 name="sort"
-                className="appearance-none w-4 h-4 border border-gray-600 rounded-full bg-[#111228] checked:border-[#6366F1] transition-colors cursor-pointer"
+                className="appearance-none w-4 h-4 border border-gray-300 dark:border-gray-600 rounded-full bg-white dark:bg-[#111228] checked:border-[#6366F1] transition-colors cursor-pointer"
                 checked={selectedSort === sort}
                 onChange={() => setSelectedSort(sort)}
               />
@@ -132,7 +132,7 @@ export default function CategorySidebar({ currentSlug }: { currentSlug?: string 
                 <div className="absolute w-2 h-2 bg-[#6366F1] rounded-full pointer-events-none" />
               )}
             </div>
-            <span className={`text-sm transition-colors ${selectedSort === sort ? 'text-white font-bold' : 'text-gray-400 group-hover:text-gray-300'}`}>
+            <span className={`text-sm transition-colors ${selectedSort === sort ? 'text-gray-900 dark:text-white font-bold' : 'text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-300'}`}>
               {sort}
             </span>
           </label>

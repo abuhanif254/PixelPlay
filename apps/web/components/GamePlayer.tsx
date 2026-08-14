@@ -36,10 +36,10 @@ export default function GamePlayer({ children, title, slug, image }: GamePlayerP
   return (
     <div 
       ref={containerRef}
-      className="w-full relative bg-[#111228] rounded-2xl border border-white/5 overflow-hidden shadow-2xl min-h-[400px] md:min-h-[500px]"
+      className="w-full relative bg-white dark:bg-[#111228] rounded-2xl border border-gray-200 dark:border-white/5 overflow-hidden shadow-2xl min-h-[400px] md:min-h-[500px]"
     >
       {!isPlaying ? (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0A0B1A]/90 z-20">
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/90 dark:bg-[#0A0B1A]/90 z-20 transition-colors">
           {image && (
             <Image 
               src={image} 
@@ -57,7 +57,7 @@ export default function GamePlayer({ children, title, slug, image }: GamePlayerP
               <div className="absolute inset-0 rounded-full bg-[#6366F1] animate-ping opacity-20"></div>
               <Play size={36} className="ml-2 group-hover:scale-110 transition-transform" />
             </button>
-            <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide font-outfit drop-shadow-md">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-wide font-outfit drop-shadow-md">
               Play {title}
             </h2>
           </div>
@@ -66,7 +66,7 @@ export default function GamePlayer({ children, title, slug, image }: GamePlayerP
         <div className="w-full h-full flex flex-col md:flex-row p-4 md:p-6 gap-6 relative z-10">
           
           {/* Game Canvas Area (Left Side) */}
-          <div className="flex-1 flex items-center justify-center bg-[#0A0B1A]/50 rounded-xl border border-white/5 overflow-hidden min-h-[400px]">
+          <div className="flex-1 flex items-center justify-center bg-gray-100 dark:bg-[#0A0B1A]/50 rounded-xl border border-gray-200 dark:border-white/5 overflow-hidden min-h-[400px]">
             {children}
           </div>
           
@@ -74,14 +74,14 @@ export default function GamePlayer({ children, title, slug, image }: GamePlayerP
           <div className="w-full md:w-64 flex flex-col gap-4 shrink-0">
             
             {/* Score & Best Box */}
-            <div className="flex bg-[#0A0B1A] border border-white/5 rounded-xl overflow-hidden divide-x divide-white/5">
+            <div className="flex bg-gray-50 dark:bg-[#0A0B1A] border border-gray-200 dark:border-white/5 rounded-xl overflow-hidden divide-x divide-gray-200 dark:divide-white/5">
               <div className="flex-1 py-3 flex flex-col items-center justify-center">
                 <span className="text-[10px] font-bold text-gray-500 tracking-widest mb-0.5">SCORE</span>
-                <span className="text-xl font-bold text-white font-outfit">2048</span>
+                <span className="text-xl font-bold text-gray-900 dark:text-white font-outfit">2048</span>
               </div>
               <div className="flex-1 py-3 flex flex-col items-center justify-center">
                 <span className="text-[10px] font-bold text-gray-500 tracking-widest mb-0.5">BEST</span>
-                <span className="text-xl font-bold text-white font-outfit">4096</span>
+                <span className="text-xl font-bold text-gray-900 dark:text-white font-outfit">4096</span>
               </div>
             </div>
 
@@ -91,34 +91,34 @@ export default function GamePlayer({ children, title, slug, image }: GamePlayerP
               New Game
             </button>
 
-            <button className="w-full py-3 bg-transparent border border-white/10 hover:bg-white/5 text-gray-300 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors">
+            <button className="w-full py-3 bg-transparent border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/5 text-gray-700 dark:text-gray-300 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors">
               <RotateCcw size={16} />
               Undo
             </button>
 
-            <button className="w-full py-3 bg-transparent border border-white/10 hover:bg-white/5 text-gray-300 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors mb-auto">
+            <button className="w-full py-3 bg-transparent border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/5 text-gray-700 dark:text-gray-300 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors mb-auto">
               <HelpCircle size={16} />
               How to Play
             </button>
             
             {/* Universal Toolbar (Bottom Area) */}
-            <div className="flex items-center justify-between gap-2 mt-4 pt-4 border-t border-white/5">
+            <div className="flex items-center justify-between gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-white/5">
               <button 
                 onClick={toggleFullscreen}
-                className="flex-1 py-3 flex items-center justify-center bg-transparent border border-white/10 hover:bg-white/5 text-gray-400 hover:text-white rounded-xl transition-all"
+                className="flex-1 py-3 flex items-center justify-center bg-transparent border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-xl transition-all"
                 title="Fullscreen"
               >
                 <Maximize2 size={16} />
               </button>
               <button 
-                className="flex-1 py-3 flex items-center justify-center bg-transparent border border-white/10 hover:bg-white/5 text-gray-400 hover:text-white rounded-xl transition-all"
+                className="flex-1 py-3 flex items-center justify-center bg-transparent border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-xl transition-all"
                 title="Theme Toggle"
               >
                 <Sun size={16} />
               </button>
               <button 
                 onClick={() => setIsMuted(!isMuted)}
-                className="flex-1 py-3 flex items-center justify-center bg-transparent border border-white/10 hover:bg-white/5 text-gray-400 hover:text-white rounded-xl transition-all"
+                className="flex-1 py-3 flex items-center justify-center bg-transparent border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-xl transition-all"
                 title="Toggle Sound"
               >
                 {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}

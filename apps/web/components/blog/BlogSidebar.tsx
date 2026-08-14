@@ -46,8 +46,8 @@ export default function BlogSidebar() {
     <div className="flex flex-col gap-8 w-full">
       
       {/* Categories */}
-      <div className="bg-[#111228] border border-white/5 rounded-2xl p-6 shadow-xl">
-        <h3 className="text-xl font-bold font-outfit text-white mb-6">Categories</h3>
+      <div className="bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-xl dark:shadow-none">
+        <h3 className="text-xl font-bold font-outfit text-gray-900 dark:text-white mb-6">Categories</h3>
         <ul className="space-y-4">
           {categories.map((cat, i) => (
             <li key={i}>
@@ -56,8 +56,8 @@ export default function BlogSidebar() {
                 className="flex items-center justify-between group"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-gray-400 group-hover:text-white transition-colors text-sm">{cat.icon}</span>
-                  <span className="text-gray-400 group-hover:text-white transition-colors text-sm font-medium">{cat.name}</span>
+                  <span className="text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors text-sm">{cat.icon}</span>
+                  <span className="text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors text-sm font-medium">{cat.name}</span>
                 </div>
                 <span className="text-gray-500 text-xs font-bold">{cat.count}</span>
               </Link>
@@ -75,8 +75,8 @@ export default function BlogSidebar() {
       </div>
 
       {/* Popular Posts */}
-      <div className="bg-[#111228] border border-white/5 rounded-2xl p-6 shadow-xl">
-        <h3 className="text-xl font-bold font-outfit text-white mb-6">Popular Posts</h3>
+      <div className="bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-xl dark:shadow-none">
+        <h3 className="text-xl font-bold font-outfit text-gray-900 dark:text-white mb-6">Popular Posts</h3>
         <div className="flex flex-col gap-5">
           {popularPosts.map((post, i) => (
             <Link key={i} href="#" className="flex gap-4 group">
@@ -88,7 +88,7 @@ export default function BlogSidebar() {
                 />
               </div>
               <div className="flex flex-col justify-center">
-                <h4 className="text-sm font-bold text-gray-300 leading-tight group-hover:text-[#6366F1] transition-colors mb-1 line-clamp-2">
+                <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 leading-tight group-hover:text-[#6366F1] transition-colors mb-1 line-clamp-2">
                   {post.title}
                 </h4>
                 <span className="text-xs text-gray-500">{post.date}</span>
@@ -99,12 +99,12 @@ export default function BlogSidebar() {
       </div>
 
       {/* Newsletter */}
-      <div className="bg-[#111228] border border-white/5 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+      <div className="bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-xl dark:shadow-none relative overflow-hidden">
         {/* Decorative background glow */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-[#6366F1]/10 blur-[50px] rounded-full pointer-events-none" />
         
-        <h3 className="text-xl font-bold font-outfit text-white mb-3 relative z-10">Subscribe to Newsletter</h3>
-        <p className="text-gray-400 text-sm mb-6 leading-relaxed relative z-10">
+        <h3 className="text-xl font-bold font-outfit text-gray-900 dark:text-white mb-3 relative z-10">Subscribe to Newsletter</h3>
+        <p className="text-gray-600 dark:text-gray-400 text-sm mb-6 leading-relaxed relative z-10">
           Get the latest gaming news, tips and updates straight to your inbox.
         </p>
         
@@ -112,7 +112,7 @@ export default function BlogSidebar() {
           <input 
             type="email" 
             placeholder="Enter your email..." 
-            className="w-full bg-[#0A0B1A] border border-white/10 text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-[#6366F1] transition-colors placeholder:text-gray-600"
+            className="w-full bg-gray-50 dark:bg-[#0A0B1A] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-[#6366F1] transition-colors placeholder:text-gray-400 dark:placeholder:text-gray-600 shadow-sm dark:shadow-none"
             required
           />
           <button 
