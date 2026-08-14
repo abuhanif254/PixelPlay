@@ -1,6 +1,6 @@
 import React from 'react';
 import { TrafficChart, RevenueChart } from '@/components/admin/AdminCharts';
-import { Users, Gamepad2, DollarSign, Activity } from 'lucide-react';
+import { Users, Gamepad2, DollarSign, Activity, FileText } from 'lucide-react';
 
 export default function AdminDashboardPage() {
   const kpis = [
