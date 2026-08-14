@@ -84,7 +84,7 @@ export function RevenueChart() {
             cursor={{ fill: '#ffffff0a' }}
             contentStyle={{ backgroundColor: '#111228', borderColor: '#ffffff1a', borderRadius: '12px', color: '#fff', fontSize: '12px' }}
             itemStyle={{ color: '#EAB308', fontWeight: 'bold' }}
-            formatter={(value: number) => [`$${value}`, 'Revenue']}
+            formatter={(value: any) => [`$${value}`, 'Revenue']}
           />
           <Bar dataKey="revenue" fill="#EAB308" radius={[4, 4, 0, 0]} />
         </BarChart>
