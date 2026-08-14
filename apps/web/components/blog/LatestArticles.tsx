@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 export default function LatestArticles() {
   const tabs = ['All', 'Guides', 'Tips & Tricks', 'News', 'Reviews', 'Walkthroughs'];
@@ -42,7 +43,7 @@ export default function LatestArticles() {
     <div>
       {/* Header & Tabs */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <h2 className="text-2xl font-bold font-outfit text-white">Latest Articles</h2>
+        <h2 className="text-2xl font-bold font-outfit text-gray-900 dark:text-white">Latest Articles</h2>
         <div className="flex flex-wrap items-center gap-2">
           {tabs.map((tab, i) => (
             <button 
@@ -50,7 +51,7 @@ export default function LatestArticles() {
               className={`px-4 py-1.5 rounded-full text-xs font-bold transition-colors ${
                 i === 0 
                 ? 'bg-[#6366F1] text-white' 
-                : 'bg-transparent border border-white/10 text-gray-400 hover:text-white hover:border-white/30'
+                : 'bg-transparent border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-300 dark:hover:border-white/30'
               }`}
             >
               {tab}
@@ -62,13 +63,15 @@ export default function LatestArticles() {
       {/* List */}
       <div className="flex flex-col gap-4">
         {articles.map((article, i) => (
-          <div key={i} className="flex flex-col sm:flex-row gap-4 sm:gap-6 bg-[#111228] border border-white/5 p-4 rounded-2xl hover:border-white/10 transition-colors group">
+          <div key={i} className="flex flex-col sm:flex-row gap-4 sm:gap-6 bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 p-4 rounded-2xl hover:border-gray-300 dark:hover:border-white/10 shadow-sm dark:shadow-none transition-colors group">
             {/* Image */}
             <div className="w-full sm:w-64 aspect-video sm:aspect-auto sm:h-36 shrink-0 rounded-xl overflow-hidden relative">
-              <img 
+              <Image 
                 src={article.image} 
-                alt={article.title} 
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                alt={article.title}
+                fill
+                sizes="(max-width: 640px) 100vw, 300px"
+                className="object-cover transition-transform duration-700 group-hover:scale-105"
               />
             </div>
 
@@ -77,17 +80,17 @@ export default function LatestArticles() {
               <span className="inline-block px-2 py-1 bg-[#6366F1]/20 text-[#6366F1] text-[10px] font-bold rounded uppercase tracking-wider w-fit mb-2">
                 {article.category}
               </span>
-              <h3 className="text-xl font-bold text-white mb-2 leading-tight group-hover:text-[#6366F1] transition-colors">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 leading-tight group-hover:text-[#6366F1] transition-colors">
                 {article.title}
               </h3>
-              <p className="text-gray-400 text-sm leading-relaxed mb-4 line-clamp-2 max-w-2xl">
+              <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed mb-4 line-clamp-2 max-w-2xl">
                 {article.description}
               </p>
               
               <div className="flex items-center justify-between mt-auto">
                 <div className="flex items-center gap-3 text-xs text-gray-500 font-medium">
                   <span>{article.date}</span>
-                  <span className="w-1 h-1 rounded-full bg-gray-700" />
+                  <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700" />
                   <span>{article.readTime}</span>
                 </div>
                 <button className="px-4 py-1.5 bg-[#6366F1]/10 text-[#6366F1] hover:bg-[#6366F1] hover:text-white text-xs font-bold rounded-lg transition-colors">
@@ -107,17 +110,17 @@ export default function LatestArticles() {
             className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold transition-colors ${
               num === 1 
               ? 'bg-[#6366F1] text-white' 
-              : 'bg-[#111228] border border-white/5 text-gray-400 hover:text-white hover:border-white/20'
+              : 'bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-300 dark:hover:border-white/20'
             }`}
           >
             {num}
           </button>
         ))}
         <span className="text-gray-500 px-1">...</span>
-        <button className="w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold bg-[#111228] border border-white/5 text-gray-400 hover:text-white hover:border-white/20">
+        <button className="w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-300 dark:hover:border-white/20">
           11
         </button>
-        <button className="h-8 px-4 flex items-center justify-center gap-1 rounded-lg text-sm font-bold bg-[#111228] border border-white/5 text-gray-400 hover:text-white hover:border-white/20 ml-2">
+        <button className="h-8 px-4 flex items-center justify-center gap-1 rounded-lg text-sm font-bold bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-300 dark:hover:border-white/20 ml-2">
           Next
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

@@ -31,13 +31,13 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
   return (
     <div className="w-full mt-10">
       {/* Anchor Navigation Header */}
-      <div className="flex items-center gap-6 border-b border-white/5 mb-8 overflow-x-auto custom-scrollbar pb-1">
+      <div className="flex items-center gap-6 border-b border-gray-200 dark:border-white/5 mb-8 overflow-x-auto custom-scrollbar pb-1">
         {TABS.map((tab, index) => (
           <button
             key={tab.id}
             onClick={() => scrollToSection(tab.id)}
             className={`whitespace-nowrap pb-3 text-sm font-bold transition-all relative hover:text-[#6366F1] ${
-              index === 0 ? 'text-[#6366F1]' : 'text-gray-400'
+              index === 0 ? 'text-[#6366F1]' : 'text-gray-600 dark:text-gray-400'
             }`}
           >
             {tab.label}
@@ -58,12 +58,12 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
             
             {/* About Section */}
             <div id="about" className="scroll-mt-32">
-              <h3 className="text-xl font-bold mb-3 text-white font-outfit">About {config.title}</h3>
-              <p className="text-sm md:text-base leading-relaxed text-gray-400">
+              <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white font-outfit">About {config.title}</h3>
+              <p className="text-sm md:text-base leading-relaxed text-gray-600 dark:text-gray-400">
                 {config.description || `${config.title} is a free online game that you can play directly in your browser. No downloads or installations required.`}
               </p>
               {config.history && (
-                <div dangerouslySetInnerHTML={{ __html: config.history }} className="text-sm md:text-base text-gray-400 leading-relaxed mt-4" />
+                <div dangerouslySetInnerHTML={{ __html: config.history }} className="text-sm md:text-base text-gray-600 dark:text-gray-400 leading-relaxed mt-4" />
               )}
             </div>
 
@@ -74,39 +74,39 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
               screenshots={config.screenshots} 
             />
 
-            <div className="w-full h-px bg-white/5 my-8" />
+            <div className="w-full h-px bg-gray-200 dark:bg-white/5 my-8" />
 
             {/* Tips Section */}
             <div id="tips" className="scroll-mt-32">
-              <h3 className="text-xl font-bold mb-4 text-white font-outfit">Tips & Tricks</h3>
+              <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white font-outfit">Tips & Tricks</h3>
               {config.tips && config.tips.length > 0 ? (
-                <ul className="space-y-2 list-disc pl-5 text-gray-400 text-sm md:text-base">
+                <ul className="space-y-2 list-disc pl-5 text-gray-600 dark:text-gray-400 text-sm md:text-base">
                   {config.tips.map((tip: string, idx: number) => (
                     <li key={idx} className="pl-1">{tip}</li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-gray-400 text-sm">No tips available for this game yet.</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">No tips available for this game yet.</p>
               )}
               {config.strategy && (
-                <div dangerouslySetInnerHTML={{ __html: config.strategy }} className="text-sm md:text-base text-gray-400 leading-relaxed mt-4" />
+                <div dangerouslySetInnerHTML={{ __html: config.strategy }} className="text-sm md:text-base text-gray-600 dark:text-gray-400 leading-relaxed mt-4" />
               )}
             </div>
 
             {/* Reviews Section */}
             <GameReviews title={config.title} rating={config.rating} />
 
-            <div className="w-full h-px bg-white/5 my-8" />
+            <div className="w-full h-px bg-gray-200 dark:bg-white/5 my-8" />
 
             {/* FAQ Section */}
             <div id="faq" className="scroll-mt-32">
-              <h3 className="text-xl font-bold mb-4 text-white font-outfit">Frequently Asked Questions</h3>
+              <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white font-outfit">Frequently Asked Questions</h3>
               {config.faqs && config.faqs.length > 0 ? (
                 <div className="space-y-3">
                   {config.faqs.map((faq: {q: string, a: string}, idx: number) => (
-                    <div key={idx} className="border border-white/10 rounded-xl overflow-hidden bg-transparent transition-colors hover:bg-white/5">
+                    <div key={idx} className="border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-transparent transition-colors hover:bg-gray-50 dark:hover:bg-white/5">
                       <div className="p-4 flex items-center justify-between cursor-pointer">
-                        <h4 className="font-bold text-gray-300 text-sm">{faq.q}</h4>
+                        <h4 className="font-bold text-gray-800 dark:text-gray-300 text-sm">{faq.q}</h4>
                         <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
@@ -115,7 +115,7 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-400 text-sm">No FAQs available for this game yet.</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">No FAQs available for this game yet.</p>
               )}
               
               <div className="mt-4 flex justify-end">
@@ -135,7 +135,7 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
         {/* Right Column - Related Games (Will move later or keep as sidebar and add carousel below) */}
         <div className="lg:col-span-4">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-base font-bold text-white font-outfit">Related Games</h3>
+            <h3 className="text-base font-bold text-gray-900 dark:text-white font-outfit">Related Games</h3>
             <Link 
               href={`/games?category=${config.category}`} 
               className="text-[#6366F1] text-xs font-bold hover:underline"

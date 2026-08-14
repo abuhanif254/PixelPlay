@@ -36,6 +36,10 @@ export async function generateMetadata(
   return {
     title,
     description,
+    keywords: [config.title, config.category || 'games', 'play online free', 'browser game', 'pixelplay'],
+    alternates: {
+      canonical: `https://pixelplay.com/games/${slug}`,
+    },
     openGraph: {
       title,
       description,
@@ -143,15 +147,15 @@ export default function GamePage({ params }: GamePageProps) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
         />
       )}
-      <div className="bg-[#05050F] min-h-screen text-white pt-24 pb-12">
+      <div className="bg-gray-50 dark:bg-[#05050F] min-h-screen text-gray-900 dark:text-white pt-24 pb-12 transition-colors">
         <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-7xl">
           
           {/* Breadcrumbs */}
           <nav className="flex items-center gap-2 text-sm text-[#6366F1] font-bold mb-6">
             <Link href="/" className="hover:underline">Home</Link>
-            <ChevronRight size={14} className="text-gray-500" />
+            <ChevronRight size={14} className="text-gray-400 dark:text-gray-500" />
             <Link href={`/games?category=${config.category}`} className="hover:underline">{config.category} Games</Link>
-            <ChevronRight size={14} className="text-gray-500" />
+            <ChevronRight size={14} className="text-gray-400 dark:text-gray-500" />
             <span className="text-[#F59E0B]">{config.title}</span>
           </nav>
 
@@ -159,11 +163,11 @@ export default function GamePage({ params }: GamePageProps) {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
             <div className="flex items-center gap-5">
               {/* Game Icon */}
-              <div className="w-20 h-20 rounded-2xl overflow-hidden bg-[#111228] border border-white/10 shrink-0 relative shadow-xl shadow-black/50">
+              <div className="w-20 h-20 rounded-2xl overflow-hidden bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/10 shrink-0 relative shadow-xl shadow-black/50">
                 {config.image ? (
                   <img src={config.image} alt={config.title} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center font-bold text-gray-500 bg-gradient-to-br from-[#111228] to-[#1D1B4B]">
+                  <div className="w-full h-full flex items-center justify-center font-bold text-gray-400 dark:text-gray-500 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-[#111228] dark:to-[#1D1B4B]">
                     {config.title.substring(0,2).toUpperCase()}
                   </div>
                 )}
@@ -171,10 +175,10 @@ export default function GamePage({ params }: GamePageProps) {
               
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-3">
-                  <h1 className="text-3xl md:text-4xl font-extrabold font-outfit text-white tracking-wide">
+                  <h1 className="text-3xl md:text-4xl font-extrabold font-outfit text-gray-900 dark:text-white tracking-wide">
                     {config.title}
                   </h1>
-                  <span className="px-3 py-1 bg-[#111228] border border-[#6366F1]/30 text-[#6366F1] text-xs font-bold rounded-lg shadow-sm shadow-[#6366F1]/10">
+                  <span className="px-3 py-1 bg-white dark:bg-[#111228] border border-[#6366F1]/30 text-[#6366F1] text-xs font-bold rounded-lg shadow-sm shadow-[#6366F1]/10">
                     {config.category}
                   </span>
                 </div>
@@ -188,10 +192,10 @@ export default function GamePage({ params }: GamePageProps) {
                       <Star size={14} className="fill-current" />
                       <Star size={14} className="fill-current opacity-50" />
                     </div>
-                    <span className="text-white font-bold ml-1">{config.rating || '4.6'}</span>
+                    <span className="text-gray-900 dark:text-white font-bold ml-1">{config.rating || '4.6'}</span>
                     <span className="text-gray-500">({mockVotes})</span>
                   </div>
-                  <div className="w-1 h-1 rounded-full bg-gray-600"></div>
+                  <div className="w-1 h-1 rounded-full bg-gray-400 dark:bg-gray-600"></div>
                   <div className="flex items-center gap-1.5">
                     <Clock size={14} className="text-gray-500" />
                     <span>{mockPlays}</span>
@@ -200,7 +204,7 @@ export default function GamePage({ params }: GamePageProps) {
               </div>
             </div>
 
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-transparent border border-white/10 hover:border-white/20 hover:bg-white/5 rounded-xl transition-all text-sm font-bold text-gray-300 w-fit shrink-0">
+            <button className="flex items-center gap-2 px-4 py-2.5 bg-transparent border border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/20 hover:bg-gray-50 dark:hover:bg-white/5 rounded-xl transition-all text-sm font-bold text-gray-700 dark:text-gray-300 w-fit shrink-0">
               <Heart size={16} className="text-red-500" />
               Add to Favorites
             </button>
@@ -233,9 +237,9 @@ export default function GamePage({ params }: GamePageProps) {
               </div>
 
               {/* How to Play Box */}
-              <div className="bg-[#111228] border border-white/5 rounded-2xl p-6 shadow-xl">
-                <h3 className="text-lg font-bold font-outfit text-white mb-4">How to Play</h3>
-                <div className="text-sm text-gray-300 leading-relaxed space-y-4">
+              <div className="bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-xl">
+                <h3 className="text-lg font-bold font-outfit text-gray-900 dark:text-white mb-4">How to Play</h3>
+                <div className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed space-y-4">
                   {config.strategy ? (
                     <div dangerouslySetInnerHTML={{ __html: config.strategy }} />
                   ) : (
@@ -249,83 +253,83 @@ export default function GamePage({ params }: GamePageProps) {
               </div>
 
               {/* Controls Box */}
-              <div className="bg-[#111228] border border-white/5 rounded-2xl p-6 shadow-xl">
-                <h3 className="text-lg font-bold font-outfit text-white mb-4">Controls</h3>
+              <div className="bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-xl">
+                <h3 className="text-lg font-bold font-outfit text-gray-900 dark:text-white mb-4">Controls</h3>
                 
                 {config.keyboardControls ? (
                   <ul className="space-y-3">
                     {Object.entries(config.keyboardControls).map(([key, action]) => (
                       <li key={key} className="flex items-center gap-3">
-                        <kbd className="min-w-[28px] h-7 px-2 flex items-center justify-center bg-[#0A0B1A] border border-white/10 rounded-lg text-xs font-bold font-mono text-gray-300 shadow-[0_2px_0_rgba(255,255,255,0.1)]">
+                        <kbd className="min-w-[28px] h-7 px-2 flex items-center justify-center bg-gray-50 dark:bg-[#0A0B1A] border border-gray-200 dark:border-white/10 rounded-lg text-xs font-bold font-mono text-gray-800 dark:text-gray-300 shadow-[0_2px_0_rgba(0,0,0,0.05)] dark:shadow-[0_2px_0_rgba(255,255,255,0.1)]">
                           {key}
                         </kbd>
-                        <span className="text-sm text-gray-400">{action as React.ReactNode}</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">{action as React.ReactNode}</span>
                       </li>
                     ))}
                   </ul>
                 ) : (
                   <ul className="space-y-3">
                     <li className="flex items-center gap-3">
-                      <kbd className="w-7 h-7 flex items-center justify-center bg-[#0A0B1A] border border-white/10 rounded-lg text-gray-300 shadow-[0_2px_0_rgba(255,255,255,0.1)]">
+                      <kbd className="w-7 h-7 flex items-center justify-center bg-gray-50 dark:bg-[#0A0B1A] border border-gray-200 dark:border-white/10 rounded-lg text-gray-800 dark:text-gray-300 shadow-[0_2px_0_rgba(0,0,0,0.05)] dark:shadow-[0_2px_0_rgba(255,255,255,0.1)]">
                         <ArrowUp size={14} />
                       </kbd>
-                      <span className="text-sm text-gray-400">Move Up</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Move Up</span>
                     </li>
                     <li className="flex items-center gap-3">
-                      <kbd className="w-7 h-7 flex items-center justify-center bg-[#0A0B1A] border border-white/10 rounded-lg text-gray-300 shadow-[0_2px_0_rgba(255,255,255,0.1)]">
+                      <kbd className="w-7 h-7 flex items-center justify-center bg-gray-50 dark:bg-[#0A0B1A] border border-gray-200 dark:border-white/10 rounded-lg text-gray-800 dark:text-gray-300 shadow-[0_2px_0_rgba(0,0,0,0.05)] dark:shadow-[0_2px_0_rgba(255,255,255,0.1)]">
                         <ArrowDown size={14} />
                       </kbd>
-                      <span className="text-sm text-gray-400">Move Down</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Move Down</span>
                     </li>
                     <li className="flex items-center gap-3">
-                      <kbd className="w-7 h-7 flex items-center justify-center bg-[#0A0B1A] border border-white/10 rounded-lg text-gray-300 shadow-[0_2px_0_rgba(255,255,255,0.1)]">
+                      <kbd className="w-7 h-7 flex items-center justify-center bg-gray-50 dark:bg-[#0A0B1A] border border-gray-200 dark:border-white/10 rounded-lg text-gray-800 dark:text-gray-300 shadow-[0_2px_0_rgba(0,0,0,0.05)] dark:shadow-[0_2px_0_rgba(255,255,255,0.1)]">
                         <ArrowLeft size={14} />
                       </kbd>
-                      <span className="text-sm text-gray-400">Move Left</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Move Left</span>
                     </li>
                     <li className="flex items-center gap-3">
-                      <kbd className="w-7 h-7 flex items-center justify-center bg-[#0A0B1A] border border-white/10 rounded-lg text-gray-300 shadow-[0_2px_0_rgba(255,255,255,0.1)]">
+                      <kbd className="w-7 h-7 flex items-center justify-center bg-gray-50 dark:bg-[#0A0B1A] border border-gray-200 dark:border-white/10 rounded-lg text-gray-800 dark:text-gray-300 shadow-[0_2px_0_rgba(0,0,0,0.05)] dark:shadow-[0_2px_0_rgba(255,255,255,0.1)]">
                         <ArrowRight size={14} />
                       </kbd>
-                      <span className="text-sm text-gray-400">Move Right</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Move Right</span>
                     </li>
                   </ul>
                 )}
               </div>
 
               {/* Game Info Box */}
-              <div className="bg-[#111228] border border-white/5 rounded-2xl p-6 shadow-xl flex-1">
-                <h3 className="text-lg font-bold font-outfit text-white mb-4">Game Info</h3>
+              <div className="bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-xl flex-1">
+                <h3 className="text-lg font-bold font-outfit text-gray-900 dark:text-white mb-4">Game Info</h3>
                 <div className="grid grid-cols-2 gap-y-4 gap-x-2 text-sm">
                   
                   <div className="flex flex-col gap-1">
                     <span className="text-gray-500 font-medium">Developer</span>
-                    <span className="text-gray-300">{config.developer || 'PixelPlay'}</span>
+                    <span className="text-gray-800 dark:text-gray-300">{config.developer || 'PixelPlay'}</span>
                   </div>
                   
                   <div className="flex flex-col gap-1">
                     <span className="text-gray-500 font-medium">Genre</span>
-                    <span className="text-gray-300">{config.category}</span>
+                    <span className="text-gray-800 dark:text-gray-300">{config.category}</span>
                   </div>
 
                   <div className="flex flex-col gap-1">
                     <span className="text-gray-500 font-medium">Released</span>
-                    <span className="text-gray-300">{config.releaseDate || 'Aug 2026'}</span>
+                    <span className="text-gray-800 dark:text-gray-300">{config.releaseDate || 'Aug 2026'}</span>
                   </div>
 
                   <div className="flex flex-col gap-1">
                     <span className="text-gray-500 font-medium">Platform</span>
-                    <span className="text-gray-300">{config.platform || 'Browser'}</span>
+                    <span className="text-gray-800 dark:text-gray-300">{config.platform || 'Browser'}</span>
                   </div>
 
                   <div className="flex flex-col gap-1">
                     <span className="text-gray-500 font-medium">Rating</span>
-                    <span className="text-gray-300">{config.rating || '4.6'} / 5</span>
+                    <span className="text-gray-800 dark:text-gray-300">{config.rating || '4.6'} / 5</span>
                   </div>
 
                   <div className="flex flex-col gap-1">
                     <span className="text-gray-500 font-medium">Players</span>
-                    <span className="text-gray-300">1 Player</span>
+                    <span className="text-gray-800 dark:text-gray-300">1 Player</span>
                   </div>
 
                 </div>

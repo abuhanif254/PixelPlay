@@ -35,8 +35,8 @@ export default function TableOfContentsWidget() {
   }, []);
 
   return (
-    <div className="bg-transparent border border-white/5 rounded-2xl p-6 shadow-xl mb-6">
-      <h3 className="text-xl font-bold font-outfit text-white mb-6">Table of Contents</h3>
+    <div className="bg-white dark:bg-transparent border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-sm dark:shadow-xl mb-6">
+      <h3 className="text-xl font-bold font-outfit text-gray-900 dark:text-white mb-6">Table of Contents</h3>
       <nav className="flex flex-col gap-3">
         {items.map((item, index) => (
           <a
@@ -45,7 +45,7 @@ export default function TableOfContentsWidget() {
             className={`flex items-start gap-3 text-sm transition-colors ${
               activeId === item.id 
               ? 'text-[#6366F1] font-bold' 
-              : 'text-gray-400 hover:text-white font-medium'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium'
             }`}
           >
             <span className="shrink-0">{index + 1}.</span>

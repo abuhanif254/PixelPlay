@@ -12,11 +12,14 @@ export const metadata: Metadata = {
 
 export default function BlogPage() {
   return (
-    <div className="min-h-screen bg-[#05050F] text-white pt-24 pb-20">
-      <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-[1400px]">
-        
-        {/* Top Hero Section */}
+    <div className="min-h-screen bg-gray-50 dark:bg-[#05050F] text-gray-900 dark:text-white transition-colors">
+      
+      {/* Top Hero Section */}
+      <div className="pt-20">
         <BlogHero />
+      </div>
+
+      <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-[1400px] pt-12 pb-20">
 
         {/* Main Layout Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">

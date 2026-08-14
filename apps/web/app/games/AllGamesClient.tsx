@@ -209,7 +209,7 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
   const FiltersContent = (
     <>
       <div className="hidden lg:flex items-center justify-between">
-        <button className="flex items-center space-x-2 text-sm font-bold text-gray-300 hover:text-white transition-colors bg-[#111228] px-4 py-2.5 rounded-xl border border-white/5 w-full shadow-sm">
+        <button className="flex items-center space-x-2 text-sm font-bold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors bg-white dark:bg-[#111228] px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/5 w-full shadow-sm">
           <SlidersHorizontal className="w-4 h-4" />
           <span>Hide Filters</span>
           <span className="flex-1 text-right">✕</span>
@@ -218,14 +218,14 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
 
       {/* Search */}
       <div>
-        <h3 className="text-[13px] font-bold text-gray-400 mb-3 uppercase tracking-wider">Search Games</h3>
+        <h3 className="text-[13px] font-bold text-gray-600 dark:text-gray-400 mb-3 uppercase tracking-wider">Search Games</h3>
         <div className="relative">
           <input 
             type="text" 
             placeholder="Search games..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[#111228] border border-white/5 rounded-xl py-3 pl-4 pr-10 text-white text-sm focus:outline-none focus:border-[#6366F1] transition-colors"
+            className="w-full bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 rounded-xl py-3 pl-4 pr-10 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-[#6366F1] transition-colors"
           />
           <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
         </div>
@@ -233,7 +233,7 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
 
       {/* Categories */}
       <div>
-        <h3 className="text-[13px] font-bold text-gray-400 mb-3 uppercase tracking-wider">Categories</h3>
+        <h3 className="text-[13px] font-bold text-gray-600 dark:text-gray-400 mb-3 uppercase tracking-wider">Categories</h3>
         <ul className="space-y-1 max-h-[40vh] lg:max-h-none overflow-y-auto pr-2 custom-scrollbar">
           {CATEGORIES.map((cat) => (
             <li key={cat.name}>
@@ -242,11 +242,11 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13px] transition-all ${
                   activeCategory === cat.name 
                     ? 'bg-[#6366F1] text-white font-bold shadow-md shadow-[#6366F1]/20' 
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5'
                 }`}
               >
                 <span>{cat.name}</span>
-                <span className={activeCategory === cat.name ? 'text-white' : 'text-gray-600'}>{cat.count}</span>
+                <span className={activeCategory === cat.name ? 'text-white' : 'text-gray-500 dark:text-gray-600'}>{cat.count}</span>
               </button>
             </li>
           ))}
@@ -259,7 +259,7 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
 
       {/* Difficulty */}
       <div>
-        <h3 className="text-[13px] font-bold text-gray-400 mb-3 uppercase tracking-wider">Difficulty</h3>
+        <h3 className="text-[13px] font-bold text-gray-600 dark:text-gray-400 mb-3 uppercase tracking-wider">Difficulty</h3>
         <ul className="space-y-3 px-1">
           {DIFFICULTIES.map((diff) => (
             <li key={diff} className="flex items-center">
@@ -268,9 +268,9 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
                 id={`diff-${diff}`} 
                 checked={activeDiff === diff}
                 onChange={() => handleDiffChange(diff)}
-                className="w-4 h-4 rounded bg-[#111228] border border-gray-600 accent-[#6366F1] cursor-pointer"
+                className="w-4 h-4 rounded bg-white dark:bg-[#111228] border border-gray-300 dark:border-gray-600 accent-[#6366F1] cursor-pointer"
               />
-              <label htmlFor={`diff-${diff}`} className="ml-3 text-[13px] text-gray-300 cursor-pointer hover:text-white">
+              <label htmlFor={`diff-${diff}`} className="ml-3 text-[13px] text-gray-700 dark:text-gray-300 cursor-pointer hover:text-gray-900 dark:hover:text-white">
                 {diff}
               </label>
             </li>
@@ -280,7 +280,7 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
 
       {/* Features */}
       <div>
-        <h3 className="text-[13px] font-bold text-gray-400 mb-3 uppercase tracking-wider">Features</h3>
+        <h3 className="text-[13px] font-bold text-gray-600 dark:text-gray-400 mb-3 uppercase tracking-wider">Features</h3>
         <ul className="space-y-3 px-1">
           {FEATURES.map((feat) => (
             <li key={feat} className="flex items-center">
@@ -289,9 +289,9 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
                 id={`feat-${feat}`} 
                 checked={activeFeatures.includes(feat)}
                 onChange={() => toggleFeature(feat)}
-                className="w-4 h-4 rounded bg-[#111228] border border-gray-600 accent-[#6366F1] cursor-pointer"
+                className="w-4 h-4 rounded bg-white dark:bg-[#111228] border border-gray-300 dark:border-gray-600 accent-[#6366F1] cursor-pointer"
               />
-              <label htmlFor={`feat-${feat}`} className="ml-3 text-[13px] text-gray-300 cursor-pointer hover:text-white">
+              <label htmlFor={`feat-${feat}`} className="ml-3 text-[13px] text-gray-700 dark:text-gray-300 cursor-pointer hover:text-gray-900 dark:hover:text-white">
                 {feat}
               </label>
             </li>
@@ -313,11 +313,11 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
     <div className="flex flex-col lg:flex-row gap-6 xl:gap-8 relative">
       
       {/* Mobile Filters Toggle */}
-      <div className="lg:hidden flex items-center justify-between bg-[#111228] border border-white/5 p-4 rounded-xl">
+      <div className="lg:hidden flex items-center justify-between bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 p-4 rounded-xl">
         <div className="flex items-center space-x-2 text-sm">
-          <span className="font-bold text-white">{activeCategory}</span>
+          <span className="font-bold text-gray-900 dark:text-white">{activeCategory}</span>
           <span className="text-gray-500">•</span>
-          <span className="text-gray-400">{totalGames} Games</span>
+          <span className="text-gray-600 dark:text-gray-400">{totalGames} Games</span>
         </div>
         <button 
           onClick={() => setIsMobileFiltersOpen(true)}
@@ -344,13 +344,13 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-x-0 bottom-0 top-[10vh] bg-[#0A0B1A] border-t border-white/10 z-50 rounded-t-3xl p-6 lg:hidden flex flex-col shadow-2xl"
+              className="fixed inset-x-0 bottom-0 top-[10vh] bg-white dark:bg-[#0A0B1A] border-t border-gray-200 dark:border-white/10 z-50 rounded-t-3xl p-6 lg:hidden flex flex-col shadow-2xl"
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-white font-outfit">Filters</h2>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white font-outfit">Filters</h2>
                 <button 
                   onClick={() => setIsMobileFiltersOpen(false)}
-                  className="p-2 bg-white/5 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                  className="p-2 bg-gray-100 dark:bg-white/5 rounded-full hover:bg-gray-200 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -372,35 +372,35 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
       <div className="flex-1 flex flex-col min-w-0">
         
         {/* Top Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 pb-4 border-b border-white/5 gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 pb-4 border-b border-gray-200 dark:border-white/5 gap-4">
           <div className="text-lg">
             {isLoading ? (
-              <div className="h-6 w-32 bg-white/5 rounded animate-pulse"></div>
+              <div className="h-6 w-32 bg-gray-200 dark:bg-white/5 rounded animate-pulse"></div>
             ) : (
               <>
-                <span className="font-bold text-[#6366F1]">{totalGames}</span> <span className="text-gray-300 font-medium">Games Found</span>
+                <span className="font-bold text-[#6366F1]">{totalGames}</span> <span className="text-gray-600 dark:text-gray-300 font-medium">Games Found</span>
               </>
             )}
           </div>
           
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2 text-[13px] text-gray-400">
+            <div className="flex items-center space-x-2 text-[13px] text-gray-500 dark:text-gray-400">
               <span>Sort by:</span>
               <div className="relative">
-                <select className="appearance-none bg-[#0A0B1A] border border-white/10 rounded-lg py-2 pl-3 pr-8 text-white focus:outline-none focus:border-[#6366F1] cursor-pointer font-medium shadow-sm">
+                <select className="appearance-none bg-white dark:bg-[#0A0B1A] border border-gray-300 dark:border-white/10 rounded-lg py-2 pl-3 pr-8 text-gray-900 dark:text-white focus:outline-none focus:border-[#6366F1] cursor-pointer font-medium shadow-sm">
                   <option>Most Popular</option>
                   <option>Newest</option>
                   <option>Highest Rated</option>
                 </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500 pointer-events-none" />
               </div>
             </div>
             
-            <div className="flex items-center bg-[#0A0B1A] rounded-lg p-1 border border-white/5 shadow-sm">
-              <button className="p-1.5 rounded bg-[#111228] text-[#6366F1] shadow border border-white/5">
+            <div className="flex items-center bg-white dark:bg-[#0A0B1A] rounded-lg p-1 border border-gray-200 dark:border-white/5 shadow-sm">
+              <button className="p-1.5 rounded bg-gray-100 dark:bg-[#111228] text-[#6366F1] shadow border border-gray-200 dark:border-white/5">
                 <LayoutGrid className="w-4 h-4" />
               </button>
-              <button className="p-1.5 rounded text-gray-500 hover:text-white transition-colors">
+              <button className="p-1.5 rounded text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
                 <List className="w-4 h-4" />
               </button>
             </div>
@@ -439,8 +439,8 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
             <button 
               onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
-              className={`w-9 h-9 rounded-lg bg-[#111228] border border-white/5 flex items-center justify-center transition-all ${
-                currentPage === 1 ? 'opacity-50 cursor-not-allowed text-gray-600' : 'text-gray-400 hover:text-white hover:border-white/20'
+              className={`w-9 h-9 rounded-lg bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 flex items-center justify-center transition-all ${
+                currentPage === 1 ? 'opacity-50 cursor-not-allowed text-gray-400 dark:text-gray-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 dark:hover:border-white/20'
               }`}
             >
               <ChevronLeft className="w-4 h-4" />
@@ -448,7 +448,7 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
             
             {generatePagination().map((page, idx) => (
               page === '...' ? (
-                <span key={`dots-${idx}`} className="w-9 h-9 flex items-center justify-center text-gray-500 text-sm">...</span>
+                <span key={`dots-${idx}`} className="w-9 h-9 flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm">...</span>
               ) : (
                 <button 
                   key={page}
@@ -456,7 +456,7 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
                   className={`w-9 h-9 rounded-lg text-sm font-bold flex items-center justify-center transition-all ${
                     page === currentPage 
                       ? 'bg-[#6366F1] text-white shadow-md shadow-[#6366F1]/30' 
-                      : 'bg-[#111228] border border-white/5 text-gray-400 hover:text-white hover:border-white/20'
+                      : 'bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 dark:hover:border-white/20'
                   }`}
                 >
                   {page}
@@ -467,8 +467,8 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
             <button 
               onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage === totalPages}
-              className={`w-9 h-9 rounded-lg bg-[#111228] border border-white/5 flex items-center justify-center transition-all ${
-                currentPage === totalPages ? 'opacity-50 cursor-not-allowed text-gray-600' : 'text-gray-400 hover:text-white hover:border-white/20'
+              className={`w-9 h-9 rounded-lg bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 flex items-center justify-center transition-all ${
+                currentPage === totalPages ? 'opacity-50 cursor-not-allowed text-gray-400 dark:text-gray-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 dark:hover:border-white/20'
               }`}
             >
               <ChevronRight className="w-4 h-4" />

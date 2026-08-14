@@ -36,11 +36,11 @@ export default function GameReviews({ title, rating = 4.6 }: GameReviewsProps) {
   ];
 
   return (
-    <div id="reviews" className="scroll-mt-32 w-full mt-12 pt-8 border-t border-white/5">
+    <div id="reviews" className="scroll-mt-32 w-full mt-12 pt-8 border-t border-gray-200 dark:border-white/5">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h3 className="text-xl font-bold text-white font-outfit">Player Reviews</h3>
-          <div className="flex items-center gap-2 mt-2 text-sm text-gray-400">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white font-outfit">Player Reviews</h3>
+          <div className="flex items-center gap-2 mt-2 text-sm text-gray-600 dark:text-gray-400">
             <div className="flex items-center text-[#F59E0B]">
               <Star size={16} className="fill-current" />
               <Star size={16} className="fill-current" />
@@ -48,7 +48,7 @@ export default function GameReviews({ title, rating = 4.6 }: GameReviewsProps) {
               <Star size={16} className="fill-current" />
               <Star size={16} className="fill-current opacity-50" />
             </div>
-            <span className="font-bold text-white ml-1">{rating}</span> out of 5 based on 2,304 votes
+            <span className="font-bold text-gray-900 dark:text-white ml-1">{rating}</span> out of 5 based on 2,304 votes
           </div>
         </div>
         <button className="px-4 py-2 bg-[#6366F1] hover:bg-[#5457DF] text-white text-sm font-bold rounded-xl transition-colors shadow-lg shadow-[#6366F1]/20 hidden sm:flex items-center gap-2">
@@ -59,14 +59,14 @@ export default function GameReviews({ title, rating = 4.6 }: GameReviewsProps) {
 
       <div className="grid gap-6">
         {reviews.map((review) => (
-          <div key={review.id} className="bg-[#111228]/50 border border-white/5 rounded-2xl p-5 hover:bg-[#111228] transition-colors">
+          <div key={review.id} className="bg-white dark:bg-[#111228]/50 border border-gray-200 dark:border-white/5 rounded-2xl p-5 hover:bg-gray-50 dark:hover:bg-[#111228] transition-colors">
             <div className="flex justify-between items-start mb-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#6366F1] to-[#1D1B4B] flex items-center justify-center font-bold text-white">
                   {review.author.substring(0, 2).toUpperCase()}
                 </div>
                 <div>
-                  <div className="font-bold text-white text-sm">{review.author}</div>
+                  <div className="font-bold text-gray-900 dark:text-white text-sm">{review.author}</div>
                   <div className="text-xs text-gray-500">{review.date}</div>
                 </div>
               </div>
@@ -81,7 +81,7 @@ export default function GameReviews({ title, rating = 4.6 }: GameReviewsProps) {
               </div>
             </div>
             
-            <p className="text-gray-300 text-sm leading-relaxed mb-4">
+            <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed mb-4">
               {review.content}
             </p>
             
@@ -93,7 +93,7 @@ export default function GameReviews({ title, rating = 4.6 }: GameReviewsProps) {
         ))}
       </div>
       
-      <button className="w-full mt-6 py-3 border border-white/10 hover:bg-white/5 text-gray-300 text-sm font-bold rounded-xl transition-colors sm:hidden">
+      <button className="w-full mt-6 py-3 border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-700 dark:text-gray-300 text-sm font-bold rounded-xl transition-colors sm:hidden">
         Write a Review
       </button>
     </div>

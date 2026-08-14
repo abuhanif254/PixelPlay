@@ -19,6 +19,22 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   return {
     title: `${category.title} | PixelPlay`,
     description: category.description,
+    keywords: [`${category.title} games`, 'free browser games', 'play online', 'pixelplay', category.title.toLowerCase()],
+    alternates: {
+      canonical: `https://pixelplay.com/categories/${params.slug}`,
+    },
+    openGraph: {
+      title: `${category.title} | PixelPlay`,
+      description: category.description,
+      url: `https://pixelplay.com/categories/${params.slug}`,
+      siteName: 'PixelPlay Games',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${category.title} | PixelPlay`,
+      description: category.description,
+    },
   };
 }
 
@@ -30,7 +46,36 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
   }
   
   return (
-    <div className="min-h-screen bg-[#05050F] text-white pt-20 pb-20">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#05050F] text-gray-900 dark:text-white pt-20 pb-20 transition-colors duration-300">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://pixelplay.com/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Categories",
+                "item": "https://pixelplay.com/categories"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": category.title,
+                "item": `https://pixelplay.com/categories/${params.slug}`
+              }
+            ]
+          })
+        }}
+      />
       
       {/* Hero Section */}
       <CategoryHero category={category} />
