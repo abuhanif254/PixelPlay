@@ -2,7 +2,16 @@ import React from 'react';
 import Link from 'next/link';
 import { Facebook, Twitter, Link as LinkIcon } from 'lucide-react';
 
-export default function ArticleHeader() {
+import { BlogPost } from '@/lib/blogData';
+
+export default function ArticleHeader({ post }: { post: BlogPost }) {
+  // Format the date nicely
+  const formattedDate = new Date(post.date).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
   return (
     <div className="flex flex-col gap-6 mb-8">
       {/* Breadcrumbs */}
@@ -11,25 +20,23 @@ export default function ArticleHeader() {
         <span>›</span>
         <Link href="/blog" className="hover:text-[#6366F1] transition-colors">Blog</Link>
         <span>›</span>
-        <Link href="/blog/category/guides" className="hover:text-[#6366F1] transition-colors">Guides</Link>
-        <span>›</span>
-        <span className="text-[#6366F1]">Top 10 Adventure Games You Should Play in 2024</span>
+        <span className="text-[#6366F1]">{post.title}</span>
       </nav>
 
       <div className="flex flex-col gap-4">
-        {/* Category Pill */}
+        {/* Category Pill - Mocked for now */}
         <span className="inline-block px-3 py-1 bg-[#6366F1]/20 text-[#6366F1] text-xs font-bold rounded uppercase tracking-wider w-fit">
-          GUIDES
+          ARTICLE
         </span>
 
         {/* Title */}
         <h1 className="text-3xl md:text-5xl font-extrabold font-outfit text-gray-900 dark:text-white leading-tight">
-          Top 10 Adventure Games <br className="hidden md:block" /> You Should Play in 2024
+          {post.title}
         </h1>
 
         {/* Excerpt */}
         <p className="text-gray-600 dark:text-gray-400 text-base md:text-lg max-w-3xl leading-relaxed">
-          Explore our handpicked list of the best adventure games that deliver epic stories, stunning worlds, and unforgettable moments.
+          {post.description}
         </p>
       </div>
 
@@ -40,13 +47,13 @@ export default function ArticleHeader() {
         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400 font-medium">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-[#6366F1] flex items-center justify-center text-white font-bold">
-              P
+              {post.author.name.charAt(0)}
             </div>
-            <span className="text-gray-900 dark:text-white font-bold">PlayHub Team</span>
+            <span className="text-gray-900 dark:text-white font-bold">{post.author.name}</span>
             <span className="text-blue-500 text-xs">✔</span>
           </div>
           <span className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-700 hidden sm:block" />
-          <span>May 12, 2024</span>
+          <span>{formattedDate}</span>
           <span className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-700 hidden sm:block" />
           <span>8 min read</span>
           <span className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-700 hidden sm:block" />

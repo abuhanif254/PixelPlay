@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next';
 import { gamesRegistry } from '@pixelplay/games/registry';
 import { siteConfig } from '@/lib/seo';
+import { getAllBlogPosts } from '@/lib/blogData';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = siteConfig.url;
@@ -39,12 +40,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: route === '' ? 1.0 : 0.7,
   }));
 
-  // Mock blog urls for sitemap until a CMS or DB is connected
-  const blogSlugs = [
-    'top-10-adventure-games-2024',
-    'beginners-guide-rpg-games',
-    'improve-reflexes-action-games'
-  ];
+  // Generate blog URLs from the local registry
+  const blogSlugs = getAllBlogPosts().map(post => post.slug);
 
   const blogUrls = blogSlugs.map(slug => ({
     url: `${baseUrl}/blog/${slug}`,
