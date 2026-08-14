@@ -3,7 +3,7 @@ import { Inter } from 'next/font/google';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import './globals.css';
-
+import ThreeGlobalCanvas from '@/components/3d/ThreeGlobalCanvas';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
@@ -71,7 +71,7 @@ export default function RootLayout({
           data-zone="mock-zone-id" 
           data-cfasync="false" 
           async 
-          strategy="afterInteractive"
+          strategy="lazyOnload"
         />
         <ThemeProvider
           attribute="class"
@@ -80,11 +80,14 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Navbar />
-          <main className="flex-grow">
+          <main id="main-scroll-container" className="flex-grow">
             {children}
           </main>
           <Footer />
         </ThemeProvider>
+        
+        {/* Global 3D Canvas Portal System */}
+        <ThreeGlobalCanvas />
       </body>
     </html>
   );

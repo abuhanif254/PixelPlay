@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { View } from '@react-three/drei';
 
 interface SectionHeaderProps {
   title: string;
@@ -10,6 +11,7 @@ interface SectionHeaderProps {
   actionText?: string;
   actionHref?: string;
   onActionClick?: () => void;
+  icon3d?: React.ReactNode;
 }
 
 export const SectionHeader: React.FC<SectionHeaderProps> = ({ 
@@ -17,7 +19,8 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
   subtitle, 
   actionText,
   actionHref,
-  onActionClick 
+  onActionClick,
+  icon3d
 }) => {
   return (
     <motion.div 
@@ -27,8 +30,15 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
       transition={{ duration: 0.4 }}
       className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-4"
     >
-      <div>
-        <h2 className="text-fluid-2xl md:text-fluid-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+      <div className="flex-1">
+        <h2 className="text-fluid-2xl md:text-fluid-3xl font-extrabold tracking-tight text-gray-900 dark:text-white flex items-center gap-2 text-balance leading-tight">
+          {icon3d && (
+            <div className="w-12 h-12 -ml-2 shrink-0 relative">
+              <View className="absolute inset-0 z-10 w-[200%] h-[200%] -top-[50%] -left-[50%] pointer-events-none">
+                {icon3d}
+              </View>
+            </div>
+          )}
           {title}
         </h2>
         {subtitle && (

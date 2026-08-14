@@ -4,6 +4,7 @@ import React from 'react';
 import { Search, Zap, Gamepad2, Users, Star } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import Hero3DController from './Hero3DController';
 
 export const HeroSection: React.FC = () => {
   return (
@@ -33,13 +34,13 @@ export const HeroSection: React.FC = () => {
             </div>
 
             {/* Title */}
-            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-[1.1]">
+            <h1 className="text-5xl md:text-7xl lg:text-[5.5rem] font-extrabold tracking-tight mb-6 leading-[1.05] text-balance">
               Play Amazing <br />
-              <span className="text-[#8B5CF6]">Games</span> Online
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#6366F1] to-[#8B5CF6]">Games</span> Online
             </h1>
 
             {/* Description */}
-            <p className="text-gray-600 dark:text-gray-400 text-lg md:text-xl max-w-lg mb-10 leading-relaxed">
+            <p className="text-gray-600 dark:text-gray-400 text-lg md:text-xl lg:text-2xl max-w-lg mb-10 leading-relaxed text-balance">
               Discover thousands of free browser games. No downloads, no installs – just click and play instantly!
             </p>
 
@@ -114,18 +115,8 @@ export const HeroSection: React.FC = () => {
               <div className="absolute w-[550px] h-[550px] rounded-full border border-blue-500/10 shadow-[0_0_100px_30px_rgba(59,130,246,0.1)] animate-[spin_30s_linear_infinite_reverse]" />
             </div>
             
-            {/* 3D Generated Controller Image */}
-            <div className="relative w-[120%] h-[120%] z-10 -mr-20">
-              <Image 
-                src="/hero_controller.jpg" 
-                alt="3D Gaming Controller"
-                fill
-                className="object-contain drop-shadow-[0_0_50px_rgba(99,102,241,0.5)]"
-                priority
-              />
-              {/* Overlay gradient to blend edges if the generated image isn't perfectly transparent */}
-              <div className="absolute inset-0 rounded-full shadow-[inset_0_0_100px_100px_#f9fafb] dark:shadow-[inset_0_0_100px_100px_#0A0B1A]" style={{mixBlendMode: 'multiply'}} />
-            </div>
+            {/* Interactive 3D CSS Controller Effect */}
+            <Hero3DController />
           </div>
         </div>
       </div>

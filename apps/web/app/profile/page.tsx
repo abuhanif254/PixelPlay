@@ -34,8 +34,13 @@ const favoriteGames = [
 
 export default function ProfilePage() {
   return (
-    <div className="min-h-screen bg-[#05050F] text-white pt-24 pb-20">
-      <div className="container mx-auto px-4 xl:px-8 max-w-[1600px] flex flex-col lg:flex-row gap-8">
+    <div className="min-h-screen bg-white dark:bg-[#0A0B1A] text-gray-900 dark:text-white pt-24 pb-20 relative">
+      {/* Ambient Background Glows */}
+      <div className="absolute top-[10%] left-[5%] w-[40vw] h-[40vw] rounded-full bg-purple-500/5 blur-[120px] pointer-events-none" />
+      <div className="absolute top-[40%] right-[0%] w-[35vw] h-[35vw] rounded-full bg-blue-500/5 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[10%] left-[20%] w-[40vw] h-[40vw] rounded-full bg-indigo-500/5 blur-[120px] pointer-events-none" />
+      
+      <div className="container mx-auto px-4 xl:px-8 max-w-[1600px] flex flex-col lg:flex-row gap-8 relative z-10">
         
         {/* Left Sidebar */}
         <div className="hidden lg:block relative">

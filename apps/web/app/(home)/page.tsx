@@ -17,6 +17,7 @@ import HomeFAQ from '@/components/HomeFAQ';
 import PopularSearches from '@/components/PopularSearches';
 import { homepageFaqs, gameCollections } from '@/lib/constants';
 import { getAllPosts } from '@/lib/blog';
+import { FireIcon, RocketIcon, CubeIcon, RingsIcon } from '@/components/3d/SectionIcons';
 import dynamic from 'next/dynamic';
 
 const CollectionCard = dynamic(() => import('@/components/CollectionCard'));
@@ -95,7 +96,11 @@ export default async function HomePage() {
   };
 
   return (
-    <div className="flex flex-col gap-12 pb-20 bg-white dark:bg-[#0A0B1A] min-h-screen text-gray-900 dark:text-white">
+    <div className="flex flex-col gap-16 pb-20 bg-white dark:bg-[#0A0B1A] min-h-screen text-gray-900 dark:text-white relative">
+      {/* Ambient Background Glows */}
+      <div className="absolute top-[20%] left-[0%] w-[50vw] h-[50vw] rounded-full bg-purple-500/5 blur-[120px] pointer-events-none" />
+      <div className="absolute top-[60%] right-[0%] w-[40vw] h-[40vw] rounded-full bg-blue-500/5 blur-[120px] pointer-events-none" />
+      
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -104,7 +109,7 @@ export default async function HomePage() {
       <HeroSection />
       <CategoriesCarousel />
 
-      <div className="container mx-auto px-4 md:px-8 space-y-16">
+      <div className="container mx-auto px-4 md:px-8 space-y-24 relative z-10">
         {/* Continue Playing (Dynamic from localStorage) */}
         <ScrollReveal>
           <RecentGames />
@@ -114,7 +119,7 @@ export default async function HomePage() {
         <ScrollReveal delay={0.1}>
           <section aria-labelledby="new-arrivals-heading">
             <div id="new-arrivals-heading" className="sr-only">New Arrivals</div>
-            <SectionHeader title="✨ New Arrivals" actionText="View Latest" />
+            <SectionHeader title="New Arrivals" actionText="View Latest" icon3d={<RocketIcon />} />
             <HorizontalScroll>
               {gamesList.slice(0, 5).map((game, i) => (
                 <div key={i} className="w-64 flex-none shrink-0 relative">
@@ -130,7 +135,7 @@ export default async function HomePage() {
         <ScrollReveal delay={0.1}>
           <section aria-labelledby="trending-games-heading">
             <div id="trending-games-heading" className="sr-only">Trending Games</div>
-            <SectionHeader title="🔥 Trending Games" subtitle="Most played games right now" actionText="View All ->" />
+            <SectionHeader title="Trending Games" subtitle="Most played games right now" actionText="View All ->" icon3d={<FireIcon />} />
             <TrendingGamesFilter games={gamesList} />
           </section>
         </ScrollReveal>
@@ -139,10 +144,10 @@ export default async function HomePage() {
         <ScrollReveal delay={0.1}>
           <section aria-labelledby="categories-heading">
             <div id="categories-heading" className="sr-only">Popular Categories</div>
-            <SectionHeader title="🧩 Popular Categories" actionText="Explore" />
+            <SectionHeader title="Popular Categories" actionText="Explore" icon3d={<CubeIcon />} />
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {categories.map((cat, i) => (
-                 <CategoryCard key={i} name={cat.title} icon={cat.icon} gameCount={cat.count} />
+                 <CategoryCard key={i} name={cat.title} icon={<cat.icon className="w-6 h-6" />} gameCount={cat.count} />
               ))}
             </div>
           </section>
@@ -153,7 +158,7 @@ export default async function HomePage() {
           <div className="grid lg:grid-cols-2 gap-12">
             <section aria-labelledby="top-rated-heading">
               <div id="top-rated-heading" className="sr-only">Top Rated Games</div>
-              <SectionHeader title="🏆 Hall of Fame" actionText="Highest Rated" />
+              <SectionHeader title="Hall of Fame" actionText="Highest Rated" icon3d={<FireIcon />} />
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                  {gamesList.slice(0, 3).map((game, i) => (
                    <GameCard key={i} title={game.title} rating={4.9} category={game.category} slug={game.slug} />
@@ -177,7 +182,7 @@ export default async function HomePage() {
         <ScrollReveal delay={0.2}>
           <section aria-labelledby="editors-picks-heading">
             <div id="editors-picks-heading" className="sr-only">Editor's Picks</div>
-            <SectionHeader title="⭐ Editor's Picks" subtitle="Hand-picked gems for you" />
+            <SectionHeader title="Editor's Picks" subtitle="Hand-picked gems for you" icon3d={<RingsIcon />} />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               <div className="md:col-span-1">
                  <GameCard title="Ultimate Chess" rating={5.0} />
@@ -193,7 +198,7 @@ export default async function HomePage() {
         <ScrollReveal delay={0.2}>
           <section aria-labelledby="collections-heading">
             <div id="collections-heading" className="sr-only">Curated Collections</div>
-            <SectionHeader title="📚 Curated Collections" actionText="Browse All" />
+            <SectionHeader title="Curated Collections" actionText="Browse All" icon3d={<CubeIcon />} />
             <div className="grid md:grid-cols-3 gap-6">
               {gameCollections.map((col, i) => (
                 <CollectionCard key={i} title={col.title} description={col.description} imageUrls={col.imageUrls} href={col.href} />
@@ -234,9 +239,10 @@ export default async function HomePage() {
           <section aria-labelledby="guides-heading">
             <div id="guides-heading" className="sr-only">Latest Guides and News</div>
             <SectionHeader 
-              title="📖 Latest Guides & News" 
+              title="Latest Guides & News" 
               actionText="Read more" 
               actionHref="/blog"
+              icon3d={<RingsIcon />}
             />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {blogPosts.slice(0, 4).map(post => (

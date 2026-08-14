@@ -42,13 +42,15 @@ export default function Navbar() {
     { name: 'Blog', href: '/blog' },
   ];
 
+  if (pathname?.startsWith('/admin')) return null;
+
   return (
     <>
       <nav className="fixed top-0 left-0 right-0 z-50 w-full bg-white dark:bg-[#0A0B1A] border-b border-black/5 dark:border-white/5">
         <div className="container mx-auto px-4 md:px-8 h-20 flex items-center justify-between gap-4">
           
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 shrink-0">
+          <Link href="/" aria-label="PlayHub Homepage" title="Go to PlayHub Homepage" className="flex items-center gap-3 shrink-0">
             <div className="flex items-center justify-center text-[#6366F1]">
               <Gamepad2 className="w-8 h-8 fill-current" />
             </div>
@@ -70,7 +72,11 @@ export default function Navbar() {
                     onMouseEnter={() => setIsCategoriesOpen(true)}
                     onMouseLeave={() => setIsCategoriesOpen(false)}
                   >
-                    <button className="flex items-center gap-1 text-sm font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors">
+                    <button 
+                      className="flex items-center gap-1 text-sm font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors"
+                      aria-expanded={isCategoriesOpen}
+                      aria-haspopup="true"
+                    >
                       {link.name}
                       {link.icon && <link.icon className={`w-4 h-4 transition-transform ${isCategoriesOpen ? 'rotate-180' : ''}`} />}
                     </button>
@@ -107,7 +113,8 @@ export default function Navbar() {
               return (
                 <Link 
                   key={link.name} 
-                  href={link.href} 
+                  href={link.href}
+                  title={`Go to ${link.name}`}
                   className={`relative flex items-center gap-1 h-20 text-sm font-semibold transition-colors ${isActive ? 'text-gray-900 dark:text-white' : 'text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white'}`}
                 >
                   {link.name}
@@ -140,6 +147,7 @@ export default function Navbar() {
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
               className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
               aria-label="Toggle Dark Mode"
+              title="Toggle Dark Mode"
             >
               {mounted ? (theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />) : <div className="w-5 h-5" />}
             </button>
@@ -169,19 +177,19 @@ export default function Navbar() {
       {/* Mobile Bottom Navigation Bar */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-[#0A0B1A]/95 backdrop-blur-xl border-t border-black/5 dark:border-white/5 pb-safe">
         <div className="flex items-center justify-around h-16 px-2">
-          <Link href="/" className="flex flex-col items-center justify-center w-full h-full text-[#6366F1]">
+          <Link href="/" title="Home" className="flex flex-col items-center justify-center w-full h-full text-[#6366F1]">
             <Gamepad2 className="w-6 h-6 mb-1" />
             <span className="text-[10px] font-bold">Home</span>
           </Link>
-          <Link href="/categories" className="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
+          <Link href="/categories" title="Categories" className="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
             <Menu className="w-6 h-6 mb-1" />
             <span className="text-[10px] font-medium">Genres</span>
           </Link>
-          <Link href="/search" className="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
+          <Link href="/search" title="Search" className="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
             <Search className="w-6 h-6 mb-1" />
             <span className="text-[10px] font-medium">Search</span>
           </Link>
-          <Link href="/profile" className="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
+          <Link href="/profile" title="Profile" className="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
             <User className="w-6 h-6 mb-1" />
             <span className="text-[10px] font-medium">Profile</span>
           </Link>

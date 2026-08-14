@@ -1,43 +1,13 @@
 import React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
+import { getAllBlogPosts } from '@/lib/blogData';
 
 export default function LatestArticles() {
   const tabs = ['All', 'Guides', 'Tips & Tricks', 'News', 'Reviews', 'Walkthroughs'];
 
-  const articles = [
-    {
-      title: "Beginner's Guide to RPG Games",
-      description: "New to RPG games? This guide will help you understand the basics and get you started on your journey.",
-      image: "https://images.unsplash.com/photo-1552820728-8b83bb6b773f?q=80&w=400&auto=format&fit=crop",
-      category: "Guides",
-      date: "May 11, 2024",
-      readTime: "6 min read"
-    },
-    {
-      title: "7 Tips to Improve Your Reflexes in Action Games",
-      description: "Fast reflexes can make a huge difference. Here are 7 proven tips to help you react faster and win more.",
-      image: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=400&auto=format&fit=crop",
-      category: "Tips & Tricks",
-      date: "May 9, 2024",
-      readTime: "5 min read"
-    },
-    {
-      title: "New Sandbox Games You Should Try in 2024",
-      description: "Check out the most exciting sandbox games that let you build, create, and explore without limits.",
-      image: "https://images.unsplash.com/photo-1607853202273-797f1c22a38e?q=80&w=400&auto=format&fit=crop",
-      category: "News",
-      date: "May 7, 2024",
-      readTime: "4 min read"
-    },
-    {
-      title: "Review: Need for Speed Unbound – Is It Worth It?",
-      description: "We review Need for Speed Unbound and break down the gameplay, graphics, and overall experience.",
-      image: "https://images.unsplash.com/photo-1547394765-185e1e68f34e?q=80&w=400&auto=format&fit=crop",
-      category: "Reviews",
-      date: "May 6, 2024",
-      readTime: "6 min read"
-    }
-  ];
+  // Skip the first 3 posts as they are featured
+  const articles = getAllBlogPosts().slice(3);
 
   return (
     <div>
@@ -62,12 +32,12 @@ export default function LatestArticles() {
 
       {/* List */}
       <div className="flex flex-col gap-4">
-        {articles.map((article, i) => (
-          <div key={i} className="flex flex-col sm:flex-row gap-4 sm:gap-6 bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 p-4 rounded-2xl hover:border-gray-300 dark:hover:border-white/10 shadow-sm dark:shadow-none transition-colors group">
+        {articles.length > 0 ? articles.map((article, i) => (
+          <Link href={`/blog/${article.slug}`} key={article.slug} className="flex flex-col sm:flex-row gap-4 sm:gap-6 bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 p-4 rounded-2xl hover:border-gray-300 dark:hover:border-white/10 shadow-sm dark:shadow-none transition-colors group">
             {/* Image */}
             <div className="w-full sm:w-64 aspect-video sm:aspect-auto sm:h-36 shrink-0 rounded-xl overflow-hidden relative">
               <Image 
-                src={article.image} 
+                src={article.coverImage} 
                 alt={article.title}
                 fill
                 sizes="(max-width: 640px) 100vw, 300px"
@@ -78,7 +48,7 @@ export default function LatestArticles() {
             {/* Content */}
             <div className="flex flex-col justify-center flex-1 py-1">
               <span className="inline-block px-2 py-1 bg-[#6366F1]/20 text-[#6366F1] text-[10px] font-bold rounded uppercase tracking-wider w-fit mb-2">
-                {article.category}
+                ARTICLE
               </span>
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 leading-tight group-hover:text-[#6366F1] transition-colors">
                 {article.title}
@@ -89,17 +59,19 @@ export default function LatestArticles() {
               
               <div className="flex items-center justify-between mt-auto">
                 <div className="flex items-center gap-3 text-xs text-gray-500 font-medium">
-                  <span>{article.date}</span>
+                  <span>{new Date(article.date).toLocaleDateString()}</span>
                   <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700" />
-                  <span>{article.readTime}</span>
+                  <span>5 min read</span>
                 </div>
                 <button className="px-4 py-1.5 bg-[#6366F1]/10 text-[#6366F1] hover:bg-[#6366F1] hover:text-white text-xs font-bold rounded-lg transition-colors">
                   Read More
                 </button>
               </div>
             </div>
-          </div>
-        ))}
+          </Link>
+        )) : (
+          <div className="py-12 text-center text-gray-500">More articles coming soon!</div>
+        )}
       </div>
 
       {/* Pagination */}

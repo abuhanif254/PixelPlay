@@ -1,7 +1,10 @@
+'use client';
+
 import React from 'react';
 import { Play, Star } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 
 interface GameCardProps {
   title: string;
@@ -23,8 +26,13 @@ export default function GameCard({
   isNew = false
 }: GameCardProps) {
   return (
-    <Link href={slug.startsWith('#') ? slug : `/games/${slug}`} title={`Play ${title} - Free Online Game`} className="block group">
-      <div className="flex flex-col bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 rounded-2xl p-3 transition-all duration-300 hover:-translate-y-1 hover:border-[#6366F1]/50 hover:shadow-[0_8px_30px_rgba(99,102,241,0.15)] h-full">
+    <Link href={slug.startsWith('#') ? slug : `/games/${slug}`} title={`Play ${title} - Free Online Game`} className="block group h-full">
+      <motion.div 
+        whileHover={{ y: -6, scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+        className="flex flex-col bg-white dark:bg-[#111228]/80 backdrop-blur-sm border border-gray-200 dark:border-white/5 rounded-2xl p-3 h-full shadow-sm hover:border-[#6366F1]/50 hover:shadow-[0_12px_40px_rgba(99,102,241,0.15)]"
+      >
         
         {/* Image Container */}
         <div className="relative aspect-square w-full rounded-xl overflow-hidden mb-3 bg-gray-100 dark:bg-[#0A0B1A]">
@@ -78,7 +86,7 @@ export default function GameCard({
           </div>
         </div>
         
-      </div>
+      </motion.div>
     </Link>
   );
 }
