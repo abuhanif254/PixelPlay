@@ -1,6 +1,8 @@
+'use client';
 import React from 'react';
 import Link from 'next/link';
 import { Gamepad2, Trophy, Heart, Star } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function ProfileActivity() {
   const activities = [
@@ -11,17 +13,23 @@ export default function ProfileActivity() {
   ];
 
   return (
-    <div className="bg-[#111228] border border-white/5 rounded-2xl p-5 flex flex-col h-full">
+    <div className="bg-white dark:bg-[#111228]/80 backdrop-blur-md border border-gray-200 dark:border-white/5 rounded-2xl p-5 flex flex-col h-full shadow-sm">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-bold text-white">Activity Feed</h3>
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white">Activity Feed</h3>
         <Link href="/profile/activity" className="text-[#6366F1] text-xs font-bold hover:text-white transition-colors">
           View All
         </Link>
       </div>
 
       <div className="flex flex-col gap-4 flex-1">
-        {activities.map((activity) => (
-          <div key={activity.id} className="flex items-center gap-4 border-b border-white/5 pb-4 last:border-0 last:pb-0">
+        {activities.map((activity, i) => (
+          <motion.div 
+            key={activity.id} 
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.1 }}
+            className="flex items-center gap-4 border-b border-gray-100 dark:border-white/5 pb-4 last:border-0 last:pb-0"
+          >
             <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${activity.bg}`}>
               <activity.icon className={`w-5 h-5 ${activity.color}`} />
             </div>
@@ -29,20 +37,20 @@ export default function ProfileActivity() {
               <span className="text-sm text-gray-300 font-medium line-clamp-2">
                 {/* Highlight specific words based on the text structure */}
                 {activity.text.split('"Score Master"').length > 1 ? (
-                  <>You earned the achievement <span className="font-bold text-white">"Score Master"</span></>
+                  <>You earned the achievement <span className="font-bold text-gray-900 dark:text-white">"Score Master"</span></>
                 ) : activity.text.split('Sudoku').length > 1 ? (
-                  <>You played <span className="font-bold text-white">Sudoku</span> and scored <span className="text-green-400 font-bold">520 points</span></>
+                  <>You played <span className="font-bold text-gray-900 dark:text-white">Sudoku</span> and scored <span className="text-green-500 font-bold">520 points</span></>
                 ) : activity.text.split('Level 28').length > 1 ? (
-                  <>You reached <span className="font-bold text-white">Level 28</span></>
+                  <>You reached <span className="font-bold text-gray-900 dark:text-white">Level 28</span></>
                 ) : activity.text.split('Chess').length > 1 ? (
-                  <>You added <span className="font-bold text-white">Chess</span> to your favorites</>
+                  <>You added <span className="font-bold text-gray-900 dark:text-white">Chess</span> to your favorites</>
                 ) : (
                   activity.text
                 )}
               </span>
             </div>
-            <span className="text-[10px] text-gray-500 whitespace-nowrap">{activity.time}</span>
-          </div>
+            <span className="text-[10px] text-gray-400 whitespace-nowrap">{activity.time}</span>
+          </motion.div>
         ))}
       </div>
     </div>

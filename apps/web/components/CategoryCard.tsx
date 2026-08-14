@@ -1,21 +1,27 @@
+'use client';
 
-import React from 'react';
-import { LucideIcon } from 'lucide-react';
+import React, { ReactNode } from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 
 interface CategoryCardProps {
   name: string;
   gameCount: number;
-  icon: LucideIcon;
+  icon: ReactNode;
   colorClass?: string;
 }
 
-export default function CategoryCard({ name, gameCount, icon: Icon, colorClass = "text-primary" }: CategoryCardProps) {
+export default function CategoryCard({ name, gameCount, icon, colorClass = "text-primary" }: CategoryCardProps) {
   const slug = name.toLowerCase().replace(/\s+/g, '-');
   
   return (
-    <Link href={`/categories/${slug}`} className="block">
-      <div className="group relative p-6 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 overflow-hidden cursor-pointer transition-all duration-300 hover:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:shadow-xl hover:-translate-y-1">
+    <Link href={`/categories/${slug}`} className="block h-full">
+      <motion.div 
+        whileHover={{ y: -6, scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+        className="group h-full relative p-6 rounded-2xl bg-gray-50 dark:bg-[#111228]/80 backdrop-blur-sm border border-gray-200 dark:border-white/5 overflow-hidden cursor-pointer hover:border-gray-300 dark:hover:border-[#6366F1]/50 hover:shadow-[0_12px_40px_rgba(99,102,241,0.15)]"
+      >
         {/* Background Glow */}
         <div className="absolute -right-8 -top-8 w-32 h-32 bg-gradient-to-br from-current to-transparent opacity-5 group-hover:opacity-10 transition-opacity duration-500 rounded-full blur-2xl" />
         
@@ -27,10 +33,10 @@ export default function CategoryCard({ name, gameCount, icon: Icon, colorClass =
             <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">{gameCount} Games</p>
           </div>
           <div className={`p-3 rounded-xl bg-gray-100 dark:bg-gray-800 shadow-inner group-hover:scale-110 transition-transform duration-300 ${colorClass}`}>
-            <Icon className="w-6 h-6" />
+            {icon}
           </div>
         </div>
-      </div>
+      </motion.div>
     </Link>
   );
 }

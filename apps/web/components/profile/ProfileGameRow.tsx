@@ -1,5 +1,7 @@
+'use client';
 import React from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 
 interface Game {
   title: string;
@@ -17,9 +19,9 @@ interface ProfileGameRowProps {
 
 export default function ProfileGameRow({ title, games, viewAllLink }: ProfileGameRowProps) {
   return (
-    <div className="bg-[#111228] border border-white/5 rounded-2xl p-5 flex flex-col">
+    <div className="bg-white dark:bg-[#111228]/80 backdrop-blur-md border border-gray-200 dark:border-white/5 rounded-2xl p-5 flex flex-col shadow-sm">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-white">{title}</h3>
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white">{title}</h3>
         <Link href={viewAllLink} className="text-[#6366F1] text-xs font-bold hover:text-white transition-colors">
           View All
         </Link>
@@ -27,7 +29,12 @@ export default function ProfileGameRow({ title, games, viewAllLink }: ProfileGam
 
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-3">
         {games.map((game, i) => (
-          <div key={i} className="flex flex-col group relative">
+          <motion.div 
+            key={i} 
+            whileHover={{ y: -4, scale: 1.02 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            className="flex flex-col group relative"
+          >
             <div className="relative aspect-square w-full rounded-xl overflow-hidden mb-2 bg-[#0A0B1A]">
               <img src={game.image} alt={game.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
               {game.isFavorite && (
@@ -36,7 +43,7 @@ export default function ProfileGameRow({ title, games, viewAllLink }: ProfileGam
                 </div>
               )}
             </div>
-            <h4 className="text-sm font-bold text-white truncate">{game.title}</h4>
+            <h4 className="text-sm font-bold text-gray-900 dark:text-white truncate mt-2">{game.title}</h4>
             <div className="flex items-center gap-2 text-xs text-gray-500">
               {game.rating ? (
                 <>
@@ -49,7 +56,7 @@ export default function ProfileGameRow({ title, games, viewAllLink }: ProfileGam
                 <span>{game.meta}</span>
               )}
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
     </div>

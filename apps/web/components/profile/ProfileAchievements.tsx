@@ -1,6 +1,8 @@
+'use client';
 import React from 'react';
 import Link from 'next/link';
 import { Gamepad2, Star, Flame, Package, Trophy } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function ProfileAchievements() {
   const achievements = [
@@ -12,19 +14,24 @@ export default function ProfileAchievements() {
   ];
 
   return (
-    <div className="bg-[#111228] border border-white/5 rounded-2xl p-5 flex flex-col h-full">
+    <div className="bg-white dark:bg-[#111228]/80 backdrop-blur-md border border-gray-200 dark:border-white/5 rounded-2xl p-5 flex flex-col h-full shadow-sm">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-bold text-white">Achievements</h3>
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white">Achievements</h3>
         <Link href="/profile/achievements" className="text-[#6366F1] text-xs font-bold hover:text-white transition-colors">
           View All
         </Link>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-        {achievements.map((ach) => (
-          <div key={ach.id} className="flex flex-col items-center text-center group cursor-pointer">
+        {achievements.map((ach, i) => (
+          <motion.div 
+            key={ach.id} 
+            whileHover={{ y: -6, scale: 1.05 }}
+            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+            className="flex flex-col items-center text-center group cursor-pointer"
+          >
             {/* Hexagon Shape */}
-            <div className="relative w-16 h-16 sm:w-20 sm:h-20 mb-3 drop-shadow-xl group-hover:-translate-y-1 transition-transform">
+            <div className="relative w-16 h-16 sm:w-20 sm:h-20 mb-3 drop-shadow-xl group-hover:drop-shadow-[0_10px_20px_rgba(99,102,241,0.2)] transition-all">
               <div 
                 className={`absolute inset-0 bg-gradient-to-b ${ach.gradient} opacity-20 blur-md group-hover:opacity-40 transition-opacity`}
               ></div>
@@ -35,7 +42,7 @@ export default function ProfileAchievements() {
               >
                 {/* Inner smaller hexagon for border effect */}
                 <div 
-                  className="w-[92%] h-[92%] bg-gradient-to-tr from-[#111228] to-[#1A1C3D] flex items-center justify-center"
+                  className="w-[92%] h-[92%] bg-gradient-to-tr from-gray-50 to-gray-200 dark:from-[#111228] dark:to-[#1A1C3D] flex items-center justify-center"
                   style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}
                 >
                   <div 
@@ -47,9 +54,9 @@ export default function ProfileAchievements() {
                 </div>
               </div>
             </div>
-            <h4 className="text-xs font-bold text-white mb-0.5">{ach.title}</h4>
+            <h4 className="text-xs font-bold text-gray-900 dark:text-white mb-0.5">{ach.title}</h4>
             <p className="text-[10px] text-gray-500 leading-tight">{ach.desc}</p>
-          </div>
+          </motion.div>
         ))}
       </div>
     </div>

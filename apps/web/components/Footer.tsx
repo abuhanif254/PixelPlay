@@ -3,8 +3,12 @@
 import { motion } from 'framer-motion';
 import { Gamepad2, Twitter, Github, Youtube, Mail } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export default function Footer() {
+  const pathname = usePathname();
+  if (pathname?.startsWith('/admin')) return null;
+
   return (
     <footer className="bg-background border-t border-black/10 dark:border-white/10 pt-16 pb-8">
       <div className="container mx-auto px-4 md:px-6">
