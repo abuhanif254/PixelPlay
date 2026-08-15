@@ -58,6 +58,7 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
   
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [sortBy, setSortBy] = useState('Most Popular');
   
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
@@ -124,39 +125,13 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
   const [displayGames, setDisplayGames] = useState<any[]>([]);
   const [totalGames, setTotalGames] = useState(0);
 
-  // Expanded dataset for demo purposes so we can test pagination
-  // In production, this would just use initialGames directly
-  const extendedGamesPool = useMemo(() => {
-    if (initialGames.length === 0) return [];
-    if (initialGames.length > 50) return initialGames; // Already has enough data
-    
-    // Duplicate the initial games to create a pool of ~100 games for testing filters/pagination
-    const pool = [];
-    const titles = ['2048', 'Snake', 'Tic Tac Toe', 'Racing Car', 'Archer Hero', 'Bubble Shooter', 'Mineblock', 'Solitaire', 'Subway Surfers', 'Chess', 'Sudoku', 'Basketball', 'Moto X3M', 'Candy Match', '8 Ball Pool', 'Fruit Ninja', 'Tower Defense', 'Word Search', 'Flappy Bird', 'Checkers'];
-    const cats = ['Puzzle', 'Arcade', 'Puzzle', 'Racing', 'Action', 'Puzzle', 'Adventure', 'Card', 'Arcade', 'Board', 'Puzzle', 'Sports', 'Racing', 'Puzzle', 'Sports', 'Arcade', 'Strategy', 'Puzzle', 'Arcade', 'Board'];
-    
-    for (let i = 0; i < 100; i++) {
-      const base = initialGames[i % initialGames.length];
-      pool.push({
-        ...base,
-        id: `${base.slug}-${i}`,
-        title: initialGames.length === 1 ? titles[i % titles.length] : `${base.title} ${i+1}`,
-        category: initialGames.length === 1 ? cats[i % cats.length] : base.category,
-        mockPlays: `${Math.floor(Math.random() * 900 + 100)}K plays`,
-        mockRating: parseFloat((Math.random() * 1.5 + 3.5).toFixed(1)),
-        isNew: i < 5 // First 5 are marked new
-      });
-    }
-    return pool;
-  }, [initialGames]);
-
   useEffect(() => {
     setIsLoading(true);
     
     // Simulate network delay for loading state
     const timer = setTimeout(() => {
       // 1. Filter the entire dataset
-      let filtered = extendedGamesPool.filter(game => {
+      let filtered = initialGames.filter(game => {
         // Filter by Category
         if (activeCategory !== 'All Games' && game.category !== activeCategory) {
           return false;
@@ -173,6 +148,24 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
         return true;
       });
 
+      // Sort the games
+      if (sortBy === 'Most Popular') {
+        filtered.sort((a, b) => (b.totalPlays || 0) - (a.totalPlays || 0));
+      } else if (sortBy === 'Newest') {
+        // Assuming higher ID or later in list means newer for now since we don't have created_at on all mocks
+        // In real db data, we'd sort by created_at.
+        // Actually since we fetch from supabase ordered by created_at desc, keeping original order works well for "Newest", 
+        // but let's reverse the index if we want it explicit, or assume initial order IS newest.
+        filtered.sort((a, b) => {
+          if (a.created_at && b.created_at) {
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          }
+          return 0; // Fallback to default fetch order
+        });
+      } else if (sortBy === 'Highest Rated') {
+        filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      }
+
       // Update total count for pagination
       setTotalGames(filtered.length);
 
@@ -185,7 +178,7 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
     }, 400); // 400ms delay to show skeletons
 
     return () => clearTimeout(timer);
-  }, [extendedGamesPool, activeCategory, activeDiff, activeFeatures, debouncedSearchQuery, currentPage]);
+  }, [initialGames, activeCategory, activeDiff, activeFeatures, debouncedSearchQuery, currentPage, sortBy]);
 
   const totalPages = Math.max(1, Math.ceil(totalGames / ITEMS_PER_PAGE));
 
@@ -387,7 +380,11 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
             <div className="flex items-center space-x-2 text-[13px] text-gray-500 dark:text-gray-400">
               <span>Sort by:</span>
               <div className="relative">
-                <select className="appearance-none bg-white dark:bg-[#0A0B1A] border border-gray-300 dark:border-white/10 rounded-lg py-2 pl-3 pr-8 text-gray-900 dark:text-white focus:outline-none focus:border-[#6366F1] cursor-pointer font-medium shadow-sm">
+                <select 
+                  value={sortBy}
+                  onChange={(e) => { setSortBy(e.target.value); setCurrentPage(1); }}
+                  className="appearance-none bg-white dark:bg-[#0A0B1A] border border-gray-300 dark:border-white/10 rounded-lg py-2 pl-3 pr-8 text-gray-900 dark:text-white focus:outline-none focus:border-[#6366F1] cursor-pointer font-medium shadow-sm"
+                >
                   <option>Most Popular</option>
                   <option>Newest</option>
                   <option>Highest Rated</option>
@@ -423,10 +420,9 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
                   title={game.title}
                   category={game.category}
                   slug={game.slug}
-                  plays={game.mockPlays}
-                  rating={game.mockRating}
+                  plays={`${Math.floor((game.totalPlays || 1000) / 1000)}K plays`}
+                  rating={game.rating || 5.0}
                   imageUrl={game.image}
-                  isNew={game.isNew}
                 />
               ))
             )}

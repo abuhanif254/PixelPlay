@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { gamesRegistry } from '@pixelplay/games';
+import { createClient } from '@/lib/supabase/server';
 import AllGamesClient from './AllGamesClient';
 import { Metadata } from 'next';
 import DynamicSEOBlock from '@/components/DynamicSEOBlock';
@@ -24,12 +24,26 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   }
 }
 
-export default function AllGamesPage({ searchParams }: Props) {
-  // Convert registry to array for easier consumption
-  const allGames = Object.entries(gamesRegistry).map(([slug, game]) => ({
-    slug,
-    ...game.config
-  }));
+export default async function AllGamesPage({ searchParams }: Props) {
+  const supabase = createClient();
+  
+  // Fetch active games from Supabase
+  const { data: games } = await supabase
+    .from('games')
+    .select('*')
+    .eq('status', 'active')
+    .order('created_at', { ascending: false });
+
+  const allGames = games?.map(game => ({
+    id: game.id,
+    title: game.title,
+    slug: game.slug,
+    description: game.description,
+    category: game.category,
+    image: game.image_url,
+    totalPlays: game.total_plays,
+    rating: game.rating
+  })) || [];
 
   const activeCategory = typeof searchParams.category === 'string' ? searchParams.category : 'All Games';
 
