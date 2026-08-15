@@ -1,9 +1,7 @@
 export const runtime = 'edge';
 import React from 'react';
-import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import ProfileSidebar from '@/components/profile/ProfileSidebar';
 import ProfileHero from '@/components/profile/ProfileHero';
 import ProfileGameRow from '@/components/profile/ProfileGameRow';
 import ProfileAchievements from '@/components/profile/ProfileAchievements';
@@ -13,16 +11,8 @@ import ProfileCollections from '@/components/profile/ProfileCollections';
 
 export const revalidate = 0;
 
-export async function generateMetadata(): Promise<Metadata> {
-  return {
-    title: 'My Profile | PixelPlay',
-    description: 'Your player profile, stats, achievements and activity.',
-  };
-}
-
-export default async function ProfilePage() {
+export default async function ProfileDashboardPage() {
   const supabase = createClient();
-
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
@@ -158,68 +148,48 @@ export default async function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0A0B1A] text-gray-900 dark:text-white pt-24 pb-20 relative">
-      {/* Ambient glows */}
-      <div className="absolute top-[10%] left-[5%] w-[40vw] h-[40vw] rounded-full bg-purple-500/5 blur-[120px] pointer-events-none" />
-      <div className="absolute top-[40%] right-[0%] w-[35vw] h-[35vw] rounded-full bg-blue-500/5 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[10%] left-[20%] w-[40vw] h-[40vw] rounded-full bg-indigo-500/5 blur-[120px] pointer-events-none" />
+    <>
+      <ProfileHero
+        profile={profileData}
+        gamesPlayed={uniqueGamesPlayed}
+        gamesThisWeek={gamesThisWeek}
+        gamesPrevWeek={gamesPrevWeek}
+        totalScore={totalScore}
+        totalScoreThisWeek={totalScoreThisWeek}
+        totalScorePrevWeek={totalScorePrevWeek}
+        highestScore={highestScore}
+        earnedCount={earnedIds.size}
+        totalAchievements={achievementsData.length}
+      />
 
-      <div className="container mx-auto px-4 xl:px-8 max-w-[1600px] flex flex-col lg:flex-row gap-8 relative z-10">
-
-        {/* Left Sidebar */}
-        <div className="hidden lg:block relative">
-          <div className="sticky top-24">
-            <ProfileSidebar profile={profileData} />
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col gap-6 w-full overflow-hidden">
-
-          <ProfileHero
-            profile={profileData}
-            gamesPlayed={uniqueGamesPlayed}
-            gamesThisWeek={gamesThisWeek}
-            gamesPrevWeek={gamesPrevWeek}
-            totalScore={totalScore}
-            totalScoreThisWeek={totalScoreThisWeek}
-            totalScorePrevWeek={totalScorePrevWeek}
-            highestScore={highestScore}
-            earnedCount={earnedIds.size}
-            totalAchievements={achievementsData.length}
-          />
-
-          {/* Row: Recently Played & Favorites */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <ProfileGameRow
-              title="Recently Played"
-              games={recentGamesList}
-              viewAllLink="/profile/recent"
-              favoriteIds={favoriteIds}
-            />
-            <ProfileGameRow
-              title="Favorite Games"
-              games={favoriteGamesList}
-              viewAllLink="/profile/favorites"
-              favoriteIds={favoriteIds}
-              showToggle
-            />
-          </div>
-
-          {/* Row: Achievements & Game Stats */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <ProfileAchievements achievements={achievementsData} />
-            <ProfileStats categoryStats={categoryStats} />
-          </div>
-
-          {/* Row: Activity Feed & Collections */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <ProfileActivity scores={typedScores} earnedAchievements={achievementsData.filter((a: any) => a.earned)} />
-            <ProfileCollections favoriteCount={favoriteIds.length} />
-          </div>
-
-        </div>
+      {/* Row: Recently Played & Favorites */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <ProfileGameRow
+          title="Recently Played"
+          games={recentGamesList}
+          viewAllLink="/profile/recent"
+          favoriteIds={favoriteIds}
+        />
+        <ProfileGameRow
+          title="Favorite Games"
+          games={favoriteGamesList}
+          viewAllLink="/profile/favorites"
+          favoriteIds={favoriteIds}
+          showToggle
+        />
       </div>
-    </div>
+
+      {/* Row: Achievements & Game Stats */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <ProfileAchievements achievements={achievementsData} />
+        <ProfileStats categoryStats={categoryStats} />
+      </div>
+
+      {/* Row: Activity Feed & Collections */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <ProfileActivity scores={typedScores} earnedAchievements={achievementsData.filter((a: any) => a.earned)} />
+        <ProfileCollections favoriteCount={favoriteIds.length} />
+      </div>
+    </>
   );
 }

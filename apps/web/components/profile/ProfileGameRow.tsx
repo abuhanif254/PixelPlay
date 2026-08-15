@@ -41,13 +41,17 @@ export default function ProfileGameRow({ title, games, viewAllLink, favoriteIds 
   };
 
   return (
-    <div className="bg-white dark:bg-[#111228]/80 backdrop-blur-md border border-gray-200 dark:border-white/5 rounded-2xl p-5 flex flex-col shadow-sm">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white">{title}</h3>
-        <Link href={viewAllLink} className="text-[#6366F1] text-xs font-bold hover:underline transition-colors">
-          View All
-        </Link>
-      </div>
+    <div className="bg-white dark:bg-[#111228]/80 backdrop-blur-md border border-gray-200 dark:border-white/5 rounded-2xl p-5 flex flex-col shadow-sm h-full">
+      {title && (
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">{title}</h3>
+          {viewAllLink && (
+            <Link href={viewAllLink} className="text-[#6366F1] text-xs font-bold hover:underline transition-colors">
+              View All
+            </Link>
+          )}
+        </div>
+      )}
 
       {games.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-10 text-center gap-2">
