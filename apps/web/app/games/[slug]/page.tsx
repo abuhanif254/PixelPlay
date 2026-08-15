@@ -8,6 +8,7 @@ import GameDetailsTabs from '@/components/GameDetailsTabs';
 import AdBanner from '@/components/AdBanner';
 import { Metadata, ResolvingMetadata } from 'next';
 import { submitScore } from '../actions';
+import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'edge';
 
@@ -22,49 +23,70 @@ export async function generateMetadata(
   parent: ResolvingMetadata
 ): Promise<Metadata> {
   const { slug } = params;
-  const game = gamesRegistry[slug];
+  
+  const supabase = createClient();
+  const { data: dbGame } = await supabase.from('games').select('*').eq('slug', slug).single();
+  
+  const localGame = gamesRegistry[slug];
 
-  if (!game) {
+  if (!dbGame && !localGame) {
     return {
-      title: 'Game Not Found - PlayHub',
+      title: 'Game Not Found - PixelPlay',
     };
   }
 
-  const { config } = game;
-  const title = `Play ${config.title} Online Free - PlayHub`;
-  const description = config.description || `Play ${config.title} online for free. No downloads required.`;
+  const title = dbGame?.title || localGame?.config?.title || 'Game';
+  const description = dbGame?.description || localGame?.config?.description || `Play ${title} online for free. No downloads required.`;
+  const image = dbGame?.image_url || localGame?.config?.image;
+  const category = (dbGame?.metadata as any)?.category || localGame?.config?.category || 'games';
 
   return {
-    title,
+    title: `Play ${title} Online Free - PixelPlay`,
     description,
-    keywords: [config.title, config.category || 'games', 'play online free', 'browser game', 'pixelplay'],
+    keywords: [title, category, 'play online free', 'browser game', 'pixelplay'],
     alternates: {
       canonical: `https://pixelplay.com/games/${slug}`,
     },
     openGraph: {
       title,
       description,
-      images: config.image ? [{ url: config.image }] : [],
+      images: image ? [{ url: image }] : [],
       type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: config.image ? [config.image] : [],
+      images: image ? [image] : [],
     },
   };
 }
 
-export default function GamePage({ params }: GamePageProps) {
+export default async function GamePage({ params }: GamePageProps) {
   const { slug } = params;
-  const game = gamesRegistry[slug];
+  
+  const supabase = createClient();
+  const { data: dbGame } = await supabase.from('games').select('*').eq('slug', slug).single();
+  
+  const localGame = gamesRegistry[slug];
 
-  if (!game) {
+  if (!dbGame && !localGame) {
     notFound();
   }
 
-  const { config, component: GameComponent } = game;
+  // Merge database and local configs (DB takes precedence if available)
+  const config = {
+    ...(localGame?.config || {}),
+    title: dbGame?.title || localGame?.config?.title || 'Unknown Game',
+    description: dbGame?.description || localGame?.config?.description || '',
+    image: dbGame?.image_url || localGame?.config?.image,
+    category: (dbGame?.metadata as any)?.category || localGame?.config?.category || 'Arcade',
+    developer: (dbGame?.metadata as any)?.developer || localGame?.config?.developer || 'PixelPlay',
+    rating: (dbGame?.metadata as any)?.rating || localGame?.config?.rating,
+  };
+
+  const sourceUrl = dbGame?.source_url || null;
+  const GameComponent = localGame?.component || (() => null);
 
   // JSON-LD Structured Data
   const videoGameSchema = {
@@ -229,8 +251,8 @@ export default function GamePage({ params }: GamePageProps) {
                 <AdBanner id="mock-mobile-banner-id" width={320} height={50} />
               </div>
 
-              <GamePlayer title={config.title} slug={slug} image={config.image}>
-                <GameComponent onGameOver={handleGameOver} />
+              <GamePlayer title={config.title} slug={slug} image={config.image} sourceUrl={sourceUrl} onGameOver={handleGameOver}>
+                {GameComponent && <GameComponent onGameOver={handleGameOver} />}
               </GamePlayer>
             </div>
 

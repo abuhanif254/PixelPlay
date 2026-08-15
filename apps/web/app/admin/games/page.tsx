@@ -25,6 +25,7 @@ export default async function AdminGamesPage() {
     total_plays: g.total_plays ?? 0,
     rating: g.rating ?? 5.0,
     image_url: g.image_url || '',
+    source_url: g.source_url || '',
     created_at: g.created_at,
   }));
 

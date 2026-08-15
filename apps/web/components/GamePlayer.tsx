@@ -6,13 +6,15 @@ import Image from 'next/image';
 import { useRecentGames } from '@/hooks/useRecentGames';
 
 interface GamePlayerProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   title: string;
   slug: string;
   image?: string;
+  sourceUrl?: string | null;
+  onGameOver?: (score: number) => void;
 }
 
-export default function GamePlayer({ children, title, slug, image }: GamePlayerProps) {
+export default function GamePlayer({ children, title, slug, image, sourceUrl, onGameOver }: GamePlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -32,6 +34,36 @@ export default function GamePlayer({ children, title, slug, image }: GamePlayerP
       document.exitFullscreen();
     }
   };
+
+  // Listen for messages from the Plugin SDK
+  React.useEffect(() => {
+    if (!isPlaying || !sourceUrl) return;
+
+    const handleMessage = (event: MessageEvent) => {
+      // Basic security check: ensure it's from our SDK format
+      if (event.data && event.data.source === 'PIXELPLAY_SDK') {
+        console.log('[Platform] Received SDK Message:', event.data);
+        
+        switch (event.data.type) {
+          case 'SUBMIT_SCORE':
+            if (onGameOver && typeof event.data.payload?.score === 'number') {
+              onGameOver(event.data.payload.score);
+            }
+            break;
+          case 'UNLOCK_ACHIEVEMENT':
+            // Future feature: handle achievement unlocks
+            console.log('Achievement unlocked:', event.data.payload?.key);
+            break;
+          case 'GAME_OVER':
+            // Could show a game over overlay
+            break;
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [isPlaying, sourceUrl, onGameOver]);
 
   return (
     <div 
@@ -66,8 +98,17 @@ export default function GamePlayer({ children, title, slug, image }: GamePlayerP
         <div className="w-full h-full flex flex-col md:flex-row p-4 md:p-6 gap-6 relative z-10">
           
           {/* Game Canvas Area (Left Side) */}
-          <div className="flex-1 flex items-center justify-center bg-gray-100 dark:bg-[#0A0B1A]/50 rounded-xl border border-gray-200 dark:border-white/5 overflow-hidden min-h-[400px]">
-            {children}
+          <div className="flex-1 flex items-center justify-center bg-gray-100 dark:bg-[#0A0B1A]/50 rounded-xl border border-gray-200 dark:border-white/5 overflow-hidden min-h-[400px] relative">
+            {sourceUrl ? (
+              <iframe 
+                src={sourceUrl}
+                className="absolute inset-0 w-full h-full border-0"
+                sandbox="allow-scripts allow-same-origin"
+                title={title}
+              />
+            ) : (
+              children
+            )}
           </div>
           
           {/* Internal Game Controls Sidebar (Right Side) */}

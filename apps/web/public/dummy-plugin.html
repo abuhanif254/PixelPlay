@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asteroids (Plugin Test)</title>
+    <!-- Include the PixelPlay SDK -->
+    <script src="/pixelplay-sdk.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #05050f;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #gameCanvas {
+            border: 2px solid #6366F1;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+            cursor: crosshair;
+            background-color: rgba(5, 5, 15, 0.9);
+        }
+        .ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            pointer-events: none;
+            z-index: 10;
+        }
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(17, 18, 40, 0.95);
+            padding: 30px 50px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+            display: none;
+            z-index: 20;
+        }
+        .game-over h2 { margin-top: 0; color: #F59E0B; }
+        button {
+            background: #6366F1;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background 0.2s;
+        }
+        button:hover { background: #5457DF; }
+    </style>
+</head>
+<body>
+
+    <div class="ui">SCORE: <span id="score">0</span></div>
+    
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
+
+    <div class="game-over" id="gameOverMenu">
+        <h2>GAME OVER</h2>
+        <p>Final Score: <span id="finalScore">0</span></p>
+        <button id="restartBtn">Play Again</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+        const gameOverMenu = document.getElementById('gameOverMenu');
+        const finalScoreEl = document.getElementById('finalScore');
+        const restartBtn = document.getElementById('restartBtn');
+
+        let score = 0;
+        let isGameOver = false;
+        let animationId;
+        
+        // Simple game state
+        let player = { x: 300, y: 350, w: 40, h: 40, speed: 5 };
+        let bullets = [];
+        let enemies = [];
+        let keys = {};
+        
+        // Input
+        window.addEventListener('keydown', (e) => keys[e.key] = true);
+        window.addEventListener('keyup', (e) => keys[e.key] = false);
+
+        // Tell platform we are ready
+        if (window.PixelPlay) {
+            window.PixelPlay.gameReady();
+        }
+
+        function spawnEnemy() {
+            if (isGameOver) return;
+            enemies.push({
+                x: Math.random() * (canvas.width - 30),
+                y: -30,
+                w: 30,
+                h: 30,
+                speed: Math.random() * 2 + 1
+            });
+            setTimeout(spawnEnemy, Math.random() * 1000 + 500);
+        }
+
+        function drawPlayer() {
+            ctx.fillStyle = '#6366F1';
+            ctx.beginPath();
+            ctx.moveTo(player.x + player.w/2, player.y);
+            ctx.lineTo(player.x + player.w, player.y + player.h);
+            ctx.lineTo(player.x, player.y + player.h);
+            ctx.fill();
+        }
+
+        function update() {
+            if (isGameOver) return;
+
+            // Movement
+            if (keys['ArrowLeft'] && player.x > 0) player.x -= player.speed;
+            if (keys['ArrowRight'] && player.x < canvas.width - player.w) player.x += player.speed;
+            
+            // Shooting
+            if (keys[' '] && bullets.length < 5) {
+                if (!keys._spaceLocked) {
+                    bullets.push({ x: player.x + player.w/2 - 2, y: player.y, w: 4, h: 10, speed: 7 });
+                    keys._spaceLocked = true;
+                }
+            }
+            if (!keys[' ']) keys._spaceLocked = false;
+
+            // Background
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawPlayer();
+
+            // Bullets
+            ctx.fillStyle = '#F59E0B';
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                let b = bullets[i];
+                b.y -= b.speed;
+                ctx.fillRect(b.x, b.y, b.w, b.h);
+                if (b.y < 0) bullets.splice(i, 1);
+            }
+
+            // Enemies
+            ctx.fillStyle = '#EF4444';
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                let e = enemies[i];
+                e.y += e.speed;
+                ctx.fillRect(e.x, e.y, e.w, e.h);
+
+                // Collision with player
+                if (e.x < player.x + player.w && e.x + e.w > player.x && e.y < player.y + player.h && e.h + e.y > player.y) {
+                    endGame();
+                }
+
+                // Collision with bullets
+                for (let j = bullets.length - 1; j >= 0; j--) {
+                    let b = bullets[j];
+                    if (b.x < e.x + e.w && b.x + b.w > e.x && b.y < e.y + e.h && b.h + b.y > e.y) {
+                        enemies.splice(i, 1);
+                        bullets.splice(j, 1);
+                        score += 10;
+                        scoreEl.innerText = score;
+                        break;
+                    }
+                }
+
+                if (e.y > canvas.height) {
+                    enemies.splice(i, 1);
+                }
+            }
+
+            animationId = requestAnimationFrame(update);
+        }
+
+        function endGame() {
+            isGameOver = true;
+            cancelAnimationFrame(animationId);
+            gameOverMenu.style.display = 'block';
+            finalScoreEl.innerText = score;
+
+            // ======= USE THE SDK =======
+            if (window.PixelPlay) {
+                window.PixelPlay.submitScore(score);
+                window.PixelPlay.gameOver();
+                
+                if (score >= 100) {
+                    window.PixelPlay.unlockAchievement('centurion');
+                }
+            }
+            // ============================
+        }
+
+        function restart() {
+            isGameOver = false;
+            score = 0;
+            scoreEl.innerText = score;
+            player.x = 300;
+            bullets = [];
+            enemies = [];
+            gameOverMenu.style.display = 'none';
+            update();
+            spawnEnemy();
+        }
+
+        restartBtn.addEventListener('click', restart);
+        
+        // Start game
+        update();
+        spawnEnemy();
+
+    </script>
+</body>
+</html>

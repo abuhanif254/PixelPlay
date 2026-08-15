@@ -18,13 +18,16 @@ type Game = {
   total_plays: number;
   rating: number;
   image_url: string;
+  source_url?: string;
   created_at: string;
 };
 
 const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
   active:      { label: 'Active',       cls: 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-500 border border-green-200 dark:border-green-500/20' },
+  pending:     { label: 'Pending',      cls: 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-500 border border-blue-200 dark:border-blue-500/20' },
   draft:       { label: 'Draft',        cls: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-500 border border-yellow-200 dark:border-yellow-500/20' },
   maintenance: { label: 'Maintenance',  cls: 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-500 border border-red-200 dark:border-red-500/20' },
+  rejected:    { label: 'Rejected',     cls: 'bg-gray-100 text-gray-700 dark:bg-gray-500/10 dark:text-gray-400 border border-gray-200 dark:border-gray-500/20' },
 };
 
 const CATEGORIES = ['Arcade', 'Puzzle', 'Action', 'Strategy', 'Racing', 'Sports', 'Adventure', 'Simulation', 'Board'];
@@ -41,7 +44,7 @@ function EditGamePanel({
   onSave: (g: Game) => void;
 }) {
   const [form, setForm] = useState(
-    game ?? { id: '', title: '', slug: '', description: '', category: 'Arcade', status: 'draft' as const, image_url: '', total_plays: 0, rating: 5.0, created_at: '' }
+    game ?? { id: '', title: '', slug: '', description: '', category: 'Arcade', status: 'draft' as const, image_url: '', source_url: '', total_plays: 0, rating: 5.0, created_at: '' }
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -55,6 +58,7 @@ function EditGamePanel({
       description: form.description,
       category: form.category,
       image_url: form.image_url,
+      source_url: form.source_url,
       status: form.status,
     });
     if (res.success) {
@@ -109,6 +113,7 @@ function EditGamePanel({
           {field('Title', <input required type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className={inputCls} />)}
           {field('Description', <textarea rows={3} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className={`${inputCls} resize-none`} />)}
           {field('Image URL', <input type="url" value={form.image_url} onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))} className={inputCls} placeholder="https://..." />)}
+          {field('Source URL (Plugin Game)', <input type="url" value={form.source_url || ''} onChange={e => setForm(f => ({ ...f, source_url: e.target.value }))} className={inputCls} placeholder="https://... (Leave empty for internal games)" />)}
           {field('Category', (
             <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} className={inputCls}>
               {CATEGORIES.map(c => <option key={c}>{c}</option>)}
@@ -140,7 +145,7 @@ function EditGamePanel({
 
 // ─── Add Game Modal ─────────────────────────────────────────────────────────────
 function AddGameModal({ onClose, onAdd }: { onClose: () => void; onAdd: (g: Game) => void }) {
-  const [form, setForm] = useState({ title: '', slug: '', description: '', category: 'Arcade', image_url: '', status: 'draft' as const });
+  const [form, setForm] = useState({ title: '', slug: '', description: '', category: 'Arcade', image_url: '', source_url: '', status: 'draft' as const });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -206,6 +211,10 @@ function AddGameModal({ onClose, onAdd }: { onClose: () => void; onAdd: (g: Game
             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider">Image URL</label>
             <input type="url" value={form.image_url} onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))} className={inputCls} placeholder="https://..." />
           </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider">Source URL (Plugin Game)</label>
+            <input type="url" value={form.source_url} onChange={e => setForm(f => ({ ...f, source_url: e.target.value }))} className={inputCls} placeholder="https://... (Leave empty for internal games)" />
+          </div>
           {error && <p className="text-sm text-red-500 bg-red-500/10 rounded-xl px-3 py-2">{error}</p>}
           <div className="flex gap-3 mt-2">
             <button type="button" onClick={onClose} className="flex-1 px-4 py-2 rounded-xl border border-gray-200 dark:border-white/10 font-bold text-gray-600 dark:text-gray-400 text-sm hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">Cancel</button>
@@ -248,7 +257,7 @@ function DeleteConfirm({ game, onClose, onConfirm }: { game: Game; onClose: () =
 export default function GamesTable({ initialGames, totalCount }: { initialGames: Game[]; totalCount: number }) {
   const [games, setGames] = useState(initialGames);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'draft' | 'maintenance'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending' | 'draft' | 'maintenance' | 'rejected'>('all');
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [editGame, setEditGame] = useState<Game | null>(null);
@@ -362,7 +371,7 @@ export default function GamesTable({ initialGames, totalCount }: { initialGames:
                 exit={{ opacity: 0, scale: 0.95, y: -8 }}
                 className="absolute right-0 top-14 w-44 bg-white dark:bg-[#1A1C3D] border border-gray-200 dark:border-white/10 rounded-xl shadow-xl overflow-hidden z-20"
               >
-                {(['all', 'active', 'draft', 'maintenance'] as const).map(s => (
+                {(['all', 'pending', 'active', 'draft', 'maintenance', 'rejected'] as const).map(s => (
                   <button
                     key={s}
                     onClick={() => { setStatusFilter(s); setShowFilterMenu(false); setPage(1); }}
@@ -437,19 +446,38 @@ export default function GamesTable({ initialGames, totalCount }: { initialGames:
                           >
                             <Edit2 size={15} /> Edit Game
                           </button>
-                          <button
-                            onClick={() => handleStatusCycle(game)}
-                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
-                          >
-                            {game.status === 'active' ? <EyeOff size={15} /> : game.status === 'maintenance' ? <Eye size={15} /> : <Eye size={15} />}
-                            {game.status === 'active' ? 'Set as Draft' : 'Set as Active'}
-                          </button>
-                          <button
-                            onClick={() => { setActiveMenu(null); updateGameStatus(game.id, 'maintenance'); setGames(gs => gs.map(g => g.id === game.id ? { ...g, status: 'maintenance' } : g)); }}
-                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
-                          >
-                            <Wrench size={15} /> Set Maintenance
-                          </button>
+                          {game.status === 'pending' ? (
+                            <>
+                              <button
+                                onClick={() => { setActiveMenu(null); updateGameStatus(game.id, 'active'); setGames(gs => gs.map(g => g.id === game.id ? { ...g, status: 'active' as const } : g)); }}
+                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-500/10 transition-colors"
+                              >
+                                <Eye size={15} /> Approve Game
+                              </button>
+                              <button
+                                onClick={() => { setActiveMenu(null); updateGameStatus(game.id, 'rejected'); setGames(gs => gs.map(g => g.id === game.id ? { ...g, status: 'rejected' as const } : g)); }}
+                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-500/10 transition-colors"
+                              >
+                                <EyeOff size={15} /> Reject Game
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => handleStatusCycle(game)}
+                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                              >
+                                {game.status === 'active' ? <EyeOff size={15} /> : <Eye size={15} />}
+                                {game.status === 'active' ? 'Set as Draft' : 'Set as Active'}
+                              </button>
+                              <button
+                                onClick={() => { setActiveMenu(null); updateGameStatus(game.id, 'maintenance'); setGames(gs => gs.map(g => g.id === game.id ? { ...g, status: 'maintenance' as const } : g)); }}
+                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                              >
+                                <Wrench size={15} /> Set Maintenance
+                              </button>
+                            </>
+                          )}
                           <div className="h-px bg-gray-100 dark:bg-white/5 w-full my-1" />
                           <button
                             onClick={() => { setDeleteTarget(game); setActiveMenu(null); }}

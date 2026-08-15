@@ -38,6 +38,7 @@ export async function addGameManually(data: {
   description: string
   category: string
   image_url: string
+  source_url?: string
   status: 'active' | 'draft' | 'maintenance'
 }) {
   const auth = await verifyAdminAction()
@@ -60,6 +61,7 @@ export async function updateGame(
     description?: string
     category?: string
     image_url?: string
+    source_url?: string
     status?: 'active' | 'draft' | 'maintenance'
   }
 ) {
