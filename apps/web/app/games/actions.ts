@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { revalidatePath } from 'next/cache'
 
 export async function submitScore(gameSlug: string, score: number) {
   const supabase = createClient()
@@ -30,6 +31,11 @@ export async function submitScore(gameSlug: string, score: number) {
   if (insertError) {
     return { success: false, error: insertError.message }
   }
+
+  // Revalidate so the updated score appears in Recent Games and Leaderboards instantly
+  revalidatePath('/profile')
+  revalidatePath('/profile/[username]', 'page')
+  revalidatePath('/leaderboard')
 
   return { success: true }
 }
