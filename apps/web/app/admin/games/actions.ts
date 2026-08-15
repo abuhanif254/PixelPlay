@@ -39,7 +39,7 @@ export async function addGameManually(data: {
   category: string
   image_url: string
   source_url?: string
-  status: 'active' | 'draft' | 'maintenance'
+  status: 'active' | 'draft' | 'maintenance' | 'pending' | 'rejected'
 }) {
   const auth = await verifyAdminAction()
   if (!auth.success) return auth
@@ -62,7 +62,7 @@ export async function updateGame(
     category?: string
     image_url?: string
     source_url?: string
-    status?: 'active' | 'draft' | 'maintenance'
+    status?: 'active' | 'draft' | 'maintenance' | 'pending' | 'rejected'
   }
 ) {
   const auth = await verifyAdminAction()
@@ -81,7 +81,7 @@ export async function updateGame(
 // ─── Update Game Status ────────────────────────────────────────────────────────
 export async function updateGameStatus(
   id: string,
-  status: 'active' | 'draft' | 'maintenance'
+  status: 'active' | 'draft' | 'maintenance' | 'pending' | 'rejected'
 ) {
   const auth = await verifyAdminAction()
   if (!auth.success) return auth
