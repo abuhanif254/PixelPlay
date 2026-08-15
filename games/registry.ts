@@ -24,6 +24,50 @@ export interface GameConfig {
 }
 
 export const gamesRegistry: Record<string, { config: GameConfig, component: any }> = {
+  "2048": {
+    config: {
+      "title": "2048",
+      "category": "Puzzle",
+      "rating": 4.9,
+      "description": "Join the numbers and get to the 2048 tile! A highly addictive math puzzle game.",
+      "history": "2048 was originally created by Gabriele Cirulli in March 2014. It is a sliding block puzzle game based on 1024 by Veewo Studio and similar to Threes.",
+      "strategy": "Keep your highest tile in a corner. The most common strategy is to pick a corner (e.g., bottom right) and only use three directions (down, right, left) to keep the highest numbers trapped there.",
+      "tips": [
+            "Never swipe the direction that pulls your highest tile out of its corner.",
+            "Try to build a 'snake' of descending numbers.",
+            "Don't rush! Take your time to plan your moves."
+      ],
+      "keyboardControls": {
+            "ArrowKeys": "Swipe Tiles",
+            "W A S D": "Swipe Tiles (Alternative)"
+      },
+      "touchControls": {
+            "Swipe": "Swipe Tiles"
+      },
+      "faqs": [
+            {
+                  "q": "Can I continue playing after reaching 2048?",
+                  "a": "Yes! The game continues, allowing you to reach 4096, 8192, and beyond."
+            },
+            {
+                  "q": "How is the score calculated?",
+                  "a": "When two tiles merge, the value of the new tile is added to your total score."
+            }
+      ],
+      "tags": [
+            "Puzzle",
+            "Math",
+            "Brain",
+            "Classic"
+      ],
+      "screenshots": [],
+      "developer": "Gabriele Cirulli / PixelPlay",
+      "releaseDate": "August 2026",
+      "platform": "Browser (Desktop, Mobile)"
+},
+    // Note: We use ssr: false because game engines rely on the browser's window and canvas
+    component: dynamic(() => import('./2048/Game'), { ssr: false })
+  },
   "snake": {
     config: {
       "title": "Neon Snake",

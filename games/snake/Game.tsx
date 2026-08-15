@@ -7,7 +7,11 @@ const TILE_SIZE = 20;
 const INITIAL_SNAKE = [{ x: 10, y: 10 }];
 const INITIAL_DIRECTION = { x: 0, y: -1 };
 
-export default function SnakeGame() {
+interface GameProps {
+  onGameOver?: (score: number) => void;
+}
+
+export default function SnakeGame({ onGameOver }: GameProps = {}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [snake, setSnake] = useState(INITIAL_SNAKE);
   const [food, setFood] = useState({ x: 15, y: 5 });
@@ -55,12 +59,14 @@ export default function SnakeGame() {
         // Wall Collision
         if (head.x < 0 || head.x >= GRID_SIZE || head.y < 0 || head.y >= GRID_SIZE) {
           setGameOver(true);
+          if (onGameOver) onGameOver(score);
           return prevSnake;
         }
 
         // Self Collision
         if (prevSnake.some((segment) => segment.x === head.x && segment.y === head.y)) {
           setGameOver(true);
+          if (onGameOver) onGameOver(score);
           return prevSnake;
         }
 
