@@ -14,7 +14,7 @@ type Game = {
   slug: string;
   description: string;
   category: string;
-  status: 'active' | 'draft' | 'maintenance';
+  status: 'active' | 'draft' | 'maintenance' | 'pending' | 'rejected';
   total_plays: number;
   rating: number;
   image_url: string;
