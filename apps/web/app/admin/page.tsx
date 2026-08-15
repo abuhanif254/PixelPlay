@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import React from 'react';
 import { TrafficChart, RevenueChart } from '@/components/admin/AdminCharts';
 import { Users, Gamepad2, Activity, FileText, Star, TrendingUp, TrendingDown, Minus, ArrowRight } from 'lucide-react';
