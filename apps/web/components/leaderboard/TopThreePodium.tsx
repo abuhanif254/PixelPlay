@@ -1,34 +1,31 @@
 import React from 'react';
-
 import { PlayerScore } from './LeaderboardTable';
+import Link from 'next/link';
 
 export default function TopThreePodium({ topThree = [] }: { topThree?: PlayerScore[] }) {
-  const displayPlayers = topThree.length === 3 ? topThree : [
-    {
-      rank: 2,
-      name: 'PixelMaster',
-      score: '98,540',
-      gamesPlayed: 245,
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=PixelMaster&backgroundColor=b6e3f4'
-    },
-    {
-      rank: 1,
-      name: 'AlexGamer',
-      score: '125,760',
-      gamesPlayed: 312,
-      avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=AlexGamer&backgroundColor=f59e0b'
-    },
-    {
-      rank: 3,
-      name: 'GameKnight',
-      score: '74,230',
-      gamesPlayed: 189,
-      avatar: 'https://api.dicebear.com/7.x/adventurer/svg?seed=GameKnight&backgroundColor=c0aede'
-    }
-  ];
+  if (topThree.length === 0) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 items-end opacity-50">
+        <div className="hidden md:flex h-56 items-center justify-center border border-dashed border-gray-300 dark:border-gray-700 rounded-2xl">
+          <span className="text-gray-400">2nd</span>
+        </div>
+        <div className="h-64 flex items-center justify-center border border-dashed border-yellow-300 dark:border-yellow-700 rounded-2xl">
+          <span className="text-yellow-500">1st</span>
+        </div>
+        <div className="hidden md:flex h-56 items-center justify-center border border-dashed border-gray-300 dark:border-gray-700 rounded-2xl">
+          <span className="text-gray-400">3rd</span>
+        </div>
+      </div>
+    );
+  }
 
-  // Map to the theme structure
-  const themedPlayers = displayPlayers.map((player) => {
+  // Reorder for podium display: [2, 1, 3]
+  const orderedPlayers = [];
+  if (topThree.length > 1) orderedPlayers.push(topThree[1]); // 2nd
+  if (topThree.length > 0) orderedPlayers.push(topThree[0]); // 1st
+  if (topThree.length > 2) orderedPlayers.push(topThree[2]); // 3rd
+
+  const themedPlayers = orderedPlayers.map((player) => {
     let theme;
     if (player.rank === 1) {
       theme = {
@@ -58,9 +55,10 @@ export default function TopThreePodium({ topThree = [] }: { topThree?: PlayerSco
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 items-end">
       {themedPlayers.map((player) => (
-        <div 
+        <Link 
+          href={`/profile/${player.name}`}
           key={player.rank}
-          className={`relative rounded-2xl flex flex-col items-center justify-center p-6 border ${player.theme.bg} ${player.theme.border} ${player.theme.shadow} ${player.rank === 1 ? 'md:-mt-8 md:mb-4 h-64 z-10' : 'h-56'}`}
+          className={`relative rounded-2xl flex flex-col items-center justify-center p-6 border transition-transform hover:-translate-y-2 cursor-pointer ${player.theme.bg} ${player.theme.border} ${player.theme.shadow} ${player.rank === 1 ? 'md:-mt-8 md:mb-4 h-64 z-10' : 'h-56'}`}
         >
           {/* Rank Badge */}
           <div className={`absolute -top-4 -left-4 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shadow-lg border-2 border-black ${player.theme.badge}`}>
@@ -86,7 +84,7 @@ export default function TopThreePodium({ topThree = [] }: { topThree?: PlayerSco
             )}
           </div>
 
-          <h3 className={`font-bold text-gray-900 dark:text-white mb-1 ${player.rank === 1 ? 'text-xl' : 'text-lg'}`}>
+          <h3 className={`font-bold text-gray-900 dark:text-white mb-1 truncate max-w-full ${player.rank === 1 ? 'text-xl' : 'text-lg'}`}>
             {player.name}
           </h3>
           
@@ -100,10 +98,10 @@ export default function TopThreePodium({ topThree = [] }: { topThree?: PlayerSco
           </div>
 
           <p className="text-gray-600 dark:text-gray-400 text-xs mt-auto">
-            Games Played: {player.gamesPlayed}
+            Games Played: {player.gamesPlayed || 0}
           </p>
 
-        </div>
+        </Link>
       ))}
     </div>
   );
