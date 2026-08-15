@@ -1,51 +1,63 @@
 import React from 'react';
 
-export default function TopThreePodium() {
-  const topPlayers = [
+import { PlayerScore } from './LeaderboardTable';
+
+export default function TopThreePodium({ topThree = [] }: { topThree?: PlayerScore[] }) {
+  const displayPlayers = topThree.length === 3 ? topThree : [
     {
       rank: 2,
       name: 'PixelMaster',
       score: '98,540',
       gamesPlayed: 245,
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=PixelMaster&backgroundColor=b6e3f4',
-      theme: {
-        bg: 'bg-slate-100 dark:bg-gradient-to-b dark:from-[#1E293B] dark:to-[#0F172A]',
-        border: 'border-slate-300 dark:border-slate-600',
-        badge: 'bg-slate-300 text-slate-800',
-        shadow: 'shadow-[0_0_30px_rgba(148,163,184,0.15)]'
-      }
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=PixelMaster&backgroundColor=b6e3f4'
     },
     {
       rank: 1,
       name: 'AlexGamer',
       score: '125,760',
       gamesPlayed: 312,
-      avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=AlexGamer&backgroundColor=f59e0b',
-      theme: {
-        bg: 'bg-yellow-50 dark:bg-gradient-to-b dark:from-[#78350F] dark:to-[#451A03]',
-        border: 'border-yellow-400 dark:border-yellow-500',
-        badge: 'bg-yellow-400 text-yellow-900',
-        shadow: 'shadow-[0_0_40px_rgba(234,179,8,0.2)]'
-      }
+      avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=AlexGamer&backgroundColor=f59e0b'
     },
     {
       rank: 3,
       name: 'GameKnight',
       score: '74,230',
       gamesPlayed: 189,
-      avatar: 'https://api.dicebear.com/7.x/adventurer/svg?seed=GameKnight&backgroundColor=c0aede',
-      theme: {
-        bg: 'bg-amber-50 dark:bg-gradient-to-b dark:from-[#451A03] dark:to-[#2E1005]', // Using a bronze-ish tone
-        border: 'border-amber-400 dark:border-amber-700',
-        badge: 'bg-amber-600 text-amber-100',
-        shadow: 'shadow-[0_0_30px_rgba(180,83,9,0.15)]'
-      }
+      avatar: 'https://api.dicebear.com/7.x/adventurer/svg?seed=GameKnight&backgroundColor=c0aede'
     }
   ];
 
+  // Map to the theme structure
+  const themedPlayers = displayPlayers.map((player) => {
+    let theme;
+    if (player.rank === 1) {
+      theme = {
+        bg: 'bg-yellow-50 dark:bg-gradient-to-b dark:from-[#78350F] dark:to-[#451A03]',
+        border: 'border-yellow-400 dark:border-yellow-500',
+        badge: 'bg-yellow-400 text-yellow-900',
+        shadow: 'shadow-[0_0_40px_rgba(234,179,8,0.2)]'
+      };
+    } else if (player.rank === 2) {
+      theme = {
+        bg: 'bg-slate-100 dark:bg-gradient-to-b dark:from-[#1E293B] dark:to-[#0F172A]',
+        border: 'border-slate-300 dark:border-slate-600',
+        badge: 'bg-slate-300 text-slate-800',
+        shadow: 'shadow-[0_0_30px_rgba(148,163,184,0.15)]'
+      };
+    } else {
+      theme = {
+        bg: 'bg-amber-50 dark:bg-gradient-to-b dark:from-[#451A03] dark:to-[#2E1005]',
+        border: 'border-amber-400 dark:border-amber-700',
+        badge: 'bg-amber-600 text-amber-100',
+        shadow: 'shadow-[0_0_30px_rgba(180,83,9,0.15)]'
+      };
+    }
+    return { ...player, theme };
+  });
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 items-end">
-      {topPlayers.map((player) => (
+      {themedPlayers.map((player) => (
         <div 
           key={player.rank}
           className={`relative rounded-2xl flex flex-col items-center justify-center p-6 border ${player.theme.bg} ${player.theme.border} ${player.theme.shadow} ${player.rank === 1 ? 'md:-mt-8 md:mb-4 h-64 z-10' : 'h-56'}`}
@@ -63,7 +75,7 @@ export default function TopThreePodium() {
               </svg>
             )}
             <div className={`w-20 h-20 rounded-full border-4 ${player.theme.border} overflow-hidden bg-black/5 dark:bg-white/10 p-1 relative z-10 shadow-inner`}>
-              <img src={player.avatar} alt={player.name} className="w-full h-full rounded-full object-cover" />
+              <img src={player.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${player.name}`} alt={player.name} className="w-full h-full rounded-full object-cover" />
             </div>
             {/* Wreath graphic for 1st place mock */}
             {player.rank === 1 && (

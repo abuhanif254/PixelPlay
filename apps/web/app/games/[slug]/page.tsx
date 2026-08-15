@@ -7,6 +7,7 @@ import GamePlayer from '@/components/GamePlayer';
 import GameDetailsTabs from '@/components/GameDetailsTabs';
 import AdBanner from '@/components/AdBanner';
 import { Metadata, ResolvingMetadata } from 'next';
+import { submitScore } from '../actions';
 
 export const runtime = 'edge';
 
@@ -131,6 +132,11 @@ export default function GamePage({ params }: GamePageProps) {
   const mockPlays = `${(Math.random() * 2 + 1).toFixed(1)}M plays`;
   const mockVotes = `${Math.floor(Math.random() * 5) + 1}.${Math.floor(Math.random() * 9)}K votes`;
 
+  const handleGameOver = async (score: number) => {
+    'use server';
+    await submitScore(slug, score);
+  };
+
   return (
     <>
       <script
@@ -224,7 +230,7 @@ export default function GamePage({ params }: GamePageProps) {
               </div>
 
               <GamePlayer title={config.title} slug={slug} image={config.image}>
-                <GameComponent />
+                <GameComponent onGameOver={handleGameOver} />
               </GamePlayer>
             </div>
 

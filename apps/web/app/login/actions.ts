@@ -40,6 +40,12 @@ export async function signup(formData: FormData) {
   redirect('/login?message=Check email to continue sign in process')
 }
 
+export async function signOut() {
+  const supabase = createClient()
+  await supabase.auth.signOut()
+  redirect('/login')
+}
+
 import { headers } from 'next/headers'
 
 function getSiteUrl() {

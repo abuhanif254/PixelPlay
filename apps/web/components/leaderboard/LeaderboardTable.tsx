@@ -1,15 +1,21 @@
 import React from 'react';
 import Link from 'next/link';
 
-export default function LeaderboardTable() {
-  const players = [
+export interface PlayerScore {
+  rank: number;
+  name: string;
+  gamesPlayed?: number;
+  score: string;
+  topGame: string;
+  avatar: string;
+}
+
+export default function LeaderboardTable({ players = [] }: { players?: PlayerScore[] }) {
+  // If no players, show some fallbacks or empty state
+  const displayPlayers = players.length > 0 ? players : [
     { rank: 4, name: 'SpeedRunner', gamesPlayed: 201, score: '65,420', topGame: '2048', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=SpeedRunner' },
     { rank: 5, name: 'BrainMaster', gamesPlayed: 176, score: '52,310', topGame: 'Sudoku', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=BrainMaster' },
     { rank: 6, name: 'SnakeKing', gamesPlayed: 198, score: '48,760', topGame: 'Snake', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=SnakeKing' },
-    { rank: 7, name: 'PuzzlePro', gamesPlayed: 156, score: '42,980', topGame: 'Minesweeper', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=PuzzlePro' },
-    { rank: 8, name: 'Charmander', gamesPlayed: 143, score: '39,210', topGame: 'Tic Tac Toe', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Charmander' },
-    { rank: 9, name: 'LegendPlayz', gamesPlayed: 132, score: '36,540', topGame: 'Solitaire', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=LegendPlayz' },
-    { rank: 10, name: 'QuickShot', gamesPlayed: 128, score: '33,870', topGame: 'Word Search', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=QuickShot' },
   ];
 
   const badges = [
@@ -34,13 +40,13 @@ export default function LeaderboardTable() {
 
       {/* Table Body */}
       <div className="flex flex-col">
-        {players.map((player, index) => (
-          <div key={player.rank} className={`grid grid-cols-12 gap-4 px-6 py-4 items-center transition-colors hover:bg-gray-50 dark:hover:bg-white/5 ${index !== players.length - 1 ? 'border-b border-gray-200 dark:border-white/5' : ''}`}>
+        {displayPlayers.map((player, index) => (
+          <div key={`${player.rank}-${player.name}`} className={`grid grid-cols-12 gap-4 px-6 py-4 items-center transition-colors hover:bg-gray-50 dark:hover:bg-white/5 ${index !== displayPlayers.length - 1 ? 'border-b border-gray-200 dark:border-white/5' : ''}`}>
             <div className="col-span-1 font-medium text-gray-600 dark:text-gray-400">{player.rank}</div>
             
             <div className="col-span-3 flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-[#6366F1]/20 overflow-hidden shrink-0">
-                <img src={player.avatar} alt={player.name} className="w-full h-full object-cover" />
+                <img src={player.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${player.name}`} alt={player.name} className="w-full h-full object-cover" />
               </div>
               <span className="font-bold text-gray-900 dark:text-gray-200 truncate">{player.name}</span>
             </div>
