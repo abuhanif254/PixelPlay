@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import React from 'react';
 import { Metadata } from 'next';
 import LeaderboardSidebar from '@/components/leaderboard/LeaderboardSidebar';
