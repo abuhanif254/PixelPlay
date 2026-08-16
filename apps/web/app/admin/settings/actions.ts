@@ -1,5 +1,7 @@
 'use server'
 
+export const runtime = 'edge';
+
 import { createClient } from '@/lib/supabase/server'
 import { verifyAdminAction } from '@/lib/admin'
 import { revalidatePath } from 'next/cache'
@@ -80,3 +82,4 @@ export async function updateSiteConfig(key: string, value: any) {
   revalidatePath('/', 'layout')
   return { success: true }
 }
+

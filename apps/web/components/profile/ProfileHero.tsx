@@ -51,11 +51,11 @@ export default function ProfileHero({
 }: HeroProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form, setForm] = useState({
-    username: profile.username,
-    full_name: profile.full_name,
-    bio: profile.bio,
-    avatar_url: profile.avatar_url,
-    banner_url: profile.banner_url,
+    username: profile.username || '',
+    full_name: profile.full_name || '',
+    bio: profile.bio || '',
+    avatar_url: profile.avatar_url || '',
+    banner_url: profile.banner_url || '',
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');

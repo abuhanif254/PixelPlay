@@ -1,5 +1,7 @@
 'use server'
 
+export const runtime = 'edge';
+
 import { createClient } from '@/lib/supabase/server'
 import { verifyAdminAction } from '@/lib/admin'
 import { revalidatePath } from 'next/cache'
@@ -176,3 +178,4 @@ export async function rejectGame(id: string, reason: string) {
   revalidatePath('/admin/games/queue')
   return { success: true }
 }
+

@@ -1,5 +1,7 @@
 'use server'
 
+export const runtime = 'edge';
+
 import { createClient } from '@/lib/supabase/server'
 import { verifyAdminAction } from '@/lib/admin'
 import { revalidatePath } from 'next/cache'
@@ -107,3 +109,4 @@ export async function incrementViews(id: string) {
     // silent — view tracking is best-effort
   }
 }
+

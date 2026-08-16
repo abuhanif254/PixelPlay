@@ -39,3 +39,4 @@ export async function subscribeToNewsletter(prevState: any, formData: FormData) 
     return { success: false, error: 'An unexpected error occurred.' };
   }
 }
+

@@ -1,5 +1,7 @@
 'use server'
 
+export const runtime = 'edge';
+
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
@@ -107,3 +109,4 @@ export async function signInWithGoogle() {
     redirect(data.url) // use the redirect API for your server framework
   }
 }
+

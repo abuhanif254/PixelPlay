@@ -43,3 +43,4 @@ export async function submitContactForm(prevState: any, formData: FormData) {
     return { success: false, error: 'An unexpected error occurred.' };
   }
 }
+

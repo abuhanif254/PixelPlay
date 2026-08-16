@@ -1,5 +1,7 @@
 'use server'
 
+export const runtime = 'edge';
+
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
@@ -92,3 +94,4 @@ export async function loadGameState(gameSlug: string) {
 
   return { success: true, data: save?.save_data }
 }
+

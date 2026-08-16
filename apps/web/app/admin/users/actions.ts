@@ -1,5 +1,7 @@
 'use server'
 
+export const runtime = 'edge';
+
 import { createClient } from '@/lib/supabase/server'
 import { verifyAdminAction } from '@/lib/admin'
 import { revalidatePath } from 'next/cache'
@@ -59,3 +61,4 @@ export async function toggleBan(userId: string, isBanned: boolean, reason?: stri
   revalidatePath('/admin/users')
   return { success: true }
 }
+
