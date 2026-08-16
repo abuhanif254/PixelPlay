@@ -5,6 +5,9 @@ import QueueClient from './QueueClient';
 import { Inbox } from 'lucide-react';
 import Link from 'next/link';
 
+export const runtime = 'edge';
+
+
 export const revalidate = 0;
 
 export default async function GameQueuePage() {
