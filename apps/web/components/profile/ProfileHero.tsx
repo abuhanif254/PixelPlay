@@ -191,7 +191,7 @@ export default function ProfileHero({
       {/* Banner + Header */}
       <div className="relative rounded-2xl overflow-hidden">
         {/* Banner */}
-        <div className={`w-full h-32 md:h-40 ${profile.banner_url ? '' : 'bg-gradient-to-r from-[#6366F1] via-purple-600 to-blue-600'}`}>
+        <div className={`relative w-full h-32 md:h-40 ${profile.banner_url ? '' : 'bg-gradient-to-r from-[#6366F1] via-purple-600 to-blue-600'}`}>
           {profile.banner_url && (
             <img src={profile.banner_url} alt="Banner" className="w-full h-full object-cover" />
           )}
@@ -199,7 +199,7 @@ export default function ProfileHero({
         </div>
 
         {/* Profile row below banner */}
-        <div className="bg-white dark:bg-[#111228]/80 border border-gray-200 dark:border-white/5 border-t-0 rounded-b-2xl px-6 pb-5">
+        <div className="relative z-10 bg-white dark:bg-[#111228]/80 border border-gray-200 dark:border-white/5 border-t-0 rounded-b-2xl px-6 pb-5">
           <div className="flex items-end justify-between gap-4 -mt-10 mb-4">
             {/* Avatar */}
             <div className="w-20 h-20 rounded-full border-4 border-white dark:border-[#111228] bg-gray-100 dark:bg-[#0A0B1A] overflow-hidden shrink-0 shadow-lg">
