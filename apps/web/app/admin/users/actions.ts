@@ -39,3 +39,20 @@ export async function getUserScores(userId: string) {
   if (error) return { success: false, error: error.message, data: [] }
   return { success: true, data: data || [] }
 }
+
+// ─── Toggle User Ban ───────────────────────────────────────────────────────────
+export async function toggleBan(userId: string, isBanned: boolean) {
+  const auth = await verifyAdminAction()
+  if (!auth.success) return auth
+
+  if (userId === auth.userId) {
+    return { success: false, error: 'You cannot ban yourself.' }
+  }
+
+  const supabase = createClient()
+  const { error } = await supabase.from('profiles').update({ is_banned: isBanned }).eq('id', userId)
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/admin/users')
+  return { success: true }
+}
