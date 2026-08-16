@@ -15,8 +15,8 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   const category = typeof searchParams.category === 'string' ? searchParams.category : 'All Games';
   
   const title = category === 'All Games' 
-    ? 'All Games - Play Free Online on PixelPlay'
-    : `${category} Games - Play Free Online on PixelPlay`;
+    ? 'All Games - Play Free Online on Spielcade'
+    : `${category} Games - Play Free Online on Spielcade`;
     
   return {
     title,

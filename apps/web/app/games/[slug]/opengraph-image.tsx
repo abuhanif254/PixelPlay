@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og';
-import { gamesRegistry } from '@pixelplay/games/registry';
+import { gamesRegistry } from '@spielcade/games/registry';
 import { siteConfig } from '@/lib/seo';
 
 export const runtime = 'edge';

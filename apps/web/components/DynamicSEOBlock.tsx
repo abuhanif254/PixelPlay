@@ -2,8 +2,8 @@ import React from 'react';
 
 const SEO_CONTENT: Record<string, { title: string, text: string }> = {
   'All Games': {
-    title: 'Play Free Online Games on PixelPlay',
-    text: 'Welcome to PixelPlay, your ultimate destination for free online browser games. Whether you are looking for action-packed adventures, mind-bending puzzles, or casual games to pass the time, we have something for everyone. Our games are playable on desktop, tablet, and mobile devices without any downloads or installations required.'
+    title: 'Play Free Online Games on Spielcade',
+    text: 'Welcome to Spielcade, your ultimate destination for free online browser games. Whether you are looking for action-packed adventures, mind-bending puzzles, or casual games to pass the time, we have something for everyone. Our games are playable on desktop, tablet, and mobile devices without any downloads or installations required.'
   },
   'Puzzle': {
     title: 'Free Online Puzzle Games',
@@ -15,14 +15,14 @@ const SEO_CONTENT: Record<string, { title: string, text: string }> = {
   },
   'Racing': {
     title: 'Free Online Racing Games',
-    text: 'Start your engines and drift into our collection of free online racing games. Drive sports cars, motorcycles, and extreme vehicles across diverse tracks. Compete against the clock or other players to prove you are the fastest racer on PixelPlay.'
+    text: 'Start your engines and drift into our collection of free online racing games. Drive sports cars, motorcycles, and extreme vehicles across diverse tracks. Compete against the clock or other players to prove you are the fastest racer on Spielcade.'
   }
 };
 
 export default function DynamicSEOBlock({ category }: { category: string }) {
   const content = SEO_CONTENT[category] || {
     title: `Free Online ${category} Games`,
-    text: `Discover the best free online ${category.toLowerCase()} games on PixelPlay. Play directly in your browser with no downloads required. Enjoy hours of fun with top-rated ${category.toLowerCase()} titles.`
+    text: `Discover the best free online ${category.toLowerCase()} games on Spielcade. Play directly in your browser with no downloads required. Enjoy hours of fun with top-rated ${category.toLowerCase()} titles.`
   };
 
   return (

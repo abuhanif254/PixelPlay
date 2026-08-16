@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Activity, Gamepad2, Trophy, Clock } from 'lucide-react';
 
 export const metadata = {
-  title: 'Activity Feed | My Profile | PixelPlay',
+  title: 'Activity Feed | My Profile | Spielcade',
   description: 'Your complete timeline of scores and achievements.',
 };
 

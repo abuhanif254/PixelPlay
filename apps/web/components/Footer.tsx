@@ -16,9 +16,9 @@ export default function Footer() {
           
           {/* Brand */}
           <div className="space-y-4">
-            <Link href="/" aria-label="PixelPlay Homepage" title="Go to PixelPlay Homepage" className="flex items-center gap-2">
+            <Link href="/" aria-label="Spielcade Homepage" title="Go to Spielcade Homepage" className="flex items-center gap-2">
               <Gamepad2 className="w-8 h-8 text-primary" />
-              <span className="font-bold text-2xl tracking-tight">PixelPlay</span>
+              <span className="font-bold text-2xl tracking-tight">Spielcade</span>
             </Link>
             <p className="text-sm text-black/60 dark:text-white/60 leading-relaxed max-w-xs">
               Your ultimate destination for free browser games. Play instantly, no downloads required. Join millions of players worldwide.
@@ -100,7 +100,7 @@ export default function Footer() {
         {/* Bottom */}
         <div className="pt-8 border-t border-black/10 dark:border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-black/40 dark:text-white/40">
-            © {new Date().getFullYear()} PixelPlay Games. All rights reserved.
+            © {new Date().getFullYear()} Spielcade Games. All rights reserved.
           </p>
           <div className="flex items-center gap-6 text-sm text-black/40 dark:text-white/40">
             <span className="hover:text-black dark:text-white transition-colors cursor-pointer">Status</span>

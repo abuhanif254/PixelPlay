@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Gamepad2, FileText, Send, PieChart, Shield } from 'lucide-react';
 
 export const metadata = {
-  title: 'Developer Studio - PixelPlay',
+  title: 'Developer Studio - Spielcade',
   description: 'Manage and submit your browser games.',
 };
 

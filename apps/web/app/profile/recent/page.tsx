@@ -7,7 +7,7 @@ import { History, ArrowLeft, Gamepad2 } from 'lucide-react';
 import ProfileGameRow from '@/components/profile/ProfileGameRow'; // We can reuse the UI component for a grid
 
 export const metadata = {
-  title: 'Recently Played | My Profile | PixelPlay',
+  title: 'Recently Played | My Profile | Spielcade',
   description: 'View your recently played games.',
 };
 

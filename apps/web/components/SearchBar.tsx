@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Search } from 'lucide-react';
-import { gamesRegistry } from '@pixelplay/games/registry';
+import { gamesRegistry } from '@spielcade/games/registry';
 import Link from 'next/link';
 
 export function SearchBar() {

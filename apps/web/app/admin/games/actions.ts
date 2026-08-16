@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { verifyAdminAction } from '@/lib/admin'
 import { revalidatePath } from 'next/cache'
-import { gamesRegistry } from '@pixelplay/games/registry'
+import { gamesRegistry } from '@spielcade/games/registry'
 
 // ─── Sync Plugin Registry → Supabase ──────────────────────────────────────────
 export async function syncGames() {

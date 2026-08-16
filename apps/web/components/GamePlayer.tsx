@@ -41,7 +41,7 @@ export default function GamePlayer({ children, title, slug, image, sourceUrl, on
 
     const handleMessage = (event: MessageEvent) => {
       // Basic security check: ensure it's from our SDK format
-      if (event.data && event.data.source === 'PIXELPLAY_SDK') {
+      if (event.data && event.data.source === 'SPIELCADE_SDK') {
         console.log('[Platform] Received SDK Message:', event.data);
         
         switch (event.data.type) {

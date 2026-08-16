@@ -1,5 +1,5 @@
 import { MetadataRoute } from 'next';
-import { gamesRegistry } from '@pixelplay/games/registry';
+import { gamesRegistry } from '@spielcade/games/registry';
 import { siteConfig } from '@/lib/seo';
 import { getAllBlogPosts } from '@/lib/blogData';
 

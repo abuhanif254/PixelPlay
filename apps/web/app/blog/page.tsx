@@ -6,8 +6,8 @@ import LatestArticles from '@/components/blog/LatestArticles';
 import BlogSidebar from '@/components/blog/BlogSidebar';
 
 export const metadata: Metadata = {
-  title: 'Blog & Guides | PixelPlay Games',
-  description: 'Tips, guides, news and strategies to level up your gaming experience on PixelPlay.',
+  title: 'Blog & Guides | Spielcade Games',
+  description: 'Tips, guides, news and strategies to level up your gaming experience on Spielcade.',
 };
 
 export default function BlogPage() {

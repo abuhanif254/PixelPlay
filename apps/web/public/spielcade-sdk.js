@@ -1,24 +1,24 @@
 /**
- * PixelPlay Game Developer SDK
+ * Spielcade Game Developer SDK
  * 
  * Include this script in your game's index.html file:
- * <script src="https://pixelplay.com/pixelplay-sdk.js"></script>
+ * <script src="https://spielcade.com/spielcade-sdk.js"></script>
  * 
  * Usage:
- * PixelPlay.submitScore(1500);
- * PixelPlay.unlockAchievement('first_blood');
+ * Spielcade.submitScore(1500);
+ * Spielcade.unlockAchievement('first_blood');
  */
 
 (function(window) {
   'use strict';
 
   // Prevent multiple initializations
-  if (window.PixelPlay) return;
+  if (window.Spielcade) return;
 
   const SDK_VERSION = '1.0.0';
 
   /**
-   * Dispatches a secure message to the parent window (the PixelPlay platform).
+   * Dispatches a secure message to the parent window (the Spielcade platform).
    * @param {string} type - The event type
    * @param {object} payload - The event payload
    */
@@ -26,28 +26,28 @@
     // Only dispatch if the game is running inside an iframe
     if (window.parent !== window) {
       window.parent.postMessage({
-        source: 'PIXELPLAY_SDK',
+        source: 'SPIELCADE_SDK',
         version: SDK_VERSION,
         type: type,
         payload: payload
-      }, '*'); // In production, we could restrict this to the exact PixelPlay domain
+      }, '*'); // In production, we could restrict this to the exact Spielcade domain
     } else {
-      console.warn(`[PixelPlay SDK] Game is not running inside an iframe. Event '${type}' was ignored.`);
-      console.log(`[PixelPlay SDK] Payload:`, payload);
+      console.warn(`[Spielcade SDK] Game is not running inside an iframe. Event '${type}' was ignored.`);
+      console.log(`[Spielcade SDK] Payload:`, payload);
     }
   }
 
-  window.PixelPlay = {
+  window.Spielcade = {
     /**
      * Call this when the player gets a new score or finishes a run.
      * @param {number} score - The player's score
      */
     submitScore: function(score) {
       if (typeof score !== 'number' || isNaN(score)) {
-        console.error('[PixelPlay SDK] Invalid score submitted. Must be a valid number.');
+        console.error('[Spielcade SDK] Invalid score submitted. Must be a valid number.');
         return;
       }
-      console.log(`[PixelPlay SDK] Submitting score: ${score}`);
+      console.log(`[Spielcade SDK] Submitting score: ${score}`);
       dispatchEvent('SUBMIT_SCORE', { score: score });
     },
 
@@ -57,10 +57,10 @@
      */
     unlockAchievement: function(achievementKey) {
       if (!achievementKey || typeof achievementKey !== 'string') {
-        console.error('[PixelPlay SDK] Invalid achievement key submitted.');
+        console.error('[Spielcade SDK] Invalid achievement key submitted.');
         return;
       }
-      console.log(`[PixelPlay SDK] Unlocking achievement: ${achievementKey}`);
+      console.log(`[Spielcade SDK] Unlocking achievement: ${achievementKey}`);
       dispatchEvent('UNLOCK_ACHIEVEMENT', { key: achievementKey });
     },
 
@@ -68,7 +68,7 @@
      * Call this when the game is fully loaded and ready to play.
      */
     gameReady: function() {
-      console.log('[PixelPlay SDK] Game Ready.');
+      console.log('[Spielcade SDK] Game Ready.');
       dispatchEvent('GAME_READY');
     },
 
@@ -76,11 +76,11 @@
      * Call this when the game enters a "Game Over" state.
      */
     gameOver: function() {
-      console.log('[PixelPlay SDK] Game Over.');
+      console.log('[Spielcade SDK] Game Over.');
       dispatchEvent('GAME_OVER');
     }
   };
 
-  console.log(`[PixelPlay SDK] Initialized (v${SDK_VERSION}).`);
+  console.log(`[Spielcade SDK] Initialized (v${SDK_VERSION}).`);
 
 })(window);

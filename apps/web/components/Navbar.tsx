@@ -50,7 +50,7 @@ export default function Navbar() {
         <div className="container mx-auto px-4 md:px-8 h-20 flex items-center justify-between gap-4">
           
           {/* Logo */}
-          <Link href="/" aria-label="PlayHub Homepage" title="Go to PlayHub Homepage" className="flex items-center gap-3 shrink-0">
+          <Link href="/" aria-label="Spielcade Homepage" title="Go to Spielcade Homepage" className="flex items-center gap-3 shrink-0">
             <div className="flex items-center justify-center text-[#6366F1]">
               <Gamepad2 className="w-8 h-8 fill-current" />
             </div>

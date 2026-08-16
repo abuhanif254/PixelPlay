@@ -6,7 +6,7 @@ import { useRecentGames } from '@/hooks/useRecentGames';
 import GameCard from '@/components/GameCard';
 import { SectionHeader } from '@/components/SectionHeader';
 import { HorizontalScroll } from '@/components/HorizontalScroll';
-import { gamesRegistry } from '@pixelplay/games/registry';
+import { gamesRegistry } from '@spielcade/games/registry';
 
 export default function RecentGames() {
   const { recentSlugs, isMounted } = useRecentGames();

@@ -38,22 +38,22 @@ export async function generateMetadata(
   
   if (!post) {
     return {
-      title: 'Post Not Found | PixelPlay',
+      title: 'Post Not Found | Spielcade',
     };
   }
 
   return {
-    title: `${post.title} | PixelPlay`,
+    title: `${post.title} | Spielcade`,
     description: post.description,
     keywords: post.keywords,
     alternates: {
-      canonical: `https://pixelplay.com/blog/${post.slug}`,
+      canonical: `https://spielcade.com/blog/${post.slug}`,
     },
     openGraph: {
-      title: `${post.title} | PixelPlay`,
+      title: `${post.title} | Spielcade`,
       description: post.description,
-      url: `https://pixelplay.com/blog/${post.slug}`,
-      siteName: 'PixelPlay Games',
+      url: `https://spielcade.com/blog/${post.slug}`,
+      siteName: 'Spielcade Games',
       images: [
         {
           url: post.coverImage,
@@ -68,7 +68,7 @@ export async function generateMetadata(
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${post.title} | PixelPlay`,
+      title: `${post.title} | Spielcade`,
       description: post.description,
       images: [post.coverImage],
     },
@@ -110,19 +110,19 @@ export default function SingleArticlePage({ params }: Props) {
                   "@type": "ListItem",
                   "position": 1,
                   "name": "Home",
-                  "item": "https://pixelplay.com/"
+                  "item": "https://spielcade.com/"
                 },
                 {
                   "@type": "ListItem",
                   "position": 2,
                   "name": "Blog",
-                  "item": "https://pixelplay.com/blog"
+                  "item": "https://spielcade.com/blog"
                 },
                 {
                   "@type": "ListItem",
                   "position": 3,
                   "name": post.title,
-                  "item": `https://pixelplay.com/blog/${post.slug}`
+                  "item": `https://spielcade.com/blog/${post.slug}`
                 }
               ]
             }

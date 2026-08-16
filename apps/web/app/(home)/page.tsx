@@ -7,7 +7,7 @@ import { HorizontalScroll } from '@/components/HorizontalScroll';
 import GameCard from '@/components/GameCard';
 import CategoryCard from '@/components/CategoryCard';
 import BlogPreviewCard from '@/components/BlogPreviewCard';
-import { gamesRegistry } from '@pixelplay/games/registry';
+import { gamesRegistry } from '@spielcade/games/registry';
 import Link from 'next/link';
 import RecentGames from '@/components/RecentGames';
 import { TrendingGamesFilter } from '@/components/TrendingGamesFilter';
@@ -27,8 +27,12 @@ const DeviceCompatibility = dynamic(() => import('@/components/DeviceCompatibili
 const DeveloperSpotlight = dynamic(() => import('@/components/DeveloperSpotlight'));
 const UpcomingGames = dynamic(() => import('@/components/UpcomingGames'));
 export const metadata: Metadata = {
-  title: 'Home',
-  description: 'Discover trending HTML5 games, popular categories, and editor\'s picks on PixelPlay.',
+  title: "Spielcade — Play Free Games, Publish Yours & Earn",
+  description: "Play free online games — from lightweight HTML5 to premium titles. Submit your own game as a developer on Spielcade and start earning from every view.",
+  openGraph: {
+    title: "Spielcade — Play Free Games, Publish Yours & Earn",
+    description: "Play free online games — from lightweight HTML5 to premium titles. Submit your own game as a developer on Spielcade and start earning from every view.",
+  },
 };
 
 export default async function HomePage() {
@@ -57,9 +61,9 @@ export default async function HomePage() {
     '@graph': [
       {
         '@type': 'CollectionPage',
-        name: 'PixelPlay Game Collection',
+        name: 'Spielcade Game Collection',
         description: 'A collection of the best free browser games.',
-        url: 'https://pixelplay.com',
+        url: 'https://spielcade.com',
         hasPart: gamesList.map(game => ({
           '@type': 'SoftwareApplication',
           name: game.title,
@@ -89,7 +93,7 @@ export default async function HomePage() {
         itemListElement: gameCollections.map((col, idx) => ({
           '@type': 'ListItem',
           position: idx + 1,
-          url: `https://pixelplay.com${col.href}`
+          url: `https://spielcade.com${col.href}`
         }))
       }
     ]
@@ -278,7 +282,7 @@ export default async function HomePage() {
         {/* SEO Text Block */}
         <ScrollReveal delay={0.2}>
           <section className="bg-gray-50 dark:bg-gray-800/50 rounded-3xl p-8 md:p-12 border border-black/5 dark:border-white/5" aria-labelledby="seo-text-heading">
-            <div id="seo-text-heading" className="sr-only">About PixelPlay</div>
+            <div id="seo-text-heading" className="sr-only">About Spielcade</div>
             <HomeSEOText />
           </section>
         </ScrollReveal>

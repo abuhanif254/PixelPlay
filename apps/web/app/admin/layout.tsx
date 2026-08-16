@@ -4,8 +4,8 @@ import AdminSidebar from '@/components/admin/AdminSidebar';
 import AdminTopBar from '@/components/admin/AdminTopBar';
 
 export const metadata: Metadata = {
-  title: 'Admin Dashboard | PixelPlay',
-  description: 'PixelPlay Administration and Management Panel',
+  title: 'Admin Dashboard | Spielcade',
+  description: 'Spielcade Administration and Management Panel',
 };
 
 export default function AdminLayout({

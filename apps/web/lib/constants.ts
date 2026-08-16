@@ -1,7 +1,7 @@
 export const homepageFaqs = [
   {
-    q: "Are the games on PixelPlay really free?",
-    a: "Yes! Every single game on PixelPlay is 100% free to play. We sustain our platform through non-intrusive advertising so you never have to pay to enjoy your favorite games."
+    q: "Are the games on Spielcade really free?",
+    a: "Yes! Every single game on Spielcade is 100% free to play. We sustain our platform through non-intrusive advertising so you never have to pay to enjoy your favorite games."
   },
   {
     q: "Do I need to download or install anything?",
@@ -9,7 +9,7 @@ export const homepageFaqs = [
   },
   {
     q: "Can I play on my mobile phone or tablet?",
-    a: "Absolutely. PixelPlay is fully optimized for mobile devices. Our responsive design ensures that most games will automatically adapt to your screen size for a perfect touch-screen experience."
+    a: "Absolutely. Spielcade is fully optimized for mobile devices. Our responsive design ensures that most games will automatically adapt to your screen size for a perfect touch-screen experience."
   },
   {
     q: "Do I need to create an account to play?",

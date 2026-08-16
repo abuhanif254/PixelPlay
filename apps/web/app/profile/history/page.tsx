@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Gamepad2, Search } from 'lucide-react';
 
 export const metadata = {
-  title: 'Game History | My Profile | PixelPlay',
+  title: 'Game History | My Profile | Spielcade',
   description: 'A detailed log of all your game sessions.',
 };
 

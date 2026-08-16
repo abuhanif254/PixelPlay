@@ -22,7 +22,7 @@ export function useGameSync() {
         setIsSyncing(true);
         try {
           // Read local data
-          const recentGames = JSON.parse(localStorage.getItem('pixelplay_recent_games') || '[]');
+          const recentGames = JSON.parse(localStorage.getItem('spielcade_recent_games') || '[]');
           
           if (recentGames.length > 0) {
             // Upsert to Supabase table

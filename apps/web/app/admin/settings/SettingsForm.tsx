@@ -161,7 +161,7 @@ export default function SettingsForm({ adminProfile, games }: { adminProfile: Ad
             { label: 'Hosting', value: 'Cloudflare Pages' },
             { label: 'Backend', value: 'Supabase' },
             { label: 'Framework', value: 'Next.js 14 (App Router)' },
-            { label: 'Plugin System', value: 'PixelPlay Game Registry' },
+            { label: 'Plugin System', value: 'Spielcade Game Registry' },
           ].map(item => (
             <div key={item.label} className="flex flex-col p-4 bg-gray-50 dark:bg-black/20 rounded-xl border border-gray-200 dark:border-white/5">
               <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{item.label}</span>

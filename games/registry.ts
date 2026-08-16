@@ -61,7 +61,7 @@ export const gamesRegistry: Record<string, { config: GameConfig, component: any 
             "Classic"
       ],
       "screenshots": [],
-      "developer": "Gabriele Cirulli / PixelPlay",
+      "developer": "Gabriele Cirulli / Spielcade",
       "releaseDate": "August 2026",
       "platform": "Browser (Desktop, Mobile)"
 },
@@ -112,7 +112,7 @@ export const gamesRegistry: Record<string, { config: GameConfig, component: any 
             "https://images.unsplash.com/photo-1552820728-8b83bb6b773f?auto=format&fit=crop&q=80&w=800"
       ],
       "trailerUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ",
-      "developer": "PixelPlay Studios",
+      "developer": "Spielcade Studios",
       "releaseDate": "August 2026",
       "platform": "Browser (Desktop, Mobile)"
 },

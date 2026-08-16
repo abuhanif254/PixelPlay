@@ -1,6 +1,6 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
-import { gamesRegistry } from '@pixelplay/games/registry';
+import { gamesRegistry } from '@spielcade/games/registry';
 import { Star, ChevronRight, Heart, Clock, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import GamePlayer from '@/components/GamePlayer';
@@ -31,33 +31,67 @@ export async function generateMetadata(
 
   if (!dbGame && !localGame) {
     return {
-      title: 'Game Not Found - PixelPlay',
+      title: 'Game Not Found - Spielcade',
+      robots: { index: false, follow: false },
     };
   }
 
   const title = dbGame?.title || localGame?.config?.title || 'Game';
   const description = dbGame?.description || localGame?.config?.description || `Play ${title} online for free. No downloads required.`;
-  const image = dbGame?.image_url || localGame?.config?.image;
+  const image = dbGame?.image_url || localGame?.config?.image || 'https://spielcade.com/og-default.jpg';
   const category = (dbGame?.metadata as any)?.category || localGame?.config?.category || 'games';
+  const status = dbGame?.status || 'approved'; // local games are considered approved
+  const tags = (dbGame?.metadata as any)?.tags || localGame?.config?.tags || [];
+
+  const shouldIndex = status === 'approved';
+  
+  const pageTitle = `${title} — Play Free ${category} Game Online | Spielcade`;
+  const rawDesc = `Play ${title} free online, no download needed. ${description}`;
+  const pageDescription = rawDesc.length > 160 ? rawDesc.slice(0, 157).trimEnd() + "..." : rawDesc;
+  const canonicalUrl = `https://spielcade.com/games/${slug}`;
 
   return {
-    title: `Play ${title} Online Free - PixelPlay`,
-    description,
-    keywords: [title, category, 'play online free', 'browser game', 'pixelplay'],
+    title: pageTitle,
+    description: pageDescription,
+    keywords: [
+      title,
+      `${title} online`,
+      `play ${title}`,
+      `free ${category.toLowerCase()} games`,
+      ...tags,
+    ],
     alternates: {
-      canonical: `https://pixelplay.com/games/${slug}`,
+      canonical: canonicalUrl,
+    },
+    robots: {
+      index: shouldIndex,
+      follow: true,
+      googleBot: {
+        index: shouldIndex,
+        follow: true,
+        "max-image-preview": "large",
+      },
     },
     openGraph: {
-      title,
-      description,
-      images: image ? [{ url: image }] : [],
+      title: pageTitle,
+      description: pageDescription,
+      url: canonicalUrl,
+      siteName: 'Spielcade',
       type: 'website',
+      images: [
+        {
+          url: image,
+          width: 1200,
+          height: 630,
+          alt: `${title} — gameplay screenshot`,
+        },
+      ],
     },
     twitter: {
       card: 'summary_large_image',
-      title,
-      description,
-      images: image ? [image] : [],
+      title: pageTitle,
+      description: pageDescription,
+      images: [image],
     },
   };
 }
@@ -81,7 +115,7 @@ export default async function GamePage({ params }: GamePageProps) {
     description: dbGame?.description || localGame?.config?.description || '',
     image: dbGame?.image_url || localGame?.config?.image,
     category: (dbGame?.metadata as any)?.category || localGame?.config?.category || 'Arcade',
-    developer: (dbGame?.metadata as any)?.developer || localGame?.config?.developer || 'PixelPlay',
+    developer: (dbGame?.metadata as any)?.developer || localGame?.config?.developer || 'Spielcade',
     rating: (dbGame?.metadata as any)?.rating || localGame?.config?.rating,
   };
 
@@ -94,16 +128,30 @@ export default async function GamePage({ params }: GamePageProps) {
     "@type": "VideoGame",
     "name": config.title,
     "description": config.description || `Play ${config.title} online for free.`,
+    "image": config.image || 'https://spielcade.com/og-default.jpg',
     "genre": config.category,
     "playMode": "SinglePlayer",
     "applicationCategory": "Game",
-    "operatingSystem": "Web Browser",
-    "aggregateRating": config.rating ? {
-      "@type": "AggregateRating",
-      "ratingValue": config.rating,
-      "bestRating": "5",
-      "ratingCount": Math.floor(Math.random() * 5000) + 100 // Mock data
-    } : undefined
+    "operatingSystem": "Any (Web Browser)",
+    "url": `https://spielcade.com/games/${slug}`,
+    "author": {
+      "@type": "Organization",
+      "name": config.developer || 'Spielcade',
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+      "availability": "https://schema.org/InStock",
+    },
+    ...(config.rating ? {
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": config.rating.toFixed(1),
+        "bestRating": "5",
+        "ratingCount": Math.floor(Math.random() * 5000) + 100 // Mock data until real ratings are implemented
+      }
+    } : {})
   };
 
   const breadcrumbSchema = {
@@ -114,19 +162,19 @@ export default async function GamePage({ params }: GamePageProps) {
         "@type": "ListItem",
         "position": 1,
         "name": "Home",
-        "item": "https://pixelplay.vercel.app/"
+        "item": "https://spielcade.vercel.app/"
       },
       {
         "@type": "ListItem",
         "position": 2,
         "name": `${config.category} Games`,
-        "item": `https://pixelplay.vercel.app/games?category=${config.category}`
+        "item": `https://spielcade.vercel.app/games?category=${config.category}`
       },
       {
         "@type": "ListItem",
         "position": 3,
         "name": config.title,
-        "item": `https://pixelplay.vercel.app/games/${slug}`
+        "item": `https://spielcade.vercel.app/games/${slug}`
       }
     ]
   };
@@ -332,7 +380,7 @@ export default async function GamePage({ params }: GamePageProps) {
                   
                   <div className="flex flex-col gap-1">
                     <span className="text-gray-500 font-medium">Developer</span>
-                    <span className="text-gray-800 dark:text-gray-300">{config.developer || 'PixelPlay'}</span>
+                    <span className="text-gray-800 dark:text-gray-300">{config.developer || 'Spielcade'}</span>
                   </div>
                   
                   <div className="flex flex-col gap-1">

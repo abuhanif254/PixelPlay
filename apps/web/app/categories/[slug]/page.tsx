@@ -14,25 +14,25 @@ export const runtime = 'edge';
 // Dynamic metadata generation based on slug
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const category = categoriesData[params.slug as keyof typeof categoriesData];
-  if (!category) return { title: 'Category Not Found | PixelPlay' };
+  if (!category) return { title: 'Category Not Found | Spielcade' };
   
   return {
-    title: `${category.title} | PixelPlay`,
+    title: `${category.title} | Spielcade`,
     description: category.description,
-    keywords: [`${category.title} games`, 'free browser games', 'play online', 'pixelplay', category.title.toLowerCase()],
+    keywords: [`${category.title} games`, 'free browser games', 'play online', 'spielcade', category.title.toLowerCase()],
     alternates: {
-      canonical: `https://pixelplay.com/categories/${params.slug}`,
+      canonical: `https://spielcade.com/categories/${params.slug}`,
     },
     openGraph: {
-      title: `${category.title} | PixelPlay`,
+      title: `${category.title} | Spielcade`,
       description: category.description,
-      url: `https://pixelplay.com/categories/${params.slug}`,
-      siteName: 'PixelPlay Games',
+      url: `https://spielcade.com/categories/${params.slug}`,
+      siteName: 'Spielcade Games',
       type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${category.title} | PixelPlay`,
+      title: `${category.title} | Spielcade`,
       description: category.description,
     },
   };
@@ -58,19 +58,19 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
                 "@type": "ListItem",
                 "position": 1,
                 "name": "Home",
-                "item": "https://pixelplay.com/"
+                "item": "https://spielcade.com/"
               },
               {
                 "@type": "ListItem",
                 "position": 2,
                 "name": "Categories",
-                "item": "https://pixelplay.com/categories"
+                "item": "https://spielcade.com/categories"
               },
               {
                 "@type": "ListItem",
                 "position": 3,
                 "name": category.title,
-                "item": `https://pixelplay.com/categories/${params.slug}`
+                "item": `https://spielcade.com/categories/${params.slug}`
               }
             ]
           })

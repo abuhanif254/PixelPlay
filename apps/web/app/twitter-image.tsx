@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og';
 import { siteConfig } from '@/lib/seo';
 
 export const runtime = 'edge';
-export const alt = 'PlayHub - Play Free Browser Games';
+export const alt = 'Spielcade - Play Free Browser Games';
 export const size = {
   width: 1200,
   height: 630,

@@ -7,7 +7,7 @@ import { Heart, Gamepad2 } from 'lucide-react';
 import ProfileGameRow from '@/components/profile/ProfileGameRow';
 
 export const metadata = {
-  title: 'Favorite Games | My Profile | PixelPlay',
+  title: 'Favorite Games | My Profile | Spielcade',
   description: 'View your favorite games.',
 };
 

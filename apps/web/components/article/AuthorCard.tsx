@@ -15,7 +15,7 @@ export default function AuthorCard() {
         </div>
         <div className="flex flex-col">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-gray-900 dark:text-white font-bold text-lg">PlayHub Team</span>
+            <span className="text-gray-900 dark:text-white font-bold text-lg">Spielcade Team</span>
             <span className="text-blue-500 text-sm">✔</span>
           </div>
           <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">

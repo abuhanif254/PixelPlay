@@ -32,7 +32,7 @@ export default async function LoginPage({
               <Gamepad2 className="w-7 h-7 text-white" />
             </div>
             <span className="text-3xl font-outfit font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
-              PixelPlay
+              Spielcade
             </span>
           </Link>
         </div>

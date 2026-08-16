@@ -7,41 +7,41 @@ import ThreeGlobalCanvas from '@/components/3d/ThreeGlobalCanvas';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://pixelplay.com'),
+  metadataBase: new URL('https://spielcade.com'),
   manifest: "/manifest.json",
   title: {
-    default: 'PixelPlay | Best Free Online Browser Games',
-    template: '%s | PixelPlay Games',
+    default: 'Spielcade | Best Free Online Browser Games',
+    template: '%s | Spielcade Games',
   },
-  description: 'Play the best free online browser games instantly. No downloads required. Join millions of players worldwide on PixelPlay.',
+  description: 'Play the best free online browser games instantly. No downloads required. Join millions of players worldwide on Spielcade.',
   keywords: ['browser games', 'free games', 'online games', 'html5 games', 'play now'],
-  authors: [{ name: 'PixelPlay Team' }],
-  creator: 'PixelPlay',
+  authors: [{ name: 'Spielcade Team' }],
+  creator: 'Spielcade',
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://pixelplay.com',
-    title: 'PixelPlay | Best Free Online Browser Games',
+    url: 'https://spielcade.com',
+    title: 'Spielcade | Best Free Online Browser Games',
     description: 'Play the best free online browser games instantly. No downloads required.',
-    siteName: 'PixelPlay Games',
+    siteName: 'Spielcade Games',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'PixelPlay | Best Free Online Browser Games',
+    title: 'Spielcade | Best Free Online Browser Games',
     description: 'Play the best free online browser games instantly. No downloads required.',
-    creator: '@pixelplay',
+    creator: '@spielcade',
   },
 };
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
-  name: 'PixelPlay Games',
-  url: 'https://pixelplay.com',
+  name: 'Spielcade Games',
+  url: 'https://spielcade.com',
   description: 'Play the best free online browser games instantly.',
   potentialAction: {
     '@type': 'SearchAction',
-    target: 'https://pixelplay.com/search?q={search_term_string}',
+    target: 'https://spielcade.com/search?q={search_term_string}',
     'query-input': 'required name=search_term_string'
   }
 };

@@ -49,7 +49,7 @@ export default function AuthForm({ message }: { message?: string }) {
         </h3>
         <p className="text-sm text-gray-400">
           {isSignUp 
-            ? 'Join PixelPlay to save your high scores and favorites.' 
+            ? 'Join Spielcade to save your high scores and favorites.' 
             : 'Sign in to access your saved games and settings.'}
         </p>
       </div>
@@ -70,7 +70,7 @@ export default function AuthForm({ message }: { message?: string }) {
               autoComplete="email"
               required
               className="block w-full rounded-xl border-0 bg-[#0A0B1A] py-3 pl-10 pr-3 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6 placeholder:text-gray-600 transition-all"
-              placeholder="player@pixelplay.com"
+              placeholder="player@spielcade.com"
             />
           </div>
         </div>

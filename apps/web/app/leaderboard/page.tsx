@@ -11,7 +11,7 @@ import UserRankCard from '@/components/leaderboard/UserRankCard';
 import { createClient } from '@/lib/supabase/server';
 
 export const metadata: Metadata = {
-  title: 'Global Leaderboard | PixelPlay',
+  title: 'Global Leaderboard | Spielcade',
   description: 'Compete with players around the world and become the ultimate champion!',
 };
 

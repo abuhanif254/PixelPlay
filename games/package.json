@@ -1,5 +1,5 @@
 {
-  "name": "@pixelplay/games",
+  "name": "@spielcade/games",
   "version": "0.1.0",
   "private": true,
   "main": "registry.ts",

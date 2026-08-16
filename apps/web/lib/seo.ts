@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 
 // Use an environment variable for the site URL, fallback to localhost for development
 export const siteConfig = {
-  name: 'PlayHub', // Temporary name until a new one is decided
+  name: 'Spielcade', // Temporary name until a new one is decided
   description: 'Play the best free online browser games.',
   url: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
   ogImage: '/og-image.jpg',
@@ -60,7 +60,7 @@ export function constructMetadata({
       title,
       description,
       images: [image],
-      creator: '@PlayHub', // Update with actual twitter handle later
+      creator: '@Spielcade', // Update with actual twitter handle later
     },
     icons,
     metadataBase: new URL(siteConfig.url),

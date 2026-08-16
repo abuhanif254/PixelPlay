@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import ProfileSidebar from '@/components/profile/ProfileSidebar';
 
 export const metadata: Metadata = {
-  title: 'My Profile | PixelPlay',
+  title: 'My Profile | Spielcade',
   description: 'Your player profile, stats, achievements and activity.',
 };
 

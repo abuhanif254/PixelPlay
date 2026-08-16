@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Trophy, Lock, CheckCircle2 } from 'lucide-react';
 
 export const metadata = {
-  title: 'Achievements | My Profile | PixelPlay',
+  title: 'Achievements | My Profile | Spielcade',
   description: 'View your unlocked and locked achievements.',
 };
 

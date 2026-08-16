@@ -66,7 +66,7 @@ export default function SubmitGamePage() {
           <div>
             <h4 className="font-bold text-blue-800 dark:text-blue-400 text-sm">Have you included the SDK?</h4>
             <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-              Your game must include our <Link href="/studio/docs" className="underline font-bold">pixelplay-sdk.js</Link> file to communicate scores back to the platform. 
+              Your game must include our <Link href="/studio/docs" className="underline font-bold">spielcade-sdk.js</Link> file to communicate scores back to the platform. 
               Make sure your game is hosted on a secure (HTTPS) server that allows iFrame embedding.
             </p>
           </div>

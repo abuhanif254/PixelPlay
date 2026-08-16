@@ -9,10 +9,117 @@ import { Trophy, Gamepad2, Star, Flame, ArrowLeft, Edit3 } from 'lucide-react';
 export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: { username: string } }): Promise<Metadata> {
+  const supabase = createClient();
+  const { username } = params;
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id, username, full_name, bio, avatar_url, role')
+    .eq('username', username)
+    .single();
+
+  if (!profile) {
+    return {
+      title: `User Not Found | Spielcade`,
+      robots: { index: false, follow: false },
+    };
+  }
+
+  const { count: publishedGamesCount } = await supabase
+    .from('games')
+    .select('id', { count: 'exact', head: true })
+    .eq('developer_id', profile.id)
+    .eq('status', 'active');
+
+  const isIndexableDeveloper = (publishedGamesCount || 0) > 0;
+  const shouldIndex = isIndexableDeveloper;
+  
+  const displayName = profile.full_name || profile.username;
+  const canonicalUrl = `https://spielcade.com/profile/${profile.username}`;
+
+  const pageTitle = isIndexableDeveloper
+    ? `${displayName} (@${profile.username}) — Game Developer on Spielcade`
+    : `${displayName} (@${profile.username}) | Spielcade`;
+
+  let totalPlays = 0;
+  if (isIndexableDeveloper) {
+     const { data: devGames } = await supabase.from('games').select('total_plays').eq('developer_id', profile.id).eq('status', 'active');
+     totalPlays = (devGames || []).reduce((acc: number, curr: any) => acc + (Number(curr.total_plays) || 0), 0);
+  }
+
+  const rawDescription = isIndexableDeveloper
+    ? `${displayName} has published ${publishedGamesCount} games on Spielcade with ${totalPlays.toLocaleString()} total plays. ${profile.bio ?? ""}`.trim()
+    : `View ${displayName}'s profile, achievements, and game stats on Spielcade.`;
+
+  const pageDescription = rawDescription.length > 160
+    ? rawDescription.slice(0, 157).trimEnd() + "..."
+    : rawDescription;
+
+  const ogImage = profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}&backgroundColor=b6e3f4`;
+
   return {
-    title: `@${params.username} | PixelPlay`,
-    description: `View ${params.username}'s profile, achievements, and game stats on PixelPlay.`,
+    title: pageTitle,
+    description: pageDescription,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    robots: {
+      index: shouldIndex,
+      follow: true, 
+      googleBot: {
+        index: shouldIndex,
+        follow: true,
+      },
+    },
+    openGraph: shouldIndex ? {
+      title: pageTitle,
+      description: pageDescription,
+      url: canonicalUrl,
+      siteName: 'Spielcade',
+      type: 'profile',
+      images: [
+        {
+          url: ogImage,
+          width: 400,
+          height: 400,
+          alt: `${displayName}'s profile picture`,
+        },
+      ],
+    } : undefined,
   };
+}
+
+function DeveloperJsonLd({ profile, totalPlays }: { profile: any, totalPlays: number }) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ProfilePage",
+    dateModified: new Date().toISOString(),
+    mainEntity: {
+      "@type": "Person",
+      name: profile.full_name || profile.username,
+      alternateName: profile.username,
+      image: profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}&backgroundColor=b6e3f4`,
+      description: profile.bio,
+      url: `https://spielcade.com/profile/${profile.username}`,
+      memberOf: {
+        "@type": "Organization",
+        name: "Spielcade",
+        url: "https://spielcade.com",
+      },
+      interactionStatistic: {
+        "@type": "InteractionCounter",
+        interactionType: "https://schema.org/PlayAction",
+        userInteractionCount: totalPlays,
+      },
+    },
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  );
 }
 
 export default async function PublicProfilePage({ params }: { params: { username: string } }) {
@@ -60,8 +167,14 @@ export default async function PublicProfilePage({ params }: { params: { username
   const xpProgress = Math.min(100, Math.round(((xp % 1000) / 1000) * 100));
   const avatarUrl = profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}&backgroundColor=b6e3f4`;
 
+  // Determine if indexable developer
+  const { data: devGames } = await supabase.from('games').select('total_plays').eq('developer_id', profile.id).eq('status', 'active');
+  const isIndexableDeveloper = devGames && devGames.length > 0;
+  const totalDevPlays = (devGames || []).reduce((acc: number, curr: any) => acc + (Number(curr.total_plays) || 0), 0);
+
   return (
     <div className="min-h-screen bg-white dark:bg-[#0A0B1A] text-gray-900 dark:text-white pt-20 pb-20">
+      {isIndexableDeveloper && <DeveloperJsonLd profile={profile} totalPlays={totalDevPlays} />}
       {/* Back button */}
       <div className="container mx-auto px-4 max-w-4xl py-4">
         <Link href="/games" className="inline-flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm font-medium transition-colors">

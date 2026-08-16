@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-const RECENT_GAMES_KEY = 'pixelplay_recent_games';
+const RECENT_GAMES_KEY = 'spielcade_recent_games';
 const MAX_RECENT_GAMES = 12;
 
 export function useRecentGames() {
