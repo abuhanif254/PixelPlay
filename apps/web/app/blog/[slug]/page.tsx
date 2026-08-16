@@ -1,3 +1,6 @@
+export const runtime = 'edge';
+export const revalidate = 60;
+
 import React from 'react';
 import { Metadata, ResolvingMetadata } from 'next';
 import ArticleHeader from '@/components/article/ArticleHeader';
@@ -14,27 +17,43 @@ import TableOfContentsWidget from '@/components/article/TableOfContentsWidget';
 import NewsletterWidget from '@/components/article/NewsletterWidget';
 import TagsWidget from '@/components/article/TagsWidget';
 
-import { getBlogPost, getAllBlogPosts } from '@/lib/blogData';
+import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
-
-export const runtime = 'edge';
+import { getComments, getLikeCount, hasUserLiked } from '../actions';
 
 type Props = {
   params: { slug: string };
 };
 
-export function generateStaticParams() {
-  const posts = getAllBlogPosts();
-  return posts.map((post) => ({
-    slug: post.slug,
-  }));
+// Fetch post helper
+async function getPostData(slug: string) {
+  const supabase = createClient();
+  const { data: post } = await supabase
+    .from('blog_posts')
+    .select(`
+      id, title, slug, content, excerpt, cover_image, tags,
+      read_time, created_at, status,
+      profiles:author_id(username, avatar_url)
+    `)
+    .eq('slug', slug)
+    .single();
+
+  if (!post || post.status !== 'published') return null;
+
+  const profiles = post.profiles as any;
+
+  return {
+    ...post,
+    author: profiles?.username || 'Spielcade Team',
+    author_avatar: profiles?.avatar_url || '',
+  };
 }
 
 export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const post = getBlogPost(params.slug);
+  const post = await getPostData(params.slug);
   
   if (!post) {
     return {
@@ -42,45 +61,61 @@ export async function generateMetadata(
     };
   }
 
+  const defaultImage = 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200&q=80';
+  const coverImage = post.cover_image || defaultImage;
+
   return {
     title: `${post.title} | Spielcade`,
-    description: post.description,
-    keywords: post.keywords,
+    description: post.excerpt,
+    keywords: post.tags,
     alternates: {
       canonical: `https://spielcade.com/blog/${post.slug}`,
     },
     openGraph: {
       title: `${post.title} | Spielcade`,
-      description: post.description,
+      description: post.excerpt,
       url: `https://spielcade.com/blog/${post.slug}`,
       siteName: 'Spielcade Games',
       images: [
         {
-          url: post.coverImage,
+          url: coverImage,
           width: 1200,
           height: 630,
           alt: post.title,
         },
       ],
       type: 'article',
-      publishedTime: post.date,
-      authors: [post.author.name],
+      publishedTime: post.created_at,
+      authors: [post.author],
     },
     twitter: {
       card: 'summary_large_image',
       title: `${post.title} | Spielcade`,
-      description: post.description,
-      images: [post.coverImage],
+      description: post.excerpt,
+      images: [coverImage],
     },
   };
 }
 
-export default function SingleArticlePage({ params }: Props) {
-  const post = getBlogPost(params.slug);
+export default async function SingleArticlePage({ params }: Props) {
+  const post = await getPostData(params.slug);
 
   if (!post) {
     notFound();
   }
+
+  // Fetch engagement data in parallel
+  const [comments, likeCount, userHasLiked] = await Promise.all([
+    getComments(post.id),
+    getLikeCount(post.id),
+    hasUserLiked(post.id)
+  ]);
+
+  // Handle views count increment lazily
+  const supabase = createClient();
+  supabase.rpc('increment_blog_views', { post_id: post.id }).then(() => {});
+
+  const coverImage = post.cover_image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200&q=80';
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#05050F] text-gray-900 dark:text-white pt-24 pb-20 transition-colors">
@@ -92,14 +127,12 @@ export default function SingleArticlePage({ params }: Props) {
               "@context": "https://schema.org",
               "@type": "BlogPosting",
               "headline": post.title,
-              "image": [
-                post.coverImage
-              ],
-              "datePublished": post.date,
-              "dateModified": post.date,
+              "image": [coverImage],
+              "datePublished": post.created_at,
+              "dateModified": post.created_at,
               "author": [{
-                  "@type": "Organization",
-                  "name": post.author.name
+                  "@type": "Person",
+                  "name": post.author
               }]
             },
             {
@@ -135,18 +168,19 @@ export default function SingleArticlePage({ params }: Props) {
           
           {/* Main Content Column */}
           <div className="lg:col-span-8 flex flex-col">
-            <ArticleHeader post={post} />
+            <ArticleHeader post={post} likeCount={likeCount} hasLiked={userHasLiked} />
             <ArticleHeroImage post={post} />
-            <InThisArticle />
-            <ArticleContent />
+            {/* Hiding InThisArticle for now since ToC usually relies on parsing markdown */}
+            {/* <InThisArticle /> */}
+            <ArticleContent content={post.content} />
             <ArticleCTA />
-            <PostNavigation />
-            <CommentsSection />
+            {/* <PostNavigation /> */}
+            <CommentsSection postId={post.id} comments={comments} />
           </div>
 
           {/* Right Sidebar Column */}
           <div className="lg:col-span-4 flex flex-col gap-0">
-            <AuthorCard />
+            {/* <AuthorCard /> */}
             <RelatedPostsWidget />
             
             {/* Sticky Container for the rest of the sidebar */}

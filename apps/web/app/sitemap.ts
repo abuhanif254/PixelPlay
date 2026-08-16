@@ -1,54 +1,65 @@
 import { MetadataRoute } from 'next';
-import { gamesRegistry } from '@spielcade/games/registry';
-import { siteConfig } from '@/lib/seo';
-import { getAllBlogPosts } from '@/lib/blogData';
+import { createClient } from '@/lib/supabase/server';
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = siteConfig.url;
+const baseUrl = 'https://spielcade.com';
 
-  // Map all games from the registry
-  const gameUrls = Object.keys(gamesRegistry).map((slug) => ({
-    url: `${baseUrl}/games/${slug}`,
-    lastModified: new Date(),
-    changeFrequency: 'weekly' as const,
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const supabase = createClient();
+
+  // 1. Fetch all published games
+  const { data: games } = await supabase
+    .from('games')
+    .select('slug, updated_at')
+    .eq('is_published', true);
+
+  // 2. Fetch all published blog posts
+  const { data: posts } = await supabase
+    .from('blog_posts')
+    .select('slug, updated_at')
+    .eq('status', 'published');
+
+  // 3. Map into sitemap format
+  const gameEntries: MetadataRoute.Sitemap = (games || []).map((game) => ({
+    url: `${baseUrl}/games/${game.slug}`,
+    lastModified: new Date(game.updated_at || new Date()),
+    changeFrequency: 'weekly',
     priority: 0.8,
   }));
 
-  // Extract unique categories
-  const categories = new Set<string>();
-  Object.values(gamesRegistry).forEach(game => {
-    if (game.config.category) {
-      categories.add(game.config.category);
+  const postEntries: MetadataRoute.Sitemap = (posts || []).map((post) => ({
+    url: `${baseUrl}/blog/${post.slug}`,
+    lastModified: new Date(post.updated_at || new Date()),
+    changeFrequency: 'monthly',
+    priority: 0.7,
+  }));
+
+  // Static routes
+  const staticEntries: MetadataRoute.Sitemap = [
+    {
+      url: baseUrl,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 1.0,
+    },
+    {
+      url: `${baseUrl}/games`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/categories`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.8,
     }
-  });
+  ];
 
-  const categoryUrls = Array.from(categories).map(category => ({
-    url: `${baseUrl}/categories/${category.toLowerCase().replace(/\s+/g, '-')}`,
-    lastModified: new Date(),
-    changeFrequency: 'daily' as const,
-    priority: 0.9,
-  }));
-
-  // Define static routes
-  const staticRoutes = [
-    '',
-    '/blog',
-  ].map((route) => ({
-    url: `${baseUrl}${route}`,
-    lastModified: new Date(),
-    changeFrequency: 'daily' as const,
-    priority: route === '' ? 1.0 : 0.7,
-  }));
-
-  // Generate blog URLs from the local registry
-  const blogSlugs = getAllBlogPosts().map(post => post.slug);
-
-  const blogUrls = blogSlugs.map(slug => ({
-    url: `${baseUrl}/blog/${slug}`,
-    lastModified: new Date(),
-    changeFrequency: 'weekly' as const,
-    priority: 0.6,
-  }));
-
-  return [...staticRoutes, ...categoryUrls, ...gameUrls, ...blogUrls];
+  return [...staticEntries, ...gameEntries, ...postEntries];
 }

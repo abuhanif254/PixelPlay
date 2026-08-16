@@ -3,11 +3,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getAllBlogPosts } from '@/lib/blogData';
 
-export default function LatestArticles() {
+export default function LatestArticles({ posts }: { posts: any[] }) {
   const tabs = ['All', 'Guides', 'Tips & Tricks', 'News', 'Reviews', 'Walkthroughs'];
 
   // Skip the first 3 posts as they are featured
-  const articles = getAllBlogPosts().slice(3);
+  const articles = posts.slice(3);
 
   return (
     <div>
@@ -37,7 +37,7 @@ export default function LatestArticles() {
             {/* Image */}
             <div className="w-full sm:w-64 aspect-video sm:aspect-auto sm:h-36 shrink-0 rounded-xl overflow-hidden relative">
               <Image 
-                src={article.coverImage} 
+                src={article.cover_image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&q=80'} 
                 alt={article.title}
                 fill
                 sizes="(max-width: 640px) 100vw, 300px"
@@ -54,14 +54,14 @@ export default function LatestArticles() {
                 {article.title}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed mb-4 line-clamp-2 max-w-2xl">
-                {article.description}
+                {article.excerpt}
               </p>
               
               <div className="flex items-center justify-between mt-auto">
                 <div className="flex items-center gap-3 text-xs text-gray-500 font-medium">
-                  <span>{new Date(article.date).toLocaleDateString()}</span>
+                  <span>{new Date(article.created_at).toLocaleDateString()}</span>
                   <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700" />
-                  <span>5 min read</span>
+                  <span>{article.read_time || 5} min read</span>
                 </div>
                 <button className="px-4 py-1.5 bg-[#6366F1]/10 text-[#6366F1] hover:bg-[#6366F1] hover:text-white text-xs font-bold rounded-lg transition-colors">
                   Read More

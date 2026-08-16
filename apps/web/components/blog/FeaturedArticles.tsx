@@ -3,12 +3,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getAllBlogPosts } from '@/lib/blogData';
 
-export default function FeaturedArticles() {
-  const allPosts = getAllBlogPosts();
-  
+export default function FeaturedArticles({ posts }: { posts: any[] }) {
   // Use first post as main article, next two as secondary if they exist
-  const mainPost = allPosts.length > 0 ? allPosts[0] : null;
-  const secondaryPosts = allPosts.slice(1, 3);
+  const mainPost = posts.length > 0 ? posts[0] : null;
+  const secondaryPosts = posts.slice(1, 3);
 
   if (!mainPost) return null;
 
@@ -22,7 +20,7 @@ export default function FeaturedArticles() {
         <Link href={`/blog/${mainPost.slug}`} className="lg:col-span-8 flex flex-col bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 rounded-2xl overflow-hidden hover:border-gray-300 dark:hover:border-white/10 transition-colors group relative shadow-sm dark:shadow-none">
           <div className="w-full aspect-video md:aspect-[16/9] relative overflow-hidden">
             <Image 
-              src={mainPost.coverImage} 
+              src={mainPost.cover_image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&q=80'} 
               alt={mainPost.title}
               fill
               priority
@@ -47,15 +45,15 @@ export default function FeaturedArticles() {
             <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-200 dark:border-white/5">
               <div className="flex items-center gap-3 text-xs text-gray-500 font-medium">
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#6366F1] to-purple-600 flex items-center justify-center text-white font-bold">
-                    {mainPost.author.name.charAt(0)}
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#6366F1] to-purple-600 flex items-center justify-center text-white font-bold overflow-hidden">
+                    {mainPost.author_avatar ? <img src={mainPost.author_avatar} className="w-full h-full object-cover" /> : mainPost.author.charAt(0)}
                   </div>
-                  <span className="text-gray-700 dark:text-gray-300">{mainPost.author.name}</span>
+                  <span className="text-gray-700 dark:text-gray-300">{mainPost.author}</span>
                 </div>
                 <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700" />
-                <span>{new Date(mainPost.date).toLocaleDateString()}</span>
+                <span>{new Date(mainPost.created_at).toLocaleDateString()}</span>
                 <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700" />
-                <span>5 min read</span>
+                <span>{mainPost.read_time || 5} min read</span>
               </div>
               <button className="px-5 py-2 bg-[#6366F1] hover:bg-[#5457DF] text-white text-sm font-bold rounded-lg transition-colors">
                 Read More
@@ -70,7 +68,7 @@ export default function FeaturedArticles() {
             <Link href={`/blog/${article.slug}`} key={article.slug} className="flex-1 bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 rounded-2xl overflow-hidden hover:border-gray-300 dark:hover:border-white/10 transition-colors group flex flex-col shadow-sm dark:shadow-none">
               <div className="w-full aspect-video relative overflow-hidden">
                 <Image 
-                  src={article.coverImage} 
+                  src={article.cover_image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&q=80'} 
                   alt={article.title}
                   fill
                   sizes="(max-width: 1024px) 100vw, 33vw"
@@ -85,9 +83,9 @@ export default function FeaturedArticles() {
                   {article.title}
                 </h3>
                 <div className="flex items-center gap-3 text-xs text-gray-500 font-medium mt-4">
-                  <span>{new Date(article.date).toLocaleDateString()}</span>
+                  <span>{new Date(article.created_at).toLocaleDateString()}</span>
                   <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700" />
-                  <span>3 min read</span>
+                  <span>{article.read_time || 5} min read</span>
                 </div>
               </div>
             </Link>
