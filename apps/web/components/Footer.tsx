@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Gamepad2, Twitter, Github, Youtube, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import NewsletterForm from './NewsletterForm';
 
 export default function Footer() {
   const pathname = usePathname();
@@ -80,25 +81,7 @@ export default function Footer() {
             <p className="text-sm text-black/60 dark:text-white/60 mb-4">
               Subscribe to our newsletter for the latest games and updates.
             </p>
-            <form className="space-y-3" onSubmit={(e) => e.preventDefault()}>
-              <div className="relative">
-                <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-black/40 dark:text-white/40" />
-                <input 
-                  type="email" 
-                  placeholder="Enter your email" 
-                  className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-                  required
-                />
-              </div>
-              <motion.button 
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                aria-label="Subscribe to newsletter"
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-lg py-2.5 text-sm transition-colors shadow-lg shadow-primary/20"
-              >
-                Subscribe Now
-              </motion.button>
-            </form>
+            <NewsletterForm />
           </div>
 
         </div>
