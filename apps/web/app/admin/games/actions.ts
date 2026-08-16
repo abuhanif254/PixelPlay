@@ -1,6 +1,6 @@
 'use server'
 
-export const runtime = 'edge';
+
 
 import { createClient } from '@/lib/supabase/server'
 import { verifyAdminAction } from '@/lib/admin'
