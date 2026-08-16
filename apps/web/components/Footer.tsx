@@ -62,7 +62,7 @@ export default function Footer() {
                 { name: 'Terms of Service', path: '/terms' },
                 { name: 'Privacy Policy', path: '/privacy' },
                 { name: 'Cookie Policy', path: '/cookies' },
-                { name: 'Contact Us', path: '#' }
+                { name: 'Contact Us', path: '/contact' }
               ].map((link) => (
                 <li key={link.name}>
                   <Link href={link.path} title={link.name} className="text-sm text-black/60 dark:text-white/60 hover:text-primary transition-colors flex items-center gap-2 group">
