@@ -4,6 +4,9 @@ import { createClient } from '@/lib/supabase/server';
 import SettingsTabs from '@/components/settings/SettingsTabs';
 import { Settings, Shield, UserX, Key, Mail } from 'lucide-react';
 
+export const runtime = 'edge';
+
+
 export const metadata = {
   title: 'Account Settings | Spielcade',
   description: 'Manage your Spielcade account settings.',

@@ -1,6 +1,9 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 
+export const runtime = 'edge';
+
+
 export const metadata: Metadata = {
   title: 'Cookie Policy | Spielcade',
   description: 'Understand how Spielcade uses cookies and similar technologies to improve your gaming experience, serve relevant ads, and analyze platform traffic.',

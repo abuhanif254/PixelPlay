@@ -1,6 +1,9 @@
 import React from 'react';
 import { Terminal, Code, CheckCircle, Lightbulb } from 'lucide-react';
 
+export const runtime = 'edge';
+
+
 export default function StudioDocsPage() {
   return (
     <div className="bg-white dark:bg-[#111228] rounded-2xl border border-gray-200 dark:border-white/5 shadow-xl overflow-hidden">
