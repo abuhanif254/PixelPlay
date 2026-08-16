@@ -48,11 +48,14 @@ export default function Navbar() {
     <>
       <nav className="fixed top-0 left-0 right-0 z-50 w-full bg-white dark:bg-[#0A0B1A] border-b border-black/5 dark:border-white/5">
         <div className="container mx-auto px-4 md:px-8 h-20 flex items-center justify-between gap-4">
-          
           {/* Logo */}
-          <Link href="/" aria-label="Spielcade Homepage" title="Go to Spielcade Homepage" className="flex items-center gap-3 shrink-0">
-            <div className="w-9 h-9 rounded-xl overflow-hidden shadow-lg shadow-indigo-500/20">
-              <img src="/logo.jpg" alt="Spielcade Logo" className="w-full h-full object-cover" />
+          <Link href="/" aria-label="Spielcade Homepage" title="Go to Spielcade Homepage" className="flex items-center gap-3 shrink-0 group">
+            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.5)] bg-[#111228] flex items-center justify-center shrink-0">
+              <img 
+                src="/logo.jpg" 
+                alt="Spielcade Logo" 
+                className="w-[120%] h-[120%] object-cover animate-[spin_10s_linear_infinite] group-hover:animate-[spin_3s_linear_infinite] transition-all" 
+              />
             </div>
             <span className="font-extrabold text-2xl tracking-tight text-gray-900 dark:text-white hidden sm:block">
               Spiel<span className="text-gray-600 dark:text-gray-300">cade</span>
