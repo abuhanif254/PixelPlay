@@ -51,11 +51,11 @@ export default function Navbar() {
           
           {/* Logo */}
           <Link href="/" aria-label="Spielcade Homepage" title="Go to Spielcade Homepage" className="flex items-center gap-3 shrink-0">
-            <div className="flex items-center justify-center text-[#6366F1]">
-              <Gamepad2 className="w-8 h-8 fill-current" />
+            <div className="w-9 h-9 rounded-xl overflow-hidden shadow-lg shadow-indigo-500/20">
+              <img src="/logo.jpg" alt="Spielcade Logo" className="w-full h-full object-cover" />
             </div>
             <span className="font-extrabold text-2xl tracking-tight text-gray-900 dark:text-white hidden sm:block">
-              Play<span className="text-gray-600 dark:text-gray-300">Hub</span>
+              Spiel<span className="text-gray-600 dark:text-gray-300">cade</span>
             </span>
           </Link>
           
