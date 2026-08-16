@@ -41,7 +41,7 @@ export async function getUserScores(userId: string) {
 }
 
 // ─── Toggle User Ban ───────────────────────────────────────────────────────────
-export async function toggleBan(userId: string, isBanned: boolean) {
+export async function toggleBan(userId: string, isBanned: boolean, reason?: string) {
   const auth = await verifyAdminAction()
   if (!auth.success) return auth
 
@@ -50,6 +50,9 @@ export async function toggleBan(userId: string, isBanned: boolean) {
   }
 
   const supabase = createClient()
+  
+  // Note: If you want to store the reason, you would need a 'ban_reason' column in 'profiles'. 
+  // For now, we accept it to fix the type signature from the client call.
   const { error } = await supabase.from('profiles').update({ is_banned: isBanned }).eq('id', userId)
   if (error) return { success: false, error: error.message }
 
