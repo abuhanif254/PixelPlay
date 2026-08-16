@@ -61,7 +61,7 @@ export default function Footer() {
                 { name: 'Help Center', path: '#' },
                 { name: 'Terms of Service', path: '/terms' },
                 { name: 'Privacy Policy', path: '/privacy' },
-                { name: 'Cookie Policy', path: '#' },
+                { name: 'Cookie Policy', path: '/cookies' },
                 { name: 'Contact Us', path: '#' }
               ].map((link) => (
                 <li key={link.name}>
