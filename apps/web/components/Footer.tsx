@@ -60,7 +60,7 @@ export default function Footer() {
               {[
                 { name: 'Help Center', path: '#' },
                 { name: 'Terms of Service', path: '/terms' },
-                { name: 'Privacy Policy', path: '#' },
+                { name: 'Privacy Policy', path: '/privacy' },
                 { name: 'Cookie Policy', path: '#' },
                 { name: 'Contact Us', path: '#' }
               ].map((link) => (
