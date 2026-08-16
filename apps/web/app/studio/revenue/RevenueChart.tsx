@@ -42,7 +42,10 @@ export default function RevenueChart({ data }: { data: any[] }) {
         <Tooltip 
           contentStyle={{ backgroundColor: '#111228', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }}
           itemStyle={{ color: '#10B981', fontWeight: 'bold' }}
-          formatter={(value: number) => [`$${value.toFixed(2)}`, 'Your Share']}
+          formatter={(value: any) => {
+            const num = Number(value) || 0;
+            return [`$${num.toFixed(2)}`, 'Your Share'];
+          }}
           labelStyle={{ color: '#9CA3AF', marginBottom: '4px' }}
         />
         <Area 
