@@ -57,11 +57,17 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold text-lg mb-6 text-black/90 dark:text-white/90">Support</h3>
             <ul className="space-y-3">
-              {['Help Center', 'Terms of Service', 'Privacy Policy', 'Cookie Policy', 'Contact Us'].map((link) => (
-                <li key={link}>
-                  <Link href="#" title={link} className="text-sm text-black/60 dark:text-white/60 hover:text-primary transition-colors flex items-center gap-2 group">
+              {[
+                { name: 'Help Center', path: '#' },
+                { name: 'Terms of Service', path: '/terms' },
+                { name: 'Privacy Policy', path: '#' },
+                { name: 'Cookie Policy', path: '#' },
+                { name: 'Contact Us', path: '#' }
+              ].map((link) => (
+                <li key={link.name}>
+                  <Link href={link.path} title={link.name} className="text-sm text-black/60 dark:text-white/60 hover:text-primary transition-colors flex items-center gap-2 group">
                     <span className="w-1.5 h-1.5 rounded-full bg-black/20 dark:bg-white/20 group-hover:bg-primary transition-colors" />
-                    {link}
+                    {link.name}
                   </Link>
                 </li>
               ))}
