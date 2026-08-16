@@ -29,7 +29,11 @@ export async function syncGames() {
 
   if (error) return { success: false, error: error.message }
 
-  revalidatePath('/admin/games')
+  try {
+    revalidatePath('/admin/games')
+  } catch (e) {
+    console.error('revalidatePath error:', e)
+  }
   return { success: true }
 }
 
@@ -51,7 +55,11 @@ export async function addGameManually(data: {
   const { error } = await supabase.from('games').insert([data])
   if (error) return { success: false, error: error.message }
 
-  revalidatePath('/admin/games')
+  try {
+    revalidatePath('/admin/games')
+  } catch (e) {
+    console.error('revalidatePath error:', e)
+  }
   return { success: true }
 }
 
@@ -75,8 +83,12 @@ export async function updateGame(
   const { error } = await supabase.from('games').update(data).eq('id', id)
   if (error) return { success: false, error: error.message }
 
-  revalidatePath('/admin/games')
-  revalidatePath('/games')
+  try {
+    revalidatePath('/admin/games')
+    revalidatePath('/games')
+  } catch (e) {
+    console.error('revalidatePath error:', e)
+  }
   return { success: true }
 }
 
@@ -93,8 +105,12 @@ export async function updateGameStatus(
   const { error } = await supabase.from('games').update({ status }).eq('id', id)
   if (error) return { success: false, error: error.message }
 
-  revalidatePath('/admin/games')
-  revalidatePath('/games')
+  try {
+    revalidatePath('/admin/games')
+    revalidatePath('/games')
+  } catch (e) {
+    console.error('revalidatePath error:', e)
+  }
   return { success: true }
 }
 
@@ -108,8 +124,12 @@ export async function deleteGame(id: string) {
   const { error } = await supabase.from('games').delete().eq('id', id)
   if (error) return { success: false, error: error.message }
 
-  revalidatePath('/admin/games')
-  revalidatePath('/games')
+  try {
+    revalidatePath('/admin/games')
+    revalidatePath('/games')
+  } catch (e) {
+    console.error('revalidatePath error:', e)
+  }
   return { success: true }
 }
 
@@ -142,9 +162,13 @@ export async function approveGame(id: string) {
     );
   }
 
-  revalidatePath('/admin/games')
-  revalidatePath('/admin/games/queue')
-  revalidatePath('/games')
+  try {
+    revalidatePath('/admin/games')
+    revalidatePath('/admin/games/queue')
+    revalidatePath('/games')
+  } catch (e) {
+    console.error('revalidatePath error:', e)
+  }
   return { success: true }
 }
 
@@ -174,8 +198,12 @@ export async function rejectGame(id: string, reason: string) {
     );
   }
 
-  revalidatePath('/admin/games')
-  revalidatePath('/admin/games/queue')
+  try {
+    revalidatePath('/admin/games')
+    revalidatePath('/admin/games/queue')
+  } catch (e) {
+    console.error('revalidatePath error:', e)
+  }
   return { success: true }
 }
 

@@ -24,7 +24,11 @@ export async function updateAdminProfile(data: {
 
   if (error) return { success: false, error: error.message }
 
-  revalidatePath('/admin/settings')
+  try {
+    revalidatePath('/admin/settings')
+  } catch (e) {
+    console.error('revalidatePath error:', e)
+  }
   return { success: true }
 }
 
@@ -38,8 +42,12 @@ export async function clearGameScores(gameId: string) {
   const { error } = await supabase.from('scores').delete().eq('game_id', gameId)
   if (error) return { success: false, error: error.message }
 
-  revalidatePath('/admin')
-  revalidatePath('/leaderboard')
+  try {
+    revalidatePath('/admin')
+    revalidatePath('/leaderboard')
+  } catch (e) {
+    console.error('revalidatePath error:', e)
+  }
   return { success: true }
 }
 
@@ -55,7 +63,11 @@ export async function markAllNotificationsRead() {
     .eq('is_read', false)
 
   if (error) return { success: false, error: error.message }
-  revalidatePath('/admin')
+  try {
+    revalidatePath('/admin')
+  } catch (e) {
+    console.error('revalidatePath error:', e)
+  }
   return { success: true }
 }
 
@@ -79,7 +91,11 @@ export async function updateSiteConfig(key: string, value: any) {
 
   if (error) return { success: false, error: error.message }
 
-  revalidatePath('/', 'layout')
+  try {
+    revalidatePath('/', 'layout')
+  } catch (e) {
+    console.error('revalidatePath error:', e)
+  }
   return { success: true }
 }
 
