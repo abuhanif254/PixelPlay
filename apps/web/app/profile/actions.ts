@@ -19,20 +19,33 @@ export async function updateProfile(data: {
   avatar_url?: string
   banner_url?: string
 }) {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { success: false, error: 'Unauthorized' }
+  try {
+    const supabase = createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError) console.error('Auth error in updateProfile:', authError)
+    if (!user) return { success: false, error: 'Unauthorized' }
 
-  const { error } = await supabase
-    .from('profiles')
-    .update({ ...data, updated_at: new Date().toISOString() })
-    .eq('id', user.id)
+    const { error } = await supabase
+      .from('profiles')
+      .update({ ...data, updated_at: new Date().toISOString() })
+      .eq('id', user.id)
 
-  if (error) return { success: false, error: error.message }
+    if (error) return { success: false, error: error.message }
 
-  revalidatePath('/profile')
-  revalidatePath('/leaderboard')
-  return { success: true }
+    try {
+      revalidatePath('/profile')
+      revalidatePath('/leaderboard')
+    } catch (revalError) {
+      console.error('revalidatePath error:', revalError)
+      // We don't fail the action if revalidatePath fails, just log it.
+    }
+    
+    return { success: true }
+  } catch (err: any) {
+    console.error('Unhandled error in updateProfile:', err)
+    return { success: false, error: err?.message || String(err) }
+  }
 }
 
 export async function toggleFavoriteGame(gameId: string) {
