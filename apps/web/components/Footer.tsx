@@ -58,7 +58,7 @@ export default function Footer() {
             <h3 className="font-semibold text-lg mb-6 text-black/90 dark:text-white/90">Support</h3>
             <ul className="space-y-3">
               {[
-                { name: 'Help Center', path: '#' },
+                { name: 'Help Center', path: '/help' },
                 { name: 'Terms of Service', path: '/terms' },
                 { name: 'Privacy Policy', path: '/privacy' },
                 { name: 'Cookie Policy', path: '/cookies' },
