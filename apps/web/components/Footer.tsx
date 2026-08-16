@@ -44,11 +44,17 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold text-lg mb-6 text-black/90 dark:text-white/90">Platform</h3>
             <ul className="space-y-3">
-              {['Browse Games', 'New Releases', 'Top Rated', 'Categories', 'Developers'].map((link) => (
-                <li key={link}>
-                  <Link href="#" title={link} className="text-sm text-black/60 dark:text-white/60 hover:text-primary transition-colors flex items-center gap-2 group">
+              {[
+                { name: 'Browse Games', path: '#' },
+                { name: 'New Releases', path: '#' },
+                { name: 'Top Rated', path: '#' },
+                { name: 'Categories', path: '#' },
+                { name: 'Developers', path: '/developers' }
+              ].map((link) => (
+                <li key={link.name}>
+                  <Link href={link.path} title={link.name} className="text-sm text-black/60 dark:text-white/60 hover:text-primary transition-colors flex items-center gap-2 group">
                     <span className="w-1.5 h-1.5 rounded-full bg-black/20 dark:bg-white/20 group-hover:bg-primary transition-colors" />
-                    {link}
+                    {link.name}
                   </Link>
                 </li>
               ))}
