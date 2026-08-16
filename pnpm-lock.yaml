@@ -17,15 +17,15 @@ importers:
       '@ducanh2912/next-pwa':
         specifier: ^10.2.9
         version: 10.2.9(next@14.1.0(@babel/core@7.29.7)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(webpack@5.109.2(postcss@8.5.26))
-      '@pixelplay/games':
-        specifier: workspace:*
-        version: link:../../games
       '@react-three/drei':
         specifier: ^9.122.0
         version: 9.122.0(@react-three/fiber@8.18.0(@types/react@18.3.31)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(three@0.160.0))(@types/react@18.3.31)(@types/three@0.160.0)(immer@11.1.16)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(three@0.160.0)(use-sync-external-store@1.6.0(react@18.3.1))
       '@react-three/fiber':
         specifier: ^8.18.0
         version: 8.18.0(@types/react@18.3.31)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(three@0.160.0)
+      '@spielcade/games':
+        specifier: workspace:*
+        version: link:../../games
       '@supabase/ssr':
         specifier: ^0.12.4
         version: 0.12.4(@supabase/supabase-js@2.112.3)
