@@ -63,3 +63,20 @@ export async function markNotificationRead(id: string) {
   await supabase.from('admin_notifications').update({ is_read: true }).eq('id', id)
   return { success: true }
 }
+
+// ─── Update Site Config ────────────────────────────────────────────────────────
+export async function updateSiteConfig(key: string, value: any) {
+  const auth = await verifyAdminAction()
+  if (!auth.success) return auth
+
+  const supabase = createClient()
+  
+  const { error } = await supabase
+    .from('site_config')
+    .upsert({ config_key: key, config_value: value }, { onConflict: 'config_key' })
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/', 'layout')
+  return { success: true }
+}

@@ -13,6 +13,19 @@ export async function GET(request: Request) {
     const supabase = createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_banned, ban_reason')
+          .eq('id', user.id)
+          .single()
+
+        if (profile?.is_banned) {
+          await supabase.auth.signOut()
+          return NextResponse.redirect(`${origin}/login?message=Account suspended: ${profile.ban_reason || 'Violation of terms.'}`)
+        }
+      }
       return NextResponse.redirect(`${origin}${next}`)
     }
   }

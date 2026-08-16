@@ -110,3 +110,13 @@ export async function updateStreak() {
     })
     .eq('id', user.id)
 }
+
+export async function sendNotification(userId: string, type: string, message: string, link: string | null = null) {
+  const supabase = createClient();
+  await supabase.from('user_notifications').insert({
+    user_id: userId,
+    type,
+    message,
+    link
+  });
+}

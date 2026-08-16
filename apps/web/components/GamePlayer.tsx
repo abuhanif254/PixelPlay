@@ -4,8 +4,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Play, Maximize2, Monitor, Sun, Volume2, VolumeX, RotateCcw, Share2, Heart, Flag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRecentGames } from '@/hooks/useRecentGames';
+import { saveGameState, loadGameState } from '@/app/games/actions';
 
-type PlayerState = 'idle' | 'ad' | 'playing' | 'game_over';
+type PlayerState = 'idle' | 'ad' | 'rewarded_ad' | 'playing' | 'game_over';
 
 interface GamePlayerProps {
   children?: React.ReactNode;
@@ -22,6 +23,7 @@ export default function GamePlayer({ children, title, slug, image, sourceUrl, on
   const [isTheater, setIsTheater] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const [adCountdown, setAdCountdown] = useState(5);
+  const [rewardedAdMsgId, setRewardedAdMsgId] = useState<number | null>(null);
   
   const containerRef = useRef<HTMLDivElement>(null);
   const { addRecentGame } = useRecentGames();
@@ -34,7 +36,7 @@ export default function GamePlayer({ children, title, slug, image, sourceUrl, on
 
   // Ad Countdown Logic
   useEffect(() => {
-    if (playerState === 'ad' && adCountdown > 0) {
+    if ((playerState === 'ad' || playerState === 'rewarded_ad') && adCountdown > 0) {
       const timer = setTimeout(() => setAdCountdown(prev => prev - 1), 1000);
       return () => clearTimeout(timer);
     }
@@ -42,6 +44,23 @@ export default function GamePlayer({ children, title, slug, image, sourceUrl, on
 
   const skipAd = () => {
     setPlayerState('playing');
+  };
+
+  const completeRewardedAd = () => {
+    setPlayerState('playing');
+    if (rewardedAdMsgId !== null) {
+      // Send success message to iframe
+      const iframe = containerRef.current?.querySelector('iframe');
+      if (iframe?.contentWindow) {
+        iframe.contentWindow.postMessage({
+          source: 'SPIELCADE_WRAPPER',
+          type: 'REWARDED_AD_COMPLETE',
+          payload: { success: true },
+          msgId: rewardedAdMsgId
+        }, '*');
+      }
+      setRewardedAdMsgId(null);
+    }
   };
 
   // Fullscreen Logic
@@ -68,7 +87,7 @@ export default function GamePlayer({ children, title, slug, image, sourceUrl, on
   useEffect(() => {
     if (playerState !== 'playing' || !sourceUrl) return;
 
-    const handleMessage = (event: MessageEvent) => {
+    const handleMessage = async (event: MessageEvent) => {
       if (event.data && event.data.source === 'SPIELCADE_SDK') {
         switch (event.data.type) {
           case 'SUBMIT_SCORE':
@@ -78,6 +97,33 @@ export default function GamePlayer({ children, title, slug, image, sourceUrl, on
             break;
           case 'GAME_OVER':
             setPlayerState('game_over');
+            break;
+          case 'SHOW_REWARDED_AD':
+            setAdCountdown(5);
+            setRewardedAdMsgId(event.data.msgId);
+            setPlayerState('rewarded_ad');
+            break;
+          case 'SAVE_DATA':
+            {
+              const res = await saveGameState(slug, event.data.payload.data);
+              event.source?.postMessage({
+                source: 'SPIELCADE_WRAPPER',
+                type: 'SAVE_DATA_RESPONSE',
+                payload: res,
+                msgId: event.data.msgId
+              }, { targetOrigin: '*' });
+            }
+            break;
+          case 'LOAD_DATA':
+            {
+              const res = await loadGameState(slug);
+              event.source?.postMessage({
+                source: 'SPIELCADE_WRAPPER',
+                type: 'LOAD_DATA_RESPONSE',
+                payload: res,
+                msgId: event.data.msgId
+              }, { targetOrigin: '*' });
+            }
             break;
         }
       }
@@ -155,14 +201,12 @@ export default function GamePlayer({ children, title, slug, image, sourceUrl, on
               Advertisement
             </div>
             
-            {/* Mock Ad Content */}
             <div className="w-full max-w-md p-8 flex flex-col items-center text-center">
               <div className="w-16 h-16 rounded-full border-4 border-[#6366F1] border-t-transparent animate-spin mb-8 shadow-[0_0_15px_rgba(99,102,241,0.5)]"></div>
               <h3 className="text-white font-bold text-xl mb-2">Loading Game Assets...</h3>
               <p className="text-gray-400 text-sm">Your game will start shortly. Support developers by watching this ad.</p>
             </div>
 
-            {/* Skip Button */}
             <div className="absolute bottom-8 right-8">
               {adCountdown > 0 ? (
                 <div className="px-6 py-3 bg-black/50 border border-white/10 text-white/70 rounded-full text-sm font-bold backdrop-blur-md">
@@ -174,6 +218,43 @@ export default function GamePlayer({ children, title, slug, image, sourceUrl, on
                   className="px-6 py-3 bg-white text-black hover:bg-gray-200 hover:scale-105 rounded-full text-sm font-bold shadow-xl transition-all flex items-center gap-2"
                 >
                   Skip Ad <Play size={14} className="fill-black" />
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+
+        {/* 2.5 REWARDED AD STATE */}
+        {playerState === 'rewarded_ad' && (
+          <motion.div 
+            key="rewarded_ad"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 flex flex-col items-center justify-center bg-black/95 z-40 backdrop-blur-sm"
+          >
+            <div className="absolute top-6 left-6 text-white/50 text-xs tracking-widest uppercase font-bold flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
+              Rewarded Ad
+            </div>
+            
+            <div className="w-full max-w-md p-8 flex flex-col items-center text-center">
+              <div className="w-16 h-16 rounded-full border-4 border-yellow-500 border-t-transparent animate-spin mb-8 shadow-[0_0_15px_rgba(234,179,8,0.5)]"></div>
+              <h3 className="text-white font-bold text-xl mb-2">Watching Ad for Reward...</h3>
+              <p className="text-gray-400 text-sm">Please do not close this window.</p>
+            </div>
+
+            <div className="absolute bottom-8 right-8">
+              {adCountdown > 0 ? (
+                <div className="px-6 py-3 bg-black/50 border border-white/10 text-white/70 rounded-full text-sm font-bold backdrop-blur-md">
+                  Reward in {adCountdown}
+                </div>
+              ) : (
+                <button 
+                  onClick={completeRewardedAd}
+                  className="px-6 py-3 bg-yellow-500 text-black hover:bg-yellow-400 hover:scale-105 rounded-full text-sm font-bold shadow-[0_0_20px_rgba(234,179,8,0.4)] transition-all flex items-center gap-2"
+                >
+                  Claim Reward <Play size={14} className="fill-black" />
                 </button>
               )}
             </div>

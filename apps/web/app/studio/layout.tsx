@@ -36,6 +36,16 @@ export default function StudioLayout({ children }: { children: React.ReactNode }
                 Submit Game
               </Link>
 
+              <Link href="/studio/revenue" className="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-green-500 dark:hover:text-green-400 transition-all">
+                <PieChart size={18} />
+                Revenue
+              </Link>
+
+              <Link href="/studio/keys" className="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-yellow-500 dark:hover:text-yellow-400 transition-all">
+                <Shield size={18} />
+                API Keys
+              </Link>
+
               <Link href="/studio/docs" className="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-[#6366F1] dark:hover:text-[#6366F1] transition-all">
                 <FileText size={18} />
                 SDK Documentation

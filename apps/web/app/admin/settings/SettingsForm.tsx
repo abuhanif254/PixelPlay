@@ -1,8 +1,8 @@
 'use client';
 import React, { useState } from 'react';
-import { Save, User, AlertTriangle, Trash2, CheckCircle } from 'lucide-react';
+import { Save, User, AlertTriangle, Trash2, CheckCircle, Settings as SettingsIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { updateAdminProfile, clearGameScores } from './actions';
+import { updateAdminProfile, clearGameScores, updateSiteConfig } from './actions';
 
 type AdminProfile = { id: string; email: string; username: string; full_name: string; avatar_url: string };
 type Game = { id: string; title: string; slug: string; total_plays: number };
@@ -36,11 +36,18 @@ function Section({ title, description, children }: { title: string; description:
   );
 }
 
-export default function SettingsForm({ adminProfile, games }: { adminProfile: AdminProfile; games: Game[] }) {
+export default function SettingsForm({ adminProfile, games, siteConfig }: { adminProfile: AdminProfile; games: Game[], siteConfig?: Record<string, any> }) {
   const [profile, setProfile] = useState(adminProfile);
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileSuccess, setProfileSuccess] = useState('');
   const [profileError, setProfileError] = useState('');
+
+  const [maintenanceMode, setMaintenanceMode] = useState(siteConfig?.maintenance_mode === 'true');
+  const [featuredGames, setFeaturedGames] = useState<string[]>(
+    Array.isArray(siteConfig?.featured_games) ? siteConfig.featured_games : []
+  );
+  const [savingConfig, setSavingConfig] = useState(false);
+  const [configSuccess, setConfigSuccess] = useState('');
 
   const [clearTarget, setClearTarget] = useState<Game | null>(null);
   const [clearing, setClearing] = useState(false);
@@ -61,6 +68,15 @@ export default function SettingsForm({ adminProfile, games }: { adminProfile: Ad
       setProfileError((res as any).error || 'Failed to update profile');
     }
     setSavingProfile(false);
+  };
+
+  const handleConfigSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingConfig(true);
+    await updateSiteConfig('maintenance_mode', maintenanceMode ? 'true' : 'false');
+    await updateSiteConfig('featured_games', featuredGames);
+    setConfigSuccess('Site configuration updated successfully!');
+    setSavingConfig(false);
   };
 
   const handleClearScores = async () => {
@@ -86,7 +102,6 @@ export default function SettingsForm({ adminProfile, games }: { adminProfile: Ad
       {/* Admin Profile Section */}
       <Section title="Admin Profile" description="Update your display name, username, and avatar shown across the platform.">
         <form onSubmit={handleProfileSave} className="flex flex-col gap-5">
-
           {/* Avatar preview */}
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-[#0A0B1A] shrink-0">
@@ -149,6 +164,69 @@ export default function SettingsForm({ adminProfile, games }: { adminProfile: Ad
             >
               <Save size={16} />
               {savingProfile ? 'Saving...' : 'Save Profile'}
+            </button>
+          </div>
+        </form>
+      </Section>
+
+      {/* Site Configuration */}
+      <Section title="Site Configuration" description="Configure dynamic features for the live platform.">
+        <form onSubmit={handleConfigSave} className="flex flex-col gap-6">
+          {/* Maintenance Mode */}
+          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-black/20 rounded-xl border border-gray-200 dark:border-white/5">
+            <div>
+              <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1">Maintenance Mode</h3>
+              <p className="text-xs text-gray-500">Enable this to prevent users from accessing the main site temporarily.</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" className="sr-only peer" checked={maintenanceMode} onChange={e => setMaintenanceMode(e.target.checked)} />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#6366F1]"></div>
+            </label>
+          </div>
+
+          {/* Featured Games */}
+          <div>
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wider">
+              Featured Games (Hero Banner)
+            </label>
+            <p className="text-xs text-gray-500 mb-3">Select up to 3 games to feature on the homepage.</p>
+            <div className="flex flex-col gap-3">
+              {[0, 1, 2].map((index) => (
+                <select
+                  key={index}
+                  value={featuredGames[index] || ''}
+                  onChange={e => {
+                    const newFeatured = [...featuredGames];
+                    if (e.target.value) {
+                      newFeatured[index] = e.target.value;
+                    } else {
+                      newFeatured.splice(index, 1);
+                    }
+                    setFeaturedGames(newFeatured.filter(Boolean));
+                  }}
+                  className={inputCls}
+                >
+                  <option value="">Select a game...</option>
+                  {games.map(g => (
+                    <option key={g.id} value={g.slug}>{g.title}</option>
+                  ))}
+                </select>
+              ))}
+            </div>
+          </div>
+
+          <AnimatePresence>
+            {configSuccess && <SuccessBanner message={configSuccess} onClose={() => setConfigSuccess('')} />}
+          </AnimatePresence>
+
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              disabled={savingConfig}
+              className="flex items-center gap-2 px-6 py-2.5 bg-[#10B981] text-white font-bold text-sm rounded-xl hover:bg-[#059669] transition-colors disabled:opacity-50"
+            >
+              <SettingsIcon size={16} />
+              {savingConfig ? 'Saving...' : 'Save Configuration'}
             </button>
           </div>
         </form>

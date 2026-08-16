@@ -16,6 +16,17 @@ export default async function AdminSettingsPage() {
     .select('id, title, slug, total_plays')
     .order('title', { ascending: true });
 
+  const { data: configs } = await supabase
+    .from('site_config')
+    .select('config_key, config_value');
+
+  const configMap: Record<string, any> = {};
+  if (configs) {
+    configs.forEach(c => {
+      configMap[c.config_key] = c.config_value;
+    });
+  }
+
   return (
     <SettingsForm
       adminProfile={{
@@ -26,6 +37,7 @@ export default async function AdminSettingsPage() {
         avatar_url: profile.avatar_url || '',
       }}
       games={(games || []).map((g: any) => ({ id: g.id, title: g.title, slug: g.slug, total_plays: g.total_plays ?? 0 }))}
+      siteConfig={configMap}
     />
   );
 }

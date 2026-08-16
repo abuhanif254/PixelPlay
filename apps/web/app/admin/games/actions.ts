@@ -110,3 +110,69 @@ export async function deleteGame(id: string) {
   revalidatePath('/games')
   return { success: true }
 }
+
+import { sendNotification } from '@/app/profile/actions';
+
+// ─── Approve Game ──────────────────────────────────────────────────────────────
+export async function approveGame(id: string) {
+  const auth = await verifyAdminAction()
+  if (!auth.success) return auth
+
+  const supabase = createClient()
+
+  const { data: game, error: fetchErr } = await supabase
+    .from('games')
+    .select('title, developer_id')
+    .eq('id', id)
+    .single();
+
+  if (fetchErr) return { success: false, error: fetchErr.message }
+
+  const { error } = await supabase.from('games').update({ status: 'active' }).eq('id', id)
+  if (error) return { success: false, error: error.message }
+
+  if (game?.developer_id) {
+    await sendNotification(
+      game.developer_id,
+      'system',
+      `Your game "${game.title}" has been approved and is now live!`,
+      `/games/${id}`
+    );
+  }
+
+  revalidatePath('/admin/games')
+  revalidatePath('/admin/games/queue')
+  revalidatePath('/games')
+  return { success: true }
+}
+
+// ─── Reject Game ───────────────────────────────────────────────────────────────
+export async function rejectGame(id: string, reason: string) {
+  const auth = await verifyAdminAction()
+  if (!auth.success) return auth
+
+  const supabase = createClient()
+
+  const { data: game, error: fetchErr } = await supabase
+    .from('games')
+    .select('title, developer_id')
+    .eq('id', id)
+    .single();
+
+  if (fetchErr) return { success: false, error: fetchErr.message }
+
+  const { error } = await supabase.from('games').update({ status: 'rejected' }).eq('id', id)
+  if (error) return { success: false, error: error.message }
+
+  if (game?.developer_id) {
+    await sendNotification(
+      game.developer_id,
+      'system',
+      `Your game "${game.title}" was rejected. Reason: ${reason}`
+    );
+  }
+
+  revalidatePath('/admin/games')
+  revalidatePath('/admin/games/queue')
+  return { success: true }
+}

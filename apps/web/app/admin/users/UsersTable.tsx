@@ -3,7 +3,8 @@ import React, { useState, useMemo } from 'react';
 import { Search, Filter, X, ChevronLeft, ChevronRight, Shield, User, ExternalLink, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { updateUserRole } from './actions';
+import { updateUserRole, toggleBan } from './actions';
+import { Ban, CheckCircle } from 'lucide-react';
 
 type UserProfile = {
   id: string;
@@ -15,6 +16,7 @@ type UserProfile = {
   level: number;
   score_count: number;
   created_at: string;
+  is_banned: boolean;
 };
 
 const PAGE_SIZE = 20;
@@ -77,6 +79,18 @@ export default function UsersTable({ initialUsers }: { initialUsers: UserProfile
       setUsers(us => us.map(u => u.id === user.id ? { ...u, role: newRole } : u));
     } else {
       alert((res as any).error || 'Failed to update role');
+    }
+    setTogglingId(null);
+  };
+
+  const handleBanToggle = async (user: UserProfile) => {
+    const reason = !user.is_banned ? window.prompt('Enter reason for ban (optional):') || '' : '';
+    setTogglingId(user.id);
+    const res = await toggleBan(user.id, !user.is_banned, reason);
+    if (res.success) {
+      setUsers(us => us.map(u => u.id === user.id ? { ...u, is_banned: !user.is_banned } : u));
+    } else {
+      alert((res as any).error || 'Failed to update ban status');
     }
     setTogglingId(null);
   };
@@ -222,6 +236,25 @@ export default function UsersTable({ initialUsers }: { initialUsers: UserProfile
                         ) : (
                           <>
                             {user.role === 'admin' ? <><User size={12} /> Demote</> : <><Shield size={12} /> Promote</>}
+                          </>
+                        )}
+                      </button>
+                      
+                      <button
+                        onClick={() => handleBanToggle(user)}
+                        disabled={togglingId === user.id}
+                        title={user.is_banned ? 'Unban User' : 'Ban User'}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-50 ${
+                          user.is_banned
+                            ? 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-500/20'
+                            : 'bg-gray-100 text-gray-600 dark:bg-white/5 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10'
+                        }`}
+                      >
+                        {togglingId === user.id ? (
+                          <span className="animate-pulse">…</span>
+                        ) : (
+                          <>
+                            {user.is_banned ? <><CheckCircle size={12} /> Unban</> : <><Ban size={12} /> Ban</>}
                           </>
                         )}
                       </button>

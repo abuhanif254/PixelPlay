@@ -42,6 +42,8 @@ function Delta({ current, previous, suffix = '' }: { current: number; previous: 
 
 const inputCls = 'w-full bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-[#6366F1] transition-colors';
 
+import { createClient } from '@/lib/supabase/client';
+
 export default function ProfileHero({
   profile, gamesPlayed, gamesThisWeek, gamesPrevWeek,
   totalScore, totalScoreThisWeek, totalScorePrevWeek,
@@ -57,21 +59,87 @@ export default function ProfileHero({
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
 
+  const supabase = createClient();
   const achievementPct = totalAchievements > 0 ? Math.round((earnedCount / totalAchievements) * 100) : 0;
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'banner') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // 200KB limit check (204800 bytes)
+    if (file.size > 204800) {
+      setError(`The selected ${type} is too large. Max size is 200KB.`);
+      e.target.value = ''; // reset input
+      return;
+    }
+    setError('');
+    
+    if (type === 'avatar') {
+      setAvatarFile(file);
+      // Create local preview URL
+      setForm(f => ({ ...f, avatar_url: URL.createObjectURL(file) }));
+    } else {
+      setBannerFile(file);
+      // Create local preview URL
+      setForm(f => ({ ...f, banner_url: URL.createObjectURL(file) }));
+    }
+  };
+
+  const uploadFile = async (file: File, bucket: string) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${profile.username}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+    
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .upload(fileName, file, { cacheControl: '3600', upsert: true });
+
+    if (error) throw error;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(fileName);
+
+    return publicUrl;
+  };
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setError('');
-    const res = await updateProfile(form);
-    if (res.success) {
-      setIsModalOpen(false);
-      window.location.reload();
-    } else {
-      setError(res.error || 'Failed to save');
+
+    try {
+      let finalAvatarUrl = form.avatar_url;
+      let finalBannerUrl = form.banner_url;
+
+      if (avatarFile) {
+        finalAvatarUrl = await uploadFile(avatarFile, 'avatars');
+      }
+      if (bannerFile) {
+        finalBannerUrl = await uploadFile(bannerFile, 'banners');
+      }
+
+      const payload = {
+        ...form,
+        avatar_url: finalAvatarUrl,
+        banner_url: finalBannerUrl,
+      };
+
+      const res = await updateProfile(payload);
+      if (res.success) {
+        setIsModalOpen(false);
+        window.location.reload();
+      } else {
+        setError(res.error || 'Failed to save');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Error uploading file.');
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   const stats = [
@@ -198,20 +266,43 @@ export default function ProfileHero({
               </div>
 
               <form onSubmit={handleUpdate} className="p-6 flex flex-col gap-4 overflow-y-auto">
-                {/* Avatar preview */}
+                {/* Avatar File Input */}
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200 dark:border-white/10 shrink-0">
                     <img src={form.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${form.username}`} alt="Avatar" className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1">
-                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider">Avatar URL</label>
-                    <input type="url" value={form.avatar_url} onChange={e => setForm(f => ({ ...f, avatar_url: e.target.value }))} className={inputCls} placeholder="https://..." />
+                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider">Avatar Image (Max 200KB)</label>
+                    <div className="relative">
+                      <input 
+                        type="file" 
+                        accept="image/png, image/jpeg, image/webp"
+                        onChange={(e) => handleFileChange(e, 'avatar')}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                      <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl text-sm text-gray-900 dark:text-white cursor-pointer hover:border-[#6366F1] transition-colors">
+                        <Camera size={16} />
+                        <span>{avatarFile ? avatarFile.name : 'Choose file...'}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
+                {/* Banner File Input */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider">Banner URL</label>
-                  <input type="url" value={form.banner_url} onChange={e => setForm(f => ({ ...f, banner_url: e.target.value }))} className={inputCls} placeholder="https://..." />
+                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider">Banner Image (Max 200KB)</label>
+                  <div className="relative mb-2">
+                    <input 
+                      type="file" 
+                      accept="image/png, image/jpeg, image/webp"
+                      onChange={(e) => handleFileChange(e, 'banner')}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                    <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl text-sm text-gray-900 dark:text-white cursor-pointer hover:border-[#6366F1] transition-colors">
+                      <Camera size={16} />
+                      <span>{bannerFile ? bannerFile.name : 'Choose file...'}</span>
+                    </div>
+                  </div>
                   {form.banner_url && (
                     <div className="mt-2 w-full h-20 rounded-xl overflow-hidden border border-gray-200 dark:border-white/10">
                       <img src={form.banner_url} alt="Banner" className="w-full h-full object-cover" />
@@ -241,7 +332,7 @@ export default function ProfileHero({
                 <div className="flex gap-3 mt-2">
                   <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 font-bold text-gray-600 dark:text-gray-400 text-sm hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">Cancel</button>
                   <button type="submit" disabled={saving} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#6366F1] text-white font-bold text-sm hover:bg-[#4F46E5] transition-colors disabled:opacity-50">
-                    <Save size={15} /> {saving ? 'Saving...' : 'Save Changes'}
+                    <Save size={15} /> {saving ? 'Uploading & Saving...' : 'Save Changes'}
                   </button>
                 </div>
               </form>

@@ -18,6 +18,20 @@ export async function login(formData: FormData) {
     redirect('/login?message=' + error.message)
   }
 
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_banned, ban_reason')
+      .eq('id', user.id)
+      .single()
+
+    if (profile?.is_banned) {
+      await supabase.auth.signOut()
+      redirect('/login?message=Account suspended: ' + (profile.ban_reason || 'Violation of terms.'))
+    }
+  }
+
   revalidatePath('/', 'layout')
   redirect('/')
 }

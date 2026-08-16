@@ -35,8 +35,15 @@ export const metadata: Metadata = {
   },
 };
 
+import { createClient } from '@/lib/supabase/server';
+
 export default async function HomePage() {
   const blogPosts = await getAllPosts();
+  const supabase = createClient();
+  
+  // Fetch featured games from config
+  const { data: configData } = await supabase.from('site_config').select('config_value').eq('config_key', 'featured_games').single();
+  const featuredGameSlugs = Array.isArray(configData?.config_value) ? configData.config_value : [];
 
   // Convert registry object to an array for rendering
   const gamesList = Object.entries(gamesRegistry).map(([slug, game]) => ({
@@ -183,20 +190,25 @@ export default async function HomePage() {
         </ScrollReveal>
 
         {/* Featured / Editor's Picks */}
-        <ScrollReveal delay={0.2}>
-          <section aria-labelledby="editors-picks-heading">
-            <div id="editors-picks-heading" className="sr-only">Editor's Picks</div>
-            <SectionHeader title="Editor's Picks" subtitle="Hand-picked gems for you" icon3d={<RingsIcon />} />
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              <div className="md:col-span-1">
-                 <GameCard title="Ultimate Chess" rating={5.0} />
+        {featuredGameSlugs.length > 0 && (
+          <ScrollReveal delay={0.2}>
+            <section aria-labelledby="editors-picks-heading">
+              <div id="editors-picks-heading" className="sr-only">Editor's Picks</div>
+              <SectionHeader title="Editor's Picks" subtitle="Hand-picked gems for you" icon3d={<RingsIcon />} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {featuredGameSlugs.slice(0, 3).map((slug: string) => {
+                  const game = gamesList.find(g => g.slug === slug);
+                  if (!game) return null;
+                  return (
+                    <div key={slug} className="md:col-span-1">
+                       <GameCard title={game.title} rating={game.rating} category={game.category} slug={game.slug} />
+                    </div>
+                  );
+                })}
               </div>
-              <div className="md:col-span-1">
-                 <GameCard title="Cyberpunk Racing" rating={4.9} />
-              </div>
-            </div>
-          </section>
-        </ScrollReveal>
+            </section>
+          </ScrollReveal>
+        )}
 
         {/* Curated Collections */}
         <ScrollReveal delay={0.2}>

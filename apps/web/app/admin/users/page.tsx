@@ -15,7 +15,7 @@ export default async function AdminUsersPage() {
     .from('profiles')
     .select(`
       id, username, full_name, avatar_url, role,
-      xp, level, created_at, updated_at
+      xp, level, created_at, updated_at, is_banned, ban_reason
     `)
     .order('created_at', { ascending: false });
 
@@ -40,6 +40,8 @@ export default async function AdminUsersPage() {
     level: p.level ?? 1,
     score_count: (scoreCounts as Record<string, number>)?.[p.id] ?? 0,
     created_at: p.created_at,
+    is_banned: p.is_banned || false,
+    ban_reason: p.ban_reason || '',
   }));
 
   return <UsersTable initialUsers={mappedUsers} />;

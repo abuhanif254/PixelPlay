@@ -8,6 +8,8 @@ import { usePathname } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/client';
 
+import NotificationBell from './NotificationBell';
+
 export default function Navbar() {
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   const { theme, setTheme } = useTheme();
@@ -155,15 +157,18 @@ export default function Navbar() {
               {mounted ? (theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />) : <div className="w-5 h-5" />}
             </button>
             
-            {/* Sign In Button */}
+            {/* Sign In Button & Notifications */}
             {user ? (
-              <Link 
-                href="/profile" 
-                className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 dark:bg-white/5 text-gray-900 dark:text-white text-sm font-bold hover:bg-gray-200 dark:hover:bg-white/10 transition-all border border-black/5 dark:border-white/5"
-              >
-                <User className="w-4 h-4 text-primary" />
-                Profile
-              </Link>
+              <div className="flex items-center gap-3">
+                <NotificationBell userId={user.id} />
+                <Link 
+                  href="/profile" 
+                  className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 dark:bg-white/5 text-gray-900 dark:text-white text-sm font-bold hover:bg-gray-200 dark:hover:bg-white/10 transition-all border border-black/5 dark:border-white/5"
+                >
+                  <User className="w-4 h-4 text-primary" />
+                  Profile
+                </Link>
+              </div>
             ) : (
               <Link 
                 href="/login" 

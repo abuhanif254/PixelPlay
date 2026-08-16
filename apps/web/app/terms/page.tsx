@@ -94,7 +94,15 @@ export default function TermsOfService() {
               All purchases of virtual items or subscriptions are final and non-refundable, except where required by applicable law.
             </p>
 
-            <h2>7. Advertisements and Third-Party Links</h2>
+            <h2>7. Developer Revenue Share</h2>
+            <p>
+              Developers who publish games on Spielcade may be eligible to earn revenue from in-game advertisements (such as Rewarded Ads) or platform engagement. 
+            </p>
+            <p>
+              The standard revenue split is <strong>70% to the Developer</strong> and <strong>30% to Spielcade</strong> of the net advertising revenue generated directly from the developer's game(s). Spielcade reserves the right to modify this revenue share at any time, but will provide at least 30 days' notice of any changes. Payouts are subject to minimum withdrawal thresholds and our Developer Studio Guidelines.
+            </p>
+
+            <h2>8. Advertisements and Third-Party Links</h2>
             <p>
               Spielcade is supported by advertising. By using the Services, you agree that Spielcade may place advertising on the platform, including video advertisements that play before or during gameplay. 
             </p>
@@ -102,12 +110,12 @@ export default function TermsOfService() {
               Our Services may contain links to third-party web sites or services that are not owned or controlled by Spielcade. We have no control over, and assume no responsibility for, the content, privacy policies, or practices of any third party web sites or services.
             </p>
 
-            <h2>8. Termination</h2>
+            <h2>9. Termination</h2>
             <p>
               We may terminate or suspend your account immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms. Upon termination, your right to use the Services will immediately cease.
             </p>
 
-            <h2>9. Limitation of Liability</h2>
+            <h2>10. Limitation of Liability</h2>
             <p>
               In no event shall Spielcade, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from:
             </p>
@@ -118,17 +126,17 @@ export default function TermsOfService() {
               <li>Unauthorized access, use or alteration of your transmissions or content.</li>
             </ul>
 
-            <h2>10. Disclaimer</h2>
+            <h2>11. Disclaimer</h2>
             <p>
               Your use of the Services is at your sole risk. The Services are provided on an "AS IS" and "AS AVAILABLE" basis. The Services are provided without warranties of any kind, whether express or implied, including, but not limited to, implied warranties of merchantability, fitness for a particular purpose, non-infringement or course of performance.
             </p>
 
-            <h2>11. Changes to These Terms</h2>
+            <h2>12. Changes to These Terms</h2>
             <p>
               We reserve the right, at our sole discretion, to modify or replace these Terms at any time. If a revision is material we will try to provide at least 30 days' notice prior to any new terms taking effect. What constitutes a material change will be determined at our sole discretion.
             </p>
 
-            <h2>12. Contact Us</h2>
+            <h2>13. Contact Us</h2>
             <p>
               If you have any questions about these Terms, please contact us at:
             </p>

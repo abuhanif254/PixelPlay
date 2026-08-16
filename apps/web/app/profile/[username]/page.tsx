@@ -122,6 +122,8 @@ function DeveloperJsonLd({ profile, totalPlays }: { profile: any, totalPlays: nu
   );
 }
 
+import FollowButton from '@/components/profile/FollowButton';
+
 export default async function PublicProfilePage({ params }: { params: { username: string } }) {
   const supabase = createClient();
   const { username } = params;
@@ -138,6 +140,24 @@ export default async function PublicProfilePage({ params }: { params: { username
   // Check if viewing own profile
   const { data: { user } } = await supabase.auth.getUser();
   const isOwnProfile = user?.id === profile.id;
+  const viewerId = user?.id;
+
+  // Followers & Following Stats
+  const [{ count: followersCount }, { count: followingCount }] = await Promise.all([
+    supabase.from('user_follows').select('*', { count: 'exact', head: true }).eq('following_id', profile.id),
+    supabase.from('user_follows').select('*', { count: 'exact', head: true }).eq('follower_id', profile.id),
+  ]);
+
+  let isFollowing = false;
+  if (viewerId && !isOwnProfile) {
+    const { data: followData } = await supabase
+      .from('user_follows')
+      .select('follower_id')
+      .eq('follower_id', viewerId)
+      .eq('following_id', profile.id)
+      .single();
+    if (followData) isFollowing = true;
+  }
 
   // Scores
   const { data: scores } = await supabase
@@ -200,6 +220,15 @@ export default async function PublicProfilePage({ params }: { params: { username
                 <span className="px-3 py-1 bg-[#6366F1]/20 text-[#6366F1] text-xs font-bold rounded-full">
                   Level {level}
                 </span>
+                
+                {!isOwnProfile && viewerId && (
+                  <FollowButton 
+                    targetUserId={profile.id} 
+                    targetUsername={profile.username} 
+                    initialIsFollowing={isFollowing} 
+                  />
+                )}
+                
                 {isOwnProfile && (
                   <Link
                     href="/profile"
@@ -210,10 +239,21 @@ export default async function PublicProfilePage({ params }: { params: { username
                 )}
               </div>
             </div>
+            
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               {profile.full_name || profile.username}
             </h1>
             <p className="text-sm text-gray-400 mb-2">@{profile.username}</p>
+            
+            <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-300 mt-2 mb-3">
+              <div className="flex gap-1.5 items-center hover:text-[#6366F1] transition-colors cursor-pointer">
+                <span className="font-bold text-gray-900 dark:text-white">{followersCount || 0}</span> Followers
+              </div>
+              <div className="flex gap-1.5 items-center hover:text-[#6366F1] transition-colors cursor-pointer">
+                <span className="font-bold text-gray-900 dark:text-white">{followingCount || 0}</span> Following
+              </div>
+            </div>
+
             {profile.bio && (
               <p className="text-sm text-gray-600 dark:text-gray-300 max-w-xl">{profile.bio}</p>
             )}
