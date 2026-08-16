@@ -3,9 +3,6 @@ import Link from 'next/link';
 import { Home, Search, Gamepad2, Compass } from 'lucide-react';
 import type { Metadata } from 'next';
 
-export const runtime = 'edge';
-
-
 export const metadata: Metadata = {
   title: 'Page Not Found | Spielcade',
   description: 'The page you are looking for could not be found.',

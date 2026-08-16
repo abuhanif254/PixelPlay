@@ -5,9 +5,6 @@ import { submitPlugin } from '../actions';
 import { Send, AlertTriangle, CheckCircle, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 
-export const runtime = 'edge';
-
-
 const CATEGORIES = ['Arcade', 'Puzzle', 'Action', 'Strategy', 'Racing', 'Sports', 'Adventure', 'Simulation', 'Board'];
 
 export default function SubmitGamePage() {

@@ -2,9 +2,6 @@ import { Metadata } from 'next';
 import ContactForm from '@/components/ContactForm';
 import { Mail, MapPin, MessageSquare, Clock } from 'lucide-react';
 
-export const runtime = 'edge';
-
-
 export const metadata: Metadata = {
   title: 'Contact Us | Spielcade',
   description: 'Get in touch with the Spielcade support team. We are here to help with your account, game issues, or business inquiries.',

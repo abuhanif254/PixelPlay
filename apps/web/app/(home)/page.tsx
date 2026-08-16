@@ -37,9 +37,6 @@ export const metadata: Metadata = {
 
 import { createClient } from '@/lib/supabase/server';
 
-export const runtime = 'edge';
-
-
 export default async function HomePage() {
   const blogPosts = await getAllPosts();
   const supabase = createClient();

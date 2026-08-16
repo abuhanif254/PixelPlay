@@ -80,5 +80,34 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
+  // Check maintenance mode
+  const { data: config } = await supabase
+    .from('site_config')
+    .select('config_value')
+    .eq('config_key', 'maintenance_mode')
+    .single()
+
+  const isMaintenance = config?.config_value === 'true'
+  
+  if (isMaintenance && !request.nextUrl.pathname.startsWith('/maintenance')) {
+    let isAdmin = false
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+      if (profile?.role === 'admin') {
+        isAdmin = true
+      }
+    }
+    
+    if (!isAdmin) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/maintenance'
+      return NextResponse.rewrite(url)
+    }
+  }
+
   return supabaseResponse
 }

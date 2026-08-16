@@ -1,9 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 
-export const runtime = 'edge';
-
-
 export const metadata: Metadata = {
   title: 'Terms of Service | Spielcade',
   description: 'Read the terms and conditions for using Spielcade, the premier online browser games platform. Learn about user rights, intellectual property, and acceptable use.',

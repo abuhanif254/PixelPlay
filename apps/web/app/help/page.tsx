@@ -3,9 +3,6 @@ import Link from 'next/link';
 import { Search, MessageCircle, Gamepad2, UserCircle, ShieldQuestion } from 'lucide-react';
 import HelpAccordion from '@/components/HelpAccordion';
 
-export const runtime = 'edge';
-
-
 export const metadata: Metadata = {
   title: 'Help Center & FAQ | Spielcade',
   description: 'Find answers to common questions about Spielcade, including account management, gameplay issues, developer publishing, and more.',

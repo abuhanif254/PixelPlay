@@ -3,9 +3,6 @@ import Link from 'next/link';
 import { Code2, Globe2, Coins, Zap, Trophy, ShieldCheck, ArrowRight, Terminal } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export const runtime = 'edge';
-
-
 export const metadata: Metadata = {
   title: 'Publish Your Game | Spielcade for Developers',
   description: 'Reach millions of players worldwide. Publish your HTML5 or WebGL game on Spielcade and earn industry-leading revenue share through our premium ad network.',
