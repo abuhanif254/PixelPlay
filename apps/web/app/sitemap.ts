@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { MetadataRoute } from 'next';
 import { createClient } from '@/lib/supabase/server';
 
