@@ -47,8 +47,26 @@ export default async function AllGamesPage({ searchParams }: Props) {
 
   const activeCategory = typeof searchParams.category === 'string' ? searchParams.category : 'All Games';
 
+  const collectionSchema = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": activeCategory === 'All Games' ? "All Free Online Games on Spielcade" : `${activeCategory} Games on Spielcade`,
+    "description": `Play the best free online ${activeCategory.toLowerCase()} games.`,
+    "url": "https://spielcade.com/games",
+    "hasPart": allGames.slice(0, 50).map(game => ({
+      "@type": "SoftwareApplication",
+      "name": game.title,
+      "applicationCategory": "Game",
+      "operatingSystem": "Any"
+    }))
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#05050F] text-gray-900 dark:text-white pt-24 pb-12 transition-colors duration-300">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }}
+      />
       <div className="container mx-auto px-4 md:px-8 max-w-[1600px]">
         
         {/* Breadcrumbs */}

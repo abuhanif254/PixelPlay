@@ -21,18 +21,7 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-const CATEGORIES = [
-  { name: 'All Games', count: 523 },
-  { name: 'Puzzle', count: 142 },
-  { name: 'Action', count: 98 },
-  { name: 'Adventure', count: 67 },
-  { name: 'Racing', count: 45 },
-  { name: 'Sports', count: 38 },
-  { name: 'Strategy', count: 36 },
-  { name: 'Arcade', count: 32 },
-  { name: 'Board', count: 28 },
-  { name: 'Card', count: 18 },
-];
+// Categories are now computed dynamically inside the component
 
 const DIFFICULTIES = ['All Levels', 'Easy', 'Medium', 'Hard', 'Expert'];
 const FEATURES = ['2 Players', 'Multiplayer', 'Mobile Friendly', 'No Time Limit', 'Leaderboard', 'Achievements'];
@@ -61,6 +50,24 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
   const [sortBy, setSortBy] = useState('Most Popular');
   
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  // Dynamically compute category counts
+  const dynamicCategories = useMemo(() => {
+    const counts: Record<string, number> = { 'All Games': initialGames.length };
+    initialGames.forEach(game => {
+      const cat = game.category || 'Arcade';
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+    
+    // Convert to array and sort by count descending (keeping All Games first)
+    return Object.entries(counts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => {
+        if (a.name === 'All Games') return -1;
+        if (b.name === 'All Games') return 1;
+        return b.count - a.count;
+      });
+  }, [initialGames]);
 
   // Sync state changes to URL
   const updateUrl = useCallback((updates: Record<string, string | number | null>) => {
@@ -228,13 +235,13 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
       <div>
         <h3 className="text-[13px] font-bold text-gray-600 dark:text-gray-400 mb-3 uppercase tracking-wider">Categories</h3>
         <ul className="space-y-1 max-h-[40vh] lg:max-h-none overflow-y-auto pr-2 custom-scrollbar">
-          {CATEGORIES.map((cat) => (
+          {dynamicCategories.map((cat) => (
             <li key={cat.name}>
               <button
                 onClick={() => handleCategoryChange(cat.name)}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13px] transition-all ${
                   activeCategory === cat.name 
-                    ? 'bg-[#6366F1] text-white font-bold shadow-md shadow-[#6366F1]/20' 
+                    ? 'bg-gradient-to-r from-[#6366F1] to-[#4F46E5] text-white font-bold shadow-[0_0_10px_rgba(99,102,241,0.3)]' 
                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5'
                 }`}
               >
@@ -451,7 +458,7 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
                   onClick={() => handlePageChange(page as number)}
                   className={`w-9 h-9 rounded-lg text-sm font-bold flex items-center justify-center transition-all ${
                     page === currentPage 
-                      ? 'bg-[#6366F1] text-white shadow-md shadow-[#6366F1]/30' 
+                      ? 'bg-gradient-to-br from-[#6366F1] to-[#4F46E5] text-white shadow-[0_0_15px_rgba(99,102,241,0.5)] border-none' 
                       : 'bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 dark:hover:border-white/20'
                   }`}
                 >
