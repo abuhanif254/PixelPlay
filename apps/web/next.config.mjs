@@ -19,6 +19,10 @@ const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
   productionBrowserSourceMaps: false,
+  experimental: {
+    webpackBuildWorker: true,
+    memoryBasedWorkersCount: true,
+  },
 };
 
 const withPWA = withPWAInit({
@@ -26,6 +30,10 @@ const withPWA = withPWAInit({
   disable: process.env.NODE_ENV === "development",
   register: true,
   skipWaiting: true,
+  buildExcludes: [/middleware-manifest\.json$/, /_buildManifest\.js$/],
+  workboxOptions: {
+    maximumFileSizeToCacheInBytes: 5000000,
+  }
 });
 
 export default withPWA(nextConfig);
