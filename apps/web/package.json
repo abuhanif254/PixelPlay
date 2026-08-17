@@ -5,7 +5,7 @@
   "scripts": {
     "postinstall": "node scripts/symlink-workaround.js",
     "dev": "next dev",
-    "build": "NODE_OPTIONS='--max-old-space-size=4096' next build && node -e \"const fs=require('fs');const p='.next/required-server-files.json';if(fs.existsSync(p)){const d=JSON.parse(fs.readFileSync(p));d.relativeAppDir='';fs.writeFileSync(p,JSON.stringify(d));}\"",
+    "build": "NODE_OPTIONS='--max-old-space-size=2048' next build && node -e \"const fs=require('fs');const p='.next/required-server-files.json';if(fs.existsSync(p)){const d=JSON.parse(fs.readFileSync(p));d.relativeAppDir='';fs.writeFileSync(p,JSON.stringify(d));}\"",
     "start": "next start",
     "lint": "next lint"
   },
