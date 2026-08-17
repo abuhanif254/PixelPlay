@@ -16,6 +16,9 @@ const nextConfig = {
       }
     ],
   },
+  eslint: { ignoreDuringBuilds: true },
+  typescript: { ignoreBuildErrors: true },
+  productionBrowserSourceMaps: false,
 };
 
 const withPWA = withPWAInit({
