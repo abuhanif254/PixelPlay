@@ -54,7 +54,7 @@ export default function Navbar() {
           <Link href="/" aria-label="Spielcade Homepage" title="Go to Spielcade Homepage" className="flex items-center gap-3 shrink-0 group">
             <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.5)] bg-[#111228] flex items-center justify-center shrink-0">
               <img 
-                src="/logo.jpg" 
+                src="/logo.png" 
                 alt="Spielcade Logo" 
                 className="w-[120%] h-[120%] object-cover animate-[spin_10s_linear_infinite] group-hover:animate-[spin_3s_linear_infinite] transition-all" 
               />

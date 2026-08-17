@@ -33,7 +33,7 @@ export default async function NewGamesPage() {
   })) || [];
 
   return (
-    <div className="min-h-screen bg-[#05050F] text-white pt-20 pb-12 font-sans">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#05050F] text-gray-900 dark:text-white pt-20 pb-12 font-sans transition-colors duration-300">
       <NewGamesClient initialGames={initialGames} />
     </div>
   );
