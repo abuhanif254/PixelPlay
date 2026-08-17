@@ -7,7 +7,6 @@ import { HorizontalScroll } from '@/components/HorizontalScroll';
 import GameCard from '@/components/GameCard';
 import CategoryCard from '@/components/CategoryCard';
 import BlogPreviewCard from '@/components/BlogPreviewCard';
-import { gamesRegistry } from '@spielcade/games/registry';
 import Link from 'next/link';
 import RecentGames from '@/components/RecentGames';
 import { TrendingGamesFilter } from '@/components/TrendingGamesFilter';
@@ -15,47 +14,45 @@ import { ScrollReveal } from '@/components/ScrollReveal';
 import HomeSEOText from '@/components/HomeSEOText';
 import HomeFAQ from '@/components/HomeFAQ';
 import PopularSearches from '@/components/PopularSearches';
-import { homepageFaqs, gameCollections } from '@/lib/constants';
+import { homepageFaqs } from '@/lib/constants';
 import { getAllPosts } from '@/lib/blog';
 import { FireIcon, RocketIcon, CubeIcon, RingsIcon } from '@/components/3d/SectionIcons';
 import dynamic from 'next/dynamic';
 
-const CollectionCard = dynamic(() => import('@/components/CollectionCard'));
-const ReviewTicker = dynamic(() => import('@/components/ReviewTicker'));
-const LeaderboardPreview = dynamic(() => import('@/components/LeaderboardPreview'));
-const DeviceCompatibility = dynamic(() => import('@/components/DeviceCompatibility'));
 const DeveloperSpotlight = dynamic(() => import('@/components/DeveloperSpotlight'));
-const UpcomingGames = dynamic(() => import('@/components/UpcomingGames'));
+
 export const metadata: Metadata = {
-  title: "Spielcade — Play Free Games, Publish Yours & Earn",
-  description: "Play free online games — from lightweight HTML5 to premium titles. Submit your own game as a developer on Spielcade and start earning from every view.",
+  title: "Play Free Online Games & Publish to Earn | Spielcade",
+  description: "Play thousands of free web games instantly. Are you a developer? Publish your HTML5 games on Spielcade and earn revenue from every view.",
   openGraph: {
-    title: "Spielcade — Play Free Games, Publish Yours & Earn",
-    description: "Play free online games — from lightweight HTML5 to premium titles. Submit your own game as a developer on Spielcade and start earning from every view.",
+    title: "Play Free Online Games & Publish to Earn | Spielcade",
+    description: "Play thousands of free web games instantly. Are you a developer? Publish your HTML5 games on Spielcade and earn revenue from every view.",
   },
 };
 
 import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'edge';
-
+export const revalidate = 60; // Revalidate every 60 seconds
 
 export default async function HomePage() {
   const blogPosts = await getAllPosts();
   const supabase = createClient();
   
-  // Fetch featured games from config
-  const { data: configData } = await supabase.from('site_config').select('config_value').eq('config_key', 'featured_games').single();
-  const featuredGameSlugs = Array.isArray(configData?.config_value) ? configData.config_value : [];
+  // Fetch dynamic game data concurrently
+  const [
+    { data: trendingGames },
+    { data: newArrivals },
+    { data: topRatedGames }
+  ] = await Promise.all([
+    supabase.from('games').select('*').order('total_plays', { ascending: false }).limit(12),
+    supabase.from('games').select('*').order('created_at', { ascending: false }).limit(10),
+    supabase.from('games').select('*').order('rating', { ascending: false }).limit(8),
+  ]);
 
-  // Convert registry object to an array for rendering
-  const gamesList = Object.entries(gamesRegistry).map(([slug, game]) => ({
-    slug,
-    title: game.config.title,
-    rating: game.config.rating || 4.5,
-    category: game.config.category || 'Arcade',
-    image: game.config.image,
-  }));
+  const trending = trendingGames || [];
+  const newGames = newArrivals || [];
+  const topRated = topRatedGames || [];
 
   const categories = [
     { title: "Puzzle", icon: Puzzle, count: 120 },
@@ -66,6 +63,7 @@ export default async function HomePage() {
     { title: "Strategy", icon: Brain, count: 90 },
   ];
 
+  // Dynamic JSON-LD Schema based on real database games
   const jsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
@@ -74,14 +72,14 @@ export default async function HomePage() {
         name: 'Spielcade Game Collection',
         description: 'A collection of the best free browser games.',
         url: 'https://spielcade.com',
-        hasPart: gamesList.map(game => ({
+        hasPart: trending.map(game => ({
           '@type': 'SoftwareApplication',
           name: game.title,
           applicationCategory: 'Game',
           operatingSystem: 'Any',
           aggregateRating: {
             '@type': 'AggregateRating',
-            ratingValue: game.rating,
+            ratingValue: game.rating || 5.0,
             ratingCount: 100
           }
         }))
@@ -95,15 +93,6 @@ export default async function HomePage() {
             '@type': 'Answer',
             text: faq.a
           }
-        }))
-      },
-      {
-        '@type': 'ItemList',
-        name: 'Curated Game Collections',
-        itemListElement: gameCollections.map((col, idx) => ({
-          '@type': 'ListItem',
-          position: idx + 1,
-          url: `https://spielcade.com${col.href}`
         }))
       }
     ]
@@ -121,44 +110,48 @@ export default async function HomePage() {
       />
       
       <HeroSection />
+      
+      {/* Move Categories Carousel closer to top for visual navigation */}
       <CategoriesCarousel />
 
       <div className="container mx-auto px-4 md:px-8 space-y-24 relative z-10">
+        
         {/* Continue Playing (Dynamic from localStorage) */}
         <ScrollReveal>
           <RecentGames />
         </ScrollReveal>
 
-        {/* New Arrivals */}
+        {/* Hot & Trending Games (Primary Engagement Zone) */}
+        <ScrollReveal delay={0.1}>
+          <section aria-labelledby="trending-games-heading">
+            <h2 id="trending-games-heading" className="sr-only">Trending Games</h2>
+            <SectionHeader title="Trending Games" subtitle="Most played games right now" actionText="View All ->" actionHref="/popular" icon3d={<FireIcon />} />
+            {/* We use TrendingGamesFilter and pass the real Supabase data */}
+            <TrendingGamesFilter games={trending} />
+          </section>
+        </ScrollReveal>
+
+        {/* New Arrivals (Horizontal Scroll) */}
         <ScrollReveal delay={0.1}>
           <section aria-labelledby="new-arrivals-heading">
-            <div id="new-arrivals-heading" className="sr-only">New Arrivals</div>
-            <SectionHeader title="New Arrivals" actionText="View Latest" icon3d={<RocketIcon />} />
+            <h2 id="new-arrivals-heading" className="sr-only">New Arrivals</h2>
+            <SectionHeader title="New Arrivals" actionText="View Latest" actionHref="/games/new" icon3d={<RocketIcon />} />
             <HorizontalScroll>
-              {gamesList.slice(0, 5).map((game, i) => (
-                <div key={i} className="w-64 flex-none shrink-0 relative">
-                  <div className="absolute top-2 left-2 bg-accent text-black text-xs font-bold px-2 py-1 rounded-full z-10 shadow-sm pointer-events-none">NEW</div>
-                  <GameCard title={game.title} rating={game.rating} category={game.category} slug={game.slug} />
+              {newGames.map((game, i) => (
+                <div key={game.id} className="w-64 flex-none shrink-0 relative">
+                  <div className="absolute top-2 left-2 bg-purple-600 text-white text-[11px] font-bold px-2 py-1 rounded uppercase tracking-wider z-10 shadow-sm pointer-events-none">NEW</div>
+                  <GameCard title={game.title} rating={game.rating || 5.0} category={game.category || 'Arcade'} slug={game.slug || game.id} imageUrl={game.image} />
                 </div>
               ))}
             </HorizontalScroll>
           </section>
         </ScrollReveal>
 
-        {/* Trending Games */}
-        <ScrollReveal delay={0.1}>
-          <section aria-labelledby="trending-games-heading">
-            <div id="trending-games-heading" className="sr-only">Trending Games</div>
-            <SectionHeader title="Trending Games" subtitle="Most played games right now" actionText="View All ->" icon3d={<FireIcon />} />
-            <TrendingGamesFilter games={gamesList} />
-          </section>
-        </ScrollReveal>
-
-        {/* Categories */}
+        {/* Popular Categories */}
         <ScrollReveal delay={0.1}>
           <section aria-labelledby="categories-heading">
-            <div id="categories-heading" className="sr-only">Popular Categories</div>
-            <SectionHeader title="Popular Categories" actionText="Explore" icon3d={<CubeIcon />} />
+            <h2 id="categories-heading" className="sr-only">Popular Categories</h2>
+            <SectionHeader title="Popular Categories" actionText="Explore All" actionHref="/categories" icon3d={<CubeIcon />} />
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {categories.map((cat, i) => (
                  <CategoryCard key={i} name={cat.title} icon={<cat.icon className="w-6 h-6" />} gameCount={cat.count} />
@@ -167,96 +160,31 @@ export default async function HomePage() {
           </section>
         </ScrollReveal>
 
-        {/* Top Rated & Multiplayer */}
+        {/* Hall of Fame (Top Rated) */}
         <ScrollReveal delay={0.2}>
-          <div className="grid lg:grid-cols-2 gap-12">
-            <section aria-labelledby="top-rated-heading">
-              <div id="top-rated-heading" className="sr-only">Top Rated Games</div>
-              <SectionHeader title="Hall of Fame" actionText="Highest Rated" icon3d={<FireIcon />} />
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                 {gamesList.slice(0, 3).map((game, i) => (
-                   <GameCard key={i} title={game.title} rating={4.9} category={game.category} slug={game.slug} />
-                 ))}
-              </div>
-            </section>
-            
-            <section aria-labelledby="multiplayer-heading">
-              <div id="multiplayer-heading" className="sr-only">Multiplayer Games</div>
-              <SectionHeader title="⚔️ Multiplayer Chaos" actionText="Play with Friends" />
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                 {gamesList.slice(0, 3).map((game, i) => (
-                   <GameCard key={i} title={`${game.title} Online`} rating={game.rating} category={game.category} slug={game.slug} />
-                 ))}
-              </div>
-            </section>
-          </div>
-        </ScrollReveal>
-
-        {/* Featured / Editor's Picks */}
-        {featuredGameSlugs.length > 0 && (
-          <ScrollReveal delay={0.2}>
-            <section aria-labelledby="editors-picks-heading">
-              <div id="editors-picks-heading" className="sr-only">Editor's Picks</div>
-              <SectionHeader title="Editor's Picks" subtitle="Hand-picked gems for you" icon3d={<RingsIcon />} />
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {featuredGameSlugs.slice(0, 3).map((slug: string) => {
-                  const game = gamesList.find(g => g.slug === slug);
-                  if (!game) return null;
-                  return (
-                    <div key={slug} className="md:col-span-1">
-                       <GameCard title={game.title} rating={game.rating} category={game.category} slug={game.slug} />
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          </ScrollReveal>
-        )}
-
-        {/* Curated Collections */}
-        <ScrollReveal delay={0.2}>
-          <section aria-labelledby="collections-heading">
-            <div id="collections-heading" className="sr-only">Curated Collections</div>
-            <SectionHeader title="Curated Collections" actionText="Browse All" icon3d={<CubeIcon />} />
-            <div className="grid md:grid-cols-3 gap-6">
-              {gameCollections.map((col, i) => (
-                <CollectionCard key={i} title={col.title} description={col.description} imageUrls={col.imageUrls} href={col.href} />
-              ))}
-            </div>
-          </section>
-        </ScrollReveal>
-
-        {/* Games by Device */}
-        <ScrollReveal delay={0.3}>
-          <section aria-labelledby="device-heading">
-            <div id="device-heading" className="sr-only">Device Compatibility</div>
-            <DeviceCompatibility />
-          </section>
-        </ScrollReveal>
-
-        {/* Genre Deep Dive */}
-        <ScrollReveal delay={0.2}>
-          <section aria-labelledby="genre-action-heading">
-            <div id="genre-action-heading" className="sr-only">Action Games Hub</div>
-            <div className="flex items-center gap-4 mb-6">
-              <div className="p-3 bg-primary/10 rounded-xl text-primary"><Swords className="w-8 h-8" /></div>
-              <div>
-                <h2 className="text-2xl font-outfit font-bold">Action Games Hub</h2>
-                <p className="text-gray-500 text-sm">Jump into the most thrilling combat and adventure games.</p>
-              </div>
-            </div>
+          <section aria-labelledby="top-rated-heading">
+            <h2 id="top-rated-heading" className="sr-only">Top Rated Games</h2>
+            <SectionHeader title="Hall of Fame" actionText="Highest Rated" icon3d={<FireIcon />} />
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {gamesList.slice(0, 4).map((game, i) => (
-                <GameCard key={i} title={game.title} rating={game.rating} category={game.category} slug={game.slug} />
-              ))}
+               {topRated.map((game, i) => (
+                 <GameCard key={game.id} title={game.title} rating={game.rating || 5.0} category={game.category || 'Arcade'} slug={game.slug || game.id} imageUrl={game.image} />
+               ))}
             </div>
+          </section>
+        </ScrollReveal>
+
+        {/* Developer Spotlight (Brand Promotion) */}
+        <ScrollReveal delay={0.2}>
+          <section aria-labelledby="developer-spotlight-heading">
+            <h2 id="developer-spotlight-heading" className="sr-only">Developer Spotlight</h2>
+            <DeveloperSpotlight />
           </section>
         </ScrollReveal>
 
         {/* Blog Section for SEO */}
         <ScrollReveal delay={0.2}>
           <section aria-labelledby="guides-heading">
-            <div id="guides-heading" className="sr-only">Latest Guides and News</div>
+            <h2 id="guides-heading" className="sr-only">Latest Guides and News</h2>
             <SectionHeader 
               title="Latest Guides & News" 
               actionText="Read more" 
@@ -280,40 +208,27 @@ export default async function HomePage() {
           </section>
         </ScrollReveal>
 
-        {/* Community & Live Data Grid */}
-        <ScrollReveal delay={0.3}>
-          <div className="grid lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-8 flex flex-col gap-8">
-              <ReviewTicker />
-              <DeveloperSpotlight />
-            </div>
-            <div className="lg:col-span-4 flex flex-col gap-8">
-              <LeaderboardPreview />
-              <UpcomingGames />
-            </div>
-          </div>
-        </ScrollReveal>
-
-        {/* SEO Text Block */}
-        <ScrollReveal delay={0.2}>
-          <section className="bg-gray-50 dark:bg-gray-800/50 rounded-3xl p-8 md:p-12 border border-black/5 dark:border-white/5" aria-labelledby="seo-text-heading">
-            <div id="seo-text-heading" className="sr-only">About Spielcade</div>
-            <HomeSEOText />
-          </section>
-        </ScrollReveal>
-
         {/* Popular Searches & FAQ */}
         <ScrollReveal delay={0.3}>
           <section className="grid md:grid-cols-12 gap-12" aria-labelledby="faq-search-heading">
-            <div id="faq-search-heading" className="sr-only">FAQs and Popular Searches</div>
+            <h2 id="faq-search-heading" className="sr-only">FAQs and Popular Searches</h2>
             <div className="md:col-span-8">
               <HomeFAQ />
             </div>
-            <div className="md:col-span-4">
+            <div className="md:col-span-4 flex flex-col gap-8">
               <PopularSearches />
             </div>
           </section>
         </ScrollReveal>
+
+        {/* SEO Text Block (Expandable) */}
+        <ScrollReveal delay={0.4}>
+          <section aria-labelledby="seo-text-heading">
+            <h2 id="seo-text-heading" className="sr-only">About Spielcade Platform</h2>
+            <HomeSEOText />
+          </section>
+        </ScrollReveal>
+
       </div>
     </div>
   );
