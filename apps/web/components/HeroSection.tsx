@@ -54,7 +54,7 @@ export const HeroSection: React.FC = () => {
                 placeholder="Search games..." 
                 className="bg-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 w-full focus:outline-none text-lg py-3"
               />
-              <button className="bg-[#6366F1] hover:bg-[#4F46E5] text-white font-bold py-3 px-8 rounded-full transition-colors shrink-0">
+              <button className="bg-[#6366F1] hover:bg-[#4F46E5] text-white font-bold py-3 px-8 rounded-full transition-all duration-300 shrink-0 shadow-[0_0_20px_rgba(99,102,241,0.4)] hover:shadow-[0_0_30px_rgba(99,102,241,0.6)] hover:scale-105 active:scale-95">
                 Search
               </button>
             </div>
