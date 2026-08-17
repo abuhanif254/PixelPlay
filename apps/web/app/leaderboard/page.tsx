@@ -9,6 +9,8 @@ import LeaderboardFilters from '@/components/leaderboard/LeaderboardFilters';
 import UserRankCard from '@/components/leaderboard/UserRankCard';
 import { createClient } from '@/lib/supabase/server';
 
+export const runtime = 'edge';
+
 export const metadata: Metadata = {
   title: 'Global Leaderboard | Spielcade',
   description: 'Compete with players around the world and become the ultimate champion!',

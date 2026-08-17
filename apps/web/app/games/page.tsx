@@ -6,6 +6,8 @@ import AllGamesClient from './AllGamesClient';
 import { Metadata } from 'next';
 import DynamicSEOBlock from '@/components/DynamicSEOBlock';
 
+export const runtime = 'edge';
+
 type Props = {
   searchParams: { [key: string]: string | string[] | undefined }
 }
