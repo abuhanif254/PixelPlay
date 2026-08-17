@@ -19,6 +19,10 @@ const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
   productionBrowserSourceMaps: false,
+  experimental: {
+    cpus: 1,
+    memoryBasedWorkersCount: true
+  }
 };
 
 const withPWA = withPWAInit({
