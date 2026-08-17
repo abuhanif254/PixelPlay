@@ -20,7 +20,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .select('slug, updated_at')
     .eq('status', 'published');
 
-  // 3. Map into sitemap format
+  // 3. Fetch all unique categories from games
+  const { data: categoryData } = await supabase
+    .from('games')
+    .select('category');
+    
+  const categories = Array.from(new Set((categoryData || []).map(g => g.category).filter(Boolean) as string[]));
+
+  // 4. Map into sitemap format
   const gameEntries: MetadataRoute.Sitemap = (games || []).map((game) => ({
     url: `${baseUrl}/games/${game.slug}`,
     lastModified: new Date(game.updated_at || new Date()),
@@ -33,6 +40,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: new Date(post.updated_at || new Date()),
     changeFrequency: 'monthly',
     priority: 0.7,
+  }));
+  
+  const categoryEntries: MetadataRoute.Sitemap = categories.map((cat) => ({
+    url: `${baseUrl}/categories/${cat.toLowerCase().replace(/\s+/g, '-')}-games`,
+    lastModified: new Date(),
+    changeFrequency: 'daily',
+    priority: 0.8,
   }));
 
   // Static routes
@@ -53,7 +67,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${baseUrl}/categories`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
-      priority: 0.8,
+      priority: 0.9,
     },
     {
       url: `${baseUrl}/blog`,
@@ -63,5 +77,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   ];
 
-  return [...staticEntries, ...gameEntries, ...postEntries];
+  return [...staticEntries, ...categoryEntries, ...gameEntries, ...postEntries];
 }

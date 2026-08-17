@@ -162,19 +162,19 @@ export default async function GamePage({ params }: GamePageProps) {
         "@type": "ListItem",
         "position": 1,
         "name": "Home",
-        "item": "https://spielcade.vercel.app/"
+        "item": "https://spielcade.com/"
       },
       {
         "@type": "ListItem",
         "position": 2,
         "name": `${config.category} Games`,
-        "item": `https://spielcade.vercel.app/games?category=${config.category}`
+        "item": `https://spielcade.com/categories/${config.category.toLowerCase().replace(/\s+/g, '-')}`
       },
       {
         "@type": "ListItem",
         "position": 3,
         "name": config.title,
-        "item": `https://spielcade.vercel.app/games/${slug}`
+        "item": `https://spielcade.com/games/${slug}`
       }
     ]
   };

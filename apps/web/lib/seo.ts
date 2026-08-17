@@ -1,10 +1,10 @@
 import { Metadata } from 'next';
 
-// Use an environment variable for the site URL, fallback to localhost for development
+// Use an environment variable for the site URL, fallback to the production domain
 export const siteConfig = {
-  name: 'Spielcade', // Temporary name until a new one is decided
+  name: 'Spielcade', 
   description: 'Play the best free online browser games.',
-  url: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
+  url: process.env.NEXT_PUBLIC_SITE_URL || 'https://spielcade.com',
   ogImage: '/og-image.jpg',
 };
 
