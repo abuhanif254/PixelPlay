@@ -14,7 +14,8 @@ export default async function LoginPage({
   const supabase = createClient();
   
   // If user is already logged in, redirect to profile
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: authData } = await supabase.auth.getUser();
+  const user = authData?.user || null;
   if (user) {
     return redirect('/profile');
   }

@@ -25,7 +25,8 @@ function timeAgo(date: Date) {
 
 export default async function ActivityFeedPage() {
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: authData } = await supabase.auth.getUser();
+  const user = authData?.user || null;
   if (!user) redirect('/login');
 
   // Fetch scores

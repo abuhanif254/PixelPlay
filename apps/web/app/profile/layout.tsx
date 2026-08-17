@@ -12,7 +12,8 @@ export const metadata: Metadata = {
 
 export default async function ProfileLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: authData } = await supabase.auth.getUser();
+  const user = authData?.user || null;
   
   if (!user) redirect('/login');
 

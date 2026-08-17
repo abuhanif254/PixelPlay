@@ -62,7 +62,8 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
   const topChampion = mappedPlayers.length > 0 ? mappedPlayers[0] : null;
 
   // Get current user's rank
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: authData } = await supabase.auth.getUser();
+  const user = authData?.user || null;
   let userRankData = null;
 
   if (user) {

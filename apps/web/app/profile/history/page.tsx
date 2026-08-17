@@ -13,7 +13,8 @@ export const revalidate = 0;
 
 export default async function GameHistoryPage() {
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: authData } = await supabase.auth.getUser();
+  const user = authData?.user || null;
   if (!user) redirect('/login');
 
   // Fetch up to 100 most recent scores for the history log

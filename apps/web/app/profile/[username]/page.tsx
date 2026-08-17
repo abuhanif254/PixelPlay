@@ -138,7 +138,8 @@ export default async function PublicProfilePage({ params }: { params: { username
   if (!profile) notFound();
 
   // Check if viewing own profile
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: authData } = await supabase.auth.getUser();
+  const user = authData?.user || null;
   const isOwnProfile = user?.id === profile.id;
   const viewerId = user?.id;
 
