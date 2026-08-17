@@ -38,7 +38,7 @@ export default function Navbar() {
     { name: 'Home', href: '/' },
     { name: 'All Games', href: '/games', icon: ChevronDown },
     { name: 'Categories', href: '/categories', icon: ChevronDown, isMega: true },
-    { name: 'New Games', href: '/new' },
+    { name: 'New Games', href: '/games/new' },
     { name: 'Popular', href: '/popular' },
     { name: 'Leaderboard', href: '/leaderboard' },
     { name: 'Blog', href: '/blog' },
