@@ -1,11 +1,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import React, { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import AllGamesClient from './AllGamesClient';
 import { Metadata } from 'next';
 import DynamicSEOBlock from '@/components/DynamicSEOBlock';
-
-export const runtime = 'edge';
 
 type Props = {
   searchParams: { [key: string]: string | string[] | undefined }
@@ -108,7 +107,9 @@ export default async function AllGamesPage({ searchParams }: Props) {
 
       <div className="container mx-auto px-4 md:px-8 max-w-[1600px]">
         {/* Interactive Client Section */}
-        <AllGamesClient initialGames={allGames} />
+        <Suspense fallback={<div className="w-full h-96 bg-gray-100 dark:bg-white/5 animate-pulse rounded-2xl" />}>
+          <AllGamesClient initialGames={allGames} />
+        </Suspense>
         
         {/* Dynamic SEO Block */}
         <DynamicSEOBlock category={activeCategory} />

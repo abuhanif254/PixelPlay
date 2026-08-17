@@ -1,5 +1,4 @@
-export const runtime = 'edge';
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Metadata } from 'next';
 import LeaderboardSidebar from '@/components/leaderboard/LeaderboardSidebar';
 import LeaderboardHero from '@/components/leaderboard/LeaderboardHero';
@@ -118,13 +117,17 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
           {/* Left Sidebar (2 cols) */}
           <div className="hidden lg:block lg:col-span-2 relative">
             <div className="sticky top-24">
-              <LeaderboardSidebar games={availableGames} topPlayers={topThree} />
+              <Suspense fallback={<div className="w-full h-96 bg-gray-100 dark:bg-white/5 animate-pulse rounded-2xl" />}>
+                <LeaderboardSidebar games={availableGames} topPlayers={topThree} />
+              </Suspense>
             </div>
           </div>
 
           {/* Main Content (7 cols) */}
           <div className="col-span-1 lg:col-span-7 flex flex-col">
-            <LeaderboardHero />
+            <Suspense fallback={<div className="w-full h-48 bg-gray-100 dark:bg-white/5 animate-pulse rounded-2xl mb-8" />}>
+              <LeaderboardHero />
+            </Suspense>
             <TopThreePodium topThree={topThree} />
             <LeaderboardTable players={remainingPlayers} />
           </div>
@@ -133,7 +136,9 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
           <div className="col-span-1 lg:col-span-3 flex flex-col">
             <TopChampionCard champion={topChampion} />
             <div className="sticky top-24">
-              <LeaderboardFilters games={availableGames} currentFilters={{ game: gameSlug, time: timePeriod }} />
+              <Suspense fallback={<div className="w-full h-96 bg-gray-100 dark:bg-white/5 animate-pulse rounded-2xl" />}>
+                <LeaderboardFilters games={availableGames} currentFilters={{ game: gameSlug, time: timePeriod }} />
+              </Suspense>
               <UserRankCard userRank={userRankData} isLoggedIn={!!user} />
             </div>
           </div>
