@@ -1,3 +1,4 @@
+'use client';
 import React from 'react';
 import { Globe, CalendarDays, Calendar, Clock } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
