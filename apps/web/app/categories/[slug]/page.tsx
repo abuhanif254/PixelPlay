@@ -8,6 +8,7 @@ import CategoryInfoBanner from '@/components/category/CategoryInfoBanner';
 import CategoryFAQ from '@/components/category/CategoryFAQ';
 import CategoryCollections from '@/components/category/CategoryCollections';
 import { categoriesData } from '@/lib/mockCategories';
+import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'edge';
 
@@ -38,13 +39,38 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default function CategoryPage({ params }: { params: { slug: string } }) {
+export default async function CategoryPage({ params }: { params: { slug: string } }) {
   const category = categoriesData[params.slug as keyof typeof categoriesData];
   
   if (!category) {
     notFound();
   }
+
+  const supabase = createClient();
+  const dbCategoryName = category.title.replace(' Games', '');
   
+  const { data: gamesData } = await supabase
+    .from('games')
+    .select('*')
+    .eq('category', dbCategoryName)
+    .order('total_plays', { ascending: false });
+
+  const games = gamesData || [];
+  
+  // Create rich snippet collection schema
+  const collectionSchema = {
+    "@type": "CollectionPage",
+    "name": `${category.title} on Spielcade`,
+    "description": category.description,
+    "url": `https://spielcade.com/categories/${params.slug}`,
+    "hasPart": games.map(game => ({
+      "@type": "SoftwareApplication",
+      "name": game.title,
+      "applicationCategory": "Game",
+      "operatingSystem": "Any"
+    }))
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#05050F] text-gray-900 dark:text-white pt-20 pb-20 transition-colors duration-300">
       <script
@@ -76,6 +102,10 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
           })
         }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }}
+      />
       
       {/* Hero Section */}
       <CategoryHero category={category} />
@@ -94,7 +124,7 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
 
           {/* Main Content (9 cols) */}
           <div className="col-span-1 lg:col-span-9 flex flex-col">
-            <CategoryGameGrid category={category} />
+            <CategoryGameGrid category={category} games={games} />
             <CategoryInfoBanner category={category} />
             
             {/* Bottom Section Layout (FAQ left, Collections right/below) */}

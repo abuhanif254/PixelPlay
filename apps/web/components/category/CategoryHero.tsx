@@ -35,7 +35,7 @@ export default function CategoryHero({ category }: { category: CategoryData }) {
               >
                 {category.icon}
               </div>
-              <h1 className="text-3xl md:text-4xl font-extrabold font-outfit text-gray-900 dark:text-white">{category.title}</h1>
+              <h1 className="text-3xl md:text-4xl font-extrabold font-outfit text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">{category.title}</h1>
             </div>
 
             <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base mb-6 max-w-lg leading-relaxed">
