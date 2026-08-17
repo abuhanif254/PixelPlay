@@ -19,6 +19,10 @@ const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
   productionBrowserSourceMaps: false,
+  webpack: (config) => {
+    config.devtool = false;
+    return config;
+  },
   experimental: {
     cpus: 1,
     memoryBasedWorkersCount: true
