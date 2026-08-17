@@ -14,6 +14,7 @@ interface GameCardProps {
   slug?: string;
   plays?: string;
   isNew?: boolean;
+  rank?: number;
 }
 
 export default function GameCard({ 
@@ -23,8 +24,15 @@ export default function GameCard({
   category = 'Action', 
   slug = '#',
   plays = '500K',
-  isNew = false
+  isNew = false,
+  rank
 }: GameCardProps) {
+  // Determine badge styling based on rank
+  let rankGradient = 'from-purple-500 to-purple-700'; // Default for 4+
+  if (rank === 1) rankGradient = 'from-yellow-400 to-yellow-600 shadow-[0_0_15px_rgba(250,204,21,0.5)]';
+  else if (rank === 2) rankGradient = 'from-gray-300 to-gray-500 shadow-[0_0_10px_rgba(156,163,175,0.4)]';
+  else if (rank === 3) rankGradient = 'from-amber-600 to-amber-800 shadow-[0_0_10px_rgba(217,119,6,0.4)]';
+
   return (
     <Link href={slug.startsWith('#') ? slug : `/games/${slug}`} title={`Play ${title} - Free Online Game`} className="block group h-full">
       <motion.div 
@@ -51,10 +59,19 @@ export default function GameCard({
           )}
 
           {/* NEW Badge overlay */}
-          {isNew && (
+          {isNew && !rank && (
             <div className="absolute top-2 left-2 z-10">
               <span className="px-2 py-0.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-[9px] font-bold tracking-wider rounded-sm uppercase shadow-md">
                 NEW
+              </span>
+            </div>
+          )}
+
+          {/* Rank Badge overlay */}
+          {rank !== undefined && (
+            <div className={`absolute top-0 left-0 z-10 w-8 h-8 rounded-br-xl rounded-tl-xl bg-gradient-to-br ${rankGradient} flex items-center justify-center`}>
+              <span className="text-white text-xs font-bold font-mono shadow-sm">
+                {rank}
               </span>
             </div>
           )}
