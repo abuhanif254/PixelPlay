@@ -39,7 +39,7 @@ export default function FeaturedArticles({ posts }: { posts: any[] }) {
               {mainPost.title}
             </h3>
             <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base leading-relaxed mb-6 line-clamp-2">
-              {mainPost.description}
+              {mainPost.excerpt}
             </p>
             
             <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-200 dark:border-white/5">

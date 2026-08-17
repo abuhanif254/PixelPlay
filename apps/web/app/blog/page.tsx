@@ -42,9 +42,31 @@ export default async function BlogPage() {
     created_at: p.created_at,
   }));
 
+  // SEO JSON-LD Schema
+  const blogSchema = {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    "name": "Blog & Guides | Spielcade Games",
+    "description": "Tips, guides, news and strategies to level up your gaming experience on Spielcade.",
+    "url": "https://spielcade.com/blog",
+    "blogPost": posts.slice(0, 10).map((post: any) => ({
+      "@type": "BlogPosting",
+      "headline": post.title,
+      "datePublished": post.created_at,
+      "url": `https://spielcade.com/blog/${post.slug}`,
+      "author": {
+        "@type": "Person",
+        "name": post.author
+      }
+    }))
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#05050F] text-gray-900 dark:text-white transition-colors">
-      
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogSchema) }}
+      />
       {/* Top Hero Section */}
       <div className="pt-20">
         <BlogHero />

@@ -74,32 +74,6 @@ export default function LatestArticles({ posts }: { posts: any[] }) {
         )}
       </div>
 
-      {/* Pagination */}
-      <div className="flex items-center justify-center gap-2 mt-8">
-        {[1, 2, 3, 4].map((num) => (
-          <button 
-            key={num} 
-            className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold transition-colors ${
-              num === 1 
-              ? 'bg-[#6366F1] text-white' 
-              : 'bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-300 dark:hover:border-white/20'
-            }`}
-          >
-            {num}
-          </button>
-        ))}
-        <span className="text-gray-500 px-1">...</span>
-        <button className="w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-300 dark:hover:border-white/20">
-          11
-        </button>
-        <button className="h-8 px-4 flex items-center justify-center gap-1 rounded-lg text-sm font-bold bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-300 dark:hover:border-white/20 ml-2">
-          Next
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      </div>
-
     </div>
   );
 }

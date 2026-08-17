@@ -19,7 +19,7 @@ export default function BlogHero() {
             BLOG & GUIDES
           </div>
           
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold font-outfit text-gray-900 dark:text-white leading-tight">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold font-outfit text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 leading-tight">
             Game On, Stay <br />
             Informed 🎮
           </h1>
