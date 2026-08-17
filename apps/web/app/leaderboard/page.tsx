@@ -86,8 +86,29 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
     }
   }
 
+  // SEO JSON-LD Schema
+  const itemListSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Global Leaderboard - Spielcade",
+    "description": "Top players on Spielcade across all games.",
+    "itemListElement": mappedPlayers.slice(0, 50).map((player, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "item": {
+        "@type": "Person",
+        "name": player.name,
+        "url": `https://spielcade.com/profile/${player.name}`
+      }
+    }))
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#05050F] text-gray-900 dark:text-white pt-24 pb-20 transition-colors">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
+      />
       <div className="container mx-auto px-4 xl:px-8 max-w-[1400px]">
         
         {/* 12 Column Layout */}

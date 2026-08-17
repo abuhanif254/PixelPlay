@@ -1,9 +1,24 @@
-'use client';
-import React, { useState } from 'react';
+import React from 'react';
 import { Globe, CalendarDays, Calendar, Clock } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function LeaderboardHero() {
-  const [activeFilter, setActiveFilter] = useState('Global');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  // Read active filter from URL, default to Global (All Time)
+  const activeTime = searchParams.get('time') || 'All Time';
+  const activeFilter = activeTime === 'All Time' ? 'Global' : activeTime;
+
+  const handleFilterClick = (filterName: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (filterName === 'Global' || filterName === 'All Time') {
+      params.delete('time');
+    } else {
+      params.set('time', filterName);
+    }
+    router.push(`/leaderboard?${params.toString()}`);
+  };
 
   const filters = [
     { name: 'Global', icon: <Globe size={16} /> },
@@ -18,7 +33,7 @@ export default function LeaderboardHero() {
       {/* Header and Podium Graphic Area */}
       <div className="relative w-full h-48 md:h-64 bg-gradient-to-r from-transparent to-[#6366F1]/10 rounded-2xl mb-6 overflow-hidden flex items-center p-8 border border-gray-200 dark:border-white/5 shadow-sm">
         <div className="relative z-10 flex flex-col max-w-lg">
-          <h1 className="text-4xl md:text-5xl font-extrabold font-outfit text-gray-900 dark:text-white mb-2 flex items-center gap-3">
+          <h1 className="text-4xl md:text-5xl font-extrabold font-outfit text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 mb-2 flex items-center gap-3">
             Leaderboard 🏆
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">
@@ -53,7 +68,7 @@ export default function LeaderboardHero() {
         {filters.map((filter) => (
           <button
             key={filter.name}
-            onClick={() => setActiveFilter(filter.name)}
+            onClick={() => handleFilterClick(filter.name)}
             className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all border ${
               activeFilter === filter.name
                 ? 'bg-white dark:bg-[#1A1B3B] border-gray-200 dark:border-[#6366F1]/50 text-[#6366F1] dark:text-white shadow-[0_0_15px_rgba(99,102,241,0.1)] dark:shadow-[0_0_15px_rgba(99,102,241,0.2)]'
