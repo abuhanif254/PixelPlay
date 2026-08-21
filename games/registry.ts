@@ -68,6 +68,30 @@ export const gamesRegistry: Record<string, { config: GameConfig, component: any 
     // Note: We use ssr: false because game engines rely on the browser's window and canvas
     component: dynamic(() => import('./2048/Game'), { ssr: false })
   },
+  "flappy-bird": {
+    config: {
+      "title": "Neon Flyer",
+      "category": "Arcade",
+      "rating": 4.9,
+      "description": "A high-speed, neon-drenched endless runner. Master the gravity, thread the needle through closing gaps, and chase the global high score!",
+      "strategy": "Focus on the rhythm. The game speeds up as your score increases, so keep your eyes focused on the center of the upcoming gaps.",
+      "keyboardControls": {
+            "Space / Up Arrow": "Engage Thrusters"
+      },
+      "touchControls": {
+            "Tap Screen": "Engage Thrusters"
+      },
+      "tags": [
+            "Arcade",
+            "Endless",
+            "Cyberpunk",
+            "Action",
+            "Physics"
+      ]
+},
+    // Note: We use ssr: false because game engines rely on the browser's window and canvas
+    component: dynamic(() => import('./flappy-bird/Game'), { ssr: false })
+  },
   "snake": {
     config: {
       "title": "Neon Snake",
