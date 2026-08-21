@@ -268,21 +268,16 @@ export default function GamePlayer({ children, title, slug, image, sourceUrl, on
             key="playing"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="w-full h-full flex flex-col relative z-10 bg-black"
+            className="w-full h-full flex flex-row relative z-10 bg-black rounded-2xl overflow-hidden"
           >
             
             {/* Left Skyscraper Ad (Visible on wide screens & theater mode) */}
-            <div className="absolute left-2 lg:left-8 top-1/2 -translate-y-1/2 hidden xl:flex z-0">
-                <AdBanner id="f782d4b90dcb09f70975f654ba40ab19" width={160} height={600} />
-            </div>
-
-            {/* Right Skyscraper Ad (Visible on wide screens & theater mode) */}
-            <div className="absolute right-2 lg:right-8 top-1/2 -translate-y-1/2 hidden xl:flex z-0">
+            <div className={`hidden ${isTheater ? 'xl:flex' : '2xl:flex'} flex-col justify-center items-center px-4 bg-gray-900 border-r border-white/5 z-20`}>
                 <AdBanner id="f782d4b90dcb09f70975f654ba40ab19" width={160} height={600} />
             </div>
 
             {/* Game Canvas */}
-            <div className="flex-1 w-full h-full relative flex justify-center items-center pointer-events-auto z-10">
+            <div className="flex-1 h-full relative flex justify-center items-center pointer-events-auto z-10 min-w-0">
               {sourceUrl ? (
                 <iframe 
                   src={sourceUrl}
@@ -293,6 +288,11 @@ export default function GamePlayer({ children, title, slug, image, sourceUrl, on
               ) : (
                 children
               )}
+            </div>
+
+            {/* Right Skyscraper Ad (Visible on wide screens & theater mode) */}
+            <div className={`hidden ${isTheater ? 'xl:flex' : '2xl:flex'} flex-col justify-center items-center px-4 bg-gray-900 border-l border-white/5 z-20`}>
+                <AdBanner id="f782d4b90dcb09f70975f654ba40ab19" width={160} height={600} />
             </div>
             
             {/* Universal Floating Action Bar */}
