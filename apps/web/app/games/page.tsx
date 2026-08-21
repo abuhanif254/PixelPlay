@@ -7,6 +7,7 @@ import { Metadata } from 'next';
 import DynamicSEOBlock from '@/components/DynamicSEOBlock';
 
 export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
 
 type Props = {
   searchParams: { [key: string]: string | string[] | undefined }
