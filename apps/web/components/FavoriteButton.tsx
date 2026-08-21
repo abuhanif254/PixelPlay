@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { Heart } from 'lucide-react'
-import { toggleFavorite } from '@/app/profile/actions'
+import { toggleFavoriteGame } from '@/app/profile/actions'
 
 interface FavoriteButtonProps {
   gameId: string
@@ -18,11 +18,11 @@ export default function FavoriteButton({ gameId, initialFavorited }: FavoriteBut
     setIsFavorited(!isFavorited)
     
     startTransition(async () => {
-      const res = await toggleFavorite(gameId)
+      const res = await toggleFavoriteGame(gameId)
       if (!res.success) {
         // Revert on error
         setIsFavorited(initialFavorited)
-        if (res.error === 'Not logged in') {
+        if (res.error === 'Unauthorized') {
           alert('You must be logged in to favorite games!')
         }
       }
