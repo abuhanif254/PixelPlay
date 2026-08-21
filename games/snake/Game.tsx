@@ -60,11 +60,10 @@ export default function SnakeGame({ onGameOver }: GameProps = {}) {
         <span className="text-xl font-mono text-accent">Score: {score}</span>
       </div>
       
-      <div className="relative">
+      <div className="relative w-full aspect-video max-w-4xl mx-auto">
         <div 
           id="phaser-snake-container" 
-          className="rounded-xl shadow-2xl shadow-accent/20 border border-gray-700 bg-black overflow-hidden" 
-          style={{ width: 400, height: 400 }} 
+          className="rounded-xl shadow-2xl shadow-accent/20 border border-gray-700 bg-black overflow-hidden w-full h-full" 
         />
         
         {gameOver && (
