@@ -120,7 +120,8 @@ export default async function GamePage({ params }: GamePageProps) {
     rating: (dbGame?.metadata as any)?.rating || localGame?.config?.rating,
   };
 
-  const sourceUrl = config.sourceUrl || (config.type === 'html5' ? `/games/${slug}/index.html` : null);
+  const sourceUrl = (config as any).sourceUrl || ((config as any).type === 'html5' ? `/games/${slug}/index.html` : null);
+  const GameComponent = localGame?.component || (() => null);
 
   // Check if current user favorited this game
   let isFavorited = false;

@@ -132,5 +132,3 @@ export default async function AllGamesPage({ searchParams }: Props) {
     );
   }
 }
-
-  return (
