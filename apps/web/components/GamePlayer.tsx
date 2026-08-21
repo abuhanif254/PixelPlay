@@ -273,12 +273,12 @@ export default function GamePlayer({ children, title, slug, image, sourceUrl, on
             
             {/* Left Skyscraper Ad (Visible on wide screens & theater mode) */}
             <div className="absolute left-2 lg:left-8 top-1/2 -translate-y-1/2 hidden xl:flex z-0">
-                <AdBanner id="mock-skyscraper-left" width={160} height={600} />
+                <AdBanner id="f782d4b90dcb09f70975f654ba40ab19" width={160} height={600} />
             </div>
 
             {/* Right Skyscraper Ad (Visible on wide screens & theater mode) */}
             <div className="absolute right-2 lg:right-8 top-1/2 -translate-y-1/2 hidden xl:flex z-0">
-                <AdBanner id="mock-skyscraper-right" width={160} height={600} />
+                <AdBanner id="f782d4b90dcb09f70975f654ba40ab19" width={160} height={600} />
             </div>
 
             {/* Game Canvas */}
