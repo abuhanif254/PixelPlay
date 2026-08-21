@@ -11,7 +11,6 @@ export default function NeonFlyerGame({ onGameOver }: GameProps = {}) {
   const [gameState, setGameState] = useState<'START' | 'PLAYING' | 'GAMEOVER'>('START');
   const [score, setScore] = useState(0);
 
-  // Audio System
   const audioCtxRef = useRef<AudioContext | null>(null);
 
   const initAudio = () => {
@@ -29,7 +28,6 @@ export default function NeonFlyerGame({ onGameOver }: GameProps = {}) {
     const gain = ctx.createGain();
     osc.connect(gain);
     gain.connect(ctx.destination);
-
     const now = ctx.currentTime;
     
     if (type === 'jump') {
@@ -59,73 +57,75 @@ export default function NeonFlyerGame({ onGameOver }: GameProps = {}) {
     }
   };
 
-  // Main Engine
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Fixed Dimensions for consistent gameplay
     const width = 400;
     const height = 600;
     canvas.width = width;
     canvas.height = height;
 
-    // Game Variables
     let animationFrameId: number;
     let lastTime = performance.now();
     
-    const gravity = 1400; // pixels per second squared
-    const jumpVelocity = -450; // pixels per second
-    let baseSpeed = 220; // scroll speed
-    let gridOffset = 0; // for the synthwave floor
+    // Smooth Speed Tracking
+    let timeAlive = 0;
+    const baseSpeed = 160; // Slower start
     
-    // Screen Shake
+    const gravity = 1200;
+    const jumpVelocity = -400;
+    let gridOffset = 0;
+    
     let shakeDuration = 0;
     let shakeMagnitude = 0;
     
-    // Entities
-    let player = {
-      x: 100,
-      y: height / 2,
-      width: 30,
-      height: 20,
-      velocity: 0,
-      rotation: 0
-    };
-
+    let player = { x: 100, y: height / 2, width: 34, height: 20, velocity: 0, rotation: 0 };
     let pipes: {x: number, topHeight: number, passed: boolean}[] = [];
+    let particles: {x: number, y: number, vx: number, vy: number, life: number, maxLife: number, color: string}[] = [];
+    let trail: {x: number, y: number, alpha: number, size: number}[] = [];
+    let floatTexts: {x: number, y: number, text: string, life: number}[] = [];
+
     const pipeWidth = 60;
-    let pipeGap = 160;
+    let pipeGap = 170;
     let spawnTimer = 0;
 
-    let particles: {x: number, y: number, vx: number, vy: number, life: number, maxLife: number, color: string}[] = [];
-    let trail: {x: number, y: number, alpha: number}[] = [];
+    // Parallax Cityscapes
+    const generateCityscape = (count: number, widthScale: number, heightMin: number, heightMax: number) => {
+      let buildings = [];
+      let currentX = 0;
+      for(let i=0; i<count; i++) {
+        let bWidth = Math.random() * 40 + widthScale;
+        let bHeight = Math.random() * (heightMax - heightMin) + heightMin;
+        buildings.push({ x: currentX, width: bWidth, height: bHeight });
+        currentX += bWidth;
+      }
+      return { buildings, totalWidth: currentX };
+    };
 
-    // Background stars (parallax)
-    const stars = Array.from({length: 60}).map(() => ({
-      x: Math.random() * width,
-      y: Math.random() * (height - 100), // Keep stars above the grid floor
-      size: Math.random() * 2 + 1,
-      speed: Math.random() * 0.5 + 0.1
-    }));
+    let bgLayer1 = generateCityscape(30, 20, 50, 150); // Distant (slow)
+    let bgLayer2 = generateCityscape(30, 30, 100, 250); // Mid (faster)
+    let cityOffset1 = 0;
+    let cityOffset2 = 0;
 
     const resetGame = () => {
-      player = { x: 100, y: height / 2, width: 30, height: 20, velocity: 0, rotation: 0 };
+      player = { x: 100, y: height / 2, width: 34, height: 20, velocity: 0, rotation: 0 };
       pipes = [];
       particles = [];
       trail = [];
+      floatTexts = [];
       spawnTimer = 0;
-      baseSpeed = 220;
-      pipeGap = 160;
+      timeAlive = 0;
+      pipeGap = 170;
       shakeDuration = 0;
       setScore(0);
     };
 
     const spawnPipe = () => {
       const minHeight = 60;
-      const maxHeight = height - 100 - pipeGap - minHeight; // Leave room for 100px floor
+      const maxHeight = height - 100 - pipeGap - minHeight;
       const topHeight = Math.floor(Math.random() * (maxHeight - minHeight + 1) + minHeight);
       pipes.push({ x: width, topHeight, passed: false });
     };
@@ -136,14 +136,14 @@ export default function NeonFlyerGame({ onGameOver }: GameProps = {}) {
     };
 
     const explode = (x: number, y: number) => {
-      const colors = ['#22D3EE', '#F43F5E', '#FBBF24', '#ffffff'];
-      for (let i = 0; i < 40; i++) {
+      const colors = ['#22D3EE', '#F43F5E', '#FBBF24', '#FFFFFF', '#A855F7'];
+      for (let i = 0; i < 60; i++) {
         particles.push({
           x, y,
-          vx: (Math.random() - 0.5) * 600,
-          vy: (Math.random() - 0.5) * 600 - 100, // Slight upward burst
+          vx: (Math.random() - 0.5) * 800,
+          vy: (Math.random() - 0.5) * 800 - 150,
           life: 1.0,
-          maxLife: Math.random() * 0.8 + 0.4,
+          maxLife: Math.random() * 1.0 + 0.5,
           color: colors[Math.floor(Math.random() * colors.length)]
         });
       }
@@ -159,6 +159,11 @@ export default function NeonFlyerGame({ onGameOver }: GameProps = {}) {
       } else if (gameState === 'PLAYING') {
         playSound('jump');
         player.velocity = jumpVelocity;
+        
+        // Spawn ring burst on jump
+        particles.push({
+          x: player.x, y: player.y, vx: -200, vy: 0, life: 1, maxLife: 0.3, color: '#F43F5E'
+        });
       } else if (gameState === 'GAMEOVER') {
         if (particles.length === 0 || particles[0].life < 0.2) {
           setGameState('START');
@@ -182,21 +187,17 @@ export default function NeonFlyerGame({ onGameOver }: GameProps = {}) {
     canvas.addEventListener('touchstart', onMouseDown, { passive: false });
 
     const update = (dt: number) => {
-      if (shakeDuration > 0) {
-        shakeDuration -= dt;
-      }
+      if (shakeDuration > 0) shakeDuration -= dt;
 
       if (gameState !== 'PLAYING') {
-        // Update particles falling during game over
         if (gameState === 'GAMEOVER') {
           particles.forEach(p => {
             p.x += p.vx * dt;
             p.y += p.vy * dt;
-            p.vy += gravity * 1.5 * dt; // Gravity
-            // Bounce off the grid floor
+            p.vy += gravity * 1.5 * dt;
             if (p.y > height - 100) {
               p.y = height - 100;
-              p.vy *= -0.5; // Bounce friction
+              p.vy *= -0.5;
               p.vx *= 0.8;
             }
             p.life -= dt;
@@ -206,48 +207,56 @@ export default function NeonFlyerGame({ onGameOver }: GameProps = {}) {
         return;
       }
 
-      // Progressive difficulty
-      const currentSpeed = baseSpeed + (score * 6); 
-      // Shrink pipe gap slightly over time, down to a minimum of 110
-      pipeGap = Math.max(110, 160 - (score * 1.5));
+      timeAlive += dt;
+      
+      // Smooth Speed Curve
+      // Starts at 160. After 30 seconds, it's 250 (160 + 90). After 60 seconds, 340.
+      const currentSpeed = baseSpeed + (timeAlive * 3); 
+      pipeGap = Math.max(105, 170 - (timeAlive * 1.2)); // Shrinks slowly over time
 
-      // Synthwave floor scrolling
       gridOffset = (gridOffset + currentSpeed * dt) % 40;
+      
+      // Parallax City Updates
+      cityOffset1 = (cityOffset1 + (currentSpeed * 0.1) * dt) % bgLayer1.totalWidth;
+      cityOffset2 = (cityOffset2 + (currentSpeed * 0.3) * dt) % bgLayer2.totalWidth;
 
-      // Update Player
       player.velocity += gravity * dt;
       player.y += player.velocity * dt;
       
-      // Dynamic rotation based on velocity (nose up when jumping, nose down when falling)
       const targetRotation = Math.min(Math.PI / 3, Math.max(-Math.PI / 4, (player.velocity * 0.12) * (Math.PI / 180)));
-      // Smooth out the rotation
       player.rotation += (targetRotation - player.rotation) * 15 * dt;
 
-      // Add to trail (exhaust)
-      if (Math.random() > 0.3) {
-        trail.push({ 
-          x: player.x - player.width/2 * Math.cos(player.rotation), 
-          y: player.y - player.width/2 * Math.sin(player.rotation), 
-          alpha: 1 
-        });
-      }
-      trail.forEach(t => t.alpha -= dt * 3);
+      // Exhaust Trail
+      trail.push({ 
+        x: player.x - player.width/2 * Math.cos(player.rotation) - 10, 
+        y: player.y - player.width/2 * Math.sin(player.rotation), 
+        alpha: 1.0,
+        size: Math.random() * 4 + 4
+      });
+      trail.forEach(t => {
+        t.alpha -= dt * 4;
+        t.size -= dt * 10;
+      });
       trail = trail.filter(t => t.alpha > 0);
+      
+      // Floating Texts
+      floatTexts.forEach(ft => {
+        ft.y -= 50 * dt;
+        ft.life -= dt;
+      });
+      floatTexts = floatTexts.filter(ft => ft.life > 0);
 
-      // Spawn Pipes
       spawnTimer -= dt;
       if (spawnTimer <= 0) {
         spawnPipe();
-        spawnTimer = 1.6 * (220 / currentSpeed);
+        spawnTimer = 1.8 * (160 / currentSpeed);
       }
 
-      // Update Pipes & Collisions
       for (let i = pipes.length - 1; i >= 0; i--) {
         const p = pipes[i];
         p.x -= currentSpeed * dt;
 
-        // Collision Check (AABB with slightly forgiving hitbox)
-        const hitMarginX = 6;
+        const hitMarginX = 8;
         const hitMarginY = 6;
         const playerBox = { 
           left: player.x - player.width/2 + hitMarginX, 
@@ -256,13 +265,13 @@ export default function NeonFlyerGame({ onGameOver }: GameProps = {}) {
           bottom: player.y + player.height/2 - hitMarginY 
         };
         const topPipeBox = { left: p.x, right: p.x + pipeWidth, top: 0, bottom: p.topHeight };
-        const botPipeBox = { left: p.x, right: p.x + pipeWidth, top: p.topHeight + pipeGap, bottom: height - 100 }; // Floor at bottom
+        const botPipeBox = { left: p.x, right: p.x + pipeWidth, top: p.topHeight + pipeGap, bottom: height - 100 };
 
         const hitTop = playerBox.right > topPipeBox.left && playerBox.left < topPipeBox.right && playerBox.bottom > topPipeBox.top && playerBox.top < topPipeBox.bottom;
         const hitBot = playerBox.right > botPipeBox.left && playerBox.left < botPipeBox.right && playerBox.bottom > botPipeBox.top && playerBox.top < botPipeBox.bottom;
 
         if (hitTop || hitBot) {
-          triggerShake(0.4, 15);
+          triggerShake(0.6, 25);
           playSound('crash');
           explode(player.x, player.y);
           setGameState('GAMEOVER');
@@ -270,24 +279,18 @@ export default function NeonFlyerGame({ onGameOver }: GameProps = {}) {
           return;
         }
 
-        // Scoring
         if (!p.passed && p.x + pipeWidth < player.x) {
           p.passed = true;
-          setScore(s => {
-            playSound('score');
-            return s + 1;
-          });
+          setScore(s => s + 1);
+          playSound('score');
+          floatTexts.push({ x: player.x + 20, y: player.y - 30, text: "+1", life: 1.0 });
         }
 
-        // Remove off-screen pipes
-        if (p.x + pipeWidth < 0) {
-          pipes.splice(i, 1);
-        }
+        if (p.x + pipeWidth < 0) pipes.splice(i, 1);
       }
 
-      // Floor / Ceiling Collision
       if (player.y + player.height/2 > height - 100 || player.y - player.height/2 < 0) {
-        triggerShake(0.5, 20);
+        triggerShake(0.6, 25);
         playSound('crash');
         explode(player.x, player.y);
         setGameState('GAMEOVER');
@@ -297,145 +300,159 @@ export default function NeonFlyerGame({ onGameOver }: GameProps = {}) {
 
     const draw = () => {
       ctx.save();
-
-      // Apply screen shake
       if (shakeDuration > 0) {
-        const dx = (Math.random() - 0.5) * shakeMagnitude;
-        const dy = (Math.random() - 0.5) * shakeMagnitude;
-        ctx.translate(dx, dy);
+        ctx.translate((Math.random() - 0.5) * shakeMagnitude, (Math.random() - 0.5) * shakeMagnitude);
       }
 
-      // Deep synthwave background
+      // Deep Synthwave Sky
       const gradient = ctx.createLinearGradient(0, 0, 0, height - 100);
-      gradient.addColorStop(0, '#020024');
-      gradient.addColorStop(0.5, '#090979');
-      gradient.addColorStop(1, '#ff007f');
+      gradient.addColorStop(0, '#0F0C29');
+      gradient.addColorStop(0.5, '#302B63');
+      gradient.addColorStop(1, '#240B36');
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, width, height);
 
-      // Draw Parallax Stars
-      ctx.fillStyle = '#FFFFFF';
-      stars.forEach(star => {
-        const speed = gameState === 'PLAYING' ? (baseSpeed + score * 6) * star.speed : 20 * star.speed;
-        star.x -= speed * 0.016;
-        if (star.x < 0) star.x = width;
-        
-        ctx.globalAlpha = star.size / 3;
-        ctx.shadowBlur = 5;
-        ctx.shadowColor = '#fff';
-        ctx.beginPath();
-        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-        ctx.fill();
-      });
-      ctx.globalAlpha = 1.0;
-      ctx.shadowBlur = 0;
-
-      // Draw Sun (Synthwave aesthetic)
-      ctx.fillStyle = '#ffb703';
-      ctx.shadowBlur = 30;
-      ctx.shadowColor = '#fb8500';
+      // Draw Sun
+      ctx.fillStyle = '#FF416C';
+      ctx.shadowBlur = 40;
+      ctx.shadowColor = '#FF4B2B';
       ctx.beginPath();
-      ctx.arc(width / 2, height - 100, 80, Math.PI, 0); // Semicircle on the horizon
-      ctx.fill();
+      ctx.arc(width / 2, height - 100, 100, Math.PI, 0);
+      
+      // Sun cutouts
+      for(let i = 0; i < 5; i++) {
+        ctx.rect(width/2 - 110, height - 100 - (i * 15) - 5, 220, 5);
+      }
+      ctx.fill('evenodd');
       ctx.shadowBlur = 0;
 
-      // Draw Pipes
-      pipes.forEach(p => {
-        ctx.shadowBlur = 20;
-        ctx.shadowColor = '#06b6d4'; // Cyan glow
-        ctx.fillStyle = '#083344'; // Dark interior
-        ctx.strokeStyle = '#22d3ee'; // Bright border
-        ctx.lineWidth = 3;
+      // Parallax Cityscapes
+      const drawCity = (layer: any, offset: number, color: string) => {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        let drawX = -offset;
+        
+        while (drawX < width) {
+          layer.buildings.forEach((b: any) => {
+            if (drawX + b.width > 0 && drawX < width) {
+              ctx.rect(drawX, height - 100 - b.height, b.width, b.height);
+            }
+            drawX += b.width;
+          });
+        }
+        ctx.fill();
+      };
+      drawCity(bgLayer1, cityOffset1, '#1A1025'); // Distant dark buildings
+      drawCity(bgLayer2, cityOffset2, '#2D1B4E'); // Closer mid-tone buildings
 
-        // Top Pipe
+      // Draw Pipes (High-tech metallic with neon core)
+      pipes.forEach(p => {
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#06b6d4';
+        
+        // Pipe Body
+        ctx.fillStyle = '#0F172A';
+        ctx.strokeStyle = '#22d3ee';
+        ctx.lineWidth = 2;
+
         ctx.fillRect(p.x, 0, pipeWidth, p.topHeight);
         ctx.strokeRect(p.x, 0, pipeWidth, p.topHeight);
-        // Top Cap
-        ctx.fillRect(p.x - 6, p.topHeight - 20, pipeWidth + 12, 20);
-        ctx.strokeRect(p.x - 6, p.topHeight - 20, pipeWidth + 12, 20);
-
-        // Bottom Pipe
+        
         ctx.fillRect(p.x, p.topHeight + pipeGap, pipeWidth, height - 100 - (p.topHeight + pipeGap));
         ctx.strokeRect(p.x, p.topHeight + pipeGap, pipeWidth, height - 100 - (p.topHeight + pipeGap));
-        // Bottom Cap
-        ctx.fillRect(p.x - 6, p.topHeight + pipeGap, pipeWidth + 12, 20);
-        ctx.strokeRect(p.x - 6, p.topHeight + pipeGap, pipeWidth + 12, 20);
+        
+        // Glowing Core Line
+        ctx.fillStyle = '#67E8F9';
+        ctx.fillRect(p.x + pipeWidth/2 - 2, 0, 4, p.topHeight);
+        ctx.fillRect(p.x + pipeWidth/2 - 2, p.topHeight + pipeGap, 4, height);
+
+        // Pipe Caps (Thicker)
+        ctx.fillStyle = '#1E293B';
+        ctx.fillRect(p.x - 4, p.topHeight - 20, pipeWidth + 8, 20);
+        ctx.strokeRect(p.x - 4, p.topHeight - 20, pipeWidth + 8, 20);
+        
+        ctx.fillRect(p.x - 4, p.topHeight + pipeGap, pipeWidth + 8, 20);
+        ctx.strokeRect(p.x - 4, p.topHeight + pipeGap, pipeWidth + 8, 20);
       });
       ctx.shadowBlur = 0;
 
       // Draw 3D Grid Floor
-      ctx.fillStyle = '#000000';
+      ctx.fillStyle = '#050510';
       ctx.fillRect(0, height - 100, width, 100);
       
-      ctx.strokeStyle = '#f43f5e'; // Magenta grid
+      ctx.strokeStyle = '#D946EF'; 
       ctx.lineWidth = 2;
       ctx.shadowBlur = 10;
-      ctx.shadowColor = '#f43f5e';
+      ctx.shadowColor = '#D946EF';
       
-      // Horizontal scrolling lines
       for (let y = gridOffset; y < 100; y += 20) {
-        // Pseudo 3D perspective effect
-        const perspectiveY = (y * y) / 100; // Exponential curve for distance
+        const perspectiveY = (y * y) / 100; 
         ctx.beginPath();
         ctx.moveTo(0, height - 100 + perspectiveY);
         ctx.lineTo(width, height - 100 + perspectiveY);
         ctx.stroke();
       }
       
-      // Vertical receding lines
       const vanishingPointX = width / 2;
-      const vanishingPointY = height - 120; // Above the floor line
       for (let x = -width; x <= width * 2; x += 40) {
         ctx.beginPath();
-        // Start line from bottom of screen, draw towards vanishing point
         ctx.moveTo(x, height);
-        ctx.lineTo(vanishingPointX + (x - vanishingPointX) * 0.2, height - 100);
+        ctx.lineTo(vanishingPointX + (x - vanishingPointX) * 0.1, height - 100);
         ctx.stroke();
       }
       
-      // Floor Horizon Line
-      ctx.strokeStyle = '#22d3ee'; // Cyan horizon
+      ctx.strokeStyle = '#22d3ee'; // Cyan horizon line
       ctx.lineWidth = 4;
+      ctx.shadowColor = '#22d3ee';
       ctx.beginPath();
       ctx.moveTo(0, height - 100);
       ctx.lineTo(width, height - 100);
       ctx.stroke();
       ctx.shadowBlur = 0;
 
-      // Draw Trail
-      trail.forEach((t, i) => {
-        ctx.globalAlpha = t.alpha * 0.8;
-        ctx.fillStyle = '#f43f5e'; // Pink thruster trail
-        const size = (trail.length - i) * 0.5 + 4; // Taper off
+      // Draw Trail (Engine Exhaust)
+      trail.forEach(t => {
+        ctx.globalAlpha = t.alpha;
+        ctx.fillStyle = '#F43F5E';
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#F43F5E';
         ctx.beginPath();
-        ctx.arc(t.x, t.y, size/2, 0, Math.PI * 2);
+        ctx.arc(t.x, t.y, Math.max(0, t.size), 0, Math.PI * 2);
         ctx.fill();
       });
       ctx.globalAlpha = 1.0;
+      ctx.shadowBlur = 0;
 
       if (gameState === 'PLAYING' || gameState === 'START') {
-        // Draw Player Ship (Stylized Triangle/Jet)
         ctx.save();
         ctx.translate(player.x, player.y);
         ctx.rotate(player.rotation);
         
         ctx.shadowBlur = 20;
-        ctx.shadowColor = '#fbbf24'; // Yellow glow
+        ctx.shadowColor = '#38BDF8';
         
-        // Ship Body
-        ctx.fillStyle = '#fffbeb';
+        // Ship Hull (Sleek Fighter)
+        ctx.fillStyle = '#E0F2FE';
         ctx.beginPath();
-        ctx.moveTo(player.width/2, 0); // Nose
-        ctx.lineTo(-player.width/2, -player.height/2); // Top wing
-        ctx.lineTo(-player.width/4, 0); // Back indent
-        ctx.lineTo(-player.width/2, player.height/2); // Bottom wing
+        ctx.moveTo(player.width/2 + 5, 0); // Pointy Nose
+        ctx.lineTo(-player.width/2, -player.height/2 - 5); // Top Fin
+        ctx.lineTo(-player.width/4, 0); // Engine well
+        ctx.lineTo(-player.width/2, player.height/2 + 5); // Bottom Fin
         ctx.closePath();
         ctx.fill();
         
-        // Neon trim
-        ctx.strokeStyle = '#f59e0b';
-        ctx.lineWidth = 2;
+        // Ship Trim / Wings
+        ctx.strokeStyle = '#0284C7';
+        ctx.lineWidth = 3;
         ctx.stroke();
+        
+        // Cockpit window
+        ctx.fillStyle = '#0EA5E9';
+        ctx.beginPath();
+        ctx.moveTo(player.width/4, -3);
+        ctx.lineTo(-player.width/8, -player.height/3);
+        ctx.lineTo(-player.width/8, 0);
+        ctx.fill();
 
         ctx.restore();
       }
@@ -446,14 +463,41 @@ export default function NeonFlyerGame({ onGameOver }: GameProps = {}) {
         ctx.fillStyle = p.color;
         ctx.shadowBlur = 15;
         ctx.shadowColor = p.color;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, Math.random() * 3 + 2, 0, Math.PI * 2);
-        ctx.fill();
+        
+        // Draw little shards instead of circles for explosions
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.life * 10);
+        ctx.fillRect(-3, -3, 6, 6);
+        ctx.restore();
       });
       ctx.globalAlpha = 1.0;
       ctx.shadowBlur = 0;
 
-      ctx.restore(); // Restore shake translation
+      // Draw Floating Texts
+      floatTexts.forEach(ft => {
+        ctx.globalAlpha = ft.life;
+        ctx.fillStyle = '#34D399';
+        ctx.font = 'bold 24px system-ui';
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#34D399';
+        ctx.fillText(ft.text, ft.x, ft.y);
+      });
+      ctx.globalAlpha = 1.0;
+      ctx.shadowBlur = 0;
+
+      // Post-Processing Vignette / CRT overlay
+      ctx.fillStyle = 'rgba(0,0,0,0.1)';
+      for(let i=0; i<height; i+=4) {
+        ctx.fillRect(0, i, width, 1);
+      }
+      const grad = ctx.createRadialGradient(width/2, height/2, height/3, width/2, height/2, height);
+      grad.addColorStop(0, 'transparent');
+      grad.addColorStop(1, 'rgba(0,0,0,0.6)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.restore(); 
     };
 
     const loop = (time: number) => {
