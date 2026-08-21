@@ -3,7 +3,7 @@ export const runtime = 'edge';
 import { MetadataRoute } from 'next';
 import { createClient } from '@/lib/supabase/server';
 
-const baseUrl = 'https://spielcade.com';
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://spielcade.com';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createClient();
@@ -12,7 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const { data: games } = await supabase
     .from('games')
     .select('slug, updated_at')
-    .eq('is_published', true);
+    .eq('status', 'active');
 
   // 2. Fetch all published blog posts
   const { data: posts } = await supabase

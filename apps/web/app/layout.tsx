@@ -7,7 +7,7 @@ import ThreeGlobalCanvas from '@/components/3d/ThreeGlobalCanvas';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://spielcade.com'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://spielcade.com'),
   manifest: "/manifest.json",
   title: {
     default: 'Spielcade | Best Free Online Browser Games',
