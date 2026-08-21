@@ -293,10 +293,10 @@ export default async function GamePage({ params }: GamePageProps) {
             <div className="lg:col-span-8 flex flex-col gap-6">
               {/* Leaderboard Ad Above Game */}
               <div className="hidden md:flex justify-center w-full">
-                <AdBanner id="mock-leaderboard-id" width={728} height={90} className="w-full max-w-[728px]" />
+                <AdBanner id="2bd411e3e6c5caac36fa619ee3376222" width={728} height={90} className="w-full max-w-[728px]" />
               </div>
               <div className="flex md:hidden justify-center w-full">
-                <AdBanner id="mock-mobile-banner-id" width={320} height={50} />
+                <AdBanner id="5a3fd317f38a51c8553f75f8c2a547ef" width={320} height={50} />
               </div>
 
               <GamePlayer title={config.title} slug={slug} image={config.image} sourceUrl={sourceUrl} onGameOver={handleGameOver}>
@@ -309,7 +309,7 @@ export default async function GamePage({ params }: GamePageProps) {
               
               {/* Sidebar Ad */}
               <div className="hidden lg:flex justify-center w-full">
-                <AdBanner id="mock-sidebar-id" width={300} height={250} />
+                <AdBanner id="2728a9e3df26c1ad90aeab8d28474a82" width={300} height={250} />
               </div>
 
               {/* How to Play Box */}
@@ -419,8 +419,8 @@ export default async function GamePage({ params }: GamePageProps) {
 
           {/* Bottom Ad Banner */}
           <div className="flex justify-center w-full mt-12">
-            <AdBanner id="mock-bottom-banner-id" width={728} height={90} className="hidden md:flex" />
-            <AdBanner id="mock-bottom-mobile-id" width={320} height={50} className="flex md:hidden" />
+            <AdBanner id="2bd411e3e6c5caac36fa619ee3376222" width={728} height={90} className="hidden md:flex" />
+            <AdBanner id="5a3fd317f38a51c8553f75f8c2a547ef" width={320} height={50} className="flex md:hidden" />
           </div>
 
         </div>
