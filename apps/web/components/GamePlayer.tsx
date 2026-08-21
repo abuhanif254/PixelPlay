@@ -5,6 +5,7 @@ import { Play, Maximize2, Monitor, Sun, Volume2, VolumeX, RotateCcw, Share2, Hea
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRecentGames } from '@/hooks/useRecentGames';
 import { saveGameState, loadGameState } from '@/app/games/actions';
+import AdBanner from '@/components/AdBanner';
 
 type PlayerState = 'idle' | 'ad' | 'rewarded_ad' | 'playing' | 'game_over';
 
@@ -267,10 +268,21 @@ export default function GamePlayer({ children, title, slug, image, sourceUrl, on
             key="playing"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="w-full h-full flex flex-col relative z-10"
+            className="w-full h-full flex flex-col relative z-10 bg-black"
           >
+            
+            {/* Left Skyscraper Ad (Visible on wide screens & theater mode) */}
+            <div className="absolute left-2 lg:left-8 top-1/2 -translate-y-1/2 hidden xl:flex z-0">
+                <AdBanner id="mock-skyscraper-left" width={160} height={600} />
+            </div>
+
+            {/* Right Skyscraper Ad (Visible on wide screens & theater mode) */}
+            <div className="absolute right-2 lg:right-8 top-1/2 -translate-y-1/2 hidden xl:flex z-0">
+                <AdBanner id="mock-skyscraper-right" width={160} height={600} />
+            </div>
+
             {/* Game Canvas */}
-            <div className="flex-1 w-full h-full bg-black relative">
+            <div className="flex-1 w-full h-full relative flex justify-center items-center pointer-events-auto z-10">
               {sourceUrl ? (
                 <iframe 
                   src={sourceUrl}
