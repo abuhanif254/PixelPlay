@@ -124,15 +124,17 @@ export default async function GamePage({ params }: GamePageProps) {
 
   // Check if current user favorited this game
   let isFavorited = false;
-  const { data: authData } = await supabase.auth.getUser();
-  if (authData?.user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('favorite_game_ids')
-      .eq('id', authData.user.id)
-      .single();
-    if (profile?.favorite_game_ids) {
-      isFavorited = profile.favorite_game_ids.includes(dbGame.id);
+  if (dbGame) {
+    const { data: authData } = await supabase.auth.getUser();
+    if (authData?.user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('favorite_game_ids')
+        .eq('id', authData.user.id)
+        .single();
+      if (profile?.favorite_game_ids) {
+        isFavorited = profile.favorite_game_ids.includes(dbGame.id);
+      }
     }
   }
 
@@ -294,7 +296,9 @@ export default async function GamePage({ params }: GamePageProps) {
               </div>
             </div>
 
-            <FavoriteButton gameId={dbGame.id} initialFavorited={isFavorited} />
+            {dbGame && (
+              <FavoriteButton gameId={dbGame.id} initialFavorited={isFavorited} />
+            )}
           </div>
 
           {/* Main Grid: Game Player & Info Sidebar */}
