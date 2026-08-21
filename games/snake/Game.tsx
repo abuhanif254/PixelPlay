@@ -82,8 +82,12 @@ export default function SnakeGame({ onGameOver }: GameProps = {}) {
       
       <div className="mt-8 text-gray-400 text-sm flex gap-6">
         <div className="flex items-center gap-2">
-          <kbd className="px-2 py-1 bg-gray-800 rounded text-xs border border-gray-700 font-mono">+`+"+?+'</kbd>
-          <span>Move</span>
+          <kbd className="px-2 py-1 bg-gray-800 rounded text-xs border border-gray-700 font-mono">Mouse</kbd>
+          <span>Steer</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <kbd className="px-2 py-1 bg-gray-800 rounded text-xs border border-gray-700 font-mono">Left Click / Space</kbd>
+          <span>Boost (Uses Score)</span>
         </div>
       </div>
     </div>
