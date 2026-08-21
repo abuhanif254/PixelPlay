@@ -6,6 +6,7 @@ import Link from 'next/link';
 import GamePlayer from '@/components/GamePlayer';
 import GameDetailsTabs from '@/components/GameDetailsTabs';
 import AdBanner from '@/components/AdBanner';
+import FavoriteButton from '@/components/FavoriteButton';
 import { Metadata, ResolvingMetadata } from 'next';
 import { submitScore } from '../actions';
 import { createClient } from '@/lib/supabase/server';
@@ -119,10 +120,23 @@ export default async function GamePage({ params }: GamePageProps) {
     rating: (dbGame?.metadata as any)?.rating || localGame?.config?.rating,
   };
 
-  const sourceUrl = dbGame?.source_url || null;
-  const GameComponent = localGame?.component || (() => null);
+  const sourceUrl = config.sourceUrl || (config.type === 'html5' ? `/games/${slug}/index.html` : null);
 
-  // JSON-LD Structured Data
+  // Check if current user favorited this game
+  let isFavorited = false;
+  const { data: authData } = await supabase.auth.getUser();
+  if (authData?.user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('favorite_game_ids')
+      .eq('id', authData.user.id)
+      .single();
+    if (profile?.favorite_game_ids) {
+      isFavorited = profile.favorite_game_ids.includes(dbGame.id);
+    }
+  }
+
+  // Schema data for SEOuctured Data
   const videoGameSchema = {
     "@context": "https://schema.org",
     "@type": "VideoGame",
@@ -280,10 +294,7 @@ export default async function GamePage({ params }: GamePageProps) {
               </div>
             </div>
 
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-transparent border border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/20 hover:bg-gray-50 dark:hover:bg-white/5 rounded-xl transition-all text-sm font-bold text-gray-700 dark:text-gray-300 w-fit shrink-0">
-              <Heart size={16} className="text-red-500" />
-              Add to Favorites
-            </button>
+            <FavoriteButton gameId={dbGame.id} initialFavorited={isFavorited} />
           </div>
 
           {/* Main Grid: Game Player & Info Sidebar */}
