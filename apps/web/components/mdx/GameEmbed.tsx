@@ -1,20 +1,30 @@
-import React from 'react';
+"use client";
+
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Gamepad2, Star, Users } from 'lucide-react';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/client';
 
 interface GameEmbedProps {
   id: string; // The game slug
 }
 
-export default async function GameEmbed({ id }: GameEmbedProps) {
-  const supabase = createClient();
-  const { data: game } = await supabase
-    .from('games')
-    .select('*')
-    .eq('slug', id)
-    .single();
+export default function GameEmbed({ id }: GameEmbedProps) {
+  const [game, setGame] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchGame = async () => {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from('games')
+        .select('*')
+        .eq('slug', id)
+        .single();
+      if (data) setGame(data);
+    };
+    if (id) fetchGame();
+  }, [id]);
 
   if (!game) return null;
 
