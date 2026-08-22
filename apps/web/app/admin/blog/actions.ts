@@ -20,6 +20,15 @@ function makeSlug(title: string) {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') + '-' + Date.now()
 }
 
+function safeRevalidate() {
+  try {
+    revalidatePath('/admin/blog');
+    revalidatePath('/blog');
+  } catch (e) {
+    console.error('Revalidation error:', e);
+  }
+}
+
 // ─── Create Blog Post ──────────────────────────────────────────────────────────
 export async function createBlogPost(data: BlogPostData) {
   const auth = await verifyAdminAction()
@@ -40,8 +49,7 @@ export async function createBlogPost(data: BlogPostData) {
 
   if (error) return { success: false, error: error.message }
 
-  revalidatePath('/admin/blog')
-  revalidatePath('/blog')
+  safeRevalidate()
   return { success: true }
 }
 
@@ -59,8 +67,7 @@ export async function updateBlogPost(id: string, data: Partial<BlogPostData>) {
 
   if (error) return { success: false, error: error.message }
 
-  revalidatePath('/admin/blog')
-  revalidatePath('/blog')
+  safeRevalidate()
   return { success: true }
 }
 
@@ -80,8 +87,7 @@ export async function togglePublishStatus(id: string, currentStatus: string) {
 
   if (error) return { success: false, error: error.message }
 
-  revalidatePath('/admin/blog')
-  revalidatePath('/blog')
+  safeRevalidate()
   return { success: true, newStatus }
 }
 
@@ -95,8 +101,7 @@ export async function deleteBlogPost(id: string) {
   const { error } = await supabase.from('blog_posts').delete().eq('id', id)
   if (error) return { success: false, error: error.message }
 
-  revalidatePath('/admin/blog')
-  revalidatePath('/blog')
+  safeRevalidate()
   return { success: true }
 }
 
@@ -109,4 +114,3 @@ export async function incrementViews(id: string) {
     // silent — view tracking is best-effort
   }
 }
-

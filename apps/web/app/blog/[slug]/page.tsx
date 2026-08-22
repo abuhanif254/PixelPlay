@@ -111,9 +111,13 @@ export default async function SingleArticlePage({ params }: Props) {
     hasUserLiked(post.id)
   ]);
 
-  // Handle views count increment lazily
-  const supabase = createClient();
-  supabase.rpc('increment_blog_views', { post_id: post.id }).then(() => {});
+  // Handle views count increment
+  try {
+    const supabase = createClient();
+    await supabase.rpc('increment_blog_views', { post_id: post.id });
+  } catch (err) {
+    console.error('Failed to increment views:', err);
+  }
 
   const coverImage = post.cover_image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200&q=80';
 
