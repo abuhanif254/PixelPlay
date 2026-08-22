@@ -1,9 +1,15 @@
 'use server'
 
-
-
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+
+function safeRevalidate(path: string) {
+  try {
+    revalidatePath(path);
+  } catch (e) {
+    console.error('Revalidation error:', e);
+  }
+}
 
 // --- Likes ---
 
@@ -32,7 +38,7 @@ export async function toggleLike(postId: string) {
     
     if (error) return { success: false, error: error.message };
     
-    revalidatePath(`/blog`);
+    safeRevalidate(`/blog`);
     return { success: true, liked: false };
   } else {
     // Like
@@ -42,7 +48,7 @@ export async function toggleLike(postId: string) {
       
     if (error) return { success: false, error: error.message };
     
-    revalidatePath(`/blog`);
+    safeRevalidate(`/blog`);
     return { success: true, liked: true };
   }
 }
@@ -94,7 +100,7 @@ export async function addComment(postId: string, content: string) {
     return { success: false, error: error.message };
   }
 
-  revalidatePath(`/blog`);
+  safeRevalidate(`/blog`);
   return { success: true };
 }
 
