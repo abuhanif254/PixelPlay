@@ -185,7 +185,7 @@ export default async function GamePage({ params }: GamePageProps) {
         "@type": "ListItem",
         "position": 2,
         "name": `${config.category} Games`,
-        "item": `https://spielcade.com/categories/${config.category.toLowerCase().replace(/\s+/g, '-')}`
+        "item": `https://spielcade.com/categories/${config.category.toLowerCase().replace(/\s+/g, '-')}-games`
       },
       {
         "@type": "ListItem",

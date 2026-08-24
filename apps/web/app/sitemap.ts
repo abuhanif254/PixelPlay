@@ -1,12 +1,15 @@
 export const runtime = 'edge';
 
 import { MetadataRoute } from 'next';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://spielcade.com';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const supabase = createClient();
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder'
+  );
 
   // 1. Fetch all published games
   const { data: games } = await supabase

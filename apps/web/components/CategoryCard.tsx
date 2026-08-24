@@ -12,7 +12,7 @@ interface CategoryCardProps {
 }
 
 export default function CategoryCard({ name, gameCount, icon, colorClass = "text-primary" }: CategoryCardProps) {
-  const slug = name.toLowerCase().replace(/\s+/g, '-');
+  const slug = name.toLowerCase().replace(/\s+/g, '-') + (name.toLowerCase().endsWith('games') ? '' : '-games');
   
   return (
     <Link href={`/categories/${slug}`} className="block h-full">

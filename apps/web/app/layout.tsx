@@ -30,9 +30,6 @@ export const metadata: Metadata = {
     title: 'Spielcade | Best Free Online Browser Games',
     description: 'Play the best free online browser games instantly. No downloads required.',
     creator: '@spielcade',
-  },
-  verification: {
-    google: 'YOUR_GSC_VERIFICATION_CODE', // Replace this with the actual code from Google Search Console
   }
 };
 

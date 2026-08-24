@@ -27,6 +27,10 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Play Free Online Games & Publish to Earn | Spielcade",
     description: "Play thousands of free web games instantly. Are you a developer? Publish your HTML5 games on Spielcade and earn revenue from every view.",
+    url: "https://spielcade.com",
+  },
+  alternates: {
+    canonical: "https://spielcade.com",
   },
 };
 

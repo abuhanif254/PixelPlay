@@ -11,6 +11,10 @@ export const metadata: Metadata = {
   openGraph: {
     title: "All Game Categories | Spielcade",
     description: "Browse our massive collection of free online games by category. Play action, puzzle, racing, strategy, and more instantly in your browser.",
+    url: "https://spielcade.com/categories",
+  },
+  alternates: {
+    canonical: "https://spielcade.com/categories",
   },
 };
 
@@ -53,7 +57,7 @@ export default async function CategoriesIndexPage() {
     hasPart: categoryCards.map(cat => ({
       '@type': 'WebPage',
       name: `${cat.name} Games`,
-      url: `https://spielcade.com/categories/${cat.name.toLowerCase().replace(/\s+/g, '-')}`
+      url: `https://spielcade.com/categories/${cat.name.toLowerCase().replace(/\s+/g, '-')}-games`
     }))
   };
 
