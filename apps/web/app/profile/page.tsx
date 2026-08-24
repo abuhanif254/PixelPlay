@@ -11,6 +11,16 @@ import ProfileCollections from '@/components/profile/ProfileCollections';
 
 export const revalidate = 0;
 
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Profile Dashboard - Spielcade',
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
 export default async function ProfileDashboardPage() {
   const supabase = createClient();
   const { data: authData } = await supabase.auth.getUser();
