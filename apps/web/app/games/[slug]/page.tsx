@@ -44,7 +44,7 @@ export async function generateMetadata(
   const status = dbGame?.status || 'approved'; // local games are considered approved
   const tags = (dbGame?.metadata as any)?.tags || localGame?.config?.tags || [];
 
-  const shouldIndex = status === 'approved';
+  const shouldIndex = status === 'approved' || status === 'active';
   
   const pageTitle = `${title} — Play Free ${category} Game Online | Spielcade`;
   const rawDesc = `Play ${title} free online, no download needed. ${description}`;
