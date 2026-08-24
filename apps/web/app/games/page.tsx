@@ -23,6 +23,11 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   return {
     title,
     description: `Explore our collection of the best free online ${category.toLowerCase()} games. No downloads, no installs - just click and play instantly!`,
+    alternates: {
+      canonical: category === 'All Games' 
+        ? 'https://spielcade.com/games'
+        : `https://spielcade.com/categories/${category.toLowerCase().replace(/\s+/g, '-')}-games`
+    }
   }
 }
 

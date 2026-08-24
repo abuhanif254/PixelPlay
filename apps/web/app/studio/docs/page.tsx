@@ -1,6 +1,8 @@
 import React from 'react';
 import { Terminal, Code, CheckCircle, Lightbulb } from 'lucide-react';
 
+import { Metadata } from 'next';
+export const metadata: Metadata = { title: 'Studio Docs', robots: { index: false, follow: false } };
 export default function StudioDocsPage() {
   return (
     <div className="bg-white dark:bg-[#111228] rounded-2xl border border-gray-200 dark:border-white/5 shadow-xl overflow-hidden">
