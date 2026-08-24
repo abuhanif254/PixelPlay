@@ -26,6 +26,50 @@ const nextConfig = {
   experimental: {
     cpus: 1,
     memoryBasedWorkersCount: true
+  },
+  async redirects() {
+    return [
+      {
+        source: '/search',
+        destination: '/games',
+        permanent: true,
+      },
+      {
+        source: '/category/:slug',
+        destination: '/categories/:slug',
+        permanent: true,
+      },
+      {
+        source: '/categories/board',
+        destination: '/categories/board-games',
+        permanent: true,
+      },
+      {
+        source: '/categories/arcade',
+        destination: '/categories/arcade-games',
+        permanent: true,
+      },
+      {
+        source: '/categories/puzzle',
+        destination: '/categories/puzzle-games',
+        permanent: true,
+      },
+      {
+        source: '/categories/action',
+        destination: '/categories/action-games',
+        permanent: true,
+      },
+      {
+        source: '/categories/racing',
+        destination: '/categories/racing-games',
+        permanent: true,
+      },
+      {
+        source: '/categories/strategy',
+        destination: '/categories/strategy-games',
+        permanent: true,
+      }
+    ];
   }
 };
 

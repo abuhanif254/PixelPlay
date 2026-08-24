@@ -13,7 +13,7 @@ export default async function RevenueDashboard() {
   const user = authData?.user || null;
 
   if (!user) {
-    redirect('/auth/login');
+    redirect('/login');
   }
 
   // Fetch actual data from developer_revenue table

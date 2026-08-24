@@ -38,12 +38,7 @@ const jsonLd = {
   '@type': 'WebSite',
   name: 'Spielcade Games',
   url: 'https://spielcade.com',
-  description: 'Play the best free online browser games instantly.',
-  potentialAction: {
-    '@type': 'SearchAction',
-    target: 'https://spielcade.com/search?q={search_term_string}',
-    'query-input': 'required name=search_term_string'
-  }
+  description: 'Play the best free online browser games instantly.'
 };
 
 import { ThemeProvider } from '@/components/ThemeProvider';

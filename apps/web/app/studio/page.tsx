@@ -13,7 +13,7 @@ export default async function StudioDashboardPage() {
   const user = authData?.user || null;
 
   if (!user) {
-    redirect('/auth/login');
+    redirect('/login');
   }
 
   const { data: games } = await supabase
