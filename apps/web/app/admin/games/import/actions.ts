@@ -124,9 +124,29 @@ export async function batchImportGames(
     for (let i = 0; i < enrichedRecords.length; i += chunkSize) {
       const chunk = enrichedRecords.slice(i, i + chunkSize);
       
-      const { error } = await supabase
+      let { error } = await supabase
         .from('games')
         .upsert(chunk, { onConflict: 'slug' });
+
+      // If 'metadata' or 'source_url' columns don't exist in Supabase schema yet, fallback gracefully
+      if (error && (error.message.includes('metadata') || error.message.includes('source_url'))) {
+        console.warn('Column not found in Supabase schema. Retrying with available core columns.');
+        const isMetadataMissing = error.message.includes('metadata');
+        const isSourceUrlMissing = error.message.includes('source_url');
+
+        const fallbackChunk = chunk.map(({ metadata, source_url, ...core }) => {
+          const item: any = { ...core };
+          if (!isMetadataMissing) item.metadata = metadata;
+          if (!isSourceUrlMissing) item.source_url = source_url;
+          return item;
+        });
+
+        const retryResult = await supabase
+          .from('games')
+          .upsert(fallbackChunk, { onConflict: 'slug' });
+        
+        error = retryResult.error;
+      }
 
       if (error) {
         console.error('Batch import chunk error:', error);
