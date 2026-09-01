@@ -40,7 +40,8 @@ export default async function AllGamesPage({ searchParams }: Props) {
       .from('games')
       .select('*')
       .eq('status', 'active')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(10000);
 
     const allGames = games?.map(game => ({
       id: game.id,
