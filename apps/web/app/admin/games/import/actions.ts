@@ -57,16 +57,28 @@ export async function fetchFeedPreview(
       };
     }
 
-    // Check existing slugs in Supabase to detect duplicates
+    // Check existing slugs in Supabase to detect duplicates safely in chunks of 50
     const supabase = createClient();
     const slugsToCheck = rawGames.map(g => slugifyGameTitle(g.title));
-    
-    const { data: existingGames } = await supabase
-      .from('games')
-      .select('slug')
-      .in('slug', slugsToCheck);
+    const existingSlugSet = new Set<string>();
 
-    const existingSlugSet = new Set(existingGames?.map(g => g.slug) || []);
+    const checkChunkSize = 50;
+    const checkPromises = [];
+    for (let i = 0; i < slugsToCheck.length; i += checkChunkSize) {
+      const slugChunk = slugsToCheck.slice(i, i + checkChunkSize);
+      checkPromises.push(
+        supabase.from('games').select('slug').in('slug', slugChunk)
+      );
+    }
+
+    const checkResults = await Promise.all(checkPromises);
+    for (const res of checkResults) {
+      if (res.data) {
+        for (const row of res.data) {
+          existingSlugSet.add(row.slug);
+        }
+      }
+    }
 
     const seenSlugs = new Set<string>();
     const enrichedPreview = rawGames.map(game => {
