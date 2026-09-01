@@ -7,7 +7,7 @@ import { Metadata } from 'next';
 import DynamicSEOBlock from '@/components/DynamicSEOBlock';
 
 export const runtime = 'edge';
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 type Props = {
   searchParams: { [key: string]: string | string[] | undefined }
@@ -34,34 +34,32 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 export default async function AllGamesPage({ searchParams }: Props) {
   try {
     const supabase = createClient();
+    const activeCategory = typeof searchParams.category === 'string' ? searchParams.category : 'All Games';
     
-    // 1. Get exact total count of active games
+    // 1. Get exact total count of active games (lightweight metadata request)
     const { count } = await supabase
       .from('games')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'active');
 
     const totalCount = count || 0;
-    const chunkSize = 1000;
-    const totalRequests = Math.max(1, Math.ceil(totalCount / chunkSize));
 
-    // 2. Fetch all games concurrently in 1000-row chunks
-    const chunkPromises = [];
-    for (let i = 0; i < totalRequests; i++) {
-      chunkPromises.push(
-        supabase
-          .from('games')
-          .select('id, title, slug, description, category, image_url, total_plays, rating')
-          .eq('status', 'active')
-          .order('created_at', { ascending: false })
-          .range(i * chunkSize, (i + 1) * chunkSize - 1)
-      );
+    // 2. Fetch games in a single lightweight query (safe for Cloudflare Edge limits)
+    let query = supabase
+      .from('games')
+      .select('id, title, slug, description, category, image_url, total_plays, rating')
+      .eq('status', 'active')
+      .order('created_at', { ascending: false });
+
+    if (activeCategory !== 'All Games') {
+      query = query.eq('category', activeCategory).limit(200);
+    } else {
+      query = query.limit(200);
     }
 
-    const chunkResults = await Promise.all(chunkPromises);
-    const rawGames = chunkResults.flatMap(r => r.data || []);
+    const { data: rawGames } = await query;
 
-    const allGames = rawGames.map(game => ({
+    const allGames = (rawGames || []).map(game => ({
       id: game.id,
       title: game.title,
       slug: game.slug,
@@ -71,8 +69,6 @@ export default async function AllGamesPage({ searchParams }: Props) {
       totalPlays: game.total_plays,
       rating: game.rating
     }));
-
-    const activeCategory = typeof searchParams.category === 'string' ? searchParams.category : 'All Games';
 
     const collectionSchema = {
       "@context": "https://schema.org",
@@ -140,7 +136,7 @@ export default async function AllGamesPage({ searchParams }: Props) {
         <div className="container mx-auto px-4 md:px-8 max-w-[1600px]">
           {/* Interactive Client Section */}
           <Suspense fallback={<div className="w-full h-96 bg-gray-100 dark:bg-white/5 animate-pulse rounded-2xl" />}>
-            <AllGamesClient initialGames={allGames} />
+            <AllGamesClient initialGames={allGames} totalCount={totalCount} />
           </Suspense>
           
           {/* Dynamic SEO Block */}

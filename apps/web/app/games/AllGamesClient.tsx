@@ -28,7 +28,13 @@ const FEATURES = ['2 Players', 'Multiplayer', 'Mobile Friendly', 'No Time Limit'
 
 const ITEMS_PER_PAGE = 15; // 5 columns x 3 rows on desktop
 
-export default function AllGamesClient({ initialGames }: { initialGames: any[] }) {
+export default function AllGamesClient({ 
+  initialGames,
+  totalCount
+}: { 
+  initialGames: any[];
+  totalCount?: number;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -53,7 +59,7 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
 
   // Dynamically compute category counts
   const dynamicCategories = useMemo(() => {
-    const counts: Record<string, number> = { 'All Games': initialGames.length };
+    const counts: Record<string, number> = { 'All Games': totalCount || initialGames.length };
     initialGames.forEach(game => {
       const cat = game.category || 'Arcade';
       counts[cat] = (counts[cat] || 0) + 1;
@@ -383,7 +389,9 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
               <div className="h-6 w-32 bg-gray-200 dark:bg-white/5 rounded animate-pulse"></div>
             ) : (
               <>
-                <span className="font-bold text-[#6366F1]">{totalGames}</span> <span className="text-gray-600 dark:text-gray-300 font-medium">Games Found</span>
+                <span className="font-bold text-[#6366F1]">
+                  {activeCategory === 'All Games' && !searchQuery ? (totalCount || totalGames) : totalGames}
+                </span> <span className="text-gray-600 dark:text-gray-300 font-medium">Games Found</span>
               </>
             )}
           </div>
