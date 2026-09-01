@@ -73,19 +73,24 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
   const updateUrl = useCallback((updates: Record<string, string | number | null>) => {
     const params = new URLSearchParams(searchParams.toString());
     Object.entries(updates).forEach(([key, value]) => {
+      if (key === 'page' && (value === 1 || value === '1' || value === null)) {
+        params.delete('page');
+        return;
+      }
       if (value !== null && value !== undefined && value !== '') {
         params.set(key, value.toString());
       } else {
         params.delete(key);
       }
     });
-    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    const queryString = params.toString();
+    router.push(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false });
   }, [searchParams, pathname, router]);
 
   // When debounced search changes, update URL and reset to page 1
   useEffect(() => {
-    if (debouncedSearchQuery !== searchParams.get('q')) {
-       updateUrl({ q: debouncedSearchQuery || null, page: 1 });
+    if (debouncedSearchQuery !== (searchParams.get('q') || searchParams.get('search') || '')) {
+       updateUrl({ q: debouncedSearchQuery || null, page: null });
        setCurrentPage(1);
     }
   }, [debouncedSearchQuery, updateUrl, searchParams]);

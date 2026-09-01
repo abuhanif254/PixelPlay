@@ -35,15 +35,33 @@ export default async function AllGamesPage({ searchParams }: Props) {
   try {
     const supabase = createClient();
     
-    // Fetch active games from Supabase
-    const { data: games } = await supabase
+    // 1. Get exact total count of active games
+    const { count } = await supabase
       .from('games')
-      .select('*')
-      .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .limit(10000);
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'active');
 
-    const allGames = games?.map(game => ({
+    const totalCount = count || 0;
+    const chunkSize = 1000;
+    const totalRequests = Math.max(1, Math.ceil(totalCount / chunkSize));
+
+    // 2. Fetch all games concurrently in 1000-row chunks
+    const chunkPromises = [];
+    for (let i = 0; i < totalRequests; i++) {
+      chunkPromises.push(
+        supabase
+          .from('games')
+          .select('id, title, slug, description, category, image_url, total_plays, rating')
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .range(i * chunkSize, (i + 1) * chunkSize - 1)
+      );
+    }
+
+    const chunkResults = await Promise.all(chunkPromises);
+    const rawGames = chunkResults.flatMap(r => r.data || []);
+
+    const allGames = rawGames.map(game => ({
       id: game.id,
       title: game.title,
       slug: game.slug,
@@ -52,7 +70,7 @@ export default async function AllGamesPage({ searchParams }: Props) {
       image: game.image_url,
       totalPlays: game.total_plays,
       rating: game.rating
-    })) || [];
+    }));
 
     const activeCategory = typeof searchParams.category === 'string' ? searchParams.category : 'All Games';
 
@@ -69,6 +87,10 @@ export default async function AllGamesPage({ searchParams }: Props) {
         "operatingSystem": "Any"
       }))
     };
+
+    const heroSubtitle = activeCategory === 'All Games'
+      ? `Explore our massive collection of ${totalCount > 0 ? `${totalCount}+` : 'thousands of'} free online games. No downloads, no installs - just click and play your favorite games instantly!`
+      : `Explore the best free online ${activeCategory.toLowerCase()} games. Handpicked, instant play, and 100% free with no downloads required!`;
 
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-[#05050F] text-gray-900 dark:text-white pt-24 pb-12 transition-colors duration-300">
@@ -95,8 +117,8 @@ export default async function AllGamesPage({ searchParams }: Props) {
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-outfit font-extrabold text-white mb-2 leading-tight">
                 {activeCategory}
               </h1>
-              <p className="text-gray-300 text-base max-w-md">
-                Explore our collection of 500+ free online games. No downloads, no installs - just click and play your favorite games instantly!
+              <p className="text-gray-300 text-sm md:text-base max-w-md">
+                {heroSubtitle}
               </p>
             </div>
           </div>
