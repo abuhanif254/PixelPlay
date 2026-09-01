@@ -79,10 +79,10 @@ export default async function HomePage() {
   let trending = fallbackGames;
   let newGames = fallbackGames;
   let topRated = fallbackGames;
+  let liveCounts: Record<string, number> = {};
 
   try {
     // Fetch dynamic game data concurrently with safety catch
-    let liveCounts: Record<string, number> = {};
 
     const [
       { data: trendingGames },
