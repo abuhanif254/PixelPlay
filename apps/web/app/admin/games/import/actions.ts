@@ -68,8 +68,17 @@ export async function fetchFeedPreview(
 
     const existingSlugSet = new Set(existingGames?.map(g => g.slug) || []);
 
+    const seenSlugs = new Set<string>();
     const enrichedPreview = rawGames.map(game => {
-      const slug = slugifyGameTitle(game.title);
+      const baseSlug = slugifyGameTitle(game.title) || 'game';
+      let slug = baseSlug;
+      let counter = 1;
+      while (seenSlugs.has(slug)) {
+        slug = `${baseSlug}-${counter}`;
+        counter++;
+      }
+      seenSlugs.add(slug);
+
       return {
         ...game,
         slug,
@@ -114,8 +123,25 @@ export async function batchImportGames(
   try {
     const supabase = createClient();
 
-    // Run SEO Enrichment on all selected games
-    const enrichedRecords = gamesToImport.map(rawGame => enrichGameForDatabase(rawGame));
+    // Run SEO Enrichment and guarantee 100% unique slugs within the batch to prevent PostgreSQL ON CONFLICT duplicates
+    const uniqueSlugsMap = new Map<string, any>();
+
+    for (const rawGame of gamesToImport) {
+      const enriched = enrichGameForDatabase(rawGame);
+      const baseSlug = enriched.slug || 'game';
+      let slug = baseSlug;
+      let counter = 1;
+
+      while (uniqueSlugsMap.has(slug)) {
+        slug = `${baseSlug}-${counter}`;
+        counter++;
+      }
+
+      enriched.slug = slug;
+      uniqueSlugsMap.set(slug, enriched);
+    }
+
+    const enrichedRecords = Array.from(uniqueSlugsMap.values());
 
     // Batch upsert to Supabase in chunks of 50 for stability
     const chunkSize = 50;
