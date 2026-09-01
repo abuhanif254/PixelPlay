@@ -87,9 +87,9 @@ export default async function HomePage() {
       { data: newArrivals },
       { data: topRatedGames }
     ] = await Promise.all([
-      supabase.from('games').select('*').eq('status', 'active').order('total_plays', { ascending: false }).limit(12),
-      supabase.from('games').select('*').eq('status', 'active').order('created_at', { ascending: false }).limit(10),
-      supabase.from('games').select('*').eq('status', 'active').order('rating', { ascending: false }).limit(8),
+      supabase.from('games').select('*').eq('status', 'active').order('total_plays', { ascending: false }).limit(24),
+      supabase.from('games').select('*').eq('status', 'active').order('created_at', { ascending: false }).limit(16),
+      supabase.from('games').select('*').eq('status', 'active').order('rating', { ascending: false }).limit(12),
     ]);
 
     if (trendingGames && trendingGames.length > 0) trending = trendingGames;

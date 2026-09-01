@@ -95,19 +95,31 @@ export function TrendingGamesFilter({ games }: TrendingGamesFilterProps) {
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-12 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-5">
         {visibleGames.length > 0 ? (
           visibleGames.map((game, i) => {
             const uniqueId = game.slug || game.id || String(i);
+            const playsCount = (game as any).total_plays || (game as any).totalPlays || 10000;
+            const playsStr = `${Math.floor(playsCount / 1000)}K plays`;
+            const img = game.image || (game as any).image_url;
+
             return (
-              <div key={uniqueId} className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366F1] rounded-2xl block">
-                <GameCard title={game.title} rating={game.rating || 5.0} imageUrl={game.image} category={game.category || 'Arcade'} slug={uniqueId} />
+              <div key={uniqueId} className="h-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366F1] rounded-2xl block">
+                <GameCard 
+                  title={game.title} 
+                  rating={game.rating || 4.8} 
+                  imageUrl={img} 
+                  category={game.category || 'Arcade'} 
+                  slug={uniqueId}
+                  plays={playsStr}
+                  rank={activeCategory === 'All' ? i + 1 : undefined}
+                />
               </div>
             );
           })
         ) : (
-          <div className="col-span-full py-12 text-center text-gray-500">
-            No trending games found for this category.
+          <div className="col-span-full py-16 text-center bg-white dark:bg-[#111228]/50 rounded-2xl border border-gray-200 dark:border-white/5">
+            <p className="text-gray-500 dark:text-gray-400 font-medium">No trending games found for {activeCategory}.</p>
           </div>
         )}
         
