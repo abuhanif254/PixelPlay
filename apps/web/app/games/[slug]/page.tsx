@@ -40,8 +40,8 @@ export async function generateMetadata(
   const title = dbGame?.title || localGame?.config?.title || 'Game';
   const description = dbGame?.description || localGame?.config?.description || `Play ${title} online for free. No downloads required.`;
   const image = dbGame?.image_url || localGame?.config?.image || 'https://spielcade.com/og-default.jpg';
-  const category = (dbGame?.metadata as any)?.category || localGame?.config?.category || 'games';
-  const status = dbGame?.status || 'approved'; // local games are considered approved
+  const category = dbGame?.category || (dbGame?.metadata as any)?.category || localGame?.config?.category || 'Arcade';
+  const status = dbGame?.status || 'active'; // local games are considered approved
   const tags = (dbGame?.metadata as any)?.tags || localGame?.config?.tags || [];
 
   const shouldIndex = status === 'approved' || status === 'active';
@@ -115,12 +115,16 @@ export default async function GamePage({ params }: GamePageProps) {
     title: dbGame?.title || localGame?.config?.title || 'Unknown Game',
     description: dbGame?.description || localGame?.config?.description || '',
     image: dbGame?.image_url || localGame?.config?.image,
-    category: (dbGame?.metadata as any)?.category || localGame?.config?.category || 'Arcade',
+    category: dbGame?.category || (dbGame?.metadata as any)?.category || localGame?.config?.category || 'Arcade',
     developer: (dbGame?.metadata as any)?.developer || localGame?.config?.developer || 'Spielcade',
-    rating: (dbGame?.metadata as any)?.rating || localGame?.config?.rating,
+    rating: dbGame?.rating || (dbGame?.metadata as any)?.rating || localGame?.config?.rating || 4.8,
+    sourceUrl: dbGame?.source_url || (localGame?.config as any)?.sourceUrl,
+    strategy: (dbGame?.metadata as any)?.strategy || (localGame?.config as any)?.strategy,
+    keyboardControls: (dbGame?.metadata as any)?.keyboardControls || (localGame?.config as any)?.keyboardControls,
+    faqs: (dbGame?.metadata as any)?.faqs || (localGame?.config as any)?.faqs,
   };
 
-  const sourceUrl = (config as any).sourceUrl || ((config as any).type === 'html5' ? `/games/${slug}/index.html` : null);
+  const sourceUrl = config.sourceUrl || ((config as any).type === 'html5' ? `/games/${slug}/index.html` : null);
   const GameComponent = localGame?.component || (() => null);
 
   // Check if current user favorited this game

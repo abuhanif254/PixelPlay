@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   LayoutDashboard, Gamepad2, FileText, Users, Settings,
-  LogOut, ChevronRight, ExternalLink
+  LogOut, ChevronRight, ExternalLink, Sparkles
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -37,11 +37,12 @@ export default function AdminSidebar() {
   };
 
   const menuItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', href: '/admin' },
-    { icon: Gamepad2,        label: 'Games',     href: '/admin/games' },
-    { icon: FileText,        label: 'Blog',      href: '/admin/blog' },
-    { icon: Users,           label: 'Users',     href: '/admin/users' },
-    { icon: Settings,        label: 'Settings',  href: '/admin/settings' },
+    { icon: LayoutDashboard, label: 'Dashboard',    href: '/admin' },
+    { icon: Gamepad2,        label: 'Games',        href: '/admin/games' },
+    { icon: Sparkles,        label: 'Import Games', href: '/admin/games/import' },
+    { icon: FileText,        label: 'Blog',         href: '/admin/blog' },
+    { icon: Users,           label: 'Users',        href: '/admin/users' },
+    { icon: Settings,        label: 'Settings',     href: '/admin/settings' },
   ];
 
   return (
