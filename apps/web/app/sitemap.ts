@@ -1,10 +1,10 @@
-﻿export const runtime = 'edge';
+export const runtime = 'edge';
 
 import { MetadataRoute } from 'next';
 import { createClient } from '@supabase/supabase-js';
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://spielcade.com';
-const CHUNK_SIZE = 5000;
+const CHUNK_SIZE = 1000;
 
 export async function generateSitemaps() {
   const supabase = createClient(
