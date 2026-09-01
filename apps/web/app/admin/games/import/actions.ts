@@ -106,27 +106,25 @@ export async function fetchFeedPreview(
 }
 
 /**
- * Batch import selected games into Supabase with automatic SEO enrichment
+ * Import a single chunk of games (50-100 games) in a single fast transaction
  */
-export async function batchImportGames(
-  gamesToImport: RawGameFeedItem[]
+export async function importSingleChunk(
+  gamesChunk: RawGameFeedItem[]
 ): Promise<{ success: boolean; importedCount: number; error?: string }> {
   const auth = await verifyAdminAction();
   if (!auth.success) {
     return { success: false, importedCount: 0, error: 'Unauthorized: Admin access required.' };
   }
 
-  if (!gamesToImport || gamesToImport.length === 0) {
-    return { success: false, importedCount: 0, error: 'No games selected for import.' };
+  if (!gamesChunk || gamesChunk.length === 0) {
+    return { success: true, importedCount: 0 };
   }
 
   try {
     const supabase = createClient();
-
-    // Run SEO Enrichment and guarantee 100% unique slugs within the batch to prevent PostgreSQL ON CONFLICT duplicates
     const uniqueSlugsMap = new Map<string, any>();
 
-    for (const rawGame of gamesToImport) {
+    for (const rawGame of gamesChunk) {
       const enriched = enrichGameForDatabase(rawGame);
       const baseSlug = enriched.slug || 'game';
       let slug = baseSlug;
@@ -143,54 +141,92 @@ export async function batchImportGames(
 
     const enrichedRecords = Array.from(uniqueSlugsMap.values());
 
-    // Batch upsert to Supabase in chunks of 50 for stability
+    let { error } = await supabase
+      .from('games')
+      .upsert(enrichedRecords, { onConflict: 'slug' });
+
+    // If 'metadata' or 'source_url' columns don't exist in Supabase schema yet, fallback gracefully
+    if (error && (error.message.includes('metadata') || error.message.includes('source_url'))) {
+      const isMetadataMissing = error.message.includes('metadata');
+      const isSourceUrlMissing = error.message.includes('source_url');
+
+      const fallbackRecords = enrichedRecords.map(({ metadata, source_url, ...core }) => {
+        const item: any = { ...core };
+        if (!isMetadataMissing) item.metadata = metadata;
+        if (!isSourceUrlMissing) item.source_url = source_url;
+        return item;
+      });
+
+      const retryResult = await supabase
+        .from('games')
+        .upsert(fallbackRecords, { onConflict: 'slug' });
+      
+      error = retryResult.error;
+    }
+
+    if (error) {
+      console.error('importSingleChunk error:', error);
+      return { success: false, importedCount: 0, error: error.message };
+    }
+
+    return {
+      success: true,
+      importedCount: enrichedRecords.length
+    };
+  } catch (error: any) {
+    console.error('importSingleChunk exception:', error);
+    return {
+      success: false,
+      importedCount: 0,
+      error: error?.message || 'Failed to process chunk.'
+    };
+  }
+}
+
+/**
+ * Revalidate Edge cache after batch import completes
+ */
+export async function finishImportJob(): Promise<{ success: boolean }> {
+  try {
+    revalidatePath('/admin/games');
+    revalidatePath('/games');
+    revalidatePath('/(home)', 'page');
+    revalidatePath('/sitemap.xml');
+  } catch (err) {
+    console.warn('Revalidation warning:', err);
+  }
+  return { success: true };
+}
+
+/**
+ * Batch import selected games into Supabase with automatic SEO enrichment
+ */
+export async function batchImportGames(
+  gamesToImport: RawGameFeedItem[]
+): Promise<{ success: boolean; importedCount: number; error?: string }> {
+  const auth = await verifyAdminAction();
+  if (!auth.success) {
+    return { success: false, importedCount: 0, error: 'Unauthorized: Admin access required.' };
+  }
+
+  if (!gamesToImport || gamesToImport.length === 0) {
+    return { success: false, importedCount: 0, error: 'No games selected for import.' };
+  }
+
+  try {
     const chunkSize = 50;
     let totalImported = 0;
 
-    for (let i = 0; i < enrichedRecords.length; i += chunkSize) {
-      const chunk = enrichedRecords.slice(i, i + chunkSize);
-      
-      let { error } = await supabase
-        .from('games')
-        .upsert(chunk, { onConflict: 'slug' });
-
-      // If 'metadata' or 'source_url' columns don't exist in Supabase schema yet, fallback gracefully
-      if (error && (error.message.includes('metadata') || error.message.includes('source_url'))) {
-        console.warn('Column not found in Supabase schema. Retrying with available core columns.');
-        const isMetadataMissing = error.message.includes('metadata');
-        const isSourceUrlMissing = error.message.includes('source_url');
-
-        const fallbackChunk = chunk.map(({ metadata, source_url, ...core }) => {
-          const item: any = { ...core };
-          if (!isMetadataMissing) item.metadata = metadata;
-          if (!isSourceUrlMissing) item.source_url = source_url;
-          return item;
-        });
-
-        const retryResult = await supabase
-          .from('games')
-          .upsert(fallbackChunk, { onConflict: 'slug' });
-        
-        error = retryResult.error;
+    for (let i = 0; i < gamesToImport.length; i += chunkSize) {
+      const chunk = gamesToImport.slice(i, i + chunkSize);
+      const res = await importSingleChunk(chunk);
+      if (!res.success) {
+        throw new Error(res.error || 'Failed on chunk');
       }
-
-      if (error) {
-        console.error('Batch import chunk error:', error);
-        throw new Error(`Database error on batch chunk: ${error.message}`);
-      }
-
-      totalImported += chunk.length;
+      totalImported += res.importedCount;
     }
 
-    // Revalidate paths for instantaneous Edge cache refresh
-    try {
-      revalidatePath('/admin/games');
-      revalidatePath('/games');
-      revalidatePath('/(home)', 'page');
-      revalidatePath('/sitemap.xml');
-    } catch (revalErr) {
-      console.warn('Revalidation warning:', revalErr);
-    }
+    await finishImportJob();
 
     return {
       success: true,

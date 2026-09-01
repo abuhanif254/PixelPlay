@@ -19,12 +19,12 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { FeedProvider, RawGameFeedItem } from '@/lib/game-feeds';
-import { fetchFeedPreview, batchImportGames } from './actions';
+import { fetchFeedPreview, importSingleChunk, finishImportJob } from './actions';
 
 type PreviewItem = RawGameFeedItem & { slug: string; isImported: boolean };
 
 const CATEGORIES = ['All', 'Action', 'Arcade', 'Puzzle', 'Racing', 'Sports', 'Strategy', 'Adventure', 'Board'];
-const LIMIT_OPTIONS = [25, 50, 100, 200];
+const LIMIT_OPTIONS = [25, 50, 100, 200, 500, 1000, 2000];
 
 export default function ImporterClient() {
   const [provider, setProvider] = useState<FeedProvider>('gamemonetize');
@@ -39,6 +39,7 @@ export default function ImporterClient() {
   const [isFetching, startFetching] = useTransition();
   const [isImporting, setIsImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
+  const [progressStatus, setProgressStatus] = useState('');
   const [importResult, setImportResult] = useState<{ success: boolean; message: string } | null>(null);
   
   // Test modal state
@@ -92,24 +93,43 @@ export default function ImporterClient() {
     setSelectedSlugs(new Set());
   };
 
-  // Execute batch import
+  // Execute progressive batch import (chunks of 100 to prevent Cloudflare timeout)
   const handleBatchImport = async () => {
     const toImport = games.filter(g => selectedSlugs.has(g.slug));
     if (toImport.length === 0) return;
 
     setIsImporting(true);
-    setImportProgress(10);
+    setImportProgress(0);
+    setProgressStatus(`Preparing ${toImport.length} games for import...`);
     setImportResult(null);
 
-    try {
-      setImportProgress(40);
-      const res = await batchImportGames(toImport);
-      setImportProgress(100);
+    const chunkSize = 100;
+    const totalChunks = Math.ceil(toImport.length / chunkSize);
+    let totalImported = 0;
+    let failedChunks = 0;
 
-      if (res.success) {
+    try {
+      for (let i = 0; i < totalChunks; i++) {
+        const chunk = toImport.slice(i * chunkSize, (i + 1) * chunkSize);
+        setProgressStatus(`Importing chunk ${i + 1} of ${totalChunks} (${totalImported} / ${toImport.length} games saved)...`);
+        
+        const res = await importSingleChunk(chunk);
+        if (res.success) {
+          totalImported += res.importedCount;
+        } else {
+          failedChunks++;
+          console.warn(`Chunk ${i + 1} error:`, res.error);
+        }
+
+        setImportProgress(Math.round(((i + 1) / totalChunks) * 100));
+      }
+
+      await finishImportJob();
+
+      if (totalImported > 0) {
         setImportResult({
           success: true,
-          message: `Successfully imported ${res.importedCount} games with rich SEO descriptions, controls, and schema markups!`
+          message: `Successfully imported ${totalImported} games into Supabase database! Cache refreshed.`
         });
         // Mark imported games in current state
         setGames(prev => prev.map(g => selectedSlugs.has(g.slug) ? { ...g, isImported: true } : g));
@@ -117,13 +137,15 @@ export default function ImporterClient() {
       } else {
         setImportResult({
           success: false,
-          message: res.error || 'Import failed.'
+          message: 'Failed to import games. Please verify your Supabase database connection.'
         });
       }
     } catch (err: any) {
+      console.error('Batch import exception:', err);
       setImportResult({ success: false, message: err?.message || 'Error occurred during import.' });
     } finally {
       setIsImporting(false);
+      setProgressStatus('');
     }
   };
 
@@ -258,7 +280,7 @@ export default function ImporterClient() {
           <div className="flex items-center justify-between text-sm">
             <span className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-[#6366F1] animate-spin" />
-              Ingesting & Enriching SEO Metadata...
+              {progressStatus || 'Ingesting & Enriching SEO Metadata...'}
             </span>
             <span className="font-mono text-[#6366F1] font-bold">{importProgress}%</span>
           </div>
