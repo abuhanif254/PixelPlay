@@ -1,26 +1,24 @@
-'use server'
+'use server';
 
-
-
-import { createClient } from '@/lib/supabase/server'
-import { revalidatePath } from 'next/cache'
+import { createClient } from '@/lib/supabase/server';
+import { revalidatePath } from 'next/cache';
 
 export async function submitScore(gameSlug: string, score: number) {
-  const supabase = createClient()
+  const supabase = createClient();
   
   // Get current user
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { success: false, error: 'User not logged in' }
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'User not logged in' };
 
   // Get game ID from slug
   const { data: game, error: gameError } = await supabase
     .from('games')
-    .select('id')
+    .select('id, total_plays')
     .eq('slug', gameSlug)
-    .single()
+    .single();
 
   if (gameError || !game) {
-    return { success: false, error: 'Game not found in database' }
+    return { success: false, error: 'Game not found in database' };
   }
 
   // Insert score
@@ -28,33 +26,54 @@ export async function submitScore(gameSlug: string, score: number) {
     .from('scores')
     .insert([
       { user_id: user.id, game_id: game.id, score }
-    ])
+    ]);
 
   if (insertError) {
-    return { success: false, error: insertError.message }
+    return { success: false, error: insertError.message };
+  }
+
+  // Award user XP & calculate level progression
+  try {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('xp, level')
+      .eq('id', user.id)
+      .single();
+
+    if (profile) {
+      const addedXp = Math.max(25, Math.min(500, Math.floor(score / 100)));
+      const newXp = (profile.xp || 0) + addedXp;
+      const newLevel = Math.floor(newXp / 500) + 1;
+      await supabase
+        .from('profiles')
+        .update({ xp: newXp, level: newLevel, updated_at: new Date().toISOString() })
+        .eq('id', user.id);
+    }
+  } catch (e) {
+    console.error('Error awarding XP:', e);
   }
 
   // Revalidate so the updated score appears in Recent Games and Leaderboards instantly
-  revalidatePath('/profile')
-  revalidatePath('/profile/[username]', 'page')
-  revalidatePath('/leaderboard')
+  revalidatePath('/profile');
+  revalidatePath('/profile/[username]', 'page');
+  revalidatePath('/leaderboard');
 
-  return { success: true }
+  return { success: true };
 }
 
 export async function saveGameState(gameSlug: string, data: object) {
-  const supabase = createClient()
+  const supabase = createClient();
   
   // 1. Enforce max size (100KB)
-  const dataString = JSON.stringify(data)
-  const sizeInBytes = new Blob([dataString]).size
+  const dataString = JSON.stringify(data);
+  const sizeInBytes = new Blob([dataString]).size;
   if (sizeInBytes > 102400) {
-    return { success: false, error: 'Save data exceeds 100KB limit' }
+    return { success: false, error: 'Save data exceeds 100KB limit' };
   }
 
   // 2. Get current user
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { success: false, error: 'User not logged in' }
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'User not logged in' };
 
   // 3. Upsert save data
   const { error } = await supabase
@@ -62,36 +81,35 @@ export async function saveGameState(gameSlug: string, data: object) {
     .upsert(
       { user_id: user.id, game_id: gameSlug, save_data: data, updated_at: new Date().toISOString() },
       { onConflict: 'user_id, game_id' }
-    )
+    );
 
   if (error) {
-    return { success: false, error: error.message }
+    return { success: false, error: error.message };
   }
 
-  return { success: true }
+  return { success: true };
 }
 
 export async function loadGameState(gameSlug: string) {
-  const supabase = createClient()
+  const supabase = createClient();
   
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { success: false, error: 'User not logged in' }
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'User not logged in' };
 
   const { data: save, error } = await supabase
     .from('game_saves')
     .select('save_data')
     .eq('user_id', user.id)
     .eq('game_id', gameSlug)
-    .single()
+    .single();
 
   if (error) {
     // PGRST116 means no rows returned, which is fine (no save yet)
     if (error.code === 'PGRST116') {
-      return { success: true, data: null }
+      return { success: true, data: null };
     }
-    return { success: false, error: error.message }
+    return { success: false, error: error.message };
   }
 
-  return { success: true, data: save?.save_data }
+  return { success: true, data: save?.save_data };
 }
-

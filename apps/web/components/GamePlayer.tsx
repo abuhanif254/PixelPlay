@@ -97,16 +97,18 @@ export default function GamePlayer({ children, title, slug, image, sourceUrl, on
     const handleFullscreenChange = () => {
       if (document.fullscreenElement) setIsTheater(false);
     };
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  // SDK Communication
+  // SDK & Game Message Communication
   useEffect(() => {
     if (playerState !== 'playing' || !sourceUrl) return;
 
     const handleMessage = async (event: MessageEvent) => {
-      if (event.data && event.data.source === 'SPIELCADE_SDK') {
+      if (!event.data) return;
+
+      // 1. SPIELCADE_SDK standard protocol
+      if (event.data.source === 'SPIELCADE_SDK') {
         switch (event.data.type) {
           case 'SUBMIT_SCORE':
             if (onGameOver && typeof event.data.payload?.score === 'number') {
@@ -145,11 +147,24 @@ export default function GamePlayer({ children, title, slug, image, sourceUrl, on
             break;
         }
       }
+
+      // 2. Generic HTML5 / GameMonetize / GameDistribution score & gameover events
+      try {
+        const raw = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+        if (raw && (raw.type === 'score' || raw.type === 'gameover' || raw.action === 'game_over' || raw.event === 'gameover' || raw.name === 'gameOver')) {
+          const detectedScore = Number(raw.score || raw.points || raw.value || raw.finalScore || 0);
+          if (detectedScore > 0 && onGameOver) {
+            onGameOver(detectedScore);
+          }
+        }
+      } catch (e) {
+        // Not a JSON string
+      }
     };
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [playerState, sourceUrl, onGameOver]);
+  }, [playerState, sourceUrl, onGameOver, slug]);
 
 
   return (
