@@ -19,6 +19,7 @@ interface GamePlayerProps {
 }
 
 export default function GamePlayer({ children, title, slug, image, sourceUrl, onGameOver }: GamePlayerProps) {
+  const { addRecentGame } = useRecentGames();
   const [playerState, setPlayerState] = useState<PlayerState>('idle');
   const [isMuted, setIsMuted] = useState(false);
   const [isTheater, setIsTheater] = useState(false);
