@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Menu, X, Sun, Moon, User, ChevronDown, Gamepad2 } from 'lucide-react';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/client';
 
@@ -12,7 +12,9 @@ import NotificationBell from './NotificationBell';
 import UserDropdown from './UserDropdown';
 
 export default function Navbar() {
+  const router = useRouter();
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
+  const [navSearch, setNavSearch] = useState('');
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
@@ -139,14 +141,25 @@ export default function Navbar() {
           {/* Actions (Search, Theme, Auth) */}
           <div className="flex items-center gap-4 shrink-0">
             {/* Search Bar */}
-            <div className="hidden md:flex items-center bg-gray-100 dark:bg-[#13142B] rounded-full px-4 py-2 w-64 border border-black/5 dark:border-white/5 focus-within:border-[#6366F1]/50 transition-colors">
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (navSearch.trim()) {
+                  router.push(`/games?search=${encodeURIComponent(navSearch.trim())}`);
+                }
+              }}
+              className="hidden md:flex items-center bg-gray-100 dark:bg-[#13142B] rounded-full px-4 py-2 w-64 border border-black/5 dark:border-white/5 focus-within:border-[#6366F1]/50 transition-colors"
+            >
               <Search className="w-4 h-4 text-gray-500 mr-2 shrink-0" />
               <input 
                 type="text" 
+                value={navSearch}
+                onChange={(e) => setNavSearch(e.target.value)}
                 placeholder="Search games..." 
                 className="bg-transparent text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none w-full"
+                aria-label="Search games"
               />
-            </div>
+            </form>
 
             {/* Dark Mode */}
             <button 

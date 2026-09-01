@@ -9,7 +9,7 @@ import { HorizontalScroll } from '@/components/HorizontalScroll';
 import { gamesRegistry } from '@spielcade/games/registry';
 
 export default function RecentGames() {
-  const { recentSlugs, isMounted } = useRecentGames();
+  const { recentSlugs, clearRecentGames, isMounted } = useRecentGames();
 
   if (!isMounted) {
     // Avoid hydration mismatch by not rendering until mounted
@@ -17,8 +17,6 @@ export default function RecentGames() {
   }
 
   if (recentSlugs.length === 0) {
-    // If no recent games, we might not want to render this section at all,
-    // or we could render a default "Continue Playing" with a message.
     return null;
   }
 
@@ -29,20 +27,31 @@ export default function RecentGames() {
       slug,
       title: game.config.title,
       rating: game.config.rating || 4.5,
-      image: game.config.image
+      image: game.config.image,
+      category: game.config.category || 'Arcade'
     };
   }).filter(Boolean);
+
+  if (recentGamesData.length === 0) return null;
 
   return (
     <section aria-labelledby="continue-playing-heading">
       <div id="continue-playing-heading" className="sr-only">Continue Playing</div>
-      <SectionHeader title="🎯 Continue Playing" actionText="Clear History" />
+      <SectionHeader 
+        title="🎯 Continue Playing" 
+        actionText="Clear History"
+        onActionClick={clearRecentGames}
+      />
       <HorizontalScroll>
         {recentGamesData.map((game, i) => (
-          <div key={`${game?.slug}-${i}`} className="min-w-[280px]">
-            <Link href={`/games/${game?.slug}`} aria-label={`Play ${game?.title}`}>
-              <GameCard title={game?.title!} rating={game?.rating!} imageUrl={game?.image} />
-            </Link>
+          <div key={`${game?.slug}-${i}`} className="w-64 flex-none shrink-0">
+            <GameCard 
+              title={game?.title!} 
+              rating={game?.rating!} 
+              imageUrl={game?.image} 
+              slug={game?.slug}
+              category={game?.category}
+            />
           </div>
         ))}
       </HorizontalScroll>

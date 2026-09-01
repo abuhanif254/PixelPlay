@@ -47,18 +47,23 @@ export const CategoriesCarousel: React.FC = () => {
           ref={scrollRef}
           className="flex-1 overflow-x-auto hide-scrollbar flex items-center gap-8 md:gap-16 px-4 py-2 scroll-smooth"
         >
-          {categories.map((cat) => (
-            <Link 
-              key={cat.name} 
-              href={`/category/${cat.name.toLowerCase()}`}
-              className="flex flex-col items-center justify-center min-w-[60px] group gap-2"
-            >
-              <cat.icon className={`w-8 h-8 ${cat.color} group-hover:-translate-y-1 transition-transform`} />
-              <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
-                {cat.name}
-              </span>
-            </Link>
-          ))}
+          {categories.map((cat) => {
+            const href = cat.name === 'More' 
+              ? '/categories' 
+              : `/categories/${cat.name.toLowerCase()}-games`;
+            return (
+              <Link 
+                key={cat.name} 
+                href={href}
+                className="flex flex-col items-center justify-center min-w-[60px] group gap-2"
+              >
+                <cat.icon className={`w-8 h-8 ${cat.color} group-hover:-translate-y-1 transition-transform`} />
+                <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
+                  {cat.name}
+                </span>
+              </Link>
+            );
+          })}
         </div>
 
         {/* Right Arrow */}

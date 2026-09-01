@@ -21,13 +21,33 @@ import dynamic from 'next/dynamic';
 
 const DeveloperSpotlight = dynamic(() => import('@/components/DeveloperSpotlight'));
 
+import { gamesRegistry } from '@spielcade/games/registry';
+
 export const metadata: Metadata = {
   title: "Play Free Online Games & Publish to Earn | Spielcade",
-  description: "Play thousands of free web games instantly. Are you a developer? Publish your HTML5 games on Spielcade and earn revenue from every view.",
+  description: "Play thousands of free web games instantly with no downloads required. Discover action, puzzle, arcade, and racing games on Spielcade.",
+  keywords: [
+    "free online games",
+    "browser games",
+    "play free games",
+    "juegos gratis online",
+    "jogos online gratis",
+    "jeux en ligne gratuits",
+    "kostenlose online spiele",
+    "html5 games",
+    "no download games",
+    "instant play games",
+    "2048 online",
+    "neon snake",
+    "neon flyer"
+  ],
   openGraph: {
     title: "Play Free Online Games & Publish to Earn | Spielcade",
     description: "Play thousands of free web games instantly. Are you a developer? Publish your HTML5 games on Spielcade and earn revenue from every view.",
     url: "https://spielcade.com",
+    siteName: "Spielcade",
+    locale: "en_US",
+    type: "website",
   },
   alternates: {
     canonical: "https://spielcade.com",
@@ -43,20 +63,41 @@ export default async function HomePage() {
   const blogPosts = await getAllPosts();
   const supabase = createClient();
   
-  // Fetch dynamic game data concurrently
-  const [
-    { data: trendingGames },
-    { data: newArrivals },
-    { data: topRatedGames }
-  ] = await Promise.all([
-    supabase.from('games').select('*').order('total_plays', { ascending: false }).limit(12),
-    supabase.from('games').select('*').order('created_at', { ascending: false }).limit(10),
-    supabase.from('games').select('*').order('rating', { ascending: false }).limit(8),
-  ]);
+  // Fallback games derived from local registry for zero-downtime reliability
+  const fallbackGames = Object.entries(gamesRegistry).map(([slug, item]) => ({
+    id: slug,
+    slug,
+    title: item.config.title,
+    category: item.config.category,
+    rating: item.config.rating || 4.9,
+    image: item.config.image || '',
+    image_url: item.config.image || '',
+    total_plays: 100000,
+    created_at: new Date().toISOString()
+  }));
 
-  const trending = trendingGames || [];
-  const newGames = newArrivals || [];
-  const topRated = topRatedGames || [];
+  let trending = fallbackGames;
+  let newGames = fallbackGames;
+  let topRated = fallbackGames;
+
+  try {
+    // Fetch dynamic game data concurrently with safety catch
+    const [
+      { data: trendingGames },
+      { data: newArrivals },
+      { data: topRatedGames }
+    ] = await Promise.all([
+      supabase.from('games').select('*').eq('status', 'active').order('total_plays', { ascending: false }).limit(12),
+      supabase.from('games').select('*').eq('status', 'active').order('created_at', { ascending: false }).limit(10),
+      supabase.from('games').select('*').eq('status', 'active').order('rating', { ascending: false }).limit(8),
+    ]);
+
+    if (trendingGames && trendingGames.length > 0) trending = trendingGames;
+    if (newArrivals && newArrivals.length > 0) newGames = newArrivals;
+    if (topRatedGames && topRatedGames.length > 0) topRated = topRatedGames;
+  } catch (error) {
+    console.error('Edge Supabase fetch fallback engaged:', error);
+  }
 
   const categories = [
     { title: "Puzzle", icon: Puzzle, count: 120 },
@@ -67,20 +108,40 @@ export default async function HomePage() {
     { title: "Strategy", icon: Brain, count: 90 },
   ];
 
-  // Dynamic JSON-LD Schema based on real database games
+  // Dynamic JSON-LD Schema with Sitelinks SearchBox for Google SEO
   const jsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
       {
+        '@type': 'WebSite',
+        '@id': 'https://spielcade.com/#website',
+        url: 'https://spielcade.com/',
+        name: 'Spielcade Games',
+        description: 'Play the best free online browser games instantly with zero downloads.',
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: {
+            '@type': 'EntryPoint',
+            urlTemplate: 'https://spielcade.com/games?search={search_term_string}'
+          },
+          'query-input': 'required name=search_term_string'
+        }
+      },
+      {
         '@type': 'CollectionPage',
         name: 'Spielcade Game Collection',
-        description: 'A collection of the best free browser games.',
+        description: 'A curated collection of the best free browser games.',
         url: 'https://spielcade.com',
         hasPart: trending.map(game => ({
           '@type': 'SoftwareApplication',
           name: game.title,
           applicationCategory: 'Game',
-          operatingSystem: 'Any',
+          operatingSystem: 'Any (Web Browser)',
+          offers: {
+            '@type': 'Offer',
+            price: '0',
+            priceCurrency: 'USD'
+          },
           aggregateRating: {
             '@type': 'AggregateRating',
             ratingValue: game.rating || 5.0,
@@ -142,9 +203,15 @@ export default async function HomePage() {
             <SectionHeader title="New Arrivals" actionText="View Latest" actionHref="/games/new" icon3d={<RocketIcon />} />
             <HorizontalScroll>
               {newGames.map((game, i) => (
-                <div key={game.id} className="w-64 flex-none shrink-0 relative">
+                <div key={game.id || i} className="w-64 flex-none shrink-0 relative">
                   <div className="absolute top-2 left-2 bg-purple-600 text-white text-[11px] font-bold px-2 py-1 rounded uppercase tracking-wider z-10 shadow-sm pointer-events-none">NEW</div>
-                  <GameCard title={game.title} rating={game.rating || 5.0} category={game.category || 'Arcade'} slug={game.slug || game.id} imageUrl={game.image} />
+                  <GameCard 
+                    title={game.title} 
+                    rating={game.rating || 5.0} 
+                    category={game.category || 'Arcade'} 
+                    slug={game.slug || game.id} 
+                    imageUrl={game.image || (game as any).image_url} 
+                  />
                 </div>
               ))}
             </HorizontalScroll>
@@ -171,7 +238,14 @@ export default async function HomePage() {
             <SectionHeader title="Hall of Fame" actionText="Highest Rated" icon3d={<FireIcon />} />
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                {topRated.map((game, i) => (
-                 <GameCard key={game.id} title={game.title} rating={game.rating || 5.0} category={game.category || 'Arcade'} slug={game.slug || game.id} imageUrl={game.image} />
+                 <GameCard 
+                   key={game.id || i} 
+                   title={game.title} 
+                   rating={game.rating || 5.0} 
+                   category={game.category || 'Arcade'} 
+                   slug={game.slug || game.id} 
+                   imageUrl={game.image || (game as any).image_url} 
+                 />
                ))}
             </div>
           </section>

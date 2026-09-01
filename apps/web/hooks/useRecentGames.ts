@@ -61,9 +61,20 @@ export function useRecentGames() {
     return () => window.removeEventListener('recentGamesUpdated', handleUpdate);
   }, []);
 
+  const clearRecentGames = () => {
+    try {
+      localStorage.removeItem(RECENT_GAMES_KEY);
+      setRecentSlugs([]);
+      window.dispatchEvent(new Event('recentGamesUpdated'));
+    } catch (e) {
+      console.error('Failed to clear recent games', e);
+    }
+  };
+
   return {
     recentSlugs,
     addRecentGame,
+    clearRecentGames,
     isMounted
   };
 }

@@ -37,7 +37,7 @@ export default function AllGamesClient({ initialGames }: { initialGames: any[] }
   const [activeCategory, setActiveCategory] = useState(searchParams.get('category') || 'All Games');
   const [activeDiff, setActiveDiff] = useState(searchParams.get('difficulty') || 'All Levels');
   const [activeFeatures, setActiveFeatures] = useState<string[]>(searchParams.get('features')?.split(',') || []);
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || searchParams.get('search') || '');
   
   // Pagination state from URL
   const [currentPage, setCurrentPage] = useState(() => {
