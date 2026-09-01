@@ -2,11 +2,20 @@
 
 import { useState, useEffect } from 'react';
 
-const RECENT_GAMES_KEY = 'spielcade_recent_games';
-const MAX_RECENT_GAMES = 12;
+export interface RecentGameItem {
+  slug: string;
+  title: string;
+  image?: string;
+  category?: string;
+  rating?: number;
+  lastPlayed?: string;
+}
+
+const RECENT_GAMES_KEY = 'spielcade_recent_games_v2';
+const MAX_RECENT_GAMES = 10;
 
 export function useRecentGames() {
-  const [recentSlugs, setRecentSlugs] = useState<string[]>([]);
+  const [recentGames, setRecentGames] = useState<RecentGameItem[]>([]);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -14,21 +23,35 @@ export function useRecentGames() {
     try {
       const stored = localStorage.getItem(RECENT_GAMES_KEY);
       if (stored) {
-        setRecentSlugs(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          // If old string array format, convert to items
+          const normalized: RecentGameItem[] = parsed.map((item: any) => {
+            if (typeof item === 'string') {
+              return { slug: item, title: item.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) };
+            }
+            return item;
+          });
+          setRecentGames(normalized);
+        }
       }
     } catch (e) {
       console.error('Failed to load recent games', e);
     }
   }, []);
 
-  const addRecentGame = (slug: string) => {
+  const addRecentGame = (gameData: string | RecentGameItem) => {
     try {
+      const item: RecentGameItem = typeof gameData === 'string' 
+        ? { slug: gameData, title: gameData.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), lastPlayed: new Date().toISOString() }
+        : { ...gameData, lastPlayed: new Date().toISOString() };
+
       const stored = localStorage.getItem(RECENT_GAMES_KEY);
-      let current = stored ? JSON.parse(stored) : [];
+      let current: RecentGameItem[] = stored ? JSON.parse(stored) : [];
       
       // Remove if it already exists to put it at the beginning
-      current = current.filter((s: string) => s !== slug);
-      current.unshift(slug);
+      current = current.filter(g => (typeof g === 'string' ? g : g.slug) !== item.slug);
+      current.unshift(item);
       
       // Keep only the most recent ones
       if (current.length > MAX_RECENT_GAMES) {
@@ -36,9 +59,7 @@ export function useRecentGames() {
       }
       
       localStorage.setItem(RECENT_GAMES_KEY, JSON.stringify(current));
-      
-      // If we are on the client, also update state so other components might react if they share state (though here they don't natively share, this is local to the hook instance)
-      setRecentSlugs(current);
+      setRecentGames(current);
       
       // Dispatch custom event for cross-component sync
       window.dispatchEvent(new Event('recentGamesUpdated'));
@@ -51,7 +72,7 @@ export function useRecentGames() {
     const handleUpdate = () => {
       try {
         const stored = localStorage.getItem(RECENT_GAMES_KEY);
-        if (stored) setRecentSlugs(JSON.parse(stored));
+        if (stored) setRecentGames(JSON.parse(stored));
       } catch (e) {
         // ignore
       }
@@ -64,7 +85,8 @@ export function useRecentGames() {
   const clearRecentGames = () => {
     try {
       localStorage.removeItem(RECENT_GAMES_KEY);
-      setRecentSlugs([]);
+      localStorage.removeItem('spielcade_recent_games');
+      setRecentGames([]);
       window.dispatchEvent(new Event('recentGamesUpdated'));
     } catch (e) {
       console.error('Failed to clear recent games', e);
@@ -72,7 +94,8 @@ export function useRecentGames() {
   };
 
   return {
-    recentSlugs,
+    recentGames,
+    recentSlugs: recentGames.map(g => g.slug),
     addRecentGame,
     clearRecentGames,
     isMounted

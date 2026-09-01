@@ -21,12 +21,6 @@ interface TrendingGamesFilterProps {
 
 export function TrendingGamesFilter({ games }: TrendingGamesFilterProps) {
   const [activeCategory, setActiveCategory] = useState<string>('All');
-  const [visibleCount, setVisibleCount] = useState<number>(12);
-  const [isLoading, setIsLoading] = useState(false);
-  const { ref, inView } = useInView({
-    threshold: 0,
-    rootMargin: '200px',
-  });
 
   // Extract unique categories from games
   const categories = ['All', ...Array.from(new Set(games.map(g => g.category).filter(Boolean) as string[]))];
@@ -35,24 +29,8 @@ export function TrendingGamesFilter({ games }: TrendingGamesFilterProps) {
     ? games 
     : games.filter(g => g.category === activeCategory);
 
-  const visibleGames = filteredGames.slice(0, visibleCount);
-  const hasMore = visibleCount < filteredGames.length;
-
-  useEffect(() => {
-    if (inView && hasMore && !isLoading) {
-      setIsLoading(true);
-      // Simulate network request for skeletons to show
-      const timer = setTimeout(() => {
-        setVisibleCount(prev => prev + 12);
-        setIsLoading(false);
-      }, 600);
-      return () => clearTimeout(timer);
-    }
-  }, [inView, hasMore, isLoading]);
-
   const handleCategoryChange = (cat: string) => {
     setActiveCategory(cat);
-    setVisibleCount(12); // Reset on category change
   };
 
   // Compute category counts
@@ -96,8 +74,8 @@ export function TrendingGamesFilter({ games }: TrendingGamesFilterProps) {
 
       {/* Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-5">
-        {visibleGames.length > 0 ? (
-          visibleGames.map((game, i) => {
+        {filteredGames.length > 0 ? (
+          filteredGames.map((game, i) => {
             const uniqueId = game.slug || game.id || String(i);
             const playsCount = (game as any).total_plays || (game as any).totalPlays || 10000;
             const playsStr = `${Math.floor(playsCount / 1000)}K plays`;
@@ -122,23 +100,18 @@ export function TrendingGamesFilter({ games }: TrendingGamesFilterProps) {
             <p className="text-gray-500 dark:text-gray-400 font-medium">No trending games found for {activeCategory}.</p>
           </div>
         )}
-        
-        {/* Loading Skeletons */}
-        {isLoading && (
-          <>
-            {Array.from({ length: 6 }).map((_, i) => (
-              <GameCardSkeleton key={`skeleton-${i}`} />
-            ))}
-          </>
-        )}
       </div>
 
-      {/* Infinite Scroll Trigger */}
-      {hasMore && (
-        <div ref={ref} className="h-10 w-full flex items-center justify-center">
-          {!isLoading && <span className="sr-only">Scroll for more</span>}
-        </div>
-      )}
+      {/* View All Button */}
+      <div className="flex justify-center pt-4">
+        <Link
+          href="/popular"
+          className="inline-flex items-center gap-2 px-8 py-3 bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/10 hover:border-purple-500 text-gray-800 dark:text-white font-bold text-sm rounded-xl shadow-sm hover:shadow-[0_0_25px_rgba(147,51,234,0.3)] transition-all hover:scale-105"
+        >
+          <span>Explore All Trending Games</span>
+          <span className="text-purple-400">&rarr;</span>
+        </Link>
+      </div>
     </div>
   );
 }

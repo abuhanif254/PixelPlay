@@ -27,13 +27,26 @@ export default function GamePlayer({ children, title, slug, image, sourceUrl, on
   const [rewardedAdMsgId, setRewardedAdMsgId] = useState<number | null>(null);
   
   const containerRef = useRef<HTMLDivElement>(null);
-  const { addRecentGame } = useRecentGames();
-
   // Handle Play Button Click
   const handlePlay = () => {
     setPlayerState('ad');
-    addRecentGame(slug);
+    addRecentGame({
+      slug,
+      title,
+      image,
+    });
   };
+
+  // Auto-record session into Recent Games on load as well
+  useEffect(() => {
+    if (slug) {
+      addRecentGame({
+        slug,
+        title,
+        image,
+      });
+    }
+  }, [slug, title, image, addRecentGame]);
 
   // Ad Countdown Logic
   useEffect(() => {
