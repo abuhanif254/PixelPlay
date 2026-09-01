@@ -1,4 +1,5 @@
 export const runtime = 'edge';
+export const revalidate = 3600; // Cache sitemap for 1 hour on Cloudflare Edge
 
 import { MetadataRoute } from 'next';
 import { createClient } from '@supabase/supabase-js';
