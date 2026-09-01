@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export interface RecentGameItem {
   slug: string;
@@ -40,7 +40,7 @@ export function useRecentGames() {
     }
   }, []);
 
-  const addRecentGame = (gameData: string | RecentGameItem) => {
+  const addRecentGame = React.useCallback((gameData: string | RecentGameItem) => {
     try {
       const item: RecentGameItem = typeof gameData === 'string' 
         ? { slug: gameData, title: gameData.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), lastPlayed: new Date().toISOString() }
@@ -66,7 +66,7 @@ export function useRecentGames() {
     } catch (e) {
       console.error('Failed to save recent game', e);
     }
-  };
+  }, []);
 
   useEffect(() => {
     const handleUpdate = () => {
@@ -82,7 +82,7 @@ export function useRecentGames() {
     return () => window.removeEventListener('recentGamesUpdated', handleUpdate);
   }, []);
 
-  const clearRecentGames = () => {
+  const clearRecentGames = React.useCallback(() => {
     try {
       localStorage.removeItem(RECENT_GAMES_KEY);
       localStorage.removeItem('spielcade_recent_games');
@@ -91,7 +91,7 @@ export function useRecentGames() {
     } catch (e) {
       console.error('Failed to clear recent games', e);
     }
-  };
+  }, []);
 
   return {
     recentGames,

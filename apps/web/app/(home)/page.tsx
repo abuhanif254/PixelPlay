@@ -80,21 +80,25 @@ export default async function HomePage() {
   let newGames = fallbackGames;
   let topRated = fallbackGames;
   let liveCounts: Record<string, number> = {};
+  let totalActiveGames = 0;
 
   try {
     // Fetch dynamic game data concurrently with safety catch
-
     const [
       { data: trendingGames },
       { data: newArrivals },
       { data: topRatedGames },
-      { data: categoryRows }
+      { data: categoryRows },
+      { count: exactCount }
     ] = await Promise.all([
       supabase.from('games').select('id, title, slug, image_url, category, total_plays, rating').eq('status', 'active').order('total_plays', { ascending: false }).limit(24),
       supabase.from('games').select('id, title, slug, image_url, category, total_plays, rating').eq('status', 'active').order('created_at', { ascending: false }).limit(16),
       supabase.from('games').select('id, title, slug, image_url, category, total_plays, rating').eq('status', 'active').order('rating', { ascending: false }).limit(12),
-      supabase.from('games').select('category').eq('status', 'active')
+      supabase.from('games').select('category').eq('status', 'active'),
+      supabase.from('games').select('*', { count: 'exact', head: true }).eq('status', 'active')
     ]);
+
+    totalActiveGames = exactCount || 0;
 
     if (categoryRows) {
       categoryRows.forEach((g: any) => {
@@ -185,7 +189,7 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       
-      <HeroSection />
+      <HeroSection totalGamesCount={totalActiveGames || undefined} />
       
       {/* Move Categories Carousel closer to top for visual navigation */}
       <CategoriesCarousel />

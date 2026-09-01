@@ -27,6 +27,8 @@ export default function GamePlayer({ children, title, slug, image, sourceUrl, on
   const [rewardedAdMsgId, setRewardedAdMsgId] = useState<number | null>(null);
   
   const containerRef = useRef<HTMLDivElement>(null);
+  const hasRecordedRef = useRef(false);
+
   // Handle Play Button Click
   const handlePlay = () => {
     setPlayerState('ad');
@@ -37,9 +39,10 @@ export default function GamePlayer({ children, title, slug, image, sourceUrl, on
     });
   };
 
-  // Auto-record session into Recent Games on load as well
+  // Auto-record session into Recent Games safely once on mount
   useEffect(() => {
-    if (slug) {
+    if (slug && !hasRecordedRef.current) {
+      hasRecordedRef.current = true;
       addRecentGame({
         slug,
         title,

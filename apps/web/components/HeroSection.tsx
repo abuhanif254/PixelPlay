@@ -42,7 +42,11 @@ const POPULAR_SUGGESTIONS = [
   { title: 'Neon Snake', category: 'Arcade', slug: 'snake', rating: 4.8 },
 ];
 
-export const HeroSection: React.FC = () => {
+interface HeroSectionProps {
+  totalGamesCount?: number;
+}
+
+export const HeroSection: React.FC<HeroSectionProps> = ({ totalGamesCount }) => {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -220,15 +224,16 @@ export const HeroSection: React.FC = () => {
             <div className="flex flex-wrap items-center gap-3 mb-12">
               <span className="text-gray-500 text-sm font-medium">Popular:</span>
               {[
-                { label: 'Snake', query: 'snake' },
-                { label: '2048', query: '2048' },
-                { label: 'Neon Flyer', query: 'neon flyer' },
+                { label: 'Action', query: 'action' },
                 { label: 'Puzzle', query: 'puzzle' },
-                { label: 'Arcade', query: 'arcade' }
+                { label: 'Arcade', query: 'arcade' },
+                { label: 'Racing', query: 'racing' },
+                { label: 'Sports', query: 'sports' },
+                { label: 'Shooting', query: 'shooting' }
               ].map(tag => (
                 <Link 
                   key={tag.label} 
-                  href={`/games?search=${encodeURIComponent(tag.query)}`}
+                  href={`/games?category=${encodeURIComponent(tag.label)}`}
                   className="px-4 py-1.5 rounded-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 text-gray-600 dark:text-gray-300 text-xs font-medium hover:bg-black/10 dark:hover:bg-white/10 hover:text-black dark:hover:text-white transition-colors"
                 >
                   {tag.label}
@@ -243,7 +248,9 @@ export const HeroSection: React.FC = () => {
                   <Gamepad2 className="w-6 h-6 fill-current" />
                 </div>
                 <div>
-                  <div className="text-xl font-bold text-gray-900 dark:text-white">1000+</div>
+                  <div className="text-xl font-bold text-gray-900 dark:text-white">
+                    {totalGamesCount ? `${totalGamesCount.toLocaleString()}+` : '4,000+'}
+                  </div>
                   <div className="text-sm text-gray-500 font-medium">Free Games</div>
                 </div>
               </div>
