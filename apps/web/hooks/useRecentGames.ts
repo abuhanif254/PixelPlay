@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 export interface RecentGameItem {
   slug: string;
@@ -40,7 +40,7 @@ export function useRecentGames() {
     }
   }, []);
 
-  const addRecentGame = React.useCallback((gameData: string | RecentGameItem) => {
+  const addRecentGame = useCallback((gameData: string | RecentGameItem) => {
     try {
       const item: RecentGameItem = typeof gameData === 'string' 
         ? { slug: gameData, title: gameData.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), lastPlayed: new Date().toISOString() }
@@ -82,7 +82,7 @@ export function useRecentGames() {
     return () => window.removeEventListener('recentGamesUpdated', handleUpdate);
   }, []);
 
-  const clearRecentGames = React.useCallback(() => {
+  const clearRecentGames = useCallback(() => {
     try {
       localStorage.removeItem(RECENT_GAMES_KEY);
       localStorage.removeItem('spielcade_recent_games');
