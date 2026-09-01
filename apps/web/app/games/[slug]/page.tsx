@@ -26,7 +26,11 @@ export async function generateMetadata(
   const { slug } = params;
   
   const supabase = createClient();
-  const { data: dbGame } = await supabase.from('games').select('*').eq('slug', slug).single();
+  const { data: dbGame } = await supabase
+    .from('games')
+    .select('id, title, slug, description, category, image_url, status, metadata')
+    .eq('slug', slug)
+    .single();
   
   const localGame = gamesRegistry[slug];
 
