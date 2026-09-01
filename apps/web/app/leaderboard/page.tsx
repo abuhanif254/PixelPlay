@@ -35,8 +35,13 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
   if (timePeriod === 'This Week') days = 7;
   else if (timePeriod === 'This Month') days = 30;
 
-  // Fetch games for filters/sidebar
-  const { data: gamesList } = await supabase.from('games').select('id, title, slug');
+  // Fetch top 50 games for filters/sidebar
+  const { data: gamesList } = await supabase
+    .from('games')
+    .select('id, title, slug')
+    .eq('status', 'active')
+    .order('total_plays', { ascending: false })
+    .limit(50);
   const availableGames = gamesList || [];
 
   // Fetch leaderboard via RPC
