@@ -13,7 +13,8 @@ export default async function AdminGamesPage() {
   const { data: games, count } = await supabase
     .from('games')
     .select('*', { count: 'exact' })
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(5000);
 
   const mappedGames = (games || []).map((g: any) => ({
     id: g.id,

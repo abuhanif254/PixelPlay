@@ -322,7 +322,9 @@ export default function GamesTable({ initialGames, totalCount }: { initialGames:
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold font-outfit text-gray-900 dark:text-white tracking-tight mb-1">Games Management</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">{games.length} games registered · {games.filter(g => g.status === 'active').length} active</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
+            {totalCount || games.length} games registered · {games.filter(g => g.status === 'active').length} active
+          </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <button
