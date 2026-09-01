@@ -3,20 +3,26 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Filter } from 'lucide-react';
 
-export default function CategorySidebar({ currentSlug }: { currentSlug?: string }) {
+export default function CategorySidebar({ 
+  currentSlug,
+  categoryCounts
+}: { 
+  currentSlug?: string;
+  categoryCounts?: Record<string, number>;
+}) {
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('All Levels');
   const [selectedSort, setSelectedSort] = useState<string>('Most Popular');
 
   const categories = [
     { name: 'All Categories', slug: 'all', count: null, icon: '🗂️' },
-    { name: 'Puzzle Games', slug: 'puzzle-games', count: 125, icon: '🧩' },
-    { name: 'Action Games', slug: 'action-games', count: 98, icon: '⚔️' },
-    { name: 'Racing Games', slug: 'racing-games', count: 67, icon: '🏎️' },
-    { name: 'Adventure Games', slug: 'adventure-games', count: 56, icon: '🗺️' },
-    { name: 'Arcade Games', slug: 'arcade-games', count: 82, icon: '👾' },
-    { name: 'Board Games', slug: 'board-games', count: 43, icon: '🎲' },
-    { name: 'Strategy Games', slug: 'strategy-games', count: 41, icon: '♟️' },
-    { name: 'Sports Games', slug: 'sports-games', count: 32, icon: '🏅' },
+    { name: 'Puzzle Games', slug: 'puzzle-games', count: categoryCounts?.['Puzzle'] ?? 125, icon: '🧩' },
+    { name: 'Action Games', slug: 'action-games', count: categoryCounts?.['Action'] ?? 98, icon: '⚔️' },
+    { name: 'Racing Games', slug: 'racing-games', count: categoryCounts?.['Racing'] ?? 67, icon: '🏎️' },
+    { name: 'Adventure Games', slug: 'adventure-games', count: categoryCounts?.['Adventure'] ?? 56, icon: '🗺️' },
+    { name: 'Arcade Games', slug: 'arcade-games', count: categoryCounts?.['Arcade'] ?? 82, icon: '👾' },
+    { name: 'Board Games', slug: 'board-games', count: categoryCounts?.['Board'] ?? 43, icon: '🎲' },
+    { name: 'Strategy Games', slug: 'strategy-games', count: categoryCounts?.['Strategy'] ?? 41, icon: '♟️' },
+    { name: 'Sports Games', slug: 'sports-games', count: categoryCounts?.['Sports'] ?? 32, icon: '🏅' },
   ];
 
   const difficulties = [

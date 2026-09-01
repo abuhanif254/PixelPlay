@@ -18,15 +18,15 @@ export default function GameCardSmall({ title, slug, rating = 4.5, imageUrl }: G
     >
       <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 shadow-sm">
         {imageUrl ? (
-          <Image
+          <img
             src={imageUrl}
             alt={title}
-            fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest bg-gradient-to-br from-gray-100 to-gray-200 dark:from-[#111228] dark:to-[#1D1B4B]">
-            {title}
+          <div className="w-full h-full flex items-center justify-center text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest bg-gradient-to-br from-gray-100 to-gray-200 dark:from-[#111228] dark:to-[#1D1B4B]">
+            {title.substring(0, 2).toUpperCase()}
           </div>
         )}
       </div>

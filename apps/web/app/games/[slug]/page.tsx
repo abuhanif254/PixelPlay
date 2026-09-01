@@ -213,15 +213,56 @@ export default async function GamePage({ params }: GamePageProps) {
     }))
   } : null;
 
-  // Grab some dummy related games
-  const registryArray = Object.entries(gamesRegistry);
-  const relatedGames = Array.from({ length: 4 }).map((_, i) => {
-    const entry = registryArray[i % registryArray.length];
-    return { slug: entry[0], ...entry[1].config };
-  });
+  // Fetch real related games from the database matching the same category
+  const { data: dbRelated } = await supabase
+    .from('games')
+    .select('id, title, slug, image_url, category, rating, total_plays')
+    .eq('status', 'active')
+    .eq('category', config.category)
+    .neq('slug', slug)
+    .order('total_plays', { ascending: false })
+    .limit(6);
 
-  const mockPlays = `${(Math.random() * 2 + 1).toFixed(1)}M plays`;
-  const mockVotes = `${Math.floor(Math.random() * 5) + 1}.${Math.floor(Math.random() * 9)}K votes`;
+  let relatedGames = (dbRelated || []).map((g: any) => ({
+    id: g.id,
+    slug: g.slug,
+    title: g.title,
+    image: g.image_url,
+    category: g.category,
+    rating: g.rating || 4.8,
+    totalPlays: g.total_plays || 10000
+  }));
+
+  // Fallback to top games if fewer than 4 games exist in this specific category
+  if (relatedGames.length < 4) {
+    const { data: fallbackGames } = await supabase
+      .from('games')
+      .select('id, title, slug, image_url, category, rating, total_plays')
+      .eq('status', 'active')
+      .neq('slug', slug)
+      .order('total_plays', { ascending: false })
+      .limit(6);
+
+    relatedGames = (fallbackGames || []).map((g: any) => ({
+      id: g.id,
+      slug: g.slug,
+      title: g.title,
+      image: g.image_url,
+      category: g.category,
+      rating: g.rating || 4.8,
+      totalPlays: g.total_plays || 10000
+    }));
+  }
+
+  const totalPlaysNum = dbGame?.total_plays || (localGame ? 25000 : 12000);
+  const formattedPlays = totalPlaysNum >= 1000000 
+    ? `${(totalPlaysNum / 1000000).toFixed(1)}M plays`
+    : `${Math.floor(totalPlaysNum / 1000)}K plays`;
+
+  const votesNum = Math.floor(totalPlaysNum * 0.12);
+  const formattedVotes = votesNum >= 1000
+    ? `${(votesNum / 1000).toFixed(1)}K votes`
+    : `${votesNum} votes`;
 
   const handleGameOver = async (score: number) => {
     'use server';
@@ -290,12 +331,12 @@ export default async function GamePage({ params }: GamePageProps) {
                       <Star size={14} className="fill-current opacity-50" />
                     </div>
                     <span className="text-gray-900 dark:text-white font-bold ml-1">{config.rating || '4.6'}</span>
-                    <span className="text-gray-500">({mockVotes})</span>
+                    <span className="text-gray-500">({formattedVotes})</span>
                   </div>
                   <div className="w-1 h-1 rounded-full bg-gray-400 dark:bg-gray-600"></div>
                   <div className="flex items-center gap-1.5">
                     <Clock size={14} className="text-gray-500" />
-                    <span>{mockPlays}</span>
+                    <span>{formattedPlays}</span>
                   </div>
                 </div>
               </div>

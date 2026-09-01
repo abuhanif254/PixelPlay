@@ -82,15 +82,26 @@ export default async function HomePage() {
 
   try {
     // Fetch dynamic game data concurrently with safety catch
+    let liveCounts: Record<string, number> = {};
+
     const [
       { data: trendingGames },
       { data: newArrivals },
-      { data: topRatedGames }
+      { data: topRatedGames },
+      { data: categoryRows }
     ] = await Promise.all([
-      supabase.from('games').select('*').eq('status', 'active').order('total_plays', { ascending: false }).limit(24),
-      supabase.from('games').select('*').eq('status', 'active').order('created_at', { ascending: false }).limit(16),
-      supabase.from('games').select('*').eq('status', 'active').order('rating', { ascending: false }).limit(12),
+      supabase.from('games').select('id, title, slug, image_url, category, total_plays, rating').eq('status', 'active').order('total_plays', { ascending: false }).limit(24),
+      supabase.from('games').select('id, title, slug, image_url, category, total_plays, rating').eq('status', 'active').order('created_at', { ascending: false }).limit(16),
+      supabase.from('games').select('id, title, slug, image_url, category, total_plays, rating').eq('status', 'active').order('rating', { ascending: false }).limit(12),
+      supabase.from('games').select('category').eq('status', 'active')
     ]);
+
+    if (categoryRows) {
+      categoryRows.forEach((g: any) => {
+        const c = g.category || 'Arcade';
+        liveCounts[c] = (liveCounts[c] || 0) + 1;
+      });
+    }
 
     if (trendingGames && trendingGames.length > 0) trending = trendingGames;
     if (newArrivals && newArrivals.length > 0) newGames = newArrivals;
@@ -100,12 +111,12 @@ export default async function HomePage() {
   }
 
   const categories = [
-    { title: "Puzzle", icon: Puzzle, count: 120 },
-    { title: "Arcade", icon: Gamepad2, count: 85 },
-    { title: "Board", icon: Grid, count: 40 },
-    { title: "Action", icon: Swords, count: 200 },
-    { title: "Racing", icon: Car, count: 55 },
-    { title: "Strategy", icon: Brain, count: 90 },
+    { title: "Puzzle", icon: Puzzle, count: liveCounts["Puzzle"] || 120 },
+    { title: "Arcade", icon: Gamepad2, count: liveCounts["Arcade"] || 85 },
+    { title: "Board", icon: Grid, count: liveCounts["Board"] || 40 },
+    { title: "Action", icon: Swords, count: liveCounts["Action"] || 200 },
+    { title: "Racing", icon: Car, count: liveCounts["Racing"] || 55 },
+    { title: "Strategy", icon: Brain, count: liveCounts["Strategy"] || 90 },
   ];
 
   // Dynamic JSON-LD Schema with Sitelinks SearchBox for Google SEO
