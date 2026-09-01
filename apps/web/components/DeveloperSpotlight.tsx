@@ -23,9 +23,14 @@ export default function DeveloperSpotlight() {
           The masterminds behind classic hits like "Neon Snake" and "Cyberpunk Racing". RetroArcade specializes in bringing nostalgic gameplay mechanics to modern HTML5 engines with stunning particle effects.
         </p>
         
-        <Link href="/developers/retroarcade" className="inline-flex items-center justify-center bg-white text-gray-900 px-6 py-3 rounded-full font-bold hover:bg-purple-50 hover:text-purple-600 hover:scale-105 transition-all duration-300 self-start shadow-[0_0_20px_rgba(255,255,255,0.1)] group-hover:shadow-[0_0_30px_rgba(168,85,247,0.4)]">
-          View Developer Catalog <ArrowRight className="ml-2 w-4 h-4" />
-        </Link>
+        <div className="flex flex-wrap items-center gap-4">
+          <Link href="/studio" className="inline-flex items-center justify-center bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white px-6 py-3 rounded-full font-bold hover:shadow-[0_0_25px_rgba(99,102,241,0.6)] hover:scale-105 transition-all duration-300 shadow-md">
+            Publish on Spielcade <ArrowRight className="ml-2 w-4 h-4" />
+          </Link>
+          <Link href="/developers" className="inline-flex items-center justify-center bg-white/10 hover:bg-white/20 text-white border border-white/10 px-5 py-3 rounded-full font-bold hover:scale-105 transition-all duration-300">
+            Developer Program
+          </Link>
+        </div>
       </div>
     </div>
   );

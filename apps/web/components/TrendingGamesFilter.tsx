@@ -55,24 +55,43 @@ export function TrendingGamesFilter({ games }: TrendingGamesFilterProps) {
     setVisibleCount(12); // Reset on category change
   };
 
+  // Compute category counts
+  const categoryCounts = games.reduce((acc, g) => {
+    const cat = g.category || 'Arcade';
+    acc[cat] = (acc[cat] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
   return (
     <div className="space-y-6">
       {/* Category Tag Cloud */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => handleCategoryChange(cat)}
-            className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-              activeCategory === cat 
-                ? 'bg-primary text-white shadow-md shadow-primary/20' 
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-            }`}
-            aria-pressed={activeCategory === cat}
-          >
-            {cat}
-          </button>
-        ))}
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide scroll-smooth">
+        {categories.map((cat) => {
+          const isSelected = activeCategory === cat;
+          const count = cat === 'All' ? games.length : (categoryCounts[cat] || 0);
+
+          return (
+            <button
+              key={cat}
+              onClick={() => handleCategoryChange(cat)}
+              className={`group flex items-center gap-2 px-4 py-2 rounded-full text-xs md:text-sm font-bold whitespace-nowrap transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366F1] ${
+                isSelected 
+                  ? 'bg-gradient-to-r from-[#6366F1] via-[#7C3AED] to-[#8B5CF6] text-white shadow-[0_0_20px_rgba(99,102,241,0.4)] scale-105' 
+                  : 'bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:border-purple-500/40 hover:text-gray-900 dark:hover:text-white shadow-sm'
+              }`}
+              aria-pressed={isSelected}
+            >
+              <span>{cat === 'All' ? '🔥 All Trending' : cat}</span>
+              <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono transition-colors ${
+                isSelected 
+                  ? 'bg-white/20 text-white' 
+                  : 'bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 group-hover:bg-purple-500/10 group-hover:text-purple-400'
+              }`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Grid */}
