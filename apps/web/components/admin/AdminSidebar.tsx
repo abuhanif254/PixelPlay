@@ -129,7 +129,7 @@ export default function AdminSidebar({
           })}
         </nav>
 
-        {/* Footer — Admin Profile + Actions */}
+        {/* Footer ï¿½ Admin Profile + Actions */}
         <div className="p-4 border-t border-gray-200 dark:border-white/5 flex flex-col gap-1 shrink-0">
           {/* Admin info card */}
           {adminProfile && (
