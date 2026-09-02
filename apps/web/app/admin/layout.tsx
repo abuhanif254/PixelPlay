@@ -3,17 +3,22 @@ import React from 'react';
 import { Metadata } from 'next';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import AdminTopBar from '@/components/admin/AdminTopBar';
+import { requireAdmin } from '@/lib/admin';
 
 export const metadata: Metadata = {
   title: 'Admin Dashboard | Spielcade',
   description: 'Spielcade Administration and Management Panel',
 };
 
-export default function AdminLayout({
+export const revalidate = 0;
+
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  await requireAdmin();
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#05050F] text-gray-900 dark:text-white relative">
       
