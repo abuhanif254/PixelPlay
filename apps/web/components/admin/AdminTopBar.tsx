@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Bell, Sun, Moon, X, CheckCheck } from 'lucide-react';
+import { Search, Bell, Sun, Moon, X, CheckCheck, Menu } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
@@ -30,7 +30,11 @@ const notifIcon: Record<string, string> = {
   new_user: '👤', new_score: '🏆', new_post: '📝', game_error: '⚠️', system: '⚙️'
 };
 
-export default function AdminTopBar() {
+export default function AdminTopBar({
+  onOpenMobileSidebar,
+}: {
+  onOpenMobileSidebar?: () => void;
+}) {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -96,11 +100,20 @@ export default function AdminTopBar() {
   };
 
   return (
-    <header className="h-20 bg-white/50 dark:bg-[#0A0B1A]/50 backdrop-blur-xl border-b border-gray-200 dark:border-white/5 flex items-center justify-between px-6 sticky top-0 z-40">
+    <header className="h-20 bg-white/50 dark:bg-[#0A0B1A]/50 backdrop-blur-xl border-b border-gray-200 dark:border-white/5 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-40 gap-3">
+
+      {/* Mobile Hamburger Toggle */}
+      <button
+        onClick={onOpenMobileSidebar}
+        aria-label="Open admin navigation menu"
+        className="lg:hidden p-2.5 rounded-xl bg-gray-100 dark:bg-[#111228] border border-gray-200 dark:border-white/5 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors shrink-0"
+      >
+        <Menu className="w-5 h-5" />
+      </button>
 
       {/* Global Search */}
       <div className="flex-1 max-w-xl relative" ref={searchRef}>
-        <div className="flex items-center bg-gray-100 dark:bg-[#111228] rounded-full px-4 py-2 w-full border border-gray-200 dark:border-white/5 focus-within:border-[#6366F1]/50 transition-colors">
+        <div className="flex items-center bg-gray-100 dark:bg-[#111228] rounded-full px-3 sm:px-4 py-2 w-full border border-gray-200 dark:border-white/5 focus-within:border-[#6366F1]/50 transition-colors">
           <Search className="w-4 h-4 text-gray-500 mr-2 shrink-0" />
           <input
             type="text"
@@ -173,12 +186,12 @@ export default function AdminTopBar() {
       </div>
 
       {/* Right Actions */}
-      <div className="flex items-center gap-3 pl-6">
+      <div className="flex items-center gap-2 sm:gap-3 pl-1 sm:pl-6 shrink-0">
 
         {/* Dark Mode Toggle */}
         <button
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          className="p-2.5 rounded-full bg-gray-100 dark:bg-[#111228] border border-gray-200 dark:border-white/5 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+          className="p-2 sm:p-2.5 rounded-full bg-gray-100 dark:bg-[#111228] border border-gray-200 dark:border-white/5 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
         >
           {mounted ? (theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />) : <div className="w-4 h-4" />}
         </button>
@@ -187,7 +200,7 @@ export default function AdminTopBar() {
         <div className="relative" ref={notifRef}>
           <button
             onClick={() => setShowNotifs(v => !v)}
-            className="p-2.5 rounded-full bg-gray-100 dark:bg-[#111228] border border-gray-200 dark:border-white/5 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors relative"
+            className="p-2 sm:p-2.5 rounded-full bg-gray-100 dark:bg-[#111228] border border-gray-200 dark:border-white/5 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors relative"
           >
             <Bell className="w-4 h-4" />
             {unreadCount > 0 && (
@@ -204,7 +217,7 @@ export default function AdminTopBar() {
                 initial={{ opacity: 0, scale: 0.95, y: -8 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: -8 }}
-                className="absolute right-0 top-14 w-80 bg-white dark:bg-[#1A1C3D] border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50"
+                className="absolute right-0 top-14 w-72 sm:w-80 max-w-[calc(100vw-2rem)] bg-white dark:bg-[#1A1C3D] border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50"
               >
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-white/5">
