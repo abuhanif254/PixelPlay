@@ -35,10 +35,42 @@ export const metadata: Metadata = {
 
 const jsonLd = {
   '@context': 'https://schema.org',
-  '@type': 'WebSite',
-  name: 'Spielcade Games',
-  url: 'https://spielcade.com',
-  description: 'Play the best free online browser games instantly.'
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': 'https://spielcade.com/#organization',
+      'name': 'Spielcade',
+      'url': 'https://spielcade.com',
+      'logo': {
+        '@type': 'ImageObject',
+        '@id': 'https://spielcade.com/#logo',
+        'url': 'https://spielcade.com/logo.png',
+        'caption': 'Spielcade'
+      },
+      'sameAs': [
+        'https://twitter.com/spielcade',
+        'https://www.youtube.com/@spielcade'
+      ]
+    },
+    {
+      '@type': 'WebSite',
+      '@id': 'https://spielcade.com/#website',
+      'url': 'https://spielcade.com',
+      'name': 'Spielcade Games',
+      'description': 'Play the best free online browser games instantly with zero downloads.',
+      'publisher': {
+        '@id': 'https://spielcade.com/#organization'
+      },
+      'potentialAction': {
+        '@type': 'SearchAction',
+        'target': {
+          '@type': 'EntryPoint',
+          'urlTemplate': 'https://spielcade.com/games?search={search_term_string}'
+        },
+        'query-input': 'required name=search_term_string'
+      }
+    }
+  ]
 };
 
 import { ThemeProvider } from '@/components/ThemeProvider';

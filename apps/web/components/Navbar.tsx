@@ -100,17 +100,76 @@ export default function Navbar() {
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: 10, scale: 0.98 }}
                           transition={{ duration: 0.2, ease: "easeOut" }}
-                          className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-[400px] rounded-2xl bg-white dark:bg-[#12132A] border border-black/5 dark:border-white/5 shadow-2xl p-4 grid grid-cols-2 gap-2"
+                          className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-[560px] rounded-2xl bg-white dark:bg-[#12132A] border border-black/10 dark:border-white/10 shadow-2xl p-6"
                         >
-                          {['Action', 'Adventure', 'Arcade', 'Board', 'Puzzle', 'Racing', 'Sports', 'Strategy'].map((cat) => (
+                          <div className="grid grid-cols-2 gap-6">
+                            {/* Column 1: Core Genres */}
+                            <div>
+                              <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider block mb-3 px-2">
+                                Core Genres
+                              </span>
+                              <div className="flex flex-col gap-1">
+                                {[
+                                  { name: 'Action Games', slug: 'action-games', icon: '⚔️' },
+                                  { name: 'Racing Games', slug: 'racing-games', icon: '🏎️' },
+                                  { name: 'Puzzle Games', slug: 'puzzle-games', icon: '🧩' },
+                                  { name: 'Arcade Games', slug: 'arcade-games', icon: '👾' },
+                                  { name: 'Adventure Games', slug: 'adventure-games', icon: '🗺️' },
+                                  { name: 'Strategy Games', slug: 'strategy-games', icon: '♟️' },
+                                  { name: 'Sports Games', slug: 'sports-games', icon: '🏅' },
+                                  { name: 'Board Games', slug: 'board-games', icon: '🎲' },
+                                ].map((cat) => (
+                                  <Link 
+                                    key={cat.slug} 
+                                    href={`/categories/${cat.slug}`}
+                                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-white transition-colors"
+                                  >
+                                    <span className="text-sm">{cat.icon}</span>
+                                    {cat.name}
+                                  </Link>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Column 2: Thematic Clusters */}
+                            <div>
+                              <span className="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider block mb-3 px-2">
+                                Trending Clusters
+                              </span>
+                              <div className="flex flex-col gap-1">
+                                {[
+                                  { name: 'Car Games', slug: 'car-games', icon: '🚗' },
+                                  { name: 'Zombie Games', slug: 'zombie-games', icon: '🧟' },
+                                  { name: '2 Player Games', slug: '2-player-games', icon: '👥' },
+                                  { name: 'Stickman Games', slug: 'stickman-games', icon: '🏃' },
+                                  { name: 'Shooting Games', slug: 'shooting-games', icon: '🎯' },
+                                  { name: 'Unblocked Games', slug: 'unblocked-games', icon: '🔓' },
+                                  { name: 'Runner Games', slug: 'runner-games', icon: '🏃‍♂️' },
+                                  { name: 'Escape Games', slug: 'escape-games', icon: '🗝️' },
+                                ].map((cluster) => (
+                                  <Link 
+                                    key={cluster.slug} 
+                                    href={`/categories/${cluster.slug}`}
+                                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-purple-50 hover:text-purple-600 dark:text-gray-300 dark:hover:bg-purple-500/10 dark:hover:text-purple-400 transition-colors"
+                                  >
+                                    <span className="text-sm">{cluster.icon}</span>
+                                    {cluster.name}
+                                  </Link>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Footer bar */}
+                          <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/5 flex items-center justify-between px-2">
+                            <span className="text-xs text-gray-500 dark:text-gray-400">17,000+ instant HTML5 browser games</span>
                             <Link 
-                              key={cat} 
-                              href={`/categories/${cat.toLowerCase()}-games`}
-                              className="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 hover:bg-black/5 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-white transition-colors"
+                              href="/categories" 
+                              className="text-xs font-bold text-[#6366F1] hover:text-[#5457DF] transition-colors"
                             >
-                              {cat}
+                              Explore All Genres →
                             </Link>
-                          ))}
+                          </div>
                         </motion.div>
                       )}
                     </AnimatePresence>

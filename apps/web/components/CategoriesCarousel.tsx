@@ -1,19 +1,31 @@
 'use client';
 
 import React, { useRef } from 'react';
-import { ChevronLeft, ChevronRight, Puzzle, Zap, Mountain, Car, Trophy, Castle, Ghost, Dices, MoreHorizontal } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Puzzle, Zap, Mountain, Car, Trophy, Castle, Ghost, Dices, Users, Skull, Crosshair, Flame, ShieldCheck, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 
-const categories = [
-  { name: 'Puzzle', icon: Puzzle, color: 'text-pink-500' },
-  { name: 'Action', icon: Zap, color: 'text-orange-500' },
-  { name: 'Adventure', icon: Mountain, color: 'text-green-500' },
-  { name: 'Racing', icon: Car, color: 'text-blue-500' },
-  { name: 'Sports', icon: Trophy, color: 'text-yellow-500' },
-  { name: 'Strategy', icon: Castle, color: 'text-purple-500' },
-  { name: 'Arcade', icon: Ghost, color: 'text-teal-400' },
-  { name: 'Board', icon: Dices, color: 'text-red-500' },
-  { name: 'More', icon: MoreHorizontal, color: 'text-gray-400' },
+interface CarouselCategory {
+  name: string;
+  slug?: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+}
+
+const categories: CarouselCategory[] = [
+  { name: 'Action', slug: 'action-games', icon: Zap, color: 'text-orange-500' },
+  { name: 'Car Games', slug: 'car-games', icon: Car, color: 'text-blue-500' },
+  { name: 'Zombie', slug: 'zombie-games', icon: Skull, color: 'text-emerald-500' },
+  { name: '2 Player', slug: '2-player-games', icon: Users, color: 'text-indigo-500' },
+  { name: 'Shooting', slug: 'shooting-games', icon: Crosshair, color: 'text-red-500' },
+  { name: 'Puzzle', slug: 'puzzle-games', icon: Puzzle, color: 'text-pink-500' },
+  { name: 'Adventure', slug: 'adventure-games', icon: Mountain, color: 'text-green-500' },
+  { name: 'Racing', slug: 'racing-games', icon: Flame, color: 'text-amber-500' },
+  { name: 'Sports', slug: 'sports-games', icon: Trophy, color: 'text-yellow-500' },
+  { name: 'Strategy', slug: 'strategy-games', icon: Castle, color: 'text-purple-500' },
+  { name: 'Arcade', slug: 'arcade-games', icon: Ghost, color: 'text-teal-400' },
+  { name: 'Board', slug: 'board-games', icon: Dices, color: 'text-rose-500' },
+  { name: 'Unblocked', slug: 'unblocked-games', icon: ShieldCheck, color: 'text-cyan-500' },
+  { name: 'All', slug: 'all', icon: MoreHorizontal, color: 'text-gray-400' },
 ];
 
 export const CategoriesCarousel: React.FC = () => {
@@ -48,9 +60,9 @@ export const CategoriesCarousel: React.FC = () => {
           className="flex-1 overflow-x-auto hide-scrollbar flex items-center gap-8 md:gap-16 px-4 py-2 scroll-smooth"
         >
           {categories.map((cat) => {
-            const href = cat.name === 'More' 
+            const href = cat.slug === 'all'
               ? '/categories' 
-              : `/categories/${cat.name.toLowerCase()}-games`;
+              : `/categories/${cat.slug || cat.name.toLowerCase() + '-games'}`;
             return (
               <Link 
                 key={cat.name} 

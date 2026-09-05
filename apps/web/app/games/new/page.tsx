@@ -3,24 +3,35 @@ import NewGamesClient from './NewGamesClient';
 import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'edge';
+export const revalidate = 300; // 5-minute Edge CDN caching
 
 export const metadata: Metadata = {
-  title: 'New Games - Play Free Online on Spielcade',
-  description: 'Explore the latest games added to Spielcade. Fresh, fun and exciting games every week!',
+  title: 'New Online Games — Play Fresh HTML5 Browser Games | Spielcade',
+  description: 'Explore the latest free online browser games added to Spielcade. Fresh action, racing, puzzle, and unblocked titles added weekly.',
+  alternates: {
+    canonical: 'https://spielcade.com/games/new',
+  },
+  openGraph: {
+    title: 'New Online Games | Spielcade',
+    description: 'Explore the latest free online browser games added to Spielcade. Fresh action, racing, puzzle, and unblocked titles added weekly.',
+    url: 'https://spielcade.com/games/new',
+    siteName: 'Spielcade Games',
+    type: 'website',
+  },
 };
 
 export default async function NewGamesPage() {
   const supabase = createClient();
   
-  // Fetch up to 200 newest active games
+  // Fetch up to 100 newest active games with targeted projection
   const { data: games } = await supabase
     .from('games')
-    .select('*')
+    .select('id, title, slug, description, category, image_url, total_plays, rating, created_at')
     .eq('status', 'active')
     .order('created_at', { ascending: false })
-    .limit(200);
+    .limit(100);
 
-  const initialGames = games?.map(game => ({
+  const initialGames = (games || []).map(game => ({
     id: game.id,
     title: game.title,
     slug: game.slug,
@@ -30,10 +41,52 @@ export default async function NewGamesPage() {
     totalPlays: game.total_plays,
     rating: game.rating,
     created_at: game.created_at
-  })) || [];
+  }));
+
+  // Google ItemList Carousel Schema
+  const itemListSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Newest Games on Spielcade',
+    description: 'Freshly released free online browser games.',
+    itemListElement: initialGames.slice(0, 30).map((game, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      url: `https://spielcade.com/games/${game.slug}`,
+      name: game.title,
+      image: game.image || 'https://spielcade.com/og-default.jpg',
+    })),
+  };
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: 'https://spielcade.com/',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'New Games',
+        item: 'https://spielcade.com/games/new',
+      },
+    ],
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#05050F] text-gray-900 dark:text-white pt-20 pb-12 font-sans transition-colors duration-300">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <NewGamesClient initialGames={initialGames} />
     </div>
   );

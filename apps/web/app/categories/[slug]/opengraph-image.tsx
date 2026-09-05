@@ -1,10 +1,8 @@
 import { ImageResponse } from 'next/og';
-import { gamesRegistry } from '@spielcade/games/registry';
-import { createClient } from '@supabase/supabase-js';
-import { siteConfig } from '@/lib/seo';
+import { categoriesData } from '@/lib/mockCategories';
 
 export const runtime = 'edge';
-export const alt = 'Game preview';
+export const alt = 'Category preview';
 export const size = {
   width: 1200,
   height: 630,
@@ -12,38 +10,16 @@ export const size = {
 export const contentType = 'image/png';
 
 export default async function Image({ params }: { params: { slug: string } }) {
-  const localGame = gamesRegistry[params.slug];
-  
-  let title = localGame?.config?.title;
-  let category = localGame?.config?.category || 'Arcade';
-  let rating = localGame?.config?.rating || 4.8;
-  let imageUrl = localGame?.config?.image;
-
-  if (!title) {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder'
-    );
-    const { data: dbGame } = await supabase
-      .from('games')
-      .select('title, category, rating, image_url')
-      .eq('slug', params.slug)
-      .single();
-
-    if (dbGame) {
-      title = dbGame.title;
-      category = dbGame.category || 'Arcade';
-      rating = dbGame.rating || 4.8;
-      imageUrl = dbGame.image_url;
-    }
-  }
-
-  if (!title) {
-    title = params.slug
+  const category = categoriesData[params.slug] || {
+    title: params.slug
       .split('-')
       .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(' ');
-  }
+      .join(' '),
+    icon: '🎮',
+    color: '#6366f1',
+    description: 'Play the best free online browser games with zero downloads on Spielcade.',
+    stats: { games: '100+', plays: '2.5M+', rating: '4.8' },
+  };
 
   return new ImageResponse(
     (
@@ -60,14 +36,14 @@ export default async function Image({ params }: { params: { slug: string } }) {
           position: 'relative',
         }}
       >
-        {/* Background Glow */}
+        {/* Decorative Glow */}
         <div
           style={{
             position: 'absolute',
-            right: '-60px',
-            top: '-60px',
-            width: '600px',
-            height: '600px',
+            right: '-80px',
+            top: '-80px',
+            width: '650px',
+            height: '650px',
             background: 'radial-gradient(circle, rgba(99,102,241,0.3) 0%, transparent 70%)',
             borderRadius: '50%',
           }}
@@ -97,17 +73,17 @@ export default async function Image({ params }: { params: { slug: string } }) {
 
           <div
             style={{
-              background: 'rgba(99,102,241,0.15)',
-              border: '1px solid rgba(99,102,241,0.4)',
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.15)',
               padding: '8px 24px',
               borderRadius: '100px',
-              color: '#a5b4fc',
+              color: '#e0e7ff',
               fontSize: '20px',
               fontWeight: '700',
               display: 'flex',
             }}
           >
-            100% FREE • NO DOWNLOAD
+            INSTANT PLAY • UNBLOCKED
           </div>
         </div>
 
@@ -117,33 +93,42 @@ export default async function Image({ params }: { params: { slug: string } }) {
             display: 'flex',
             flexDirection: 'column',
             gap: '16px',
-            maxWidth: '900px',
+            maxWidth: '920px',
           }}
         >
           <div
             style={{
-              fontSize: '76px',
-              fontWeight: '900',
-              color: 'white',
-              lineHeight: 1.05,
               display: 'flex',
-              letterSpacing: '-2px',
+              alignItems: 'center',
+              gap: '24px',
             }}
           >
-            {title}
+            <span style={{ fontSize: '72px' }}>{category.icon}</span>
+            <span
+              style={{
+                fontSize: '84px',
+                fontWeight: '900',
+                color: 'white',
+                letterSpacing: '-2px',
+                lineHeight: 1.05,
+              }}
+            >
+              {category.title}
+            </span>
           </div>
           <div
             style={{
-              fontSize: '28px',
+              fontSize: '26px',
               color: '#9ca3af',
+              lineHeight: 1.4,
               display: 'flex',
             }}
           >
-            Play free online instantly in your browser — unblocked on mobile & PC
+            {category.description}
           </div>
         </div>
 
-        {/* Meta Badges */}
+        {/* Meta Stats Badges */}
         <div
           style={{
             display: 'flex',
@@ -157,13 +142,13 @@ export default async function Image({ params }: { params: { slug: string } }) {
               border: '1px solid rgba(255,255,255,0.1)',
               padding: '12px 28px',
               borderRadius: '100px',
-              color: '#fbbf24',
-              fontSize: '26px',
+              color: '#a5b4fc',
+              fontSize: '24px',
               fontWeight: '700',
               display: 'flex',
             }}
           >
-            ★ {Number(rating).toFixed(1)} / 5.0
+            {category.stats?.games || '100+'} Games
           </div>
           <div
             style={{
@@ -171,13 +156,13 @@ export default async function Image({ params }: { params: { slug: string } }) {
               border: '1px solid rgba(255,255,255,0.1)',
               padding: '12px 28px',
               borderRadius: '100px',
-              color: '#e0e7ff',
-              fontSize: '26px',
-              fontWeight: '600',
+              color: '#34d399',
+              fontSize: '24px',
+              fontWeight: '700',
               display: 'flex',
             }}
           >
-            {category} Games
+            {category.stats?.plays || '1M+'} Total Plays
           </div>
           <div
             style={{
@@ -185,12 +170,12 @@ export default async function Image({ params }: { params: { slug: string } }) {
               padding: '12px 32px',
               borderRadius: '100px',
               color: 'white',
-              fontSize: '26px',
+              fontSize: '24px',
               fontWeight: '800',
               display: 'flex',
             }}
           >
-            PLAY NOW →
+            EXPLORE GENRE →
           </div>
         </div>
       </div>

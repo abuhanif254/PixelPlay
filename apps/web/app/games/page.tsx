@@ -17,27 +17,32 @@ const VALID_CATEGORIES = ['Action', 'Adventure', 'Arcade', 'Board', 'Puzzle', 'R
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const category = typeof searchParams.category === 'string' ? searchParams.category : 'All Games';
+  const hasSearch = typeof searchParams.search === 'string' && searchParams.search.trim().length > 0;
   const isCanonicalCategory = VALID_CATEGORIES.includes(category);
   
-  const title = category === 'All Games' 
-    ? 'All Games - Play Free Online on Spielcade'
-    : `${category} Games - Play Free Online on Spielcade`;
+  const shouldNoindex = hasSearch || (!isCanonicalCategory && category !== 'All Games');
+
+  const title = hasSearch
+    ? `Search Results for "${searchParams.search}" — Free Games | Spielcade`
+    : category === 'All Games' 
+      ? 'All Games — Play Free Online HTML5 Games | Spielcade'
+      : `${category} Games — Play Free Online on Spielcade`;
     
   return {
     title,
     description: `Explore our collection of the best free online ${category.toLowerCase()} games. No downloads, no installs - just click and play instantly!`,
     alternates: {
-      canonical: isCanonicalCategory
+      canonical: isCanonicalCategory && !hasSearch
         ? `https://spielcade.com/categories/${category.toLowerCase().replace(/\s+/g, '-')}-games`
         : 'https://spielcade.com/games'
     },
-    ...(!isCanonicalCategory && category !== 'All Games' && {
+    ...(shouldNoindex && {
       robots: {
         index: false,
         follow: true,
       }
     })
-  }
+  };
 }
 
 export default async function AllGamesPage({ searchParams }: Props) {

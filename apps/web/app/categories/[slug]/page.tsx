@@ -108,19 +108,39 @@ export default async function CategoryPage({ params }: { params: { slug: string 
     }
   };
   
-  // Create rich snippet collection schema
-  const collectionSchema = {
+  // Create Google ItemList Carousel and CollectionPage schema
+  const richSchemas = {
     "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    "name": `${category.title} on Spielcade`,
-    "description": category.description,
-    "url": `https://spielcade.com/categories/${params.slug}`,
-    "hasPart": games.map(game => ({
-      "@type": "SoftwareApplication",
-      "name": game.title,
-      "applicationCategory": "Game",
-      "operatingSystem": "Any"
-    }))
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": `https://spielcade.com/categories/${params.slug}#collection`,
+        "name": `${category.title} on Spielcade`,
+        "description": category.description,
+        "url": `https://spielcade.com/categories/${params.slug}`,
+        "hasPart": games.slice(0, 30).map(game => ({
+          "@type": "SoftwareApplication",
+          "name": game.title,
+          "applicationCategory": "Game",
+          "operatingSystem": "Any"
+        }))
+      },
+      {
+        "@type": "ItemList",
+        "@id": `https://spielcade.com/categories/${params.slug}#itemlist`,
+        "name": `Best ${category.title}`,
+        "description": category.description,
+        "url": `https://spielcade.com/categories/${params.slug}`,
+        "numberOfItems": games.length,
+        "itemListElement": games.slice(0, 30).map((game, index) => ({
+          "@type": "ListItem",
+          "position": index + 1,
+          "url": `https://spielcade.com/games/${game.slug}`,
+          "name": game.title,
+          "image": game.image_url || 'https://spielcade.com/og-default.jpg'
+        }))
+      }
+    ]
   };
 
   return (
@@ -156,7 +176,7 @@ export default async function CategoryPage({ params }: { params: { slug: string 
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(richSchemas) }}
       />
       
       {/* Hero Section with Live Stats */}
