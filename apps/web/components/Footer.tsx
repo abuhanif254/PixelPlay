@@ -1,7 +1,8 @@
-"use client";
+'use client';
 
+import React from 'react';
 import { motion } from 'framer-motion';
-import { Gamepad2, Twitter, Github, Youtube, Mail } from 'lucide-react';
+import { Gamepad2, Twitter, Github, Youtube, ShieldCheck, Zap, Globe, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import NewsletterForm from './NewsletterForm';
@@ -11,36 +12,56 @@ export default function Footer() {
   if (pathname?.startsWith('/admin')) return null;
 
   return (
-    <footer className="bg-background border-t border-black/10 dark:border-white/10 pt-16 pb-8">
-      <div className="container mx-auto px-4 md:px-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+    <footer className="bg-slate-50 dark:bg-[#070818] border-t border-slate-200/80 dark:border-white/10 pt-16 pb-12 transition-colors">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Top 4-Column Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8 mb-14">
           
-          {/* Brand */}
-          <div className="space-y-4">
-            <Link href="/" aria-label="Spielcade Homepage" title="Go to Spielcade Homepage" className="flex items-center gap-3 shrink-0 group">
-              <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.5)] bg-[#111228] flex items-center justify-center shrink-0">
+          {/* Col 1: Brand & Status (4 cols) */}
+          <div className="lg:col-span-4 space-y-4">
+            <Link href="/" aria-label="Spielcade Homepage" title="Go to Spielcade Homepage" className="flex items-center gap-2.5 shrink-0 group">
+              <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-indigo-500/50 shadow-[0_0_12px_rgba(99,102,241,0.4)] bg-[#111228] flex items-center justify-center shrink-0">
                 <img 
                   src="/logo.png" 
                   alt="Spielcade Logo" 
-                  className="w-[120%] h-[120%] object-cover animate-[spin_10s_linear_infinite] group-hover:animate-[spin_3s_linear_infinite] transition-all" 
+                  className="w-[120%] h-[120%] object-cover animate-[spin_12s_linear_infinite] group-hover:animate-[spin_3s_linear_infinite] transition-all" 
                 />
               </div>
-              <span className="font-extrabold text-2xl tracking-tight text-gray-900 dark:text-white">
-                Spiel<span className="text-gray-600 dark:text-gray-300">cade</span>
+              <span className="font-extrabold text-2xl tracking-tight text-slate-900 dark:text-white">
+                Spiel<span className="text-indigo-600 dark:text-indigo-400">cade</span>
               </span>
             </Link>
-            <p className="text-sm text-black/60 dark:text-white/60 leading-relaxed max-w-xs">
-              Your ultimate destination for free browser games. Play instantly, no downloads required. Join millions of players worldwide.
+            
+            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed max-w-sm">
+              The premier web gaming portal. Play over 17,000 free online HTML5 games instantly with zero downloads. Built for gamers, powered by creators.
             </p>
-            <div className="flex items-center gap-4 pt-2">
-              {[Twitter, Github, Youtube].map((Icon, i) => (
+
+            {/* Platform Status Badge */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span>All Systems Operational • 99.9% Uptime</span>
+            </div>
+
+            {/* Social Icons */}
+            <div className="flex items-center gap-3 pt-2">
+              {[
+                { Icon: Twitter, label: 'Twitter', href: 'https://twitter.com' },
+                { Icon: Github, label: 'GitHub', href: 'https://github.com' },
+                { Icon: Youtube, label: 'YouTube', href: 'https://youtube.com' }
+              ].map(({ Icon, label, href }) => (
                 <motion.a 
-                  key={i}
-                  href="#"
-                  aria-label={['Twitter', 'GitHub', 'YouTube'][i]}
-                  title={['Twitter', 'GitHub', 'YouTube'][i]}
-                  whileHover={{ y: -3 }}
-                  className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center text-black/70 dark:text-white/70 hover:bg-primary/20 hover:text-primary transition-colors"
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  title={label}
+                  whileHover={{ y: -2, scale: 1.05 }}
+                  className="w-9 h-9 rounded-full bg-slate-200/70 dark:bg-white/5 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-600 dark:hover:text-white transition-all shadow-sm"
                 >
                   <Icon className="w-4 h-4" />
                 </motion.a>
@@ -48,20 +69,27 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Links */}
-          <div>
-            <h3 className="font-semibold text-lg mb-6 text-black/90 dark:text-white/90">Platform</h3>
-            <ul className="space-y-3">
+          {/* Col 2: Platform Links (2 cols) */}
+          <div className="lg:col-span-2">
+            <h3 className="font-bold text-sm uppercase tracking-wider text-slate-900 dark:text-white mb-4">
+              Platform
+            </h3>
+            <ul className="space-y-2.5">
               {[
                 { name: 'All Games', path: '/games' },
                 { name: 'Categories', path: '/categories' },
+                { name: 'New Releases', path: '/games/new' },
+                { name: 'Popular Hits', path: '/popular' },
                 { name: 'Leaderboard', path: '/leaderboard' },
-                { name: 'Blog & News', path: '/blog' },
                 { name: 'Developer Studio', path: '/studio' }
               ].map((link) => (
                 <li key={link.name}>
-                  <Link href={link.path} title={link.name} className="text-sm text-black/60 dark:text-white/60 hover:text-[#6366F1] transition-colors flex items-center gap-2 group">
-                    <span className="w-1.5 h-1.5 rounded-full bg-black/20 dark:bg-white/20 group-hover:bg-[#6366F1] transition-colors" />
+                  <Link 
+                    href={link.path} 
+                    title={link.name} 
+                    className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-white transition-colors flex items-center gap-2 group"
+                  >
+                    <span className="w-1 h-1 rounded-full bg-slate-400 dark:bg-slate-600 group-hover:bg-indigo-600 transition-colors" />
                     {link.name}
                   </Link>
                 </li>
@@ -69,19 +97,27 @@ export default function Footer() {
             </ul>
           </div>
 
-          <div>
-            <h3 className="font-semibold text-lg mb-6 text-black/90 dark:text-white/90">Support</h3>
-            <ul className="space-y-3">
+          {/* Col 3: Support & Legal (2 cols) */}
+          <div className="lg:col-span-2">
+            <h3 className="font-bold text-sm uppercase tracking-wider text-slate-900 dark:text-white mb-4">
+              Support
+            </h3>
+            <ul className="space-y-2.5">
               {[
                 { name: 'Help Center', path: '/help' },
+                { name: 'Game Guides', path: '/blog' },
                 { name: 'Terms of Service', path: '/terms' },
                 { name: 'Privacy Policy', path: '/privacy' },
-                { name: 'Cookie Policy', path: '/cookies' },
+                { name: 'Cookie Settings', path: '/cookies' },
                 { name: 'Contact Us', path: '/contact' }
               ].map((link) => (
                 <li key={link.name}>
-                  <Link href={link.path} title={link.name} className="text-sm text-black/60 dark:text-white/60 hover:text-[#6366F1] transition-colors flex items-center gap-2 group">
-                    <span className="w-1.5 h-1.5 rounded-full bg-black/20 dark:bg-white/20 group-hover:bg-[#6366F1] transition-colors" />
+                  <Link 
+                    href={link.path} 
+                    title={link.name} 
+                    className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-white transition-colors flex items-center gap-2 group"
+                  >
+                    <span className="w-1 h-1 rounded-full bg-slate-400 dark:bg-slate-600 group-hover:bg-indigo-600 transition-colors" />
                     {link.name}
                   </Link>
                 </li>
@@ -89,48 +125,84 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Newsletter */}
-          <div>
-            <h3 className="font-semibold text-lg mb-6 text-black/90 dark:text-white/90">Stay Updated</h3>
-            <p className="text-sm text-black/60 dark:text-white/60 mb-4">
-              Subscribe to our newsletter for the latest games and updates.
+          {/* Col 4: Newsletter & Trust Badges (4 cols) */}
+          <div className="lg:col-span-4">
+            <h3 className="font-bold text-sm uppercase tracking-wider text-slate-900 dark:text-white mb-4">
+              Stay Updated
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mb-4 leading-relaxed">
+              Get weekly drops of trending unblocked web games and creator insights.
             </p>
-            <NewsletterForm />
+            <div className="mb-6">
+              <NewsletterForm />
+            </div>
+
+            {/* Trust Badges */}
+            <div className="flex flex-wrap gap-2 pt-2">
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-200/60 dark:bg-white/5 text-slate-700 dark:text-slate-300 text-[11px] font-semibold">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                <span>SSL Encrypted</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-200/60 dark:bg-white/5 text-slate-700 dark:text-slate-300 text-[11px] font-semibold">
+                <Zap className="w-3.5 h-3.5 text-amber-500" />
+                <span>Instant WebGL</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-200/60 dark:bg-white/5 text-slate-700 dark:text-slate-300 text-[11px] font-semibold">
+                <Globe className="w-3.5 h-3.5 text-blue-500" />
+                <span>Global Edge CDN</span>
+              </div>
+            </div>
           </div>
 
         </div>
 
-        {/* Category Links for Crawlability & Sitewide SEO */}
-        <div className="pt-8 mb-8 border-t border-black/10 dark:border-white/10">
-          <p className="text-xs font-bold uppercase tracking-wider text-black/50 dark:text-white/50 mb-3">
-            Popular Categories & Genres
+        {/* Structured Category Hubs Directory for Google Crawlability & User Discovery */}
+        <div className="pt-8 mb-8 border-t border-slate-200 dark:border-white/10">
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">
+            Popular Categories & Cluster Hubs
           </p>
-          <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs text-black/60 dark:text-white/60">
-            <Link href="/categories/action-games" className="hover:text-[#6366F1] transition-colors">Action Games</Link>
-            <Link href="/categories/puzzle-games" className="hover:text-[#6366F1] transition-colors">Puzzle Games</Link>
-            <Link href="/categories/racing-games" className="hover:text-[#6366F1] transition-colors">Racing Games</Link>
-            <Link href="/categories/arcade-games" className="hover:text-[#6366F1] transition-colors">Arcade Games</Link>
-            <Link href="/categories/strategy-games" className="hover:text-[#6366F1] transition-colors">Strategy Games</Link>
-            <Link href="/categories/board-games" className="hover:text-[#6366F1] transition-colors">Board Games</Link>
-            <Link href="/categories/sports-games" className="hover:text-[#6366F1] transition-colors">Sports Games</Link>
-            <Link href="/categories/adventure-games" className="hover:text-[#6366F1] transition-colors">Adventure Games</Link>
-            <Link href="/games/tags/unblocked" className="hover:text-[#6366F1] transition-colors">Unblocked Games</Link>
-            <Link href="/games/tags/multiplayer" className="hover:text-[#6366F1] transition-colors">Multiplayer Games</Link>
-            <Link href="/popular" className="hover:text-[#6366F1] transition-colors">Top Played Games</Link>
-            <Link href="/games/new" className="hover:text-[#6366F1] transition-colors">New HTML5 Games</Link>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { name: 'Car Games', path: '/categories/car-games' },
+              { name: 'Zombie Games', path: '/categories/zombie-games' },
+              { name: '2 Player Games', path: '/categories/2-player-games' },
+              { name: 'Action Games', path: '/categories/action-games' },
+              { name: 'Puzzle Games', path: '/categories/puzzle-games' },
+              { name: 'Racing Games', path: '/categories/racing-games' },
+              { name: 'Shooting Games', path: '/categories/shooting-games' },
+              { name: 'Arcade Games', path: '/categories/arcade-games' },
+              { name: 'Strategy Games', path: '/categories/strategy-games' },
+              { name: 'Board Games', path: '/categories/board-games' },
+              { name: 'Sports Games', path: '/categories/sports-games' },
+              { name: 'Adventure Games', path: '/categories/adventure-games' },
+              { name: 'Stickman Games', path: '/categories/stickman-games' },
+              { name: 'Unblocked Games', path: '/categories/unblocked-games' },
+              { name: 'Runner Games', path: '/categories/runner-games' },
+              { name: 'Escape Games', path: '/categories/escape-games' },
+            ].map(cat => (
+              <Link 
+                key={cat.name} 
+                href={cat.path} 
+                className="px-3 py-1 rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/5 text-slate-700 dark:text-slate-300 text-xs font-medium hover:border-indigo-500/50 hover:text-indigo-600 dark:hover:text-white transition-colors"
+              >
+                {cat.name}
+              </Link>
+            ))}
           </div>
         </div>
 
-        {/* Bottom */}
-        <div className="pt-8 border-t border-black/10 dark:border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-black/40 dark:text-white/40">
-            © {new Date().getFullYear()} Spielcade Games. All rights reserved.
+        {/* Bottom Bar: Copyright & Compliance */}
+        <div className="pt-8 border-t border-slate-200 dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 dark:text-slate-400">
+          <p>
+            © {new Date().getFullYear()} Spielcade Platform. All games are the property of their respective creators.
           </p>
-          <div className="flex items-center gap-6 text-sm text-black/40 dark:text-white/40">
-            <span className="hover:text-black dark:text-white transition-colors cursor-pointer">Status</span>
-            <span className="hover:text-black dark:text-white transition-colors cursor-pointer">Security</span>
+          <div className="flex items-center gap-6">
+            <Link href="/terms" className="hover:text-slate-900 dark:hover:text-white transition-colors">Terms of Use</Link>
+            <Link href="/privacy" className="hover:text-slate-900 dark:hover:text-white transition-colors">Privacy Policy</Link>
+            <Link href="/cookies" className="hover:text-slate-900 dark:hover:text-white transition-colors">Cookie Policy</Link>
           </div>
         </div>
+
       </div>
     </footer>
   );

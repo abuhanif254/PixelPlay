@@ -43,7 +43,7 @@ export const CategoriesCarousel: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 md:px-8 -mt-6 mb-6 relative z-20">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4 mb-6 relative z-20">
       <div className="bg-white/90 dark:bg-[#111228]/90 backdrop-blur-xl border border-black/5 dark:border-white/10 rounded-3xl p-3 md:p-4 flex items-center shadow-xl hover:border-purple-500/20 transition-colors">
         
         {/* Left Arrow */}

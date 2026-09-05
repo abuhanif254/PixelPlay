@@ -207,6 +207,7 @@ export default async function HomePage() {
         featuredGame={featuredGame as any}
         randomPool={randomPool}
         liveSuggestions={trending.slice(0, 6) as any}
+        spotlightGames={trending.slice(0, 3) as any}
       />
       
       {/* 2. Live Gaming Pulse Ticker */}
@@ -219,7 +220,7 @@ export default async function HomePage() {
       {/* 3. Categories Carousel with Gradient Edge Fade */}
       <CategoriesCarousel />
 
-      <div className="container mx-auto px-4 md:px-8 space-y-24 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-20 sm:space-y-24 relative z-10 w-full">
         
         {/* 4. Continue Playing (Dynamic from localStorage) */}
         <ScrollReveal>
