@@ -89,6 +89,7 @@ export default async function CategoryPage({ params }: { params: { slug: string 
   
   // Create rich snippet collection schema
   const collectionSchema = {
+    "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": `${category.title} on Spielcade`,
     "description": category.description,
@@ -160,7 +161,7 @@ export default async function CategoryPage({ params }: { params: { slug: string 
             {/* Bottom Section Layout (FAQ left, Collections right/below) */}
             <div className="flex flex-col xl:flex-row gap-8">
               <div className="xl:w-1/2">
-                <CategoryFAQ />
+                <CategoryFAQ category={dynamicCategory} />
               </div>
               <div className="xl:w-1/2">
                 <CategoryCollections />

@@ -100,6 +100,27 @@ export default function Footer() {
 
         </div>
 
+        {/* Category Links for Crawlability & Sitewide SEO */}
+        <div className="pt-8 mb-8 border-t border-black/10 dark:border-white/10">
+          <p className="text-xs font-bold uppercase tracking-wider text-black/50 dark:text-white/50 mb-3">
+            Popular Categories & Genres
+          </p>
+          <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs text-black/60 dark:text-white/60">
+            <Link href="/categories/action-games" className="hover:text-[#6366F1] transition-colors">Action Games</Link>
+            <Link href="/categories/puzzle-games" className="hover:text-[#6366F1] transition-colors">Puzzle Games</Link>
+            <Link href="/categories/racing-games" className="hover:text-[#6366F1] transition-colors">Racing Games</Link>
+            <Link href="/categories/arcade-games" className="hover:text-[#6366F1] transition-colors">Arcade Games</Link>
+            <Link href="/categories/strategy-games" className="hover:text-[#6366F1] transition-colors">Strategy Games</Link>
+            <Link href="/categories/board-games" className="hover:text-[#6366F1] transition-colors">Board Games</Link>
+            <Link href="/categories/sports-games" className="hover:text-[#6366F1] transition-colors">Sports Games</Link>
+            <Link href="/categories/adventure-games" className="hover:text-[#6366F1] transition-colors">Adventure Games</Link>
+            <Link href="/games/tags/unblocked" className="hover:text-[#6366F1] transition-colors">Unblocked Games</Link>
+            <Link href="/games/tags/multiplayer" className="hover:text-[#6366F1] transition-colors">Multiplayer Games</Link>
+            <Link href="/popular" className="hover:text-[#6366F1] transition-colors">Top Played Games</Link>
+            <Link href="/games/new" className="hover:text-[#6366F1] transition-colors">New HTML5 Games</Link>
+          </div>
+        </div>
+
         {/* Bottom */}
         <div className="pt-8 border-t border-black/10 dark:border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-black/40 dark:text-white/40">

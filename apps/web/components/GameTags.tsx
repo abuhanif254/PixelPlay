@@ -7,6 +7,17 @@ interface GameTagsProps {
   category: string;
 }
 
+const CANONICAL_CATEGORIES: Record<string, string> = {
+  action: '/categories/action-games',
+  adventure: '/categories/adventure-games',
+  arcade: '/categories/arcade-games',
+  board: '/categories/board-games',
+  puzzle: '/categories/puzzle-games',
+  racing: '/categories/racing-games',
+  sports: '/categories/sports-games',
+  strategy: '/categories/strategy-games',
+};
+
 export default function GameTags({ tags, category }: GameTagsProps) {
   // Always include the main category as a tag for SEO internal linking
   const allTags = Array.from(new Set([category, ...(tags || [])]));
@@ -19,15 +30,20 @@ export default function GameTags({ tags, category }: GameTagsProps) {
       </div>
       
       <div className="flex flex-wrap gap-3">
-        {allTags.map((tag, idx) => (
-          <Link 
-            key={idx}
-            href={`/games?category=${encodeURIComponent(tag)}`}
-            className="px-4 py-2 bg-gray-100 dark:bg-[#111228] hover:bg-[#6366F1] dark:hover:bg-[#6366F1] border border-gray-200 dark:border-white/10 hover:border-[#6366F1] text-gray-700 dark:text-gray-300 hover:text-white rounded-full text-sm font-medium transition-all shadow-sm"
-          >
-            #{tag}
-          </Link>
-        ))}
+        {allTags.map((tag, idx) => {
+          const normalized = tag.toLowerCase().trim();
+          const href = CANONICAL_CATEGORIES[normalized] || `/games/tags/${encodeURIComponent(normalized.replace(/\s+/g, '-'))}`;
+
+          return (
+            <Link 
+              key={idx}
+              href={href}
+              className="px-4 py-2 bg-gray-100 dark:bg-[#111228] hover:bg-[#6366F1] dark:hover:bg-[#6366F1] border border-gray-200 dark:border-white/10 hover:border-[#6366F1] text-gray-700 dark:text-gray-300 hover:text-white rounded-full text-sm font-medium transition-all shadow-sm"
+            >
+              #{tag}
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

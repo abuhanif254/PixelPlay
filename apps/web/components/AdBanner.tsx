@@ -50,8 +50,8 @@ export default function AdBanner({ id, width, height, className = '' }: AdBanner
 
   return (
     <div 
-      className={`flex items-center justify-center bg-[#111228] border border-white/5 rounded-xl overflow-hidden relative ${className}`}
-      style={{ minWidth: width, minHeight: height }}
+      className={`flex items-center justify-center bg-[#111228] border border-white/5 rounded-xl overflow-hidden relative shrink-0 ${className}`}
+      style={{ width: `${width}px`, height: `${height}px`, maxWidth: '100%' }}
     >
       {/* Fallback/Placeholder UI visible before ad loads */}
       <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-gray-500 uppercase tracking-widest z-0 pointer-events-none">
@@ -62,6 +62,7 @@ export default function AdBanner({ id, width, height, className = '' }: AdBanner
         title="Advertisement"
         width={width}
         height={height}
+        loading="lazy"
         frameBorder="0"
         scrolling="no"
         marginWidth={0}

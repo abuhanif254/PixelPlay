@@ -87,6 +87,38 @@ ${categories
     });
   }
 
+  // If id is "blog"
+  if (cleanId === 'blog') {
+    const { data: posts } = await supabase
+      .from('blog_posts')
+      .select('slug, created_at, updated_at')
+      .eq('status', 'published')
+      .order('created_at', { ascending: false });
+
+    const postList = posts || [];
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${postList
+  .map(
+    (post: any) => `  <url>
+    <loc>${baseUrl}/blog/${post.slug}</loc>
+    <lastmod>${new Date(post.updated_at || post.created_at || Date.now()).toISOString()}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>`
+  )
+  .join('\n')}
+</urlset>`;
+
+    return new Response(xml, {
+      headers: {
+        'Content-Type': 'application/xml; charset=utf-8',
+        'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+      },
+    });
+  }
+
   // Numeric id => game chunk (e.g. 1 => 0-999, 2 => 1000-1999)
   const pageNum = parseInt(cleanId, 10) || 1;
   const start = (pageNum - 1) * CHUNK_SIZE;

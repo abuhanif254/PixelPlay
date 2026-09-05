@@ -10,6 +10,13 @@ import FavoriteButton from '@/components/FavoriteButton';
 import { Metadata, ResolvingMetadata } from 'next';
 import { submitScore } from '../actions';
 import { createClient } from '@/lib/supabase/server';
+import { 
+  generateEnrichedDescription, 
+  generateStrategyContent, 
+  generateControlsMatrix, 
+  generateGameFaqs, 
+  generateGameTags 
+} from '@/lib/seo-enricher';
 
 export const runtime = 'edge';
 
@@ -42,17 +49,19 @@ export async function generateMetadata(
   }
 
   const title = dbGame?.title || localGame?.config?.title || 'Game';
-  const description = dbGame?.description || localGame?.config?.description || `Play ${title} online for free. No downloads required.`;
-  const image = dbGame?.image_url || localGame?.config?.image || 'https://spielcade.com/og-default.jpg';
   const category = dbGame?.category || (dbGame?.metadata as any)?.category || localGame?.config?.category || 'Arcade';
+  const rawGameDesc = dbGame?.description || localGame?.config?.description || '';
+  const description = (rawGameDesc && rawGameDesc.length >= 80)
+    ? rawGameDesc
+    : generateEnrichedDescription(title, category, rawGameDesc);
+  const image = dbGame?.image_url || localGame?.config?.image || 'https://spielcade.com/og-default.jpg';
   const status = dbGame?.status || 'active'; // local games are considered approved
-  const tags = (dbGame?.metadata as any)?.tags || localGame?.config?.tags || [];
+  const tags = (dbGame?.metadata as any)?.tags || localGame?.config?.tags || generateGameTags(title, category);
 
   const shouldIndex = status === 'approved' || status === 'active';
   
-  const pageTitle = `${title} — Play Free ${category} Game Online | Spielcade`;
-  const rawDesc = `Play ${title} free online, no download needed. ${description}`;
-  const pageDescription = rawDesc.length > 160 ? rawDesc.slice(0, 157).trimEnd() + "..." : rawDesc;
+  const pageTitle = `${title} — Play Free Online Game (No Download) | Spielcade`;
+  const pageDescription = description.length > 160 ? description.slice(0, 157).trimEnd() + "..." : description;
   const canonicalUrl = `https://spielcade.com/games/${slug}`;
 
   return {
@@ -113,19 +122,40 @@ export default async function GamePage({ params }: GamePageProps) {
     notFound();
   }
 
+  const rawTitle = dbGame?.title || localGame?.config?.title || 'Unknown Game';
+  const rawCat = dbGame?.category || (dbGame?.metadata as any)?.category || localGame?.config?.category || 'Arcade';
+  const rawGameDesc = dbGame?.description || localGame?.config?.description || '';
+  const finalDesc = (rawGameDesc && rawGameDesc.length >= 80)
+    ? rawGameDesc
+    : generateEnrichedDescription(rawTitle, rawCat, rawGameDesc);
+
+  const finalStrategy = (dbGame?.metadata as any)?.strategy || (localGame?.config as any)?.strategy || generateStrategyContent(rawTitle, rawCat);
+  const finalControls = (dbGame?.metadata as any)?.keyboardControls || (localGame?.config as any)?.keyboardControls || generateControlsMatrix('', rawCat);
+  const finalFaqs = ((dbGame?.metadata as any)?.faqs && (dbGame?.metadata as any)?.faqs.length > 0)
+    ? (dbGame?.metadata as any)?.faqs
+    : ((localGame?.config as any)?.faqs && (localGame?.config as any)?.faqs.length > 0)
+      ? (localGame?.config as any)?.faqs
+      : generateGameFaqs(rawTitle, rawCat);
+  const finalTags = ((dbGame?.metadata as any)?.tags && (dbGame?.metadata as any)?.tags.length > 0)
+    ? (dbGame?.metadata as any)?.tags
+    : ((localGame?.config as any)?.tags && (localGame?.config as any)?.tags.length > 0)
+      ? (localGame?.config as any)?.tags
+      : generateGameTags(rawTitle, rawCat);
+
   // Merge database and local configs (DB takes precedence if available)
   const config = {
     ...(localGame?.config || {}),
-    title: dbGame?.title || localGame?.config?.title || 'Unknown Game',
-    description: dbGame?.description || localGame?.config?.description || '',
+    title: rawTitle,
+    description: finalDesc,
     image: dbGame?.image_url || localGame?.config?.image,
-    category: dbGame?.category || (dbGame?.metadata as any)?.category || localGame?.config?.category || 'Arcade',
+    category: rawCat,
     developer: (dbGame?.metadata as any)?.developer || localGame?.config?.developer || 'Spielcade',
     rating: dbGame?.rating || (dbGame?.metadata as any)?.rating || localGame?.config?.rating || 4.8,
     sourceUrl: dbGame?.source_url || (localGame?.config as any)?.sourceUrl,
-    strategy: (dbGame?.metadata as any)?.strategy || (localGame?.config as any)?.strategy,
-    keyboardControls: (dbGame?.metadata as any)?.keyboardControls || (localGame?.config as any)?.keyboardControls,
-    faqs: (dbGame?.metadata as any)?.faqs || (localGame?.config as any)?.faqs,
+    strategy: finalStrategy,
+    keyboardControls: finalControls,
+    faqs: finalFaqs,
+    tags: finalTags,
   };
 
   const sourceUrl = config.sourceUrl || ((config as any).type === 'html5' ? `/games/${slug}/index.html` : null);
@@ -147,7 +177,17 @@ export default async function GamePage({ params }: GamePageProps) {
     }
   }
 
-  // Schema data for SEOuctured Data
+  const totalPlaysNum = dbGame?.total_plays || (localGame ? 25000 : 12000);
+  const formattedPlays = totalPlaysNum >= 1000000 
+    ? `${(totalPlaysNum / 1000000).toFixed(1)}M plays`
+    : `${Math.floor(totalPlaysNum / 1000)}K plays`;
+
+  const votesNum = Math.floor(totalPlaysNum * 0.12);
+  const formattedVotes = votesNum >= 1000
+    ? `${(votesNum / 1000).toFixed(1)}K votes`
+    : `${votesNum} votes`;
+
+  // Schema data for Structured Data
   const videoGameSchema = {
     "@context": "https://schema.org",
     "@type": "VideoGame",
@@ -155,6 +195,7 @@ export default async function GamePage({ params }: GamePageProps) {
     "description": config.description || `Play ${config.title} online for free.`,
     "image": config.image || 'https://spielcade.com/og-default.jpg',
     "genre": config.category,
+    "inLanguage": "en",
     "playMode": "SinglePlayer",
     "applicationCategory": "Game",
     "operatingSystem": "Any (Web Browser)",
@@ -162,6 +203,15 @@ export default async function GamePage({ params }: GamePageProps) {
     "author": {
       "@type": "Organization",
       "name": config.developer || 'Spielcade',
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Spielcade",
+      "url": "https://spielcade.com",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://spielcade.com/logo.png"
+      }
     },
     "offers": {
       "@type": "Offer",
@@ -172,9 +222,10 @@ export default async function GamePage({ params }: GamePageProps) {
     ...(config.rating ? {
       "aggregateRating": {
         "@type": "AggregateRating",
-        "ratingValue": config.rating.toFixed(1),
+        "ratingValue": Number(config.rating).toFixed(1),
         "bestRating": "5",
-        "ratingCount": Math.floor(Math.random() * 5000) + 100 // Mock data until real ratings are implemented
+        "worstRating": "1",
+        "ratingCount": Math.max(25, votesNum)
       }
     } : {})
   };
@@ -225,7 +276,7 @@ export default async function GamePage({ params }: GamePageProps) {
     .eq('category', config.category)
     .neq('slug', slug)
     .order('total_plays', { ascending: false })
-    .limit(6);
+    .limit(12);
 
   let relatedGames = (dbRelated || []).map((g: any) => ({
     id: g.id,
@@ -237,15 +288,15 @@ export default async function GamePage({ params }: GamePageProps) {
     totalPlays: g.total_plays || 10000
   }));
 
-  // Fallback to top games if fewer than 4 games exist in this specific category
-  if (relatedGames.length < 4) {
+  // Fallback to top games if fewer than 6 games exist in this specific category
+  if (relatedGames.length < 6) {
     const { data: fallbackGames } = await supabase
       .from('games')
       .select('id, title, slug, image_url, category, rating, total_plays')
       .eq('status', 'active')
       .neq('slug', slug)
       .order('total_plays', { ascending: false })
-      .limit(6);
+      .limit(12);
 
     relatedGames = (fallbackGames || []).map((g: any) => ({
       id: g.id,
@@ -257,16 +308,6 @@ export default async function GamePage({ params }: GamePageProps) {
       totalPlays: g.total_plays || 10000
     }));
   }
-
-  const totalPlaysNum = dbGame?.total_plays || (localGame ? 25000 : 12000);
-  const formattedPlays = totalPlaysNum >= 1000000 
-    ? `${(totalPlaysNum / 1000000).toFixed(1)}M plays`
-    : `${Math.floor(totalPlaysNum / 1000)}K plays`;
-
-  const votesNum = Math.floor(totalPlaysNum * 0.12);
-  const formattedVotes = votesNum >= 1000
-    ? `${(votesNum / 1000).toFixed(1)}K votes`
-    : `${votesNum} votes`;
 
   const handleGameOver = async (score: number) => {
     'use server';

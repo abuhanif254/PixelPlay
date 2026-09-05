@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import GameCardSmall from './GameCardSmall';
 import GameMedia from './GameMedia';
@@ -13,6 +13,7 @@ interface GameDetailsTabsProps {
 }
 
 export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTabsProps) {
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
   const TABS = [
     { id: 'about', label: 'About' },
     { id: 'media', label: 'Media' },
@@ -103,26 +104,49 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
               <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white font-outfit">Frequently Asked Questions</h3>
               {config.faqs && config.faqs.length > 0 ? (
                 <div className="space-y-3">
-                  {config.faqs.map((faq: {q: string, a: string}, idx: number) => (
-                    <div key={idx} className="border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-transparent transition-colors hover:bg-gray-50 dark:hover:bg-white/5">
-                      <div className="p-4 flex items-center justify-between cursor-pointer">
-                        <h4 className="font-bold text-gray-800 dark:text-gray-300 text-sm">{faq.q}</h4>
-                        <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
+                  {config.faqs.map((faq: { q: string; a: string }, idx: number) => {
+                    const isOpen = openFaq === idx;
+                    return (
+                      <div 
+                        key={idx} 
+                        className={`border rounded-xl overflow-hidden transition-colors ${
+                          isOpen 
+                            ? 'border-indigo-200 dark:border-indigo-900/50 bg-indigo-50/20 dark:bg-indigo-950/20' 
+                            : 'border-gray-200 dark:border-white/10 bg-transparent hover:bg-gray-50 dark:hover:bg-white/5'
+                        }`}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setOpenFaq(isOpen ? null : idx)}
+                          className="w-full p-4 flex items-center justify-between text-left focus:outline-none"
+                          aria-expanded={isOpen}
+                        >
+                          <h4 className="font-bold text-gray-800 dark:text-gray-200 text-sm md:text-base pr-4">
+                            {faq.q}
+                          </h4>
+                          <svg 
+                            className={`w-4 h-4 text-gray-500 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180 text-[#6366F1]' : ''}`} 
+                            fill="none" 
+                            viewBox="0 0 24 24" 
+                            stroke="currentColor"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                        <div 
+                          className={`px-4 pb-4 pt-1 text-sm text-gray-600 dark:text-gray-400 leading-relaxed border-t border-gray-100 dark:border-white/5 ${
+                            isOpen ? 'block' : 'hidden'
+                          }`}
+                        >
+                          {faq.a}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-gray-600 dark:text-gray-400 text-sm">No FAQs available for this game yet.</p>
               )}
-              
-              <div className="mt-4 flex justify-end">
-                <button className="text-[#6366F1] text-xs font-bold hover:underline">
-                  View All FAQs
-                </button>
-              </div>
             </div>
 
             {/* Tags Section */}
@@ -132,7 +156,7 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
 
         </div>
 
-        {/* Right Column - Related Games (Will move later or keep as sidebar and add carousel below) */}
+        {/* Right Column - Related Games */}
         <div className="lg:col-span-4">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-base font-bold text-gray-900 dark:text-white font-outfit">Related Games</h3>
@@ -145,7 +169,7 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
           </div>
           
           <div className="grid grid-cols-2 gap-4">
-            {relatedGames.slice(0, 4).map((game, i) => (
+            {relatedGames.slice(0, 10).map((game, i) => (
               <GameCardSmall 
                 key={i} 
                 title={game.title} 
