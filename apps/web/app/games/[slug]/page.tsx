@@ -440,6 +440,7 @@ export default async function GamePage({ params }: GamePageProps) {
               <GamePlayer 
                 title={config.title} 
                 slug={slug} 
+                category={config.category}
                 image={config.image} 
                 sourceUrl={sourceUrl} 
                 onGameOver={handleGameOver}
