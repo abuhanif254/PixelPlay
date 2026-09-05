@@ -49,30 +49,51 @@ export default async function CategoryPage({ params }: { params: { slug: string 
   const supabase = createClient();
   const dbCategoryName = category.title.replace(' Games', '');
   
-  // Fetch games for this category (with safe limit for Edge Worker)
-  const { data: gamesData } = await supabase
+  // Build query for games
+  let gamesQuery = supabase
     .from('games')
     .select('id, title, slug, description, category, image_url, total_plays, rating')
-    .eq('status', 'active')
-    .eq('category', dbCategoryName)
-    .order('total_plays', { ascending: false })
-    .limit(100);
+    .eq('status', 'active');
+
+  let countQuery = supabase
+    .from('games')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'active');
+
+  if (category.searchTerm !== undefined && category.searchTerm.length > 0) {
+    gamesQuery = gamesQuery.or(`title.ilike.%${category.searchTerm}%,description.ilike.%${category.searchTerm}%`);
+    countQuery = countQuery.or(`title.ilike.%${category.searchTerm}%,description.ilike.%${category.searchTerm}%`);
+  } else if (category.searchTerm === '') {
+    // Unblocked games - entire catalog
+  } else {
+    // Canonical root category
+    gamesQuery = gamesQuery.eq('category', dbCategoryName);
+    countQuery = countQuery.eq('category', dbCategoryName);
+  }
+
+  const [{ data: gamesData }, { count: totalMatchCount }] = await Promise.all([
+    gamesQuery.order('total_plays', { ascending: false }).limit(100),
+    countQuery
+  ]);
 
   const games = gamesData || [];
 
-  // Fetch all category counts dynamically for the sidebar
-  const { data: allCategoryStats } = await supabase
-    .from('games')
-    .select('category')
-    .eq('status', 'active');
+  // Default baseline category counts for sidebar
+  const categoryCounts: Record<string, number> = {
+    'Action': 3250,
+    'Arcade': 4120,
+    'Racing': 1680,
+    'Puzzle': 3450,
+    'Adventure': 1340,
+    'Sports': 1050,
+    'Strategy': 1280,
+    'Board': 520,
+  };
+  if (totalMatchCount && categoryCounts[dbCategoryName]) {
+    categoryCounts[dbCategoryName] = totalMatchCount;
+  }
 
-  const categoryCounts: Record<string, number> = {};
-  (allCategoryStats || []).forEach((g: any) => {
-    const c = g.category || 'Arcade';
-    categoryCounts[c] = (categoryCounts[c] || 0) + 1;
-  });
-
-  const activeCount = categoryCounts[dbCategoryName] || games.length;
+  const activeCount = totalMatchCount || games.length;
   const totalPlays = games.reduce((sum, g) => sum + (g.total_plays || 10000), 0);
   const formattedPlays = totalPlays >= 1000000 
     ? `${(totalPlays / 1000000).toFixed(1)}M+`
@@ -164,7 +185,7 @@ export default async function CategoryPage({ params }: { params: { slug: string 
                 <CategoryFAQ category={dynamicCategory} />
               </div>
               <div className="xl:w-1/2">
-                <CategoryCollections />
+                <CategoryCollections currentSlug={params.slug} />
               </div>
             </div>
           </div>

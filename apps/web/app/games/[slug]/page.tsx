@@ -60,7 +60,7 @@ export async function generateMetadata(
 
   const shouldIndex = status === 'approved' || status === 'active';
   
-  const pageTitle = `${title} — Play Free Online Game (No Download) | Spielcade`;
+  const pageTitle = `${title} — Play Free Online Game Unblocked | Spielcade`;
   const pageDescription = description.length > 160 ? description.slice(0, 157).trimEnd() + "..." : description;
   const canonicalUrl = `https://spielcade.com/games/${slug}`;
 
@@ -71,6 +71,9 @@ export async function generateMetadata(
       title,
       `${title} online`,
       `play ${title}`,
+      `${title} unblocked`,
+      'unblocked games',
+      'free browser games',
       `free ${category.toLowerCase()} games`,
       ...tags,
     ],
@@ -522,6 +525,56 @@ export default async function GamePage({ params }: GamePageProps) {
 
           {/* Bottom Interactive Tabs Area */}
           <GameDetailsTabs config={config} relatedGames={relatedGames} />
+
+          {/* Semantic Recommendation Graph: Games Like {title} */}
+          {relatedGames.length > 0 && (
+            <section className="w-full mt-12 bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 rounded-2xl p-6 md:p-8 shadow-xl">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-100 dark:border-white/5">
+                <div>
+                  <h2 className="text-xl md:text-2xl font-bold font-outfit text-gray-900 dark:text-white">
+                    Games Like {config.title}
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    If you enjoyed playing <span className="font-semibold text-gray-900 dark:text-gray-200">{config.title}</span>, discover these similar free online {config.category} games. No downloads, instant browser play, unblocked on Chromebooks and mobile.
+                  </p>
+                </div>
+                <Link
+                  href={`/categories/${config.category.toLowerCase().replace(/\s+/g, '-')}-games`}
+                  className="inline-flex items-center gap-2 text-xs font-bold text-[#6366F1] hover:text-white bg-[#6366F1]/10 hover:bg-[#6366F1] px-4 py-2.5 rounded-xl transition-all self-start md:self-auto shrink-0"
+                >
+                  More {config.category} Games →
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {relatedGames.slice(0, 6).map((similarGame: any) => (
+                  <Link
+                    key={similarGame.slug}
+                    href={`/games/${similarGame.slug}`}
+                    className="group flex flex-col bg-gray-50 dark:bg-[#0A0B1A] border border-gray-200 dark:border-white/5 hover:border-[#6366F1]/50 rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                  >
+                    <div className="relative aspect-video w-full overflow-hidden bg-gray-200 dark:bg-black/30">
+                      <img
+                        src={similarGame.image || 'https://spielcade.com/og-default.jpg'}
+                        alt={`Play ${similarGame.title} unblocked free online`}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                    </div>
+                    <div className="p-3 flex flex-col flex-grow justify-between">
+                      <h3 className="text-xs font-bold text-gray-900 dark:text-white truncate group-hover:text-[#6366F1] transition-colors">
+                        {similarGame.title}
+                      </h3>
+                      <div className="flex items-center justify-between mt-2 text-[11px]">
+                        <span className="font-semibold text-emerald-500">Free</span>
+                        <span className="text-gray-500 dark:text-gray-400">★ {Number(similarGame.rating || 4.8).toFixed(1)}</span>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Bottom Ad Banner */}
           <div className="flex justify-center w-full mt-12">

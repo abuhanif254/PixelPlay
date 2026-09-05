@@ -2,9 +2,20 @@ export const runtime = 'edge';
 export const revalidate = 3600;
 
 import { createClient } from '@supabase/supabase-js';
+import { categoriesData } from '@/lib/mockCategories';
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://spielcade.com';
 const CHUNK_SIZE = 1000;
+
+function escapeXml(unsafe: string): string {
+  if (!unsafe) return '';
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
 
 export async function GET(
   request: Request,
@@ -55,25 +66,17 @@ ${staticRoutes
 
   // If id is "categories" or "0"
   if (cleanId === 'categories' || cleanId === '0') {
-    const { data: categoryData } = await supabase
-      .from('games')
-      .select('category')
-      .eq('status', 'active');
-
-    const defaultCategories = ['Action', 'Puzzle', 'Arcade', 'Racing', 'Board', 'Strategy', 'Sports', 'Adventure'];
-    const dbCategories = (categoryData || []).map((g: any) => g.category).filter(Boolean);
-    const categories = Array.from(new Set([...defaultCategories, ...dbCategories]));
+    const categorySlugs = Object.keys(categoriesData);
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${categories
-  .map((cat) => {
-    const slug = cat.toLowerCase().replace(/\s+/g, '-');
+${categorySlugs
+  .map((slug) => {
     return `  <url>
-    <loc>${baseUrl}/categories/${slug}-games</loc>
+    <loc>${baseUrl}/categories/${slug}</loc>
     <lastmod>${new Date().toISOString()}</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.8</priority>
+    <priority>0.85</priority>
   </url>`;
   })
   .join('\n')}
@@ -126,7 +129,7 @@ ${postList
 
   const { data: games } = await supabase
     .from('games')
-    .select('slug, created_at')
+    .select('slug, title, image_url, created_at')
     .eq('status', 'active')
     .order('created_at', { ascending: false })
     .range(start, end);
@@ -134,16 +137,26 @@ ${postList
   const gameList = games || [];
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 ${gameList
-  .map(
-    (game: any) => `  <url>
-    <loc>${baseUrl}/games/${game.slug}</loc>
-    <lastmod>${new Date(game.created_at || Date.now()).toISOString()}</lastmod>
+  .map((game: any) => {
+    const loc = `${baseUrl}/games/${game.slug}`;
+    const lastmod = new Date(game.created_at || Date.now()).toISOString();
+    const imageTag = game.image_url
+      ? `\n    <image:image>
+      <image:loc>${escapeXml(game.image_url)}</image:loc>
+      <image:title>${escapeXml(game.title || game.slug)}</image:title>
+    </image:image>`
+      : '';
+
+    return `  <url>
+    <loc>${loc}</loc>
+    <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>`
-  )
+    <priority>0.8</priority>${imageTag}
+  </url>`;
+  })
   .join('\n')}
 </urlset>`;
 

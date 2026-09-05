@@ -152,15 +152,180 @@ const CATEGORY_FAQS: Record<string, Array<{ q: string; a: string }>> = {
       q: 'Do puzzle games improve brain health?',
       a: 'Studies suggest that regularly playing logic puzzles can boost working memory, problem-solving agility, and mental sharpness.'
     }
+  ],
+  'car-games': [
+    {
+      q: 'What types of car games can I play on Spielcade?',
+      a: 'You can play 3D sports car racing, realistic drift simulators, city parking challenges, off-road truck trials, and highway police chases directly in your browser.'
+    },
+    {
+      q: 'Are these car games unblocked for school Chromebooks?',
+      a: 'Yes, all car games run in lightweight HTML5 WebGL with zero installation or downloads needed, making them fast and unblocked on school Chromebooks and laptops.'
+    },
+    {
+      q: 'Can I customize and tune my cars in browser games?',
+      a: 'Many of our top car games let you customize paint jobs, spoilers, rims, turbochargers, and engine tuning as you earn in-game credits.'
+    },
+    {
+      q: 'What are the controls for online car games?',
+      a: 'Standard controls use the Arrow Keys or WASD for steering, acceleration, and braking, with Spacebar for the handbrake/drift and Shift or N for Nitro boost.'
+    }
+  ],
+  'zombie-games': [
+    {
+      q: 'What are the best free zombie games to play online?',
+      a: 'Our zombie library features top-rated undead wave survival, tactical sniper defense, post-apocalyptic shooters, and base-building survival games.'
+    },
+    {
+      q: 'Do I need to download or install zombie games?',
+      a: 'No, every zombie game on Spielcade is 100% free and launches instantly in your web browser with zero downloads or storage required.'
+    },
+    {
+      q: 'Can I play zombie games on mobile?',
+      a: 'Yes, all zombie games feature responsive touch controls and WebGL graphics that run smoothly on iPhones, Android phones, and iPads.'
+    },
+    {
+      q: 'How do you survive high waves in zombie survival games?',
+      a: 'Aim for headshots for maximum damage, keep moving to avoid getting cornered, prioritize weapon reloads between waves, and upgrade barricades early.'
+    }
+  ],
+  'stickman-games': [
+    {
+      q: 'Why are stickman games so popular?',
+      a: 'Stickman games combine fluid, minimalist physics-based animations with intense combat, sniper missions, parkour acrobatics, and high-replayability gameplay.'
+    },
+    {
+      q: 'Are stickman games free on Spielcade?',
+      a: 'Yes, all stickman titles—from fighting duels to epic archery battles—are completely free to play without microtransactions or required downloads.'
+    },
+    {
+      q: 'Can I play stickman multiplayer games with friends?',
+      a: 'Yes! We host 2-player stickman fighting and racing games playable on the same keyboard or across online browser lobbies.'
+    },
+    {
+      q: 'Which stickman genres are available?',
+      a: 'We feature stickman archery, ragdoll physics brawlers, sniper assassins, motorcycle stunts, and parkour platform runners.'
+    }
+  ],
+  '2-player-games': [
+    {
+      q: 'How do 2-player games work on one computer?',
+      a: 'Most 2-player games use split keyboard controls—Player 1 uses WASD while Player 2 uses the Arrow Keys—allowing instant local head-to-head competition.'
+    },
+    {
+      q: 'Are there cooperative 2-player games where we work together?',
+      a: 'Yes, we have co-op adventure and puzzle games where two players must coordinate to open doors, trigger switches, and solve team challenges.'
+    },
+    {
+      q: 'Can I play 2-player games on mobile or tablet?',
+      a: 'Many 2-player games feature shared-screen touch controls on tablets and smartphones, allowing two players to tap opposite sides of the screen.'
+    },
+    {
+      q: 'Are online 2-player games free with no download?',
+      a: 'Yes, all 2-player and multiplayer games on Spielcade are completely free with zero installation required.'
+    }
+  ],
+  'unblocked-games': [
+    {
+      q: 'What are unblocked games?',
+      a: 'Unblocked games are browser games that can be played freely on restricted networks, such as school Wi-Fi or work offices, without firewall blocks.'
+    },
+    {
+      q: 'Are unblocked games safe to play on school Chromebooks?',
+      a: 'Yes! Spielcade uses end-to-end HTTPS encryption, contains no executable downloads or malware, and runs purely inside modern sandboxed web browsers.'
+    },
+    {
+      q: 'What types of games are available unblocked on Spielcade?',
+      a: 'Our unblocked library spans over 17,000 games including car racing, endless runners, puzzle logic, sports shootouts, and retro arcade classics.'
+    },
+    {
+      q: 'Do I need a VPN to play unblocked games?',
+      a: 'No VPN is needed. Spielcade is hosted on Cloudflare Global Edge CDN, delivering lightning-fast, firewall-friendly web access anywhere in the world.'
+    }
+  ],
+  'shooting-games': [
+    {
+      q: 'What are the best free online shooting games?',
+      a: 'Our collection includes first-person shooters (FPS), tactical military sniper games, retro top-down shoot-\'em-ups, and zombie gun battles.'
+    },
+    {
+      q: 'How do I aim and shoot in browser FPS games?',
+      a: 'Use your Mouse to look and aim, Left Click to shoot, Right Click to zoom or aim down sights, and WASD to move and strafe.'
+    },
+    {
+      q: 'Do shooting games require high-end graphics cards?',
+      a: 'No, all shooting games on Spielcade are optimized with WebGL hardware acceleration to run at 60 FPS even on basic Chromebooks and laptops.'
+    },
+    {
+      q: 'Are multiplayer shooting games available?',
+      a: 'Yes, you can jump into live multiplayer arena shootouts and battle royale matches directly from your browser with zero install.'
+    }
+  ],
+  'escape-games': [
+    {
+      q: 'How do escape room games work?',
+      a: 'You are locked in a mysterious room or facility and must inspect objects, decipher cryptic codes, find hidden keys, and solve logic puzzles to escape.'
+    },
+    {
+      q: 'What should I do if I get stuck in an escape game?',
+      a: 'Examine every object carefully, click background details for hidden drawers, write down suspicious numbers or patterns, and try combining inventory items.'
+    },
+    {
+      q: 'Are escape games free and playable on mobile?',
+      a: 'Yes! All escape room games are 100% free with point-and-click or tap controls that work seamlessly on phones, tablets, and desktop computers.'
+    },
+    {
+      q: 'How long do online escape games take to solve?',
+      a: 'Most browser escape puzzles take between 15 to 45 minutes of fun, brain-teasing problem solving.'
+    }
+  ],
+  'runner-games': [
+    {
+      q: 'What are endless runner games?',
+      a: 'Runner games feature a character moving forward automatically while you jump over hazards, slide under barriers, and collect bonus coins to achieve a record score.'
+    },
+    {
+      q: 'What are the best tips to get a high score in runner games?',
+      a: 'Keep your eyes looking one step ahead of your character, memorize obstacle patterns, use power-ups wisely, and stay calm as the game speed ramps up.'
+    },
+    {
+      q: 'Can I play runner games on my phone with swipe controls?',
+      a: 'Yes, our runner games fully support touchscreen swipe gestures (swipe up to jump, down to slide, left/right to change lanes).'
+    },
+    {
+      q: 'Are runner games free to play without download?',
+      a: 'Yes, all runner games are free instant-play browser games with no downloads or paid microtransactions required.'
+    }
   ]
 };
+
+function generateFallbackFaqs(title: string): Array<{ q: string; a: string }> {
+  return [
+    {
+      q: `What are ${title}?`,
+      a: `${title} on Spielcade are free online browser games playable instantly without any downloads, app installs, or registration.`
+    },
+    {
+      q: `Can I play ${title} unblocked on school Chromebooks and mobile?`,
+      a: `Yes! All ${title} are built with lightweight HTML5 WebGL, ensuring fast performance, responsive touch controls, and unblocked access across school Wi-Fi and mobile devices.`
+    },
+    {
+      q: `Are ${title} completely free?`,
+      a: `Every game in the ${title} collection is 100% free to play with unlimited restarts, leaderboard tracking, and no paywalls.`
+    },
+    {
+      q: `What controls are used to play ${title}?`,
+      a: `Most games use standard Arrow Keys, WASD, or Mouse clicks on desktop, and intuitive tap and swipe gestures on mobile screens.`
+    }
+  ];
+}
 
 export default function CategoryFAQ({ category }: CategoryFAQProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   const slug = category?.slug || 'puzzle-games';
   const categoryTitle = category?.title || 'Games';
-  const faqs = CATEGORY_FAQS[slug] || CATEGORY_FAQS['puzzle-games'];
+  const faqs = CATEGORY_FAQS[slug] || generateFallbackFaqs(categoryTitle);
 
   return (
     <div className="flex flex-col flex-1">

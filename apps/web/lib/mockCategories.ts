@@ -1,11 +1,23 @@
-export const categoriesData = {
+export interface CategoryItem {
+  title: string;
+  slug: string;
+  icon: string;
+  description: string;
+  stats: { games: string; plays: string; rating: string };
+  color: string;
+  searchTerm?: string;
+  parentCategory?: string;
+}
+
+export const categoriesData: Record<string, CategoryItem> = {
+  // Root Canonical Categories
   'action-games': {
     title: 'Action Games',
     slug: 'action-games',
     icon: '⚔️',
     description: 'Jump into the heat of the moment with our thrilling action games. Fast-paced, explosive, and intense!',
     stats: { games: '98+', plays: '4.5M+', rating: '4.8' },
-    color: '#EF4444', // Red
+    color: '#EF4444',
   },
   'adventure-games': {
     title: 'Adventure Games',
@@ -13,7 +25,7 @@ export const categoriesData = {
     icon: '🗺️',
     description: 'Embark on epic journeys, explore unknown worlds, and uncover hidden treasures.',
     stats: { games: '56+', plays: '1.2M+', rating: '4.7' },
-    color: '#10B981', // Green
+    color: '#10B981',
   },
   'arcade-games': {
     title: 'Arcade Games',
@@ -21,7 +33,7 @@ export const categoriesData = {
     icon: '👾',
     description: 'Relive the golden age of gaming with classic and modern arcade experiences.',
     stats: { games: '82+', plays: '3.1M+', rating: '4.6' },
-    color: '#F59E0B', // Yellow
+    color: '#F59E0B',
   },
   'board-games': {
     title: 'Board Games',
@@ -29,7 +41,7 @@ export const categoriesData = {
     icon: '🎲',
     description: 'Play digital versions of your favorite classic board games with friends or AI.',
     stats: { games: '43+', plays: '890K+', rating: '4.5' },
-    color: '#8B5CF6', // Purple
+    color: '#8B5CF6',
   },
   'puzzle-games': {
     title: 'Puzzle Games',
@@ -37,7 +49,7 @@ export const categoriesData = {
     icon: '🧩',
     description: 'Challenge your mind with our collection of the best puzzle games. Solve, match, connect, and win!',
     stats: { games: '125+', plays: '2.3M+', rating: '4.6' },
-    color: '#6366F1', // Indigo (Default)
+    color: '#6366F1',
   },
   'racing-games': {
     title: 'Racing Games',
@@ -45,7 +57,7 @@ export const categoriesData = {
     icon: '🏎️',
     description: 'Burn rubber and race to the finish line in our high-speed racing games.',
     stats: { games: '67+', plays: '5.6M+', rating: '4.7' },
-    color: '#3B82F6', // Blue
+    color: '#3B82F6',
   },
   'sports-games': {
     title: 'Sports Games',
@@ -53,7 +65,7 @@ export const categoriesData = {
     icon: '🏅',
     description: 'Compete in your favorite sports, from basketball to soccer and everything in between.',
     stats: { games: '32+', plays: '1.9M+', rating: '4.4' },
-    color: '#F97316', // Orange
+    color: '#F97316',
   },
   'strategy-games': {
     title: 'Strategy Games',
@@ -61,8 +73,220 @@ export const categoriesData = {
     icon: '♟️',
     description: 'Plan your moves, build your empire, and outsmart your opponents.',
     stats: { games: '41+', plays: '2.8M+', rating: '4.8' },
-    color: '#14B8A6', // Teal
-  }
+    color: '#14B8A6',
+  },
+
+  // High-Volume Thematic Topic Clusters
+  'car-games': {
+    title: 'Car Games',
+    slug: 'car-games',
+    icon: '🚗',
+    description: 'Get behind the wheel of supercars, trucks, and hot rods. Race, drift, park, and customize high-performance vehicles unblocked.',
+    stats: { games: '1,000+', plays: '8.2M+', rating: '4.8' },
+    color: '#3B82F6',
+    searchTerm: 'car',
+    parentCategory: 'Racing',
+  },
+  'zombie-games': {
+    title: 'Zombie Games',
+    slug: 'zombie-games',
+    icon: '🧟',
+    description: 'Survive the undead apocalypse! Arm yourself with weapons, build defenses, and battle waves of zombies in instant-play web games.',
+    stats: { games: '330+', plays: '3.7M+', rating: '4.7' },
+    color: '#10B981',
+    searchTerm: 'zombie',
+    parentCategory: 'Action',
+  },
+  'stickman-games': {
+    title: 'Stickman Games',
+    slug: 'stickman-games',
+    icon: '🏃',
+    description: 'Play the greatest stickman adventures, sniper missions, fighting duels, and parkour challenges directly in your browser.',
+    stats: { games: '230+', plays: '4.1M+', rating: '4.7' },
+    color: '#6366F1',
+    searchTerm: 'stickman',
+    parentCategory: 'Action',
+  },
+  '2-player-games': {
+    title: '2 Player Games',
+    slug: '2-player-games',
+    icon: '👥',
+    description: 'Grab a friend and play head-to-head on the same keyboard or online. Compete in 2-player sports, racing, and battle arenas.',
+    stats: { games: '130+', plays: '2.9M+', rating: '4.8' },
+    color: '#EC4899',
+    searchTerm: '2 player',
+    parentCategory: 'Arcade',
+  },
+  'escape-games': {
+    title: 'Escape Games',
+    slug: 'escape-games',
+    icon: '🗝️',
+    description: 'Solve intricate room riddles, find hidden clues, crack locks, and escape tricky chambers in thrilling mystery room games.',
+    stats: { games: '530+', plays: '3.4M+', rating: '4.6' },
+    color: '#F59E0B',
+    searchTerm: 'escape',
+    parentCategory: 'Puzzle',
+  },
+  'shooting-games': {
+    title: 'Shooting Games',
+    slug: 'shooting-games',
+    icon: '🎯',
+    description: 'Aim down sights in FPS shooters, tactical sniper missions, and target practice arcade games. Fast reflex action unblocked.',
+    stats: { games: '580+', plays: '6.3M+', rating: '4.8' },
+    color: '#EF4444',
+    searchTerm: 'shoot',
+    parentCategory: 'Action',
+  },
+  'drift-games': {
+    title: 'Drift Games',
+    slug: 'drift-games',
+    icon: '🏎️',
+    description: 'Slide around sharp corners, burn tires on asphalt tracks, and score monster drift points in realistic 3D car drift simulators.',
+    stats: { games: '110+', plays: '2.1M+', rating: '4.7' },
+    color: '#8B5CF6',
+    searchTerm: 'drift',
+    parentCategory: 'Racing',
+  },
+  'moto-games': {
+    title: 'Moto Games',
+    slug: 'moto-games',
+    icon: '🏍️',
+    description: 'Stunt across dirt hills, conquer obstacle courses, and speed through highway traffic on motorcycles and BMX bikes.',
+    stats: { games: '125+', plays: '2.5M+', rating: '4.6' },
+    color: '#F97316',
+    searchTerm: 'moto',
+    parentCategory: 'Racing',
+  },
+  'dress-up-games': {
+    title: 'Dress Up Games',
+    slug: 'dress-up-games',
+    icon: '👗',
+    description: 'Showcase your fashion style! Style models, design stunning outfits, choose makeup, and create dream looks in free makeover games.',
+    stats: { games: '350+', plays: '4.8M+', rating: '4.7' },
+    color: '#EC4899',
+    searchTerm: 'dress',
+    parentCategory: 'Arcade',
+  },
+  'cooking-games': {
+    title: 'Cooking Games',
+    slug: 'cooking-games',
+    icon: '🍳',
+    description: 'Bake cakes, manage busy restaurants, prepare sushi, and become a master chef in delicious cooking simulation games.',
+    stats: { games: '120+', plays: '2.2M+', rating: '4.6' },
+    color: '#F59E0B',
+    searchTerm: 'cook',
+    parentCategory: 'Arcade',
+  },
+  'football-games': {
+    title: 'Football Games',
+    slug: 'football-games',
+    icon: '⚽',
+    description: 'Score sensational goals, take penalty shootouts, and lead your soccer club to world championship victory.',
+    stats: { games: '120+', plays: '3.1M+', rating: '4.7' },
+    color: '#10B981',
+    searchTerm: 'football',
+    parentCategory: 'Sports',
+  },
+  'basketball-games': {
+    title: 'Basketball Games',
+    slug: 'basketball-games',
+    icon: '🏀',
+    description: 'Sink three-pointers, throw down monster dunks, and win high-stakes court shootouts in free online basketball games.',
+    stats: { games: '100+', plays: '2.4M+', rating: '4.6' },
+    color: '#EA580C',
+    searchTerm: 'basket',
+    parentCategory: 'Sports',
+  },
+  'clicker-games': {
+    title: 'Clicker Games',
+    slug: 'clicker-games',
+    icon: '👆',
+    description: 'Tap your way to billions! Upgrade multipliers, unlock automated generators, and watch your empire scale in idle clicker games.',
+    stats: { games: '130+', plays: '1.8M+', rating: '4.5' },
+    color: '#06B6D4',
+    searchTerm: 'clicker',
+    parentCategory: 'Strategy',
+  },
+  'runner-games': {
+    title: 'Runner Games',
+    slug: 'runner-games',
+    icon: '🏃‍♂️',
+    description: 'Dodge obstacles, jump over perils, slide under barriers, and collect coins in adrenaline-pumping endless runner games.',
+    stats: { games: '670+', plays: '7.2M+', rating: '4.8' },
+    color: '#3B82F6',
+    searchTerm: 'runner',
+    parentCategory: 'Arcade',
+  },
+  'ninja-games': {
+    title: 'Ninja Games',
+    slug: 'ninja-games',
+    icon: '🥷',
+    description: 'Stealth through shadows, slice fruit and enemies with katanas, and master ancient martial arts in free ninja games.',
+    stats: { games: '85+', plays: '1.4M+', rating: '4.6' },
+    color: '#334155',
+    searchTerm: 'ninja',
+    parentCategory: 'Action',
+  },
+  'chess-games': {
+    title: 'Chess Games',
+    slug: 'chess-games',
+    icon: '♟️',
+    description: 'Master grandmaster tactics, solve chess checkmate puzzles, and play against intelligent chess bots at all skill levels.',
+    stats: { games: '40+', plays: '950K+', rating: '4.8' },
+    color: '#64748B',
+    searchTerm: 'chess',
+    parentCategory: 'Board',
+  },
+  'mahjong-games': {
+    title: 'Mahjong Games',
+    slug: 'mahjong-games',
+    icon: '🀄',
+    description: 'Match traditional Chinese tiles, clear multi-layered pyramids, and relax with classic Solitaire Mahjong boards.',
+    stats: { games: '50+', plays: '1.6M+', rating: '4.7' },
+    color: '#0D9488',
+    searchTerm: 'mahjong',
+    parentCategory: 'Board',
+  },
+  'solitaire-games': {
+    title: 'Solitaire Games',
+    slug: 'solitaire-games',
+    icon: '🃏',
+    description: 'Play Klondike, Spider, FreeCell, and Pyramid Solitaire online with smooth card animations and hints.',
+    stats: { games: '60+', plays: '2.0M+', rating: '4.7' },
+    color: '#4F46E5',
+    searchTerm: 'solitaire',
+    parentCategory: 'Board',
+  },
+  'unblocked-games': {
+    title: 'Unblocked Games',
+    slug: 'unblocked-games',
+    icon: '🔓',
+    description: 'Play unblocked games for school or work with zero download. Fast, safe HTML5 games that run on Chromebooks and mobile browsers.',
+    stats: { games: '17,000+', plays: '15M+', rating: '4.9' },
+    color: '#10B981',
+    searchTerm: '',
+    parentCategory: 'Arcade',
+  },
+  'brain-games': {
+    title: 'Brain Games',
+    slug: 'brain-games',
+    icon: '🧠',
+    description: 'Sharpen your memory, IQ, and mental reflexes with logic puzzles, number grids, and brain teaser challenges.',
+    stats: { games: '300+', plays: '4.2M+', rating: '4.8' },
+    color: '#A855F7',
+    searchTerm: 'brain',
+    parentCategory: 'Puzzle',
+  },
+  'multiplayer-games': {
+    title: 'Multiplayer Games',
+    slug: 'multiplayer-games',
+    icon: '🌐',
+    description: 'Challenge players around the globe in real-time online multiplayer battles, arenas, and sports tourneys.',
+    stats: { games: '200+', plays: '5.1M+', rating: '4.8' },
+    color: '#0284C7',
+    searchTerm: 'multiplayer',
+    parentCategory: 'Action',
+  },
 };
 
-export type CategoryData = typeof categoriesData['puzzle-games'];
+export type CategoryData = CategoryItem;
