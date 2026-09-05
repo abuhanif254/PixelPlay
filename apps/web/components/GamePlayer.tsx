@@ -1,10 +1,13 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react';
-import { Play, Maximize2, Monitor, Sun, Volume2, VolumeX, RotateCcw, Share2, Heart, Flag } from 'lucide-react';
+import React, { useState, useRef, useEffect, useTransition } from 'react';
+import { Play, Maximize2, Monitor, Sun, Volume2, VolumeX, RotateCcw, Share2, Heart, Flag, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useRecentGames } from '@/hooks/useRecentGames';
 import { saveGameState, loadGameState } from '@/app/games/actions';
+import { toggleFavoriteGame } from '@/app/profile/actions';
 import AdBanner from '@/components/AdBanner';
 
 type PlayerState = 'idle' | 'ad' | 'rewarded_ad' | 'playing' | 'game_over';
@@ -16,9 +19,31 @@ interface GamePlayerProps {
   image?: string;
   sourceUrl?: string | null;
   onGameOver?: (score: number) => void;
+  relatedGames?: Array<{
+    id?: string;
+    slug: string;
+    title: string;
+    image?: string;
+    category?: string;
+    rating?: number;
+    totalPlays?: number;
+  }>;
+  gameId?: string;
+  initialFavorited?: boolean;
 }
 
-export default function GamePlayer({ children, title, slug, image, sourceUrl, onGameOver }: GamePlayerProps) {
+export default function GamePlayer({ 
+  children, 
+  title, 
+  slug, 
+  image, 
+  sourceUrl, 
+  onGameOver,
+  relatedGames = [],
+  gameId,
+  initialFavorited = false,
+}: GamePlayerProps) {
+  const router = useRouter();
   const { addRecentGame } = useRecentGames();
   const [playerState, setPlayerState] = useState<PlayerState>('idle');
   const [isMuted, setIsMuted] = useState(false);
@@ -26,9 +51,67 @@ export default function GamePlayer({ children, title, slug, image, sourceUrl, on
   const [isHovering, setIsHovering] = useState(false);
   const [adCountdown, setAdCountdown] = useState(5);
   const [rewardedAdMsgId, setRewardedAdMsgId] = useState<number | null>(null);
+  const [isFavorited, setIsFavorited] = useState(initialFavorited);
+  const [isPendingFav, startTransition] = useTransition();
+  const [shareToast, setShareToast] = useState(false);
   
   const containerRef = useRef<HTMLDivElement>(null);
   const hasRecordedRef = useRef(false);
+
+  // Sync initialFavorited changes
+  useEffect(() => {
+    setIsFavorited(initialFavorited);
+  }, [initialFavorited]);
+
+  const handleToggleFavorite = () => {
+    if (!gameId) {
+      alert('Please sign in to add games to your favorites!');
+      return;
+    }
+    const nextState = !isFavorited;
+    setIsFavorited(nextState);
+    startTransition(async () => {
+      const res = await toggleFavoriteGame(gameId);
+      if (!res.success) {
+        setIsFavorited(!nextState);
+        if (res.error === 'Unauthorized') {
+          alert('You must be logged in to favorite games!');
+        }
+      }
+    });
+  };
+
+  const handleShare = async () => {
+    const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+    const shareData = {
+      title: `Play ${title} Unblocked | Spielcade`,
+      text: `Play ${title} for free online in your browser!`,
+      url: shareUrl,
+    };
+
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch (e) {
+        // Fallback to clipboard
+      }
+    }
+
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        setShareToast(true);
+        setTimeout(() => setShareToast(false), 2500);
+      } catch (err) {
+        console.error('Failed to copy to clipboard:', err);
+      }
+    }
+  };
+
+  const handleReport = () => {
+    window.open(`/contact?subject=Report%20Game%20Issue&game=${encodeURIComponent(slug)}`, '_blank');
+  };
 
   // Handle Play Button Click
   const handlePlay = () => {
@@ -314,7 +397,8 @@ export default function GamePlayer({ children, title, slug, image, sourceUrl, on
                 <iframe 
                   src={sourceUrl}
                   className="absolute inset-0 w-full h-full border-0"
-                  sandbox="allow-scripts allow-same-origin"
+                  sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-popups allow-forms allow-modals"
+                  allow="fullscreen; autoplay; gamepad; focus-without-user-activation; accelerometer; gyroscope; clipboard-write"
                   title={title}
                 />
               ) : (
@@ -326,6 +410,20 @@ export default function GamePlayer({ children, title, slug, image, sourceUrl, on
             <div className={`hidden ${isTheater ? 'xl:flex' : '2xl:flex'} flex-col justify-center items-center px-4 bg-gray-900 border-l border-white/5 z-20`}>
                 <AdBanner id="f782d4b90dcb09f70975f654ba40ab19" width={160} height={600} />
             </div>
+
+            {/* Share Toast Notification */}
+            <AnimatePresence>
+              {shareToast && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="absolute top-6 left-1/2 -translate-x-1/2 z-[60] bg-emerald-600 text-white px-5 py-2.5 rounded-full text-xs font-bold shadow-2xl flex items-center gap-2 border border-emerald-400/30"
+                >
+                  <Check size={14} className="text-white stroke-[3]" /> Link copied to clipboard!
+                </motion.div>
+              )}
+            </AnimatePresence>
             
             {/* Universal Floating Action Bar */}
             <AnimatePresence>
@@ -338,12 +436,21 @@ export default function GamePlayer({ children, title, slug, image, sourceUrl, on
                 >
                   <div className="bg-black/80 backdrop-blur-md border border-white/10 rounded-2xl px-6 py-3 flex items-center gap-6 shadow-2xl pointer-events-auto">
                     
-                    <button className="text-white/70 hover:text-white hover:scale-110 transition-all" title="Favorite">
-                      <Heart size={20} />
+                    <button 
+                      onClick={handleToggleFavorite}
+                      disabled={isPendingFav}
+                      className={`hover:scale-110 transition-all ${isFavorited ? 'text-red-500 hover:text-red-400' : 'text-white/70 hover:text-white'}`} 
+                      title={isFavorited ? "Favorited" : "Add to Favorites"}
+                    >
+                      <Heart size={20} className={isFavorited ? 'fill-red-500' : ''} />
                     </button>
                     
-                    <button className="text-white/70 hover:text-white hover:scale-110 transition-all" title="Share">
-                      <Share2 size={20} />
+                    <button 
+                      onClick={handleShare}
+                      className="text-white/70 hover:text-white hover:scale-110 transition-all relative" 
+                      title="Share Game"
+                    >
+                      {shareToast ? <Check size={20} className="text-emerald-400" /> : <Share2 size={20} />}
                     </button>
                     
                     <div className="w-px h-6 bg-white/10" />
@@ -374,7 +481,11 @@ export default function GamePlayer({ children, title, slug, image, sourceUrl, on
 
                     <div className="w-px h-6 bg-white/10" />
 
-                    <button className="text-white/70 hover:text-red-400 hover:scale-110 transition-all" title="Report Bug">
+                    <button 
+                      onClick={handleReport}
+                      className="text-white/70 hover:text-red-400 hover:scale-110 transition-all" 
+                      title="Report Bug / Issue"
+                    >
                       <Flag size={20} />
                     </button>
 
@@ -394,29 +505,37 @@ export default function GamePlayer({ children, title, slug, image, sourceUrl, on
             className="absolute inset-0 flex flex-col items-center justify-center bg-black/95 z-30 p-4 md:p-8"
           >
             <h2 className="text-3xl md:text-4xl font-black text-white mb-2 font-outfit">Game Over</h2>
-            <p className="text-gray-400 mb-8">Ready for your next challenge?</p>
+            <p className="text-gray-400 mb-6 text-sm md:text-base">Ready for your next challenge? Choose a game below:</p>
             
-            {/* Mock Up Next Cards */}
-            <div className="flex gap-4 mb-8 overflow-x-auto max-w-full pb-4 px-4 snap-x">
-              {[
-                { title: 'Neon Racer', color: 'from-pink-500/20' },
-                { title: 'Space Dash', color: 'from-blue-500/20' },
-                { title: 'Puzzle Bob', color: 'from-green-500/20' }
-              ].map((game, i) => (
-                <div key={i} className={`w-32 h-32 md:w-48 md:h-48 rounded-2xl overflow-hidden relative group cursor-pointer border border-white/10 hover:border-[#6366F1] transition-all shrink-0 snap-center bg-gradient-to-br ${game.color} to-gray-900`}>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent z-10" />
-                  <div className="absolute bottom-3 left-3 z-20">
-                    <span className="text-white font-bold text-sm block leading-tight">{game.title}</span>
-                    <span className="text-[#6366F1] text-[10px] uppercase tracking-widest font-bold">Recommended</span>
+            {/* Dynamic Up Next Real Games */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8 w-full max-w-2xl px-2">
+              {(relatedGames && relatedGames.length > 0 ? relatedGames.slice(0, 4) : []).map((game: any) => (
+                <Link 
+                  key={game.slug}
+                  href={`/games/${game.slug}`}
+                  className="flex flex-col bg-slate-900 border border-white/10 hover:border-indigo-500 rounded-xl overflow-hidden group transition-all hover:scale-105"
+                >
+                  <div className="relative aspect-video w-full overflow-hidden bg-black/40">
+                    {game.image ? (
+                      <img src={game.image} alt={game.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center font-bold text-xs text-slate-500">
+                        {game.title?.substring(0, 2).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                      <Play size={24} className="text-white fill-white" />
+                    </div>
                   </div>
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 z-30 transition-opacity bg-black/40 backdrop-blur-sm">
-                    <Play size={32} className="text-white fill-white shadow-2xl" />
+                  <div className="p-2">
+                    <span className="text-white font-bold text-xs truncate block group-hover:text-indigo-400 transition-colors">{game.title}</span>
+                    <span className="text-slate-400 text-[10px] block mt-0.5">{game.category} • ★ {Number(game.rating || 4.8).toFixed(1)}</span>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
 
-            <div className="flex gap-4 mt-2">
+            <div className="flex items-center gap-4">
               <button 
                 onClick={() => setPlayerState('playing')}
                 className="px-8 py-3 bg-[#6366F1] text-white rounded-xl font-bold hover:bg-[#5457DF] hover:scale-105 transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(99,102,241,0.4)]"

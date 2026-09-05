@@ -274,6 +274,21 @@ export default async function GamePage({ params }: GamePageProps) {
     }))
   } : null;
 
+  const howToSchema = config.keyboardControls && Object.keys(config.keyboardControls).length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": `How to Play ${config.title}`,
+    "description": `Comprehensive controls guide and gameplay instructions to play ${config.title} online for free in your browser.`,
+    "image": config.image || 'https://spielcade.com/og-default.jpg',
+    "step": Object.entries(config.keyboardControls).map(([key, action], idx) => ({
+      "@type": "HowToStep",
+      "position": idx + 1,
+      "name": `Control ${idx + 1}: ${key}`,
+      "text": `Press ${key} to ${action}.`,
+      "url": `https://spielcade.com/games/${slug}#controls`
+    }))
+  } : null;
+
   // Fetch real related games from the database matching the same category
   const { data: dbRelated } = await supabase
     .from('games')
@@ -334,6 +349,12 @@ export default async function GamePage({ params }: GamePageProps) {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+      )}
+      {howToSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }}
         />
       )}
       <div className="bg-gray-50 dark:bg-[#05050F] min-h-screen text-gray-900 dark:text-white pt-24 pb-12 transition-colors">
@@ -416,7 +437,16 @@ export default async function GamePage({ params }: GamePageProps) {
                 <AdBanner id="5a3fd317f38a51c8553f75f8c2a547ef" width={320} height={50} />
               </div>
 
-              <GamePlayer title={config.title} slug={slug} image={config.image} sourceUrl={sourceUrl} onGameOver={handleGameOver}>
+              <GamePlayer 
+                title={config.title} 
+                slug={slug} 
+                image={config.image} 
+                sourceUrl={sourceUrl} 
+                onGameOver={handleGameOver}
+                relatedGames={relatedGames}
+                gameId={dbGame?.id}
+                initialFavorited={isFavorited}
+              >
                 {GameComponent && <GameComponent onGameOver={handleGameOver} />}
               </GamePlayer>
             </div>

@@ -161,7 +161,7 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-base font-bold text-gray-900 dark:text-white font-outfit">Related Games</h3>
             <Link 
-              href={`/games?category=${config.category}`} 
+              href={`/categories/${(config.category || 'arcade').toLowerCase().replace(/\s+/g, '-')}-games`} 
               className="text-[#6366F1] text-xs font-bold hover:underline"
             >
               View All
