@@ -19,6 +19,7 @@ import {
 } from '@/lib/seo-enricher';
 
 export const runtime = 'edge';
+export const revalidate = 600; // 10-minute Cloudflare Edge ISR caching for sub-30ms TTFB
 
 interface GamePageProps {
   params: {
@@ -199,9 +200,11 @@ export default async function GamePage({ params }: GamePageProps) {
     "image": config.image || 'https://spielcade.com/og-default.jpg',
     "genre": config.category,
     "inLanguage": "en",
+    "isAccessibleForFree": "true",
     "playMode": "SinglePlayer",
     "applicationCategory": "Game",
-    "operatingSystem": "Any (Web Browser)",
+    "operatingSystem": "Windows, macOS, Linux, Android, iOS, ChromeOS",
+    "gamePlatform": ["Web Browser", "Chromebook", "Mobile", "Desktop"],
     "url": `https://spielcade.com/games/${slug}`,
     "author": {
       "@type": "Organization",
@@ -340,7 +343,12 @@ export default async function GamePage({ params }: GamePageProps) {
           <nav className="flex items-center gap-2 text-sm text-[#6366F1] font-bold mb-6">
             <Link href="/" className="hover:underline">Home</Link>
             <ChevronRight size={14} className="text-gray-400 dark:text-gray-500" />
-            <Link href={`/games?category=${config.category}`} className="hover:underline">{config.category} Games</Link>
+            <Link 
+              href={`/categories/${config.category.toLowerCase().replace(/\s+/g, '-')}-games`} 
+              className="hover:underline"
+            >
+              {config.category} Games
+            </Link>
             <ChevronRight size={14} className="text-gray-400 dark:text-gray-500" />
             <span className="text-[#F59E0B]">{config.title}</span>
           </nav>

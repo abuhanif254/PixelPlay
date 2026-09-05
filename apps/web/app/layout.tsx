@@ -30,6 +30,9 @@ export const metadata: Metadata = {
     title: 'Spielcade | Best Free Online Browser Games',
     description: 'Play the best free online browser games instantly. No downloads required.',
     creator: '@spielcade',
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || 'G-SPIELCADE-VERIFICATION',
   }
 };
 
@@ -88,6 +91,8 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://img.gamemonetize.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://img.gamemonetize.com" />
         <link rel="alternate" type="application/rss+xml" title="Spielcade Games RSS Feed" href="/feed.xml" />
         <script
           type="application/ld+json"

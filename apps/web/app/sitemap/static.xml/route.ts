@@ -7,6 +7,7 @@ export async function GET() {
   const staticRoutes = [
     { url: `${baseUrl}`, priority: '1.0', changefreq: 'daily' },
     { url: `${baseUrl}/games`, priority: '0.9', changefreq: 'daily' },
+    { url: `${baseUrl}/games/new`, priority: '0.9', changefreq: 'daily' },
     { url: `${baseUrl}/categories`, priority: '0.9', changefreq: 'weekly' },
     { url: `${baseUrl}/popular`, priority: '0.8', changefreq: 'daily' },
     { url: `${baseUrl}/leaderboard`, priority: '0.8', changefreq: 'daily' },
