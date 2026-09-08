@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useTransition } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useTransition } from 'react';
 import { 
   Play, 
   Maximize2, 
@@ -14,8 +14,12 @@ import {
   Heart, 
   Flag, 
   Check, 
-  X, 
-  Sparkles 
+  X,
+  Gamepad2,
+  Cloud,
+  CloudOff,
+  Loader2,
+  LayoutTemplate,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -26,6 +30,29 @@ import { toggleFavoriteGame } from '@/app/profile/actions';
 import AdBanner from '@/components/AdBanner';
 
 type PlayerState = 'idle' | 'ad' | 'rewarded_ad' | 'playing' | 'game_over';
+type AspectRatio = '16:9' | '4:3' | '9:16' | 'auto';
+type CloudSaveStatus = 'idle' | 'saving' | 'saved' | 'loading' | 'loaded' | 'error';
+
+// --- Virtual Gamepad D-Pad key mappings ---
+const VPAD_KEYS: Record<string, string> = {
+  up: 'ArrowUp',
+  down: 'ArrowDown',
+  left: 'ArrowLeft',
+  right: 'ArrowRight',
+  a: 'x',
+  b: 'z',
+  x: 'c',
+  y: 'v',
+};
+
+// --- Aspect ratio CSS class map ---
+const AR_CLASSES: Record<AspectRatio, string> = {
+  '16:9': 'aspect-video min-h-[260px] sm:min-h-[380px] md:min-h-[480px] xl:min-h-[560px]',
+  '4:3': 'aspect-[4/3] min-h-[240px] sm:min-h-[360px]',
+  '9:16': 'aspect-[9/16] max-w-[360px] mx-auto min-h-[480px]',
+  'auto': 'min-h-[300px] sm:min-h-[420px] md:min-h-[540px] xl:min-h-[620px]',
+};
+
 
 interface GamePlayerProps {
   children?: React.ReactNode;
@@ -75,12 +102,54 @@ export default function GamePlayer({
   const [isPendingFav, startTransition] = useTransition();
   const [shareToast, setShareToast] = useState(false);
   const [showHud, setShowHud] = useState(true);
-  
+
+  // Feature 1: Iframe Asset Loading Buffer
+  const [isIframeLoading, setIsIframeLoading] = useState(false);
+  const iframeLoadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Feature 2: Mobile Virtual Touch Controller
+  const [showVirtualPad, setShowVirtualPad] = useState(false);
+  const pressedKeysRef = useRef<Set<string>>(new Set());
+
+  // Feature 3: Cloud Save Status Pill
+  const [cloudSaveStatus, setCloudSaveStatus] = useState<CloudSaveStatus>('idle');
+  const cloudSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Feature 4: Aspect Ratio Selector
+  const [aspectRatio, setAspectRatio] = useState<AspectRatio>('16:9');
+  const [showArMenu, setShowArMenu] = useState(false);
+
+  // Feature 5: Cinematic Ambient Glow color derived from category
+  const ambientColor = useRef<string>('#6366F1');
+
   const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const hasRecordedRef = useRef(false);
   const hudTimerRef = useRef<NodeJS.Timeout | null>(null);
   const wakeLockRef = useRef<any>(null);
+
+  // Derive ambient glow color from game category
+  useEffect(() => {
+    const categoryColors: Record<string, string> = {
+      action: '#EF4444', adventure: '#F59E0B', puzzle: '#8B5CF6',
+      racing: '#F97316', sports: '#10B981', shooting: '#EF4444',
+      strategy: '#3B82F6', arcade: '#EC4899', rpg: '#A855F7',
+      horror: '#6B7280', simulation: '#14B8A6', platform: '#F59E0B',
+    };
+    const key = (category || '').toLowerCase();
+    const match = Object.keys(categoryColors).find(k => key.includes(k));
+    ambientColor.current = match ? categoryColors[match] : '#6366F1';
+  }, [category]);
+
+  // Feature 3: Helper to set cloud status with auto-dismiss after 3s
+  const setCloudStatus = useCallback((status: CloudSaveStatus) => {
+    setCloudSaveStatus(status);
+    if (cloudSaveTimerRef.current) clearTimeout(cloudSaveTimerRef.current);
+    if (status === 'saved' || status === 'loaded' || status === 'error') {
+      cloudSaveTimerRef.current = setTimeout(() => setCloudSaveStatus('idle'), 3000);
+    }
+  }, []);
+
 
   // Sync initialFavorited updates
   useEffect(() => {
@@ -174,11 +243,18 @@ export default function GamePlayer({
   }, [playerState, adCountdown]);
 
   const skipAd = () => {
+    // Feature 1: show branded loading overlay immediately after ad skip
+    setIsIframeLoading(true);
     setPlayerState('playing');
-    // Auto-focus the game iframe
-    setTimeout(() => {
-      iframeRef.current?.focus();
-    }, 100);
+    if (iframeLoadTimeoutRef.current) clearTimeout(iframeLoadTimeoutRef.current);
+    iframeLoadTimeoutRef.current = setTimeout(() => setIsIframeLoading(false), 12000);
+    setTimeout(() => { iframeRef.current?.focus(); }, 100);
+  };
+
+  // Dismiss loading buffer as soon as iframe fires onLoad
+  const handleIframeLoad = () => {
+    if (iframeLoadTimeoutRef.current) clearTimeout(iframeLoadTimeoutRef.current);
+    setTimeout(() => setIsIframeLoading(false), 800);
   };
 
   const completeRewardedAd = () => {
@@ -212,7 +288,10 @@ export default function GamePlayer({
   // Instant Game Reload (remounts iframe without page refresh)
   const handleReload = () => {
     setIsReloading(true);
+    setIsIframeLoading(true);
     setReloadKey(prev => prev + 1);
+    if (iframeLoadTimeoutRef.current) clearTimeout(iframeLoadTimeoutRef.current);
+    iframeLoadTimeoutRef.current = setTimeout(() => setIsIframeLoading(false), 12000);
     setTimeout(() => {
       setIsReloading(false);
       iframeRef.current?.focus();
@@ -324,6 +403,7 @@ export default function GamePlayer({
             break;
           case 'SAVE_DATA':
             {
+              setCloudStatus('saving');
               const res = await saveGameState(slug, event.data.payload.data);
               event.source?.postMessage({
                 source: 'SPIELCADE_WRAPPER',
@@ -331,10 +411,12 @@ export default function GamePlayer({
                 payload: res,
                 msgId: event.data.msgId
               }, { targetOrigin: '*' });
+              setCloudStatus(res ? 'saved' : 'error');
             }
             break;
           case 'LOAD_DATA':
             {
+              setCloudStatus('loading');
               const res = await loadGameState(slug);
               event.source?.postMessage({
                 source: 'SPIELCADE_WRAPPER',
@@ -342,6 +424,7 @@ export default function GamePlayer({
                 payload: res,
                 msgId: event.data.msgId
               }, { targetOrigin: '*' });
+              setCloudStatus(res ? 'loaded' : 'error');
             }
             break;
         }
@@ -363,7 +446,63 @@ export default function GamePlayer({
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [playerState, sourceUrl, onGameOver, slug]);
+  }, [playerState, sourceUrl, onGameOver, slug, setCloudStatus]);
+
+  // Cleanup all timers on unmount
+  useEffect(() => {
+    return () => {
+      if (iframeLoadTimeoutRef.current) clearTimeout(iframeLoadTimeoutRef.current);
+      if (cloudSaveTimerRef.current) clearTimeout(cloudSaveTimerRef.current);
+      if (hudTimerRef.current) clearTimeout(hudTimerRef.current);
+    };
+  }, []);
+
+  // Feature 2: Virtual Gamepad — dispatch synthetic keyboard events into game iframe
+  const dispatchVirtualKey = useCallback((key: string, type: 'keydown' | 'keyup') => {
+    const iframe = iframeRef.current;
+    const target = (iframe?.contentDocument || document) as any;
+    const codeMap: Record<string, string> = {
+      ArrowUp: 'ArrowUp', ArrowDown: 'ArrowDown', ArrowLeft: 'ArrowLeft', ArrowRight: 'ArrowRight',
+    };
+    const evt = new KeyboardEvent(type, {
+      key,
+      code: codeMap[key] || `Key${key.toUpperCase()}`,
+      bubbles: true,
+      cancelable: true,
+    });
+    target.dispatchEvent(evt);
+    if (iframe?.contentWindow) {
+      iframe.contentWindow.postMessage(
+        { source: 'SPIELCADE_WRAPPER', type: type === 'keydown' ? 'KEY_DOWN' : 'KEY_UP', key },
+        '*'
+      );
+    }
+  }, []);
+
+  const handleVpadPress = useCallback((action: string) => {
+    const key = VPAD_KEYS[action];
+    if (!key || pressedKeysRef.current.has(key)) return;
+    pressedKeysRef.current.add(key);
+    dispatchVirtualKey(key, 'keydown');
+  }, [dispatchVirtualKey]);
+
+  const handleVpadRelease = useCallback((action: string) => {
+    const key = VPAD_KEYS[action];
+    if (!key) return;
+    pressedKeysRef.current.delete(key);
+    dispatchVirtualKey(key, 'keyup');
+  }, [dispatchVirtualKey]);
+
+  const vpadProps = (action: string) => ({
+    onPointerDown: (e: React.PointerEvent) => {
+      e.preventDefault();
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      handleVpadPress(action);
+    },
+    onPointerUp: (e: React.PointerEvent) => { e.preventDefault(); handleVpadRelease(action); },
+    onPointerLeave: () => handleVpadRelease(action),
+  });
+
 
   const handleToggleFavorite = () => {
     if (!gameId) {
@@ -416,19 +555,31 @@ export default function GamePlayer({
   };
 
   return (
-    <div className="w-full flex flex-col select-none">
-      
+    <div className="w-full flex flex-col select-none relative">
+
+      {/* Feature 5: Cinematic Ambient Back-Glow (GPU-accelerated, category-themed) */}
+      {playerState === 'playing' && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -inset-6 rounded-3xl opacity-25 blur-3xl transition-opacity duration-1000 z-0"
+          style={{
+            background: `radial-gradient(ellipse at center, ${ambientColor.current}60 0%, transparent 70%)`,
+            willChange: 'opacity',
+          }}
+        />
+      )}
+
       {/* Primary Game Display Canvas */}
-      <div 
+      <div
         ref={containerRef}
         onMouseMove={resetHudTimer}
         onTouchStart={resetHudTimer}
         className={`relative w-full bg-black overflow-hidden shadow-2xl transition-all duration-300 ease-in-out flex flex-col justify-center touch-manipulation ${
           isWebFullscreen
             ? 'fixed inset-0 z-[1000] w-screen h-screen rounded-none'
-            : isTheater 
-              ? 'fixed inset-2 md:inset-6 lg:inset-10 z-[100] rounded-2xl shadow-[0_0_80px_rgba(0,0,0,0.9)] border border-white/10' 
-              : 'aspect-video w-full min-h-[260px] sm:min-h-[380px] md:min-h-[480px] xl:min-h-[560px] rounded-2xl border border-gray-200 dark:border-white/10'
+            : isTheater
+              ? 'fixed inset-2 md:inset-6 lg:inset-10 z-[100] rounded-2xl shadow-[0_0_80px_rgba(0,0,0,0.9)] border border-white/10'
+              : `${AR_CLASSES[aspectRatio]} w-full rounded-2xl border border-gray-200 dark:border-white/10`
         }`}
       >
         {/* Theater Mode Background Dimming */}
@@ -575,15 +726,70 @@ export default function GamePlayer({
               {/* Game Viewport Container */}
               <div className="flex-1 h-full relative flex justify-center items-center pointer-events-auto z-10 min-w-0">
                 {sourceUrl ? (
-                  <iframe 
-                    key={reloadKey}
-                    ref={iframeRef}
-                    src={sourceUrl}
-                    className="absolute inset-0 w-full h-full border-0"
-                    sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-popups allow-forms allow-modals"
-                    allow="fullscreen; autoplay; gamepad; focus-without-user-activation; accelerometer; gyroscope; clipboard-write"
-                    title={title}
-                  />
+                  <>
+                    <iframe
+                      key={reloadKey}
+                      ref={iframeRef}
+                      src={sourceUrl}
+                      onLoad={handleIframeLoad}
+                      className="absolute inset-0 w-full h-full border-0"
+                      sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-popups allow-forms allow-modals"
+                      allow="fullscreen; autoplay; gamepad; focus-without-user-activation; accelerometer; gyroscope; clipboard-write"
+                      title={title}
+                    />
+
+                    {/* Feature 1: Iframe Asset Loading Buffer — eliminates black screen after ad skip */}
+                    <AnimatePresence>
+                      {isIframeLoading && (
+                        <motion.div
+                          key="iframe-loading"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-gray-950"
+                        >
+                          {image && (
+                            <img
+                              src={image}
+                              alt={title}
+                              className="absolute inset-0 w-full h-full object-cover opacity-20 blur-sm scale-110"
+                            />
+                          )}
+                          <div className="relative z-10 flex flex-col items-center gap-4 text-center px-4">
+                            <div className="relative w-20 h-20">
+                              <div
+                                className="absolute inset-0 rounded-full border-4 border-t-transparent animate-spin"
+                                style={{ borderColor: `${ambientColor.current} transparent transparent transparent` }}
+                              />
+                              <div className="absolute inset-2 rounded-full border-2 border-white/10 animate-pulse" />
+                              {image ? (
+                                <img src={image} alt="" className="absolute inset-3 rounded-full object-cover" />
+                              ) : (
+                                <div className="absolute inset-3 rounded-full bg-white/10 flex items-center justify-center">
+                                  <Loader2 size={20} className="text-white/60 animate-spin" />
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <p className="text-white font-bold text-base sm:text-lg font-outfit">Loading {title}</p>
+                              <p className="text-gray-400 text-xs mt-1">Initializing game engine...</p>
+                            </div>
+                            <div className="w-48 h-1 rounded-full bg-white/10 overflow-hidden">
+                              <div
+                                className="h-full w-full rounded-full opacity-80"
+                                style={{
+                                  background: `linear-gradient(90deg, transparent 0%, ${ambientColor.current} 50%, transparent 100%)`,
+                                  backgroundSize: '200% 100%',
+                                  animation: 'shimmer 1.5s ease-in-out infinite',
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </>
                 ) : (
                   children
                 )}
@@ -604,6 +810,76 @@ export default function GamePlayer({
                     className="absolute top-6 left-1/2 -translate-x-1/2 z-[70] bg-emerald-600 text-white px-5 py-2.5 rounded-full text-xs font-bold shadow-2xl flex items-center gap-2 border border-emerald-400/30"
                   >
                     <Check size={14} className="text-white stroke-[3]" /> Link copied to clipboard!
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Feature 3: Cloud Save Status Pill — floating above game canvas */}
+              <AnimatePresence>
+                {cloudSaveStatus !== 'idle' && (
+                  <motion.div
+                    key="cloud-pill"
+                    initial={{ opacity: 0, y: -16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -16 }}
+                    transition={{ duration: 0.25 }}
+                    className={`absolute top-4 left-1/2 -translate-x-1/2 z-[60] px-4 py-1.5 rounded-full text-xs font-bold border backdrop-blur-md flex items-center gap-2 shadow-lg pointer-events-none ${
+                      cloudSaveStatus === 'error'
+                        ? 'bg-red-900/80 border-red-500/30 text-red-300'
+                        : cloudSaveStatus === 'saving' || cloudSaveStatus === 'loading'
+                        ? 'bg-blue-900/80 border-blue-500/30 text-blue-200'
+                        : 'bg-emerald-900/80 border-emerald-500/30 text-emerald-200'
+                    }`}
+                  >
+                    {(cloudSaveStatus === 'saving' || cloudSaveStatus === 'loading') && (
+                      <Loader2 size={12} className="animate-spin" />
+                    )}
+                    {cloudSaveStatus === 'saving' && '💾 Saving...'}
+                    {cloudSaveStatus === 'saved' && '☁️ Cloud Save Synced'}
+                    {cloudSaveStatus === 'loading' && '☁️ Loading Save...'}
+                    {cloudSaveStatus === 'loaded' && '☁️ Save Loaded'}
+                    {cloudSaveStatus === 'error' && '⚠️ Save Error'}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Feature 2: Mobile Virtual Touch Controller — on-screen D-Pad + Action buttons */}
+              <AnimatePresence>
+                {showVirtualPad && (
+                  <motion.div
+                    key="vpad"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute bottom-4 left-0 right-0 z-40 flex justify-between items-end px-4 pointer-events-none"
+                  >
+                    {/* D-Pad (Left) */}
+                    <div className="pointer-events-auto relative w-[128px] h-[128px] select-none">
+                      <button {...vpadProps('up')} className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-10 bg-black/75 border border-white/25 rounded-xl flex items-center justify-center text-white active:bg-white/20 touch-none shadow-lg" aria-label="Up">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 19V5m0 0-7 7m7-7 7 7"/></svg>
+                      </button>
+                      <button {...vpadProps('down')} className="absolute bottom-0 left-1/2 -translate-x-1/2 w-10 h-10 bg-black/75 border border-white/25 rounded-xl flex items-center justify-center text-white active:bg-white/20 touch-none shadow-lg" aria-label="Down">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 5v14m0 0 7-7m-7 7-7-7"/></svg>
+                      </button>
+                      <button {...vpadProps('left')} className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/75 border border-white/25 rounded-xl flex items-center justify-center text-white active:bg-white/20 touch-none shadow-lg" aria-label="Left">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M19 12H5m0 0 7 7M5 12l7-7"/></svg>
+                      </button>
+                      <button {...vpadProps('right')} className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/75 border border-white/25 rounded-xl flex items-center justify-center text-white active:bg-white/20 touch-none shadow-lg" aria-label="Right">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 12h14m0 0-7-7m7 7-7 7"/></svg>
+                      </button>
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="w-3 h-3 rounded-full bg-white/10 border border-white/15" />
+                      </div>
+                    </div>
+
+                    {/* Action Buttons (Right — ABXY layout) */}
+                    <div className="pointer-events-auto relative w-[128px] h-[128px] select-none">
+                      <button {...vpadProps('a')} className="absolute top-0 left-1/2 -translate-x-1/2 w-11 h-11 bg-green-600/85 border border-green-400/40 rounded-full flex items-center justify-center text-white text-sm font-black active:scale-90 touch-none shadow-lg" aria-label="A">A</button>
+                      <button {...vpadProps('b')} className="absolute right-0 top-1/2 -translate-y-1/2 w-11 h-11 bg-red-600/85 border border-red-400/40 rounded-full flex items-center justify-center text-white text-sm font-black active:scale-90 touch-none shadow-lg" aria-label="B">B</button>
+                      <button {...vpadProps('x')} className="absolute left-0 top-1/2 -translate-y-1/2 w-11 h-11 bg-blue-600/85 border border-blue-400/40 rounded-full flex items-center justify-center text-white text-sm font-black active:scale-90 touch-none shadow-lg" aria-label="X">X</button>
+                      <button {...vpadProps('y')} className="absolute bottom-0 left-1/2 -translate-x-1/2 w-11 h-11 bg-yellow-500/85 border border-yellow-400/40 rounded-full flex items-center justify-center text-white text-sm font-black active:scale-90 touch-none shadow-lg" aria-label="Y">Y</button>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -791,7 +1067,7 @@ export default function GamePlayer({
           </div>
 
           {/* Right Section: Interactive Action Controls */}
-          <div className="flex items-center gap-1.5 sm:gap-2 ml-auto">
+          <div className="flex items-center gap-1.5 sm:gap-2 ml-auto flex-wrap justify-end">
             {/* Restart Game */}
             <button
               onClick={handleReload}
@@ -813,12 +1089,69 @@ export default function GamePlayer({
               <span className="hidden sm:inline">{isMuted ? "Unmute" : "Mute"}</span>
             </button>
 
+            {/* Feature 2: Virtual Gamepad Toggle */}
+            {playerState === 'playing' && (
+              <button
+                onClick={() => setShowVirtualPad(prev => !prev)}
+                className={`p-2 sm:px-3 sm:py-2 rounded-xl transition-all flex items-center gap-1.5 text-xs font-semibold ${
+                  showVirtualPad
+                    ? 'bg-[#6366F1] text-white shadow-md shadow-[#6366F1]/30'
+                    : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10'
+                }`}
+                title="Toggle Virtual Gamepad (for touch screens)"
+              >
+                <Gamepad2 size={16} />
+                <span className="hidden sm:inline">Gamepad</span>
+              </button>
+            )}
+
+            {/* Feature 4: Aspect Ratio Selector */}
+            <div className="relative">
+              <button
+                onClick={() => setShowArMenu(prev => !prev)}
+                className="p-2 sm:px-3 sm:py-2 rounded-xl text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all flex items-center gap-1.5 text-xs font-semibold"
+                title="Change Aspect Ratio"
+              >
+                <LayoutTemplate size={16} />
+                <span className="hidden sm:inline">{aspectRatio === 'auto' ? 'Auto' : aspectRatio}</span>
+              </button>
+              <AnimatePresence>
+                {showArMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.92, y: 4 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.92, y: 4 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute bottom-full mb-2 right-0 z-50 bg-white dark:bg-[#1a1b38] border border-gray-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden min-w-[138px]"
+                  >
+                    {(['16:9', '4:3', '9:16', 'auto'] as AspectRatio[]).map(ar => (
+                      <button
+                        key={ar}
+                        onClick={() => { setAspectRatio(ar); setShowArMenu(false); }}
+                        className={`w-full text-left px-3 py-2.5 text-xs font-semibold flex items-center gap-2 transition-colors ${
+                          aspectRatio === ar
+                            ? 'bg-[#6366F1] text-white'
+                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5'
+                        }`}
+                      >
+                        {aspectRatio === ar ? <Check size={11} /> : <span className="w-[11px]" />}
+                        <span>{ar === 'auto' ? 'Auto' : ar}</span>
+                        <span className="ml-auto text-[10px] opacity-60">
+                          {ar === '16:9' ? 'Standard' : ar === '4:3' ? 'Retro' : ar === '9:16' ? 'Vertical' : 'Fill'}
+                        </span>
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             {/* Theater Mode Toggle (Desktop only) */}
             <button
               onClick={() => setIsTheater(!isTheater)}
               className={`hidden md:flex p-2 sm:px-3 sm:py-2 rounded-xl transition-all items-center gap-1.5 text-xs font-semibold ${
-                isTheater 
-                  ? "bg-[#6366F1] text-white shadow-md shadow-[#6366F1]/30" 
+                isTheater
+                  ? "bg-[#6366F1] text-white shadow-md shadow-[#6366F1]/30"
                   : "text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10"
               }`}
               title="Theater Mode (Hotkey: T)"
@@ -844,8 +1177,8 @@ export default function GamePlayer({
               onClick={handleToggleFavorite}
               disabled={isPendingFav}
               className={`p-2 rounded-xl transition-all ${
-                isFavorited 
-                  ? "text-red-500 bg-red-50 dark:bg-red-500/10" 
+                isFavorited
+                  ? "text-red-500 bg-red-50 dark:bg-red-500/10"
                   : "text-gray-700 dark:text-gray-300 hover:text-red-500 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10"
               }`}
               title={isFavorited ? "Favorited" : "Add to Favorites"}
@@ -870,9 +1203,48 @@ export default function GamePlayer({
             >
               <Flag size={16} />
             </button>
+
+            {/* Feature 3: Cloud Save Status — compact pill in control deck */}
+            <AnimatePresence>
+              {cloudSaveStatus !== 'idle' && (
+                <motion.div
+                  key="cloud-deck"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className={`px-2.5 py-1.5 rounded-xl text-[11px] font-bold border flex items-center gap-1.5 ${
+                    cloudSaveStatus === 'error'
+                      ? 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400'
+                      : 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400'
+                  }`}
+                >
+                  {(cloudSaveStatus === 'saving' || cloudSaveStatus === 'loading')
+                    ? <Loader2 size={11} className="animate-spin" />
+                    : cloudSaveStatus === 'error'
+                    ? <CloudOff size={11} />
+                    : <Cloud size={11} />
+                  }
+                  <span className="hidden sm:inline">
+                    {cloudSaveStatus === 'saving' && 'Saving...'}
+                    {cloudSaveStatus === 'saved' && 'Synced'}
+                    {cloudSaveStatus === 'loading' && 'Loading...'}
+                    {cloudSaveStatus === 'loaded' && 'Loaded'}
+                    {cloudSaveStatus === 'error' && 'Error'}
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       )}
+
+      {/* Shimmer animation keyframe for loading buffer progress bar */}
+      <style>{`
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+      `}</style>
 
     </div>
   );
