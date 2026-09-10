@@ -27,16 +27,13 @@ import {
   MoreHorizontal,
   Timer,
   Trophy,
-  PictureInPicture2,
+  Pin,
+  PinOff,
   Zap,
   Sparkles,
-  Sliders,
   Award,
   Flame,
-  CornerDownRight,
-  Focus,
-  Eye,
-  RefreshCw,
+  ArrowUpRight,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -52,15 +49,15 @@ type CloudSaveStatus = 'idle' | 'saving' | 'saved' | 'loading' | 'loaded' | 'err
 type GamepadMode = 'dual' | 'wasd' | 'arrows';
 type GamepadOpacity = 'low' | 'med' | 'high';
 
-// Key mappings for virtual touch controls
+// Virtual Gamepad key mappings (WASD + Arrows simultaneously)
 const VPAD_KEY_PAIRS: Record<string, { key: string; code: string; secondaryKey?: string; secondaryCode?: string }> = {
   up: { key: 'ArrowUp', code: 'ArrowUp', secondaryKey: 'w', secondaryCode: 'KeyW' },
   down: { key: 'ArrowDown', code: 'ArrowDown', secondaryKey: 's', secondaryCode: 'KeyS' },
   left: { key: 'ArrowLeft', code: 'ArrowLeft', secondaryKey: 'a', secondaryCode: 'KeyA' },
   right: { key: 'ArrowRight', code: 'ArrowRight', secondaryKey: 'd', secondaryCode: 'KeyD' },
   a: { key: ' ', code: 'Space', secondaryKey: 'x', secondaryCode: 'KeyX' }, // Jump / Primary Action
-  b: { key: 'Shift', code: 'ShiftLeft', secondaryKey: 'z', secondaryCode: 'KeyZ' }, // Run / Secondary Action
-  x: { key: 'e', code: 'KeyE', secondaryKey: 'c', secondaryCode: 'KeyC' }, // Interact / Reload
+  b: { key: 'Shift', code: 'ShiftLeft', secondaryKey: 'z', secondaryCode: 'KeyZ' }, // Run / Dash
+  x: { key: 'e', code: 'KeyE', secondaryKey: 'c', secondaryCode: 'KeyC' }, // Interact / Use
   y: { key: 'q', code: 'KeyQ', secondaryKey: 'v', secondaryCode: 'KeyV' }, // Special / Switch
 };
 
@@ -128,6 +125,7 @@ export default function GamePlayer({
   const [isTheater, setIsTheater] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isWebFullscreen, setIsWebFullscreen] = useState(false);
+  const [isMiniPlayer, setIsMiniPlayer] = useState(false); // Bulletproof In-Page Floating Mini-Player
   const [reloadKey, setReloadKey] = useState(0);
   const [isReloading, setIsReloading] = useState(false);
   const [adCountdown, setAdCountdown] = useState(5);
@@ -177,23 +175,18 @@ export default function GamePlayer({
   const [unlockedAchievement, setUnlockedAchievement] = useState<{ title: string; xp?: number } | null>(null);
   const achievementTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Improvement 4: Picture-in-Picture
-  const [isPip, setIsPip] = useState(false);
-  const pipWindowRef = useRef<Window | null>(null);
-  const [hasPipSupport] = useState(() => typeof window !== 'undefined' && 'documentPictureInPicture' in window);
-
-  // Improvement 5: Swipe Gestures
+  // Improvement 4: Swipe Gestures
   const touchStartYRef = useRef(0);
   const touchStartXRef = useRef(0);
 
-  // Improvement 6: Shortcuts Modal
+  // Improvement 5: Shortcuts Modal
   const [showShortcuts, setShowShortcuts] = useState(false);
   const shortcutTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Improvement 7: Screenshot Engine
+  // Improvement 6: Screenshot Engine
   const [screenshotToast, setScreenshotToast] = useState<'success' | 'postcard' | 'hint' | null>(null);
 
-  // Improvement 8: Overflow Menu
+  // Improvement 7: Overflow Menu
   const [showOverflowMenu, setShowOverflowMenu] = useState(false);
   const overflowMenuRef = useRef<HTMLDivElement>(null);
   const volumeMenuRef = useRef<HTMLDivElement>(null);
@@ -487,16 +480,19 @@ export default function GamePlayer({
           await containerRef.current.requestFullscreen();
           setIsFullscreen(true);
           setIsTheater(false);
+          setIsMiniPlayer(false);
           if (screen.orientation && (screen.orientation as any).lock) {
             (screen.orientation as any).lock('landscape').catch(() => {});
           }
         } else {
           setIsWebFullscreen(true);
           setIsTheater(false);
+          setIsMiniPlayer(false);
         }
       } catch {
         setIsWebFullscreen(true);
         setIsTheater(false);
+        setIsMiniPlayer(false);
       }
     }
     refocusGame();
@@ -551,6 +547,7 @@ export default function GamePlayer({
         }
         if (isTheater) setIsTheater(false);
         if (isWebFullscreen) setIsWebFullscreen(false);
+        if (isMiniPlayer) setIsMiniPlayer(false);
       } else if (e.key === '?') {
         e.preventDefault();
         setShowShortcuts(p => !p);
@@ -561,7 +558,7 @@ export default function GamePlayer({
 
     window.addEventListener('keydown', handle, { passive: false });
     return () => window.removeEventListener('keydown', handle);
-  }, [playerState, isTheater, isWebFullscreen, isMuted, showShortcuts]);
+  }, [playerState, isTheater, isWebFullscreen, isMuted, isMiniPlayer, showShortcuts]);
 
   // SDK & Game Message Receiver Protocol
   useEffect(() => {
@@ -783,173 +780,186 @@ export default function GamePlayer({
     const dx = e.changedTouches[0].clientX - touchStartXRef.current;
     if (Math.abs(dy) <= Math.abs(dx)) return;
 
-    if (dy > 75 && (isTheater || isFullscreen || isWebFullscreen)) {
+    if (dy > 75 && (isTheater || isFullscreen || isWebFullscreen || isMiniPlayer)) {
       if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
       setIsFullscreen(false);
       setIsWebFullscreen(false);
       setIsTheater(false);
-    } else if (dy < -75 && !isTheater && !isFullscreen && !isWebFullscreen) {
+      setIsMiniPlayer(false);
+    } else if (dy < -75 && !isTheater && !isFullscreen && !isWebFullscreen && !isMiniPlayer) {
       setIsTheater(true);
     }
   };
 
-  // Real Screenshot Engine (Canvas extraction + DisplayMedia + Branded Postcard Fallback)
-  const handleScreenshot = async () => {
-    const iframe = iframeRef.current;
-    let captured = false;
-
-    // 1. Try DOM Canvas extraction if same-origin
+  // Instant High-Resolution Screenshot & Gamer Card Engine
+  const handleScreenshot = () => {
     try {
-      if (iframe?.contentDocument) {
-        const gameCanvas = iframe.contentDocument.querySelector('canvas');
-        if (gameCanvas) {
-          gameCanvas.toBlob(blob => {
-            if (blob) {
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = `${slug}-screenshot-${Date.now()}.png`;
-              a.click();
-              URL.revokeObjectURL(url);
-            }
-          });
-          setScreenshotToast('success');
-          captured = true;
-        }
-      }
-    } catch {}
+      const iframe = iframeRef.current;
+      let capturedDirectCanvas = false;
 
-    // 2. Try Screen Capture API if user allows
-    if (!captured && typeof navigator !== 'undefined' && navigator.mediaDevices?.getDisplayMedia) {
+      // 1. If game has an accessible same-origin canvas, capture it directly
       try {
-        const stream = await navigator.mediaDevices.getDisplayMedia({
-          video: { displaySurface: 'browser' } as any,
-          preferCurrentTab: true as any,
-        });
-        const video = document.createElement('video');
-        video.srcObject = stream;
-        await video.play();
-
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth || 1280;
-        canvas.height = video.videoHeight || 720;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(video, 0, 0);
-          canvas.toBlob(blob => {
-            if (blob) {
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = `${slug}-capture-${Date.now()}.png`;
-              a.click();
-              URL.revokeObjectURL(url);
-            }
-          });
-          setScreenshotToast('success');
-          captured = true;
-        }
-        stream.getTracks().forEach(t => t.stop());
-      } catch {}
-    }
-
-    // 3. Fallback: Generate a stylish Spielcade Gamer Card
-    if (!captured) {
-      try {
-        const cardCanvas = document.createElement('canvas');
-        cardCanvas.width = 1200;
-        cardCanvas.height = 630;
-        const ctx = cardCanvas.getContext('2d');
-        if (ctx) {
-          // Dark background
-          ctx.fillStyle = '#080816';
-          ctx.fillRect(0, 0, 1200, 630);
-
-          // Accent radial gradient
-          const grad = ctx.createRadialGradient(600, 315, 50, 600, 315, 600);
-          grad.addColorStop(0, `${ambientColor.current}40`);
-          grad.addColorStop(1, '#080816');
-          ctx.fillStyle = grad;
-          ctx.fillRect(0, 0, 1200, 630);
-
-          // Spielcade branding
-          ctx.fillStyle = '#6366F1';
-          ctx.font = 'bold 36px sans-serif';
-          ctx.fillText('SPIELCADE.COM', 80, 90);
-
-          // Title
-          ctx.fillStyle = '#FFFFFF';
-          ctx.font = '900 68px sans-serif';
-          ctx.fillText(title, 80, 200);
-
-          // Stats
-          ctx.fillStyle = '#A1A1AA';
-          ctx.font = '500 30px sans-serif';
-          ctx.fillText(`Category: ${category || 'Arcade'}  •  Time Played: ${fmtTime(sessionTime)}`, 80, 260);
-
-          if (personalBest) {
-            ctx.fillStyle = '#F59E0B';
-            ctx.font = 'bold 42px sans-serif';
-            ctx.fillText(`Personal Best: ${personalBest.toLocaleString()} pts`, 80, 340);
+        if (iframe?.contentDocument) {
+          const gameCanvas = iframe.contentDocument.querySelector('canvas');
+          if (gameCanvas) {
+            gameCanvas.toBlob(blob => {
+              if (blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${slug}-screenshot-${Date.now()}.png`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }
+            });
+            setScreenshotToast('success');
+            capturedDirectCanvas = true;
           }
-
-          // Footer
-          ctx.fillStyle = '#71717A';
-          ctx.font = '500 24px sans-serif';
-          ctx.fillText('Play free unblocked online games with zero downloads', 80, 540);
-
-          cardCanvas.toBlob(blob => {
-            if (blob) {
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = `${slug}-card-${Date.now()}.png`;
-              a.click();
-              URL.revokeObjectURL(url);
-            }
-          });
-          setScreenshotToast('postcard');
-          captured = true;
         }
-      } catch {
-        setScreenshotToast('hint');
+      } catch {}
+
+      if (capturedDirectCanvas) {
+        setTimeout(() => setScreenshotToast(null), 3500);
+        return;
       }
+
+      // 2. Generate an ultra-sharp 1200x630 Gamer Card with Game Poster, High Score & Spielcade Verified Seal
+      const cardCanvas = document.createElement('canvas');
+      cardCanvas.width = 1200;
+      cardCanvas.height = 630;
+      const ctx = cardCanvas.getContext('2d');
+      if (!ctx) {
+        setScreenshotToast('hint');
+        setTimeout(() => setScreenshotToast(null), 3500);
+        return;
+      }
+
+      // Dark futuristic background
+      ctx.fillStyle = '#060611';
+      ctx.fillRect(0, 0, 1200, 630);
+
+      // Radial Category Ambient Glow
+      const grad = ctx.createRadialGradient(600, 315, 60, 600, 315, 600);
+      grad.addColorStop(0, `${ambientColor.current}50`);
+      grad.addColorStop(0.7, '#060611');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1200, 630);
+
+      // Grid pattern overlay
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < 1200; x += 40) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, 630);
+        ctx.stroke();
+      }
+      for (let y = 0; y < 630; y += 40) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(1200, y);
+        ctx.stroke();
+      }
+
+      // Branding Header
+      ctx.fillStyle = '#6366F1';
+      ctx.font = 'bold 32px sans-serif';
+      ctx.fillText('SPIELCADE.COM', 80, 85);
+
+      ctx.fillStyle = '#10B981';
+      ctx.font = 'bold 16px sans-serif';
+      ctx.fillText('● VERIFIED GAMEPLAY SNAPSHOT', 360, 82);
+
+      // Game Title
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = '900 64px sans-serif';
+      ctx.fillText(title, 80, 190);
+
+      // Category & Session time
+      ctx.fillStyle = '#A1A1AA';
+      ctx.font = '500 28px sans-serif';
+      ctx.fillText(`Category: ${category || 'Arcade'}  •  Session Time: ${fmtTime(sessionTime)}`, 80, 250);
+
+      // Score / Record Highlight Card
+      const displayScore = liveScore !== null && liveScore > 0 ? liveScore : personalBest;
+      if (displayScore) {
+        // Glowing pill background
+        ctx.fillStyle = 'rgba(245, 158, 11, 0.15)';
+        ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(80, 300, 520, 100, 20);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#F59E0B';
+        ctx.font = 'bold 42px sans-serif';
+        ctx.fillText(`★ ${displayScore.toLocaleString()} PTS`, 110, 365);
+
+        ctx.fillStyle = '#E4E4E7';
+        ctx.font = 'bold 20px sans-serif';
+        ctx.fillText('HIGH SCORE RECORD', 380, 360);
+      }
+
+      // Footer
+      ctx.fillStyle = '#71717A';
+      ctx.font = '500 22px sans-serif';
+      ctx.fillText('Play 17,000+ free unblocked online games directly in your browser with no downloads', 80, 550);
+
+      // Draw poster if loaded
+      const exportCanvas = () => {
+        cardCanvas.toBlob(blob => {
+          if (blob) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${slug}-snapshot-${Date.now()}.png`;
+            a.click();
+            URL.revokeObjectURL(url);
+            setScreenshotToast('postcard');
+          } else {
+            setScreenshotToast('hint');
+          }
+        });
+      };
+
+      if (image) {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          try {
+            // Draw thumbnail in corner with rounded border
+            ctx.save();
+            ctx.beginPath();
+            ctx.roundRect(850, 140, 270, 270, 24);
+            ctx.clip();
+            ctx.drawImage(img, 850, 140, 270, 270);
+            ctx.restore();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.roundRect(850, 140, 270, 270, 24);
+            ctx.stroke();
+          } catch {}
+          exportCanvas();
+        };
+        img.onerror = () => exportCanvas();
+        img.src = image;
+      } else {
+        exportCanvas();
+      }
+    } catch {
+      setScreenshotToast('hint');
     }
 
     setTimeout(() => setScreenshotToast(null), 3500);
   };
 
-  // Picture-in-Picture Engine
-  const handlePip = async () => {
-    if (!(window as any).documentPictureInPicture) return;
-    if (isPip && pipWindowRef.current) {
-      pipWindowRef.current.close();
-      return;
-    }
-    try {
-      const pipWin: Window = await (window as any).documentPictureInPicture.requestWindow({
-        width: 480,
-        height: 270,
-      });
-      pipWindowRef.current = pipWin;
-      setIsPip(true);
-      pipWin.document.body.style.cssText =
-        'margin:0;background:#000;display:flex;align-items:center;justify-content:center;width:100%;height:100%;overflow:hidden;';
-
-      if (iframeRef.current) {
-        pipWin.document.body.appendChild(iframeRef.current);
-      }
-
-      pipWin.addEventListener('pagehide', () => {
-        const vp = containerRef.current?.querySelector('.pip-viewport');
-        if (iframeRef.current && vp) vp.appendChild(iframeRef.current);
-        setIsPip(false);
-        pipWindowRef.current = null;
-        refocusGame();
-      });
-    } catch {
-      setIsPip(false);
-    }
+  // Mini-Player Toggle (Crash-proof, stays in same React tree)
+  const toggleMiniPlayer = () => {
+    setIsMiniPlayer(prev => !prev);
+    setIsTheater(false);
+    refocusGame();
   };
 
   // Favorite toggle
@@ -1004,7 +1014,7 @@ export default function GamePlayer({
     <div className="w-full flex flex-col select-none relative">
 
       {/* Feature 5: Cinematic GPU Ambient Back-Glow */}
-      {playerState === 'playing' && (
+      {playerState === 'playing' && !isMiniPlayer && (
         <div
           aria-hidden="true"
           className="pointer-events-none absolute -inset-6 rounded-3xl opacity-25 blur-3xl transition-opacity duration-1000 z-0"
@@ -1015,7 +1025,25 @@ export default function GamePlayer({
         />
       )}
 
-      {/* Primary Display Canvas */}
+      {/* Mini-Player Placeholder when game is pinned to corner */}
+      {isMiniPlayer && (
+        <div
+          onClick={() => setIsMiniPlayer(false)}
+          className={`w-full ${AR_CLASSES[aspectRatio]} rounded-2xl border-2 border-dashed border-gray-300 dark:border-white/15 bg-gray-100/50 dark:bg-white/5 flex flex-col items-center justify-center gap-3 cursor-pointer group transition-all hover:border-[#6366F1]`}
+        >
+          <div className="w-14 h-14 rounded-2xl bg-[#6366F1]/10 text-[#6366F1] flex items-center justify-center group-hover:scale-110 transition-transform">
+            <ArrowUpRight size={28} />
+          </div>
+          <div className="text-center">
+            <p className="text-sm font-bold text-gray-900 dark:text-white font-outfit">
+              {title} is playing in Mini-Player
+            </p>
+            <p className="text-xs text-gray-500 mt-1">Click anywhere here to return the game to full view</p>
+          </div>
+        </div>
+      )}
+
+      {/* Primary Display Canvas (Seamlessly floats to corner when isMiniPlayer is active) */}
       <div
         ref={containerRef}
         onClick={refocusGame}
@@ -1024,14 +1052,46 @@ export default function GamePlayer({
         onMouseLeave={() => setIsCanvasHovered(false)}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className={`relative w-full bg-black overflow-hidden shadow-2xl transition-all duration-300 ease-in-out flex flex-col justify-center touch-manipulation ${
-          isWebFullscreen
-            ? 'fixed inset-0 z-[1000] w-screen h-screen rounded-none pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]'
-            : isTheater
-              ? 'fixed inset-2 md:inset-6 lg:inset-10 z-[100] rounded-2xl shadow-[0_0_80px_rgba(0,0,0,0.9)] border border-white/10'
-              : `${AR_CLASSES[aspectRatio]} w-full rounded-2xl border border-gray-200 dark:border-white/10`
+        className={`relative bg-black overflow-hidden shadow-2xl transition-all duration-300 ease-in-out flex flex-col justify-center touch-manipulation ${
+          isMiniPlayer
+            ? 'fixed bottom-6 right-6 z-[999] w-[340px] sm:w-[420px] aspect-video rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.85)] border-2 border-white/20'
+            : isWebFullscreen
+              ? 'fixed inset-0 z-[1000] w-screen h-screen rounded-none pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]'
+              : isTheater
+                ? 'fixed inset-2 md:inset-6 lg:inset-10 z-[100] rounded-2xl shadow-[0_0_80px_rgba(0,0,0,0.9)] border border-white/10'
+                : `${AR_CLASSES[aspectRatio]} w-full rounded-2xl border border-gray-200 dark:border-white/10`
         }`}
       >
+        {/* Mini-Player Hover Controls Bar */}
+        {isMiniPlayer && (
+          <div className="absolute top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/80 to-transparent p-2.5 flex items-center justify-between text-white">
+            <span className="text-xs font-bold truncate max-w-[200px] font-outfit drop-shadow">{title}</span>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={handleToggleMute}
+                className="p-1.5 bg-black/60 hover:bg-white/20 rounded-lg transition-colors"
+                title={isMuted ? 'Unmute' : 'Mute'}
+              >
+                {isMuted ? <VolumeX size={14} className="text-red-400" /> : <Volume2 size={14} />}
+              </button>
+              <button
+                onClick={() => setIsMiniPlayer(false)}
+                className="p-1.5 bg-black/60 hover:bg-white/20 rounded-lg transition-colors"
+                title="Expand to Full View"
+              >
+                <ArrowUpRight size={14} />
+              </button>
+              <button
+                onClick={() => setIsMiniPlayer(false)}
+                className="p-1.5 bg-black/60 hover:bg-red-600 rounded-lg transition-colors"
+                title="Close Mini-Player"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Swipe drag-indicator bar in theater / fullscreen */}
         {isExpandedMode && (
           <div className="absolute top-2 left-1/2 -translate-x-1/2 z-50 w-12 h-1 rounded-full bg-white/25 pointer-events-none" />
@@ -1166,25 +1226,16 @@ export default function GamePlayer({
               animate={{ opacity: 1 }}
               className="w-full h-full flex flex-row relative z-10 bg-black overflow-hidden"
             >
-              {/* Left Skyscraper Ad */}
-              <div className={`hidden ${isTheater ? 'xl:flex' : '2xl:flex'} flex-col justify-center items-center px-3 bg-gray-950 border-r border-white/5 z-20 shrink-0`}>
-                <AdBanner id="f782d4b90dcb09f70975f654ba40ab19" width={160} height={600} />
-              </div>
+              {/* Left Skyscraper Ad (Hidden in mini-player) */}
+              {!isMiniPlayer && (
+                <div className={`hidden ${isTheater ? 'xl:flex' : '2xl:flex'} flex-col justify-center items-center px-3 bg-gray-950 border-r border-white/5 z-20 shrink-0`}>
+                  <AdBanner id="f782d4b90dcb09f70975f654ba40ab19" width={160} height={600} />
+                </div>
+              )}
 
-              {/* Game Viewport Container */}
-              <div className="pip-viewport flex-1 h-full relative flex justify-center items-center pointer-events-auto z-10 min-w-0">
-                {isPip ? (
-                  <div className="flex flex-col items-center justify-center p-6 text-center space-y-3">
-                    <PictureInPicture2 size={44} className="text-[#6366F1] animate-pulse" />
-                    <p className="text-white font-bold text-sm">Game is playing in Picture-in-Picture window</p>
-                    <button
-                      onClick={handlePip}
-                      className="px-4 py-2 bg-[#6366F1] hover:bg-[#5356e8] text-white rounded-xl text-xs font-bold transition-all shadow-lg"
-                    >
-                      Return Game Here
-                    </button>
-                  </div>
-                ) : sourceUrl ? (
+              {/* Game Viewport Container (STAYS CONSTANT IN DOM — NEVER UNMOUNTS) */}
+              <div className="flex-1 h-full relative flex justify-center items-center pointer-events-auto z-10 min-w-0">
+                {sourceUrl ? (
                   <>
                     <iframe
                       key={reloadKey}
@@ -1199,7 +1250,7 @@ export default function GamePlayer({
 
                     {/* Feature 1: Iframe Loading Buffer */}
                     <AnimatePresence>
-                      {isIframeLoading && (
+                      {isIframeLoading && !isMiniPlayer && (
                         <motion.div
                           key="loading"
                           initial={{ opacity: 0 }}
@@ -1253,9 +1304,9 @@ export default function GamePlayer({
                   children
                 )}
 
-                {/* Pause Overlay */}
+                {/* Pause Overlay (Hidden in mini-player) */}
                 <AnimatePresence>
-                  {playerState === 'paused' && (
+                  {playerState === 'paused' && !isMiniPlayer && (
                     <motion.div
                       key="pause-screen"
                       initial={{ opacity: 0 }}
@@ -1298,10 +1349,12 @@ export default function GamePlayer({
                 </AnimatePresence>
               </div>
 
-              {/* Right Skyscraper Ad */}
-              <div className={`hidden ${isTheater ? 'xl:flex' : '2xl:flex'} flex-col justify-center items-center px-3 bg-gray-950 border-l border-white/5 z-20 shrink-0`}>
-                <AdBanner id="f782d4b90dcb09f70975f654ba40ab19" width={160} height={600} />
-              </div>
+              {/* Right Skyscraper Ad (Hidden in mini-player) */}
+              {!isMiniPlayer && (
+                <div className={`hidden ${isTheater ? 'xl:flex' : '2xl:flex'} flex-col justify-center items-center px-3 bg-gray-950 border-l border-white/5 z-20 shrink-0`}>
+                  <AdBanner id="f782d4b90dcb09f70975f654ba40ab19" width={160} height={600} />
+                </div>
+              )}
 
               {/* Share Toast */}
               <AnimatePresence>
@@ -1319,7 +1372,7 @@ export default function GamePlayer({
 
               {/* Score Toast & New Record Banner */}
               <AnimatePresence>
-                {showScoreToast && liveScore !== null && (
+                {showScoreToast && liveScore !== null && !isMiniPlayer && (
                   <motion.div
                     key="score"
                     initial={{ opacity: 0, scale: 0.8, y: 20 }}
@@ -1346,7 +1399,7 @@ export default function GamePlayer({
 
               {/* Achievement Notification Banner (Xbox / Steam Style) */}
               <AnimatePresence>
-                {unlockedAchievement && (
+                {unlockedAchievement && !isMiniPlayer && (
                   <motion.div
                     key="ach"
                     initial={{ opacity: 0, y: -40, scale: 0.9 }}
@@ -1373,7 +1426,7 @@ export default function GamePlayer({
                 )}
               </AnimatePresence>
 
-              {/* Screenshot Toast */}
+              {/* Screenshot Toast Notification */}
               <AnimatePresence>
                 {screenshotToast && (
                   <motion.div
@@ -1390,16 +1443,16 @@ export default function GamePlayer({
                     }`}
                   >
                     <Camera size={13} />
-                    {screenshotToast === 'success' && 'Screenshot saved to downloads!'}
+                    {screenshotToast === 'success' && 'Gameplay snapshot downloaded!'}
                     {screenshotToast === 'postcard' && 'Gamer card saved to downloads!'}
-                    {screenshotToast === 'hint' && 'Press PrtScn or device screenshot'}
+                    {screenshotToast === 'hint' && 'Use Windows+Shift+S / Cmd+Shift+4'}
                   </motion.div>
                 )}
               </AnimatePresence>
 
               {/* Cloud Save Pill */}
               <AnimatePresence>
-                {cloudSaveStatus !== 'idle' && (
+                {cloudSaveStatus !== 'idle' && !isMiniPlayer && (
                   <motion.div
                     key="cloud"
                     initial={{ opacity: 0, y: -16 }}
@@ -1468,7 +1521,7 @@ export default function GamePlayer({
 
               {/* Feature 2: Dual-Mode Mobile Virtual Gamepad (Haptics + Opacity) */}
               <AnimatePresence>
-                {showVirtualPad && (
+                {showVirtualPad && !isMiniPlayer && (
                   <motion.div
                     key="vpad"
                     initial={{ opacity: 0, y: 25 }}
@@ -1985,20 +2038,20 @@ export default function GamePlayer({
 
             <div className="w-px h-5 bg-gray-200 dark:bg-white/10 mx-0.5 hidden sm:block" />
 
-            {/* Tier 3: Pro Tools (PiP, Screenshot, Help) */}
+            {/* Tier 3: Pro Tools (Mini-Player Pin, Screenshot, Help) */}
 
-            {/* Picture-in-Picture */}
-            {hasPipSupport && (playerState === 'playing' || playerState === 'paused') && (
+            {/* Mini-Player Pin Button (100% stable, zero crash) */}
+            {(playerState === 'playing' || playerState === 'paused') && (
               <button
-                onClick={handlePip}
+                onClick={toggleMiniPlayer}
                 className={`hidden md:flex p-2 rounded-xl transition-all ${
-                  isPip
-                    ? 'bg-[#6366F1] text-white'
+                  isMiniPlayer
+                    ? 'bg-[#6366F1] text-white shadow-md shadow-[#6366F1]/30'
                     : 'text-gray-700 dark:text-gray-300 hover:text-[#6366F1] bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10'
                 }`}
-                title="Picture in Picture (Pop Out)"
+                title={isMiniPlayer ? 'Unpin Mini-Player' : 'Pin to Corner (Mini-Player)'}
               >
-                <PictureInPicture2 size={15} />
+                {isMiniPlayer ? <PinOff size={15} /> : <Pin size={15} />}
               </button>
             )}
 
@@ -2007,7 +2060,7 @@ export default function GamePlayer({
               <button
                 onClick={handleScreenshot}
                 className="hidden md:flex p-2 rounded-xl text-gray-700 dark:text-gray-300 hover:text-[#6366F1] bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all"
-                title="Capture Screenshot"
+                title="Save Gameplay Snapshot (Camera)"
               >
                 <Camera size={15} />
               </button>
@@ -2112,19 +2165,19 @@ export default function GamePlayer({
                       }}
                       className="w-full px-4 py-2.5 text-xs font-semibold flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors md:hidden"
                     >
-                      <Camera size={14} /> Screenshot
+                      <Camera size={14} /> Take Screenshot
                     </button>
 
-                    {/* PiP */}
-                    {hasPipSupport && (
+                    {/* Mini-Player Pin */}
+                    {(playerState === 'playing' || playerState === 'paused') && (
                       <button
                         onClick={() => {
-                          handlePip();
+                          toggleMiniPlayer();
                           setShowOverflowMenu(false);
                         }}
                         className="w-full px-4 py-2.5 text-xs font-semibold flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors md:hidden"
                       >
-                        <PictureInPicture2 size={14} /> {isPip ? 'Exit PiP' : 'Picture-in-Picture'}
+                        <Pin size={14} /> {isMiniPlayer ? 'Unpin Player' : 'Pin to Corner (Mini-Player)'}
                       </button>
                     )}
 
