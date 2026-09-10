@@ -8,6 +8,10 @@ import ProfileSidebar from '@/components/profile/ProfileSidebar';
 export const metadata: Metadata = {
   title: 'My Profile | Spielcade',
   description: 'Your player profile, stats, achievements and activity.',
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default async function ProfileLayout({ children }: { children: React.ReactNode }) {

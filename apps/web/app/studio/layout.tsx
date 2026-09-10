@@ -6,6 +6,10 @@ import { Gamepad2, FileText, Send, PieChart, Shield } from 'lucide-react';
 export const metadata = {
   title: 'Developer Studio - Spielcade',
   description: 'Manage and submit your browser games.',
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function StudioLayout({ children }: { children: React.ReactNode }) {

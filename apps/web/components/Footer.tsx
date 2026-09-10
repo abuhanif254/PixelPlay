@@ -191,6 +191,28 @@ export default function Footer() {
           </div>
         </div>
 
+        {/* A-Z Games Crawl Directory for Shallow Crawl Depth */}
+        <div className="pt-6 mb-8 border-t border-slate-200 dark:border-white/10">
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">
+            A–Z Games Directory
+          </p>
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            {[
+              'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+              'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+              'u', 'v', 'w', 'x', 'y', 'z', '0-9'
+            ].map(char => (
+              <Link
+                key={char}
+                href={`/games/alphabetical/${char}`}
+                className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/5 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-600 dark:hover:text-white transition-all shadow-sm"
+              >
+                {char === '0-9' ? '#' : char}
+              </Link>
+            ))}
+          </div>
+        </div>
+
         {/* Bottom Bar: Copyright & Compliance */}
         <div className="pt-8 border-t border-slate-200 dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 dark:text-slate-400">
           <p>

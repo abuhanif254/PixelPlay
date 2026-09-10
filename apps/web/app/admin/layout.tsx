@@ -7,6 +7,10 @@ import { requireAdmin } from '@/lib/admin';
 export const metadata: Metadata = {
   title: 'Admin Dashboard | Spielcade',
   description: 'Spielcade Administration and Management Panel',
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export const revalidate = 0;

@@ -14,6 +14,9 @@ export const runtime = 'edge';
 export const metadata: Metadata = {
   title: 'Global Leaderboard | Spielcade',
   description: 'Compete with players around the world and become the ultimate champion!',
+  alternates: {
+    canonical: 'https://spielcade.com/leaderboard',
+  },
 };
 
 export const revalidate = 0; // Dynamic route for live scores

@@ -63,11 +63,11 @@ export default function NotFound() {
           </Link>
 
           <Link 
-            href="/search" 
+            href="/games" 
             className="flex items-center justify-center gap-2 px-6 py-4 bg-white dark:bg-[#111228] hover:bg-gray-50 dark:hover:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white font-bold rounded-xl transition-all shadow-sm group"
           >
             <Search size={20} className="text-[#F59E0B] group-hover:scale-110 transition-transform" />
-            <span>Search</span>
+            <span>Search Games</span>
           </Link>
 
         </div>

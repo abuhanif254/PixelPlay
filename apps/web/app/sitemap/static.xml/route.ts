@@ -15,6 +15,11 @@ export async function GET() {
     { url: `${baseUrl}/help`, priority: '0.5', changefreq: 'monthly' },
     { url: `${baseUrl}/developers`, priority: '0.5', changefreq: 'monthly' },
     { url: `${baseUrl}/contact`, priority: '0.5', changefreq: 'monthly' },
+    ...['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0-9'].map(l => ({
+      url: `${baseUrl}/games/alphabetical/${l}`,
+      priority: '0.8',
+      changefreq: 'weekly'
+    })),
   ];
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>

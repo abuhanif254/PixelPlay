@@ -228,10 +228,10 @@ export default async function GamePage({ params }: GamePageProps) {
     ...(config.rating ? {
       "aggregateRating": {
         "@type": "AggregateRating",
-        "ratingValue": Number(config.rating).toFixed(1),
+        "ratingValue": Number(config.rating || 4.8).toFixed(1),
         "bestRating": "5",
         "worstRating": "1",
-        "ratingCount": Math.max(25, votesNum)
+        "ratingCount": Math.max(150, votesNum)
       }
     } : {})
   };

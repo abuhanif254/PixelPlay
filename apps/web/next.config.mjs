@@ -98,6 +98,16 @@ const nextConfig = {
         source: '/categories/strategy',
         destination: '/categories/strategy-games',
         permanent: true,
+      },
+      {
+        source: '/categories/sports',
+        destination: '/categories/sports-games',
+        permanent: true,
+      },
+      {
+        source: '/categories/adventure',
+        destination: '/categories/adventure-games',
+        permanent: true,
       }
     ];
   }

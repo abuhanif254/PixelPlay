@@ -62,20 +62,16 @@ export default async function CategoriesIndexPage() {
     { name: "Adventure", icon: <Shield className="w-8 h-8" />, colorClass: "text-emerald-500", key: "Adventure" },
   ];
 
-  const thematicClusters = [
-    { name: "Car Games", slug: "car-games", icon: "🚗", count: "1,000+", desc: "Supercars, drift, racing & parking" },
-    { name: "Zombie Games", slug: "zombie-games", icon: "🧟", count: "330+", desc: "Undead waves, survival & shooters" },
-    { name: "Stickman Games", slug: "stickman-games", icon: "🏃", count: "230+", desc: "Brawlers, parkour & sniper duels" },
-    { name: "2 Player Games", slug: "2-player-games", icon: "👥", count: "130+", desc: "Local co-op & head-to-head battles" },
-    { name: "Shooting Games", slug: "shooting-games", icon: "🎯", count: "580+", desc: "FPS shooters & sniper missions" },
-    { name: "Escape Games", slug: "escape-games", icon: "🗝️", count: "530+", desc: "Mystery rooms & puzzle chambers" },
-    { name: "Runner Games", slug: "runner-games", icon: "🏃‍♂️", count: "670+", desc: "Endless platform runners & dashes" },
-    { name: "Unblocked Games", slug: "unblocked-games", icon: "🔓", count: "17,000+", desc: "Safe, instant games for school or work" },
-    { name: "Drift Games", slug: "drift-games", icon: "🏎️", count: "110+", desc: "Asphalt slides & tire-burning physics" },
-    { name: "Dress Up Games", slug: "dress-up-games", icon: "👗", count: "350+", desc: "Fashion styling, makeover & beauty" },
-    { name: "Cooking Games", slug: "cooking-games", icon: "🍳", count: "120+", desc: "Baking, restaurant management & chef" },
-    { name: "Football Games", slug: "football-games", icon: "⚽", count: "120+", desc: "World tournaments & penalty kicks" },
-  ];
+  const canonicalSlugs = new Set(['action-games', 'adventure-games', 'arcade-games', 'board-games', 'puzzle-games', 'racing-games', 'sports-games', 'strategy-games']);
+  const thematicClusters = Object.entries(categoriesData)
+    .filter(([slug]) => !canonicalSlugs.has(slug))
+    .map(([slug, data]) => ({
+      name: data.title,
+      slug: data.slug,
+      icon: data.icon,
+      count: data.stats.games,
+      desc: data.description.length > 85 ? data.description.slice(0, 82) + '...' : data.description
+    }));
 
   // Dynamic JSON-LD CollectionPage schema
   const jsonLd = {

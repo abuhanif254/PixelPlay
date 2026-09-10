@@ -181,6 +181,21 @@ export async function importSingleChunk(
       return { success: false, importedCount: 0, error: error.message };
     }
 
+    // Trigger IndexNow ping in background for real-time search engine crawling
+    try {
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://spielcade.com';
+      const newUrls = enrichedRecords.map(r => `${siteUrl}/games/${r.slug}`);
+      if (newUrls.length > 0) {
+        fetch(`${siteUrl}/api/indexnow`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ urls: newUrls.slice(0, 100) })
+        }).catch(err => console.warn('Background IndexNow ping notification ignored:', err));
+      }
+    } catch {
+      // Non-blocking
+    }
+
     return {
       success: true,
       importedCount: enrichedRecords.length
