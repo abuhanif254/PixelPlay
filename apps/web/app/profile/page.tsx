@@ -32,7 +32,7 @@ export default async function ProfileDashboardPage() {
     .from('profiles')
     .select('id, username, full_name, avatar_url, banner_url, bio, xp, level, streak, favorite_game_ids, last_played_at, created_at')
     .eq('id', user.id)
-    .single();
+    .maybeSingle();
 
   // ── All scores with game data ────────────────────────────────────────
   const { data: scores } = await supabase

@@ -49,31 +49,49 @@ export async function updateProfile(data: {
 }
 
 export async function toggleFavoriteGame(gameId: string) {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { success: false, error: 'Unauthorized' }
+  try {
+    const supabase = createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) return { success: false, error: 'Unauthorized' }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('favorite_game_ids')
-    .eq('id', user.id)
-    .single()
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('favorite_game_ids')
+      .eq('id', user.id)
+      .maybeSingle()
 
-  const current: string[] = profile?.favorite_game_ids || []
-  const isFav = current.includes(gameId)
-  const updated = isFav
-    ? current.filter((id) => id !== gameId)
-    : [...current, gameId]
+    if (profileError) {
+      console.error('Error fetching profile in toggleFavoriteGame:', profileError)
+    }
 
-  const { error } = await supabase
-    .from('profiles')
-    .update({ favorite_game_ids: updated, updated_at: new Date().toISOString() })
-    .eq('id', user.id)
+    const current: string[] = profile?.favorite_game_ids || []
+    const isFav = current.includes(gameId)
+    const updated = isFav
+      ? current.filter((id) => id !== gameId)
+      : [...current, gameId]
 
-  if (error) return { success: false, error: error.message }
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({ favorite_game_ids: updated, updated_at: new Date().toISOString() })
+      .eq('id', user.id)
 
-  revalidatePath('/profile')
-  return { success: true, isFavorite: !isFav }
+    if (updateError) {
+      console.error('Error updating favorite_game_ids:', updateError)
+      return { success: false, error: updateError.message }
+    }
+
+    try {
+      revalidatePath('/profile')
+      revalidatePath('/profile/favorites')
+    } catch (revalErr) {
+      // Ignore Edge runtime revalidate errors
+    }
+
+    return { success: true, isFavorite: !isFav }
+  } catch (err: any) {
+    console.error('Unhandled error in toggleFavoriteGame:', err)
+    return { success: false, error: err?.message || 'Failed to toggle favorite' }
+  }
 }
 
 export async function checkAndAwardAchievements() {
@@ -83,7 +101,9 @@ export async function checkAndAwardAchievements() {
 
   try {
     await supabase.rpc('check_and_award_achievements', { p_user_id: user.id })
-    revalidatePath('/profile')
+    try {
+      revalidatePath('/profile')
+    } catch {}
     return { success: true }
   } catch {
     return { success: false }
@@ -91,46 +111,55 @@ export async function checkAndAwardAchievements() {
 }
 
 export async function updateStreak() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return
+  try {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('streak, last_played_at')
-    .eq('id', user.id)
-    .single()
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('streak, last_played_at')
+      .eq('id', user.id)
+      .maybeSingle()
 
-  const now = new Date()
-  const lastPlayed = profile?.last_played_at ? new Date(profile.last_played_at) : null
-  const daysSince = lastPlayed
-    ? Math.floor((now.getTime() - lastPlayed.getTime()) / 86400000)
-    : null
+    const now = new Date()
+    const lastPlayed = profile?.last_played_at ? new Date(profile.last_played_at) : null
+    const daysSince = lastPlayed
+      ? Math.floor((now.getTime() - lastPlayed.getTime()) / 86400000)
+      : null
 
-  let newStreak = profile?.streak ?? 0
-  if (daysSince === null || daysSince >= 2) {
-    newStreak = 1 // reset
-  } else if (daysSince === 1) {
-    newStreak = newStreak + 1 // continue streak
+    let newStreak = profile?.streak ?? 0
+    if (daysSince === null || daysSince >= 2) {
+      newStreak = 1 // reset
+    } else if (daysSince === 1) {
+      newStreak = newStreak + 1 // continue streak
+    }
+    // daysSince === 0 → same day, no change to streak
+
+    await supabase
+      .from('profiles')
+      .update({
+        streak: newStreak,
+        last_played_at: now.toISOString(),
+        updated_at: now.toISOString(),
+      })
+      .eq('id', user.id)
+  } catch (err) {
+    console.error('Error updating streak:', err)
   }
-  // daysSince === 0 → same day, no change to streak
-
-  await supabase
-    .from('profiles')
-    .update({
-      streak: newStreak,
-      last_played_at: now.toISOString(),
-      updated_at: now.toISOString(),
-    })
-    .eq('id', user.id)
 }
 
 export async function sendNotification(userId: string, type: string, message: string, link: string | null = null) {
-  const supabase = createClient();
-  await supabase.from('user_notifications').insert({
-    user_id: userId,
-    type,
-    message,
-    link
-  });
+  try {
+    const supabase = createClient();
+    await supabase.from('user_notifications').insert({
+      user_id: userId,
+      type,
+      message,
+      link
+    });
+  } catch (err) {
+    console.error('Error sending notification:', err)
+  }
 }
+

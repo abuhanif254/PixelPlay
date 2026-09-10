@@ -22,7 +22,7 @@ export default async function ProfileLayout({ children }: { children: React.Reac
     .from('profiles')
     .select('username, full_name, avatar_url, xp, level, streak')
     .eq('id', user.id)
-    .single();
+    .maybeSingle();
 
   const xp = profile?.xp ?? 0;
   const level = profile?.level ?? 1;

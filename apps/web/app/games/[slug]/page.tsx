@@ -118,7 +118,7 @@ export default async function GamePage({ params }: GamePageProps) {
   const { slug } = params;
   
   const supabase = createClient();
-  const { data: dbGame } = await supabase.from('games').select('*').eq('slug', slug).single();
+  const { data: dbGame } = await supabase.from('games').select('*').eq('slug', slug).maybeSingle();
   
   const localGame = gamesRegistry[slug];
 
@@ -174,7 +174,7 @@ export default async function GamePage({ params }: GamePageProps) {
         .from('profiles')
         .select('favorite_game_ids')
         .eq('id', authData.user.id)
-        .single();
+        .maybeSingle();
       if (profile?.favorite_game_ids) {
         isFavorited = profile.favorite_game_ids.includes(dbGame.id);
       }

@@ -133,6 +133,9 @@ export default function GamePlayer({
   const [isFavorited, setIsFavorited] = useState(initialFavorited);
   const [isPendingFav, startTransition] = useTransition();
   const [shareToast, setShareToast] = useState(false);
+  const [favToast, setFavToast] = useState<'added' | 'removed' | null>(null);
+  const favToastTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   const [showHud, setShowHud] = useState(true);
 
   // Focus tracking
@@ -294,10 +297,19 @@ export default function GamePlayer({
     return () => document.removeEventListener('mousedown', handle);
   }, []);
 
-  // Sync initialFavorited
+  // Sync initialFavorited with guest localStorage support
   useEffect(() => {
-    setIsFavorited(initialFavorited);
-  }, [initialFavorited]);
+    try {
+      const guestFavs: string[] = JSON.parse(localStorage.getItem('spielcade_guest_favorites') || '[]');
+      if (guestFavs.includes(slug) || (gameId && guestFavs.includes(gameId))) {
+        setIsFavorited(true);
+      } else {
+        setIsFavorited(initialFavorited);
+      }
+    } catch {
+      setIsFavorited(initialFavorited);
+    }
+  }, [initialFavorited, slug, gameId]);
 
   // WakeLock API management
   useEffect(() => {
@@ -962,21 +974,40 @@ export default function GamePlayer({
     refocusGame();
   };
 
-  // Favorite toggle
+  // Favorite toggle (Works seamlessly for guests + authenticated users)
   const handleToggleFavorite = () => {
-    if (!gameId) {
-      alert('Please sign in to add games to your favorites!');
-      return;
-    }
     const next = !isFavorited;
     setIsFavorited(next);
-    startTransition(async () => {
-      const res = await toggleFavoriteGame(gameId);
-      if (!res.success) {
-        setIsFavorited(!next);
-        if (res.error === 'Unauthorized') alert('You must be logged in to favorite games!');
+    setFavToast(next ? 'added' : 'removed');
+    if (favToastTimerRef.current) clearTimeout(favToastTimerRef.current);
+    favToastTimerRef.current = setTimeout(() => setFavToast(null), 2500);
+
+    // Persist immediately in guest localStorage
+    try {
+      const guestFavs: string[] = JSON.parse(localStorage.getItem('spielcade_guest_favorites') || '[]');
+      const keysToAdd = [slug, ...(gameId ? [gameId] : [])];
+      let updated: string[];
+      if (next) {
+        updated = Array.from(new Set([...guestFavs, ...keysToAdd]));
+      } else {
+        updated = guestFavs.filter(id => id !== slug && (!gameId || id !== gameId));
       }
-    });
+      localStorage.setItem('spielcade_guest_favorites', JSON.stringify(updated));
+    } catch (e) {
+      console.warn('Failed to save favorite in localStorage:', e);
+    }
+
+    // Sync to Supabase in background if gameId exists
+    if (gameId) {
+      startTransition(async () => {
+        try {
+          await toggleFavoriteGame(gameId);
+        } catch (err) {
+          console.warn('Background favorite sync skipped:', err);
+        }
+      });
+    }
+
     refocusGame();
   };
 
@@ -1366,6 +1397,25 @@ export default function GamePlayer({
                     className="absolute top-6 left-1/2 -translate-x-1/2 z-[70] bg-emerald-600 text-white px-5 py-2.5 rounded-full text-xs font-bold shadow-2xl flex items-center gap-2 border border-emerald-400/30"
                   >
                     <Check size={14} className="stroke-[3]" /> Link copied with your score!
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Favorite Toast */}
+              <AnimatePresence>
+                {favToast && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className={`absolute top-6 left-1/2 -translate-x-1/2 z-[70] px-5 py-2.5 rounded-full text-xs font-bold shadow-2xl flex items-center gap-2 border backdrop-blur-md ${
+                      favToast === 'added'
+                        ? 'bg-red-600/95 text-white border-red-400/40 shadow-red-500/25'
+                        : 'bg-gray-800/95 text-gray-200 border-white/20'
+                    }`}
+                  >
+                    <Heart size={14} className={favToast === 'added' ? 'fill-white stroke-[2.5]' : 'stroke-[2.5]'} />
+                    {favToast === 'added' ? 'Added to your favorites!' : 'Removed from favorites'}
                   </motion.div>
                 )}
               </AnimatePresence>
