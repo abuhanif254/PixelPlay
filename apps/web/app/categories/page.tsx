@@ -20,7 +20,6 @@ import {
 import Link from 'next/link';
 import CategoryCard from '@/components/CategoryCard';
 import { SectionHeader } from '@/components/SectionHeader';
-import { CubeIcon } from '@/components/3d/SectionIcons';
 import { categoriesData } from '@/lib/mockCategories';
 
 export const metadata: Metadata = {
@@ -108,7 +107,7 @@ export default async function CategoriesIndexPage() {
         </div>
 
         {/* Primary Canonical Genres */}
-        <SectionHeader title="Explore Canonical Genres" icon3d={<CubeIcon />} />
+        <SectionHeader title="Explore Canonical Genres" icon={<Grid className="w-5 h-5 text-indigo-500" />} />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-8 mb-16">
           {canonicalCards.map((cat) => (
             <div key={cat.key} className="h-48">

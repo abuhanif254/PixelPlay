@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { View } from '@react-three/drei';
 
 interface SectionHeaderProps {
   title: string;
@@ -11,25 +10,20 @@ interface SectionHeaderProps {
   actionText?: string;
   actionHref?: string;
   onActionClick?: () => void;
+  icon?: React.ReactNode;
   icon3d?: React.ReactNode;
 }
 
 export const SectionHeader: React.FC<SectionHeaderProps> = ({ 
   title, 
   subtitle, 
-  actionText,
-  actionHref,
-  onActionClick,
-  icon3d
+  actionText, 
+  actionHref, 
+  onActionClick, 
+  icon,
+  icon3d,
 }) => {
-  const [canRender3D, setCanRender3D] = useState(false);
-
-  useEffect(() => {
-    // Only render 3D views on screens >= 768px after client hydration
-    if (typeof window !== 'undefined' && window.innerWidth >= 768) {
-      setCanRender3D(true);
-    }
-  }, []);
+  const displayIcon = icon || icon3d;
 
   return (
     <motion.div 
@@ -40,15 +34,13 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
       className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-4"
     >
       <div className="flex-1">
-        <h2 className="text-fluid-2xl md:text-fluid-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 flex items-center gap-2 text-balance leading-tight">
-          {canRender3D && icon3d && (
-            <div className="w-12 h-12 -ml-2 shrink-0 relative hidden sm:block">
-              <View className="absolute inset-0 z-10 w-[200%] h-[200%] -top-[50%] -left-[50%] pointer-events-none">
-                {icon3d}
-              </View>
-            </div>
+        <h2 className="text-fluid-2xl md:text-fluid-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 flex items-center gap-2.5 text-balance leading-tight">
+          {displayIcon && (
+            <span className="w-8 h-8 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
+              {displayIcon}
+            </span>
           )}
-          {title}
+          <span>{title}</span>
         </h2>
         {subtitle && (
           <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm md:text-base">
@@ -60,7 +52,7 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
       {actionText && (
         actionHref ? (
           <Link 
-            href={actionHref}
+            href={actionHref} 
             className="text-accent hover:text-accent/80 font-medium text-sm md:text-base transition-colors whitespace-nowrap"
           >
             {actionText} &rarr;

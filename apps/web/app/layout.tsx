@@ -3,7 +3,6 @@ import { Inter } from 'next/font/google';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import './globals.css';
-import ThreeGlobalCanvas from '@/components/3d/ThreeGlobalCanvas';
 const inter = Inter({ subsets: ['latin'] });
 
 export const viewport: Viewport = {
@@ -139,9 +138,6 @@ export default function RootLayout({
           </main>
           <Footer />
         </ThemeProvider>
-        
-        {/* Global 3D Canvas Portal System */}
-        <ThreeGlobalCanvas />
       </body>
     </html>
   );

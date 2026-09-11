@@ -43,7 +43,13 @@ export default function UserDropdown({ userId }: { userId: string }) {
     router.refresh();
   };
 
-  if (!profile) return null; // Or a loading skeleton
+  if (!profile) {
+    return (
+      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#6366F1] to-purple-600 flex items-center justify-center text-white text-xs font-bold shrink-0 animate-pulse">
+        <User className="w-3.5 h-3.5 text-white/80" />
+      </div>
+    );
+  }
 
   const menuItems = [
     { icon: User, label: 'Profile', href: '/profile' },

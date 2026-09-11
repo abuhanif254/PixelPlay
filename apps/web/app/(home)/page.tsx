@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { Puzzle, Gamepad2, Grid, Swords, Car, Brain, Sparkles, Flame, Rocket, Trophy, Rings } from 'lucide-react';
+import { Puzzle, Gamepad2, Grid, Swords, Car, Brain, Sparkles, Flame, Rocket, Trophy } from 'lucide-react';
 import { HeroSection } from '@/components/HeroSection';
 import GamingPulseTicker from '@/components/GamingPulseTicker';
 import { CategoriesCarousel } from '@/components/CategoriesCarousel';
@@ -19,7 +19,6 @@ import HomeFAQ from '@/components/HomeFAQ';
 import PopularSearches from '@/components/PopularSearches';
 import { homepageFaqs } from '@/lib/constants';
 import { getAllPosts } from '@/lib/blog';
-import { FireIcon, RocketIcon, CubeIcon, RingsIcon } from '@/components/3d/SectionIcons';
 import dynamic from 'next/dynamic';
 
 const DeveloperSpotlight = dynamic(() => import('@/components/DeveloperSpotlight'));
@@ -236,7 +235,7 @@ export default async function HomePage() {
               subtitle="Most played browser games across the community" 
               actionText="View All ->" 
               actionHref="/popular" 
-              icon3d={<FireIcon />} 
+              icon={<Flame className="w-5 h-5 text-orange-500 fill-orange-500/20" />} 
             />
             <TrendingGamesFilter games={trending} />
           </section>
@@ -256,7 +255,7 @@ export default async function HomePage() {
               subtitle="Latest HTML5 web games added to Spielcade"
               actionText="View Latest" 
               actionHref="/games/new" 
-              icon3d={<RocketIcon />} 
+              icon={<Rocket className="w-5 h-5 text-indigo-500" />} 
             />
             <HorizontalScroll>
               {newGames.map((game, i) => (
@@ -290,7 +289,7 @@ export default async function HomePage() {
               subtitle="Explore games across primary categories"
               actionText="Explore All" 
               actionHref="/categories" 
-              icon3d={<CubeIcon />} 
+              icon={<Grid className="w-5 h-5 text-purple-500" />} 
             />
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {categories.map((cat, i) => (
@@ -314,7 +313,7 @@ export default async function HomePage() {
               subtitle="Highest community-rated games (4.8★+)"
               actionText="Highest Rated" 
               actionHref="/popular"
-              icon3d={<FireIcon />} 
+              icon={<Trophy className="w-5 h-5 text-amber-500 fill-amber-500/20" />} 
             />
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                {topRated.map((game, i) => (
@@ -350,7 +349,7 @@ export default async function HomePage() {
               subtitle="Tips, developer stories, and game reviews"
               actionText="Read More" 
               actionHref="/blog"
-              icon3d={<RingsIcon />}
+              icon={<Sparkles className="w-5 h-5 text-pink-500" />}
             />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {blogPosts.slice(0, 4).map(post => (

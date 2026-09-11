@@ -392,7 +392,7 @@ export default function Navbar() {
               aria-label="Toggle Dark Mode"
               title="Toggle Dark Mode"
             >
-              {mounted ? (theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />) : <div className="w-4 h-4" />}
+              {mounted ? (theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />) : <Moon className="w-4 h-4" />}
             </button>
             
             {/* Sign In Button & Notifications */}
@@ -404,10 +404,10 @@ export default function Navbar() {
             ) : (
               <Link 
                 href="/login" 
-                className="hidden sm:flex items-center gap-1.5 px-4 sm:px-5 py-2 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-bold shadow-md hover:shadow-indigo-500/30 hover:scale-105 active:scale-95 transition-all"
+                className="flex items-center gap-1.5 px-3 sm:px-5 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-bold shadow-md hover:shadow-indigo-500/30 hover:scale-105 active:scale-95 transition-all shrink-0"
               >
                 <User className="w-3.5 h-3.5" />
-                Sign In
+                <span>Sign In</span>
               </Link>
             )}
           </div>
