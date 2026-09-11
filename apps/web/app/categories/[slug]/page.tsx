@@ -182,7 +182,7 @@ export default async function CategoryPage({ params }: { params: { slug: string 
       {/* Hero Section with Live Stats */}
       <CategoryHero category={dynamicCategory} />
 
-      <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-[1400px]">
+      <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-[1400px] pb-24 md:pb-12">
         
         {/* 12 Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative">
@@ -196,7 +196,12 @@ export default async function CategoryPage({ params }: { params: { slug: string 
 
           {/* Main Content (9 cols) */}
           <div className="col-span-1 lg:col-span-9 flex flex-col">
-            <CategoryGameGrid category={dynamicCategory} games={games} />
+            <CategoryGameGrid 
+              category={dynamicCategory} 
+              games={games} 
+              currentSlug={params.slug} 
+              categoryCounts={categoryCounts} 
+            />
             <CategoryInfoBanner category={dynamicCategory} />
             
             {/* Bottom Section Layout (FAQ left, Collections right/below) */}

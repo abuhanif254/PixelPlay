@@ -1,11 +1,24 @@
 'use client';
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { LayoutGrid, List } from 'lucide-react';
+import { LayoutGrid, List, Filter, X } from 'lucide-react';
 import GameCard from '@/components/GameCard';
+import CategorySidebar from './CategorySidebar';
+import { motion, AnimatePresence } from 'framer-motion';
 
-export default function CategoryGameGrid({ category, games }: { category: CategoryData, games: any[] }) {
+export default function CategoryGameGrid({ 
+  category, 
+  games,
+  currentSlug,
+  categoryCounts,
+}: { 
+  category: any; 
+  games: any[];
+  currentSlug?: string;
+  categoryCounts?: Record<string, number>;
+}) {
   const [activeTag, setActiveTag] = useState('All');
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   
   const tags = ['All', 'Logic', 'Math', 'Matching', 'Word', 'Brain', 'Physics', 'Classic'];
 
@@ -28,7 +41,17 @@ export default function CategoryGameGrid({ category, games }: { category: Catego
           </span>
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+          {/* Mobile Filter Button */}
+          <button
+            onClick={() => setIsMobileFiltersOpen(true)}
+            className="lg:hidden flex items-center gap-1.5 px-3.5 py-1.5 bg-[#6366F1] text-white text-xs font-bold rounded-lg shadow-md shadow-[#6366F1]/20 active:scale-95 transition-all"
+            aria-label="Open Filters"
+          >
+            <Filter size={14} />
+            <span>Filters</span>
+          </button>
+
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600 dark:text-gray-400">Sort by:</span>
             <select className="bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-sm rounded-lg pl-3 pr-8 py-1.5 focus:outline-none focus:border-[#6366F1] cursor-pointer appearance-none bg-no-repeat" style={{ backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239CA3AF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22%2F%3E%3C%2Fsvg%3E")', backgroundPosition: 'right 0.7rem top 50%', backgroundSize: '0.65rem auto' }}>
@@ -91,7 +114,7 @@ export default function CategoryGameGrid({ category, games }: { category: Catego
       </div>
 
       {/* Load More Button */}
-      <div className="flex justify-center w-full">
+      <div className="flex justify-center w-full mb-6">
         <button className="flex items-center gap-2 px-8 py-3 bg-transparent border border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/30 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm font-bold rounded-xl transition-all">
           <svg className="w-4 h-4 animate-spin-slow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -100,6 +123,42 @@ export default function CategoryGameGrid({ category, games }: { category: Catego
         </button>
       </div>
 
+      {/* Mobile Filters Drawer (Bottom Sheet) */}
+      <AnimatePresence>
+        {isMobileFiltersOpen && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileFiltersOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 lg:hidden"
+            />
+            <motion.div 
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-x-0 bottom-0 top-[12vh] bg-white dark:bg-[#0A0B1A] border-t border-gray-200 dark:border-white/10 z-50 rounded-t-3xl p-6 lg:hidden flex flex-col shadow-2xl"
+            >
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-white/10">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white font-outfit flex items-center gap-2">
+                  <Filter size={18} className="text-[#6366F1]" /> Filters & Genres
+                </h2>
+                <button 
+                  onClick={() => setIsMobileFiltersOpen(false)}
+                  className="p-2 bg-gray-100 dark:bg-white/5 rounded-full hover:bg-gray-200 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto pb-12 custom-scrollbar pr-2">
+                <CategorySidebar currentSlug={currentSlug} categoryCounts={categoryCounts} />
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

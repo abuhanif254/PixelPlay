@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -6,9 +6,26 @@ import './globals.css';
 import ThreeGlobalCanvas from '@/components/3d/ThreeGlobalCanvas';
 const inter = Inter({ subsets: ['latin'] });
 
+export const viewport: Viewport = {
+  themeColor: '#0A0B1A',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: 'cover',
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://spielcade.com'),
   manifest: "/manifest.json",
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/icons/icon-192x192.png',
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Spielcade',
+  },
   title: {
     default: 'Spielcade | Best Free Online Browser Games',
     template: '%s | Spielcade Games',

@@ -12,7 +12,7 @@ export default function Footer() {
   if (pathname?.startsWith('/admin')) return null;
 
   return (
-    <footer className="bg-slate-50 dark:bg-[#070818] border-t border-slate-200/80 dark:border-white/10 pt-16 pb-12 transition-colors">
+    <footer className="bg-slate-50 dark:bg-[#070818] border-t border-slate-200/80 dark:border-white/10 pt-16 pb-28 sm:pb-16 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Top 4-Column Grid */}

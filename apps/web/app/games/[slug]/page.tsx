@@ -357,7 +357,7 @@ export default async function GamePage({ params }: GamePageProps) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }}
         />
       )}
-      <div className="bg-gray-50 dark:bg-[#05050F] min-h-screen text-gray-900 dark:text-white pt-24 pb-12 transition-colors">
+      <div className="bg-gray-50 dark:bg-[#05050F] min-h-screen text-gray-900 dark:text-white pt-24 pb-24 md:pb-12 transition-colors">
         <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-7xl">
           
           {/* Breadcrumbs */}

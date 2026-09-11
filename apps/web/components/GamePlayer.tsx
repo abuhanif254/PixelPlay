@@ -969,6 +969,11 @@ export default function GamePlayer({
 
   // Mini-Player Toggle (Crash-proof, stays in same React tree)
   const toggleMiniPlayer = () => {
+    // On small mobile screens (< 768px), floating miniplayer causes screen collision with bottom bar; scroll into view instead
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
     setIsMiniPlayer(prev => !prev);
     setIsTheater(false);
     refocusGame();
@@ -1085,7 +1090,7 @@ export default function GamePlayer({
         onTouchEnd={handleTouchEnd}
         className={`relative bg-black overflow-hidden shadow-2xl transition-all duration-300 ease-in-out flex flex-col justify-center touch-manipulation ${
           isMiniPlayer
-            ? 'fixed bottom-6 right-6 z-[999] w-[340px] sm:w-[420px] aspect-video rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.85)] border-2 border-white/20'
+            ? 'fixed bottom-6 right-6 z-[999] w-[340px] sm:w-[420px] aspect-video rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.85)] border-2 border-white/20 hidden md:flex'
             : isWebFullscreen
               ? 'fixed inset-0 z-[1000] w-screen h-screen rounded-none pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]'
               : isTheater
@@ -1932,8 +1937,9 @@ export default function GamePlayer({
             {playerState === 'playing' && (
               <button
                 onClick={togglePause}
-                className="p-2 rounded-xl text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all flex items-center gap-1.5 text-xs font-semibold"
+                className="p-2 min-w-[36px] min-h-[36px] justify-center rounded-xl text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all flex items-center gap-1.5 text-xs font-semibold"
                 title="Pause Game (P)"
+                aria-label="Pause Game"
               >
                 <Pause size={15} />
                 <span className="hidden xl:inline">Pause</span>
@@ -1944,8 +1950,9 @@ export default function GamePlayer({
             <button
               onClick={handleReload}
               disabled={isReloading}
-              className="p-2 rounded-xl text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all flex items-center gap-1.5 text-xs font-semibold"
+              className="p-2 min-w-[36px] min-h-[36px] justify-center rounded-xl text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all flex items-center gap-1.5 text-xs font-semibold"
               title="Restart Game (R)"
+              aria-label="Restart Game"
             >
               <RotateCcw size={15} className={isReloading ? 'animate-spin text-[#6366F1]' : ''} />
               <span className="hidden xl:inline">Restart</span>
@@ -1956,8 +1963,9 @@ export default function GamePlayer({
               <button
                 onClick={handleToggleMute}
                 onMouseEnter={() => setShowVolumeSlider(true)}
-                className="p-2 rounded-xl text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all flex items-center gap-1.5 text-xs font-semibold"
+                className="p-2 min-w-[36px] min-h-[36px] justify-center rounded-xl text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all flex items-center gap-1.5 text-xs font-semibold"
                 title={isMuted ? 'Unmute Sound (M)' : 'Mute Sound (M)'}
+                aria-label="Toggle Sound"
               >
                 {isMuted || volume === 0 ? (
                   <VolumeX size={15} className="text-red-500" />
@@ -1999,30 +2007,30 @@ export default function GamePlayer({
             {/* Fullscreen */}
             <button
               onClick={toggleFullscreen}
-              className="p-2 rounded-xl text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all flex items-center gap-1.5 text-xs font-semibold"
+              className="p-2 min-w-[36px] min-h-[36px] justify-center rounded-xl text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all flex items-center gap-1.5 text-xs font-semibold"
               title="Fullscreen (F)"
+              aria-label="Fullscreen"
             >
               <Maximize2 size={15} />
               <span className="hidden xl:inline">Fullscreen</span>
             </button>
 
-            {/* Tier 2: Responsive sm+ Controls */}
-
-            {/* Virtual Gamepad Toggle */}
+            {/* Virtual Gamepad Toggle (Promoted to mobile toolbar for instant thumb access) */}
             {playerState === 'playing' && (
               <button
                 onClick={() => {
                   setShowVirtualPad(p => !p);
                   refocusGame();
                 }}
-                className={`hidden sm:flex p-2 rounded-xl transition-all items-center gap-1.5 text-xs font-semibold ${
+                className={`flex p-2 min-w-[36px] min-h-[36px] justify-center rounded-xl transition-all items-center gap-1.5 text-xs font-semibold ${
                   showVirtualPad
                     ? 'bg-[#6366F1] text-white shadow-md shadow-[#6366F1]/30'
                     : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10'
                 }`}
-                title="Virtual Gamepad"
+                title="Virtual Touch Gamepad"
+                aria-label="Toggle Mobile Virtual Gamepad"
               >
-                <Gamepad2 size={15} />
+                <Gamepad2 size={16} />
               </button>
             )}
 

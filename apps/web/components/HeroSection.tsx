@@ -172,7 +172,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setIsSearchFocused(true)}
                   placeholder="Search 17,000+ games (e.g. Car, 2048, Snake)..." 
-                  className="bg-transparent text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 w-full focus:outline-none text-xs sm:text-sm py-2"
+                  className="bg-transparent text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 w-full focus:outline-none text-base sm:text-sm py-2"
                   aria-label="Search free games"
                 />
                 {searchQuery && (

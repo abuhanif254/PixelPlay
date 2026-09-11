@@ -279,7 +279,7 @@ export default function Navbar() {
                     }
                   }}
                   placeholder="Search 17,000+ games..." 
-                  className="bg-transparent text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none w-full"
+                  className="bg-transparent text-base sm:text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none w-full"
                   aria-label="Search games"
                 />
                 {navSearch && (

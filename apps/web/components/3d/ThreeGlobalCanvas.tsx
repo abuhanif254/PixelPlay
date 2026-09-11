@@ -6,11 +6,25 @@ import { View, Preload } from '@react-three/drei';
 
 export default function ThreeGlobalCanvas() {
   const [eventSource, setEventSource] = useState<HTMLElement | null>(null);
+  const [isMobile, setIsMobile] = useState<boolean>(true); // Default to true on initial mount to avoid flash of canvas on phones
 
   useEffect(() => {
+    // Disable background WebGL context on mobile phones (< 768px) to conserve GPU memory and battery
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
     // Next.js app router main container or document body
     setEventSource(document.getElementById('main-scroll-container') || document.body);
+
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  if (isMobile) {
+    return null;
+  }
 
   return (
     <Canvas
