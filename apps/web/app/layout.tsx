@@ -133,7 +133,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Navbar />
-          <main id="main-scroll-container" className="flex-grow">
+          <main id="main-scroll-container" className="flex-grow w-full max-w-full overflow-x-hidden">
             {children}
           </main>
           <Footer />

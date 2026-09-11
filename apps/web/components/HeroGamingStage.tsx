@@ -123,7 +123,7 @@ export default function HeroGamingStage({ games }: HeroGamingStageProps) {
       ref={containerRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className="relative w-full h-[460px] sm:h-[500px] lg:h-[560px] flex items-center justify-center select-none"
+      className="relative w-full max-w-full h-[440px] sm:h-[500px] lg:h-[560px] flex items-center justify-center select-none overflow-hidden sm:overflow-visible"
       style={{ perspective: 1200 }}
     >
       {/* Ambient Neon Atmosphere Glows (Behind Cards) */}
@@ -131,14 +131,14 @@ export default function HeroGamingStage({ games }: HeroGamingStageProps) {
       <div className="absolute w-72 h-72 rounded-full bg-blue-500/20 dark:bg-blue-600/25 blur-[100px] pointer-events-none -bottom-10 -left-10" />
 
       {/* Cyber Grid Circle Decoration */}
-      <div className="absolute w-[360px] h-[360px] sm:w-[440px] sm:h-[440px] rounded-full border border-purple-500/20 dark:border-white/10 pointer-events-none flex items-center justify-center">
+      <div className="absolute w-[280px] h-[280px] sm:w-[440px] sm:h-[440px] rounded-full border border-purple-500/20 dark:border-white/10 pointer-events-none flex items-center justify-center">
         <div className="w-[85%] h-[85%] rounded-full border border-dashed border-indigo-500/20 dark:border-white/5 animate-[spin_40s_linear_infinite]" />
       </div>
 
       {/* 3D Holographic Stage Container */}
       <motion.div 
         style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }}
-        className="relative w-full max-w-[480px] h-[380px] sm:h-[420px] flex items-center justify-center"
+        className="relative w-full max-w-[340px] sm:max-w-[480px] h-[380px] sm:h-[420px] flex items-center justify-center"
       >
 
         {/* Card 0: Left Angled Card */}
@@ -153,7 +153,7 @@ export default function HeroGamingStage({ games }: HeroGamingStageProps) {
           }}
           transition={{ type: 'spring', stiffness: 300, damping: 25 }}
           onClick={() => setActiveCardIndex(0)}
-          className="absolute w-[240px] sm:w-[270px] cursor-pointer"
+          className="hidden sm:block absolute w-[240px] sm:w-[270px] cursor-pointer"
           style={{ transformStyle: 'preserve-3d' }}
         >
           <div className="rounded-2xl p-2.5 bg-white/95 dark:bg-[#111228]/95 backdrop-blur-xl border border-slate-200 dark:border-white/15 shadow-xl hover:shadow-2xl transition-all duration-300">
@@ -196,7 +196,7 @@ export default function HeroGamingStage({ games }: HeroGamingStageProps) {
           }}
           transition={{ type: 'spring', stiffness: 300, damping: 25 }}
           onClick={() => setActiveCardIndex(2)}
-          className="absolute w-[240px] sm:w-[270px] cursor-pointer"
+          className="hidden sm:block absolute w-[240px] sm:w-[270px] cursor-pointer"
           style={{ transformStyle: 'preserve-3d' }}
         >
           <div className="rounded-2xl p-2.5 bg-white/95 dark:bg-[#111228]/95 backdrop-blur-xl border border-slate-200 dark:border-white/15 shadow-xl hover:shadow-2xl transition-all duration-300">
