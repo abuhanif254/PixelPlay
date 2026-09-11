@@ -9,32 +9,58 @@ import { createClient } from '@/lib/supabase/client';
 
 export default function UserDropdown({ userId }: { userId: string }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<any>({
+    username: 'Player',
+    avatar_url: null,
+    level: 1,
+    xp: 0,
+    role: 'user',
+  });
   const dropdownRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
   const router = useRouter();
 
   useEffect(() => {
     async function fetchProfile() {
-      const { data } = await supabase
-        .from('profiles')
-        .select('username, avatar_url, level, xp, role')
-        .eq('id', userId)
-        .single();
-      
-      if (data) setProfile(data);
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('username, avatar_url, level, xp, role')
+          .eq('id', userId)
+          .single();
+        
+        if (data && !error) {
+          setProfile(data);
+        } else {
+          const { data: authData } = await supabase.auth.getUser();
+          const authUser = authData?.user;
+          const fallbackUsername = authUser?.user_metadata?.username || authUser?.user_metadata?.full_name || authUser?.email?.split('@')[0] || 'Player';
+          const fallbackAvatar = authUser?.user_metadata?.avatar_url || null;
+          setProfile((prev: any) => ({
+            ...prev,
+            username: fallbackUsername,
+            avatar_url: fallbackAvatar,
+          }));
+        }
+      } catch (err) {
+        console.error('Error fetching profile:', err);
+      }
     }
     fetchProfile();
   }, [userId]);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, []);
 
   const handleSignOut = async () => {
@@ -43,21 +69,13 @@ export default function UserDropdown({ userId }: { userId: string }) {
     router.refresh();
   };
 
-  if (!profile) {
-    return (
-      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#6366F1] to-purple-600 flex items-center justify-center text-white text-xs font-bold shrink-0 animate-pulse">
-        <User className="w-3.5 h-3.5 text-white/80" />
-      </div>
-    );
-  }
-
   const menuItems = [
     { icon: User, label: 'Profile', href: '/profile' },
     { icon: Gamepad2, label: 'Developer Studio', href: '/studio' },
     { icon: Settings, label: 'Settings', href: '/settings' },
   ];
 
-  if (profile.role === 'admin') {
+  if (profile?.role === 'admin') {
     menuItems.push({ icon: Shield, label: 'Admin Dashboard', href: '/admin' });
   }
 
@@ -68,14 +86,14 @@ export default function UserDropdown({ userId }: { userId: string }) {
         className="flex items-center gap-2 pl-2 pr-4 py-1.5 rounded-full bg-gray-100 dark:bg-white/5 border border-black/5 dark:border-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all"
       >
         <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-[#6366F1] to-purple-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
-          {profile.avatar_url ? (
+          {profile?.avatar_url ? (
             <img src={profile.avatar_url} alt={profile.username} className="w-full h-full object-cover" />
           ) : (
-            profile.username?.charAt(0).toUpperCase() || 'U'
+            profile?.username?.charAt(0).toUpperCase() || 'U'
           )}
         </div>
         <span className="text-sm font-bold text-gray-900 dark:text-white max-w-[100px] truncate hidden sm:block">
-          {profile.username}
+          {profile?.username}
         </span>
         <ChevronDown className={`w-3.5 h-3.5 text-gray-500 transition-transform hidden sm:block ${isOpen ? 'rotate-180' : ''}`} />
       </button>
@@ -87,7 +105,7 @@ export default function UserDropdown({ userId }: { userId: string }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 mt-2 w-64 bg-white dark:bg-[#12132A] rounded-2xl shadow-xl border border-gray-200 dark:border-white/10 overflow-hidden z-50"
+            className="absolute right-0 mt-2 w-64 max-w-[calc(100vw-1.5rem)] bg-white dark:bg-[#12132A] rounded-2xl shadow-2xl border border-gray-200 dark:border-white/10 overflow-hidden z-[60]"
           >
             {/* Header: User Info */}
             <div className="p-4 border-b border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/[0.02]">

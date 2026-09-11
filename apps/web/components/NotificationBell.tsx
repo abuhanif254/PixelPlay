@@ -43,26 +43,34 @@ export default function NotificationBell({ userId }: { userId: string }) {
   }, [userId]);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, []);
 
   const fetchNotifications = async () => {
-    const { data } = await supabase
-      .from('user_notifications')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(10);
-    
-    if (data) {
-      setNotifications(data);
-      setUnreadCount(data.filter(n => !n.is_read).length);
+    try {
+      const { data } = await supabase
+        .from('user_notifications')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(10);
+      
+      if (data) {
+        setNotifications(data);
+        setUnreadCount(data.filter(n => !n.is_read).length);
+      }
+    } catch (err) {
+      console.error('Error fetching notifications:', err);
     }
   };
 
@@ -107,7 +115,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 mt-2 w-80 bg-white dark:bg-[#12132A] rounded-2xl shadow-xl border border-gray-200 dark:border-white/10 overflow-hidden z-50"
+            className="fixed sm:absolute right-2 sm:right-0 top-16 sm:top-auto mt-1 sm:mt-2 w-[calc(100vw-1rem)] sm:w-80 max-w-sm bg-white dark:bg-[#12132A] rounded-2xl shadow-2xl border border-gray-200 dark:border-white/10 overflow-hidden z-[60]"
           >
             <div className="p-4 border-b border-gray-200 dark:border-white/10 flex items-center justify-between bg-gray-50/50 dark:bg-white/[0.02]">
               <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
