@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { View } from '@react-three/drei';
@@ -22,6 +22,15 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
   onActionClick,
   icon3d
 }) => {
+  const [canRender3D, setCanRender3D] = useState(false);
+
+  useEffect(() => {
+    // Only render 3D views on screens >= 768px after client hydration
+    if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+      setCanRender3D(true);
+    }
+  }, []);
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
@@ -32,8 +41,8 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
     >
       <div className="flex-1">
         <h2 className="text-fluid-2xl md:text-fluid-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 flex items-center gap-2 text-balance leading-tight">
-          {icon3d && (
-            <div className="w-12 h-12 -ml-2 shrink-0 relative">
+          {canRender3D && icon3d && (
+            <div className="w-12 h-12 -ml-2 shrink-0 relative hidden sm:block">
               <View className="absolute inset-0 z-10 w-[200%] h-[200%] -top-[50%] -left-[50%] pointer-events-none">
                 {icon3d}
               </View>

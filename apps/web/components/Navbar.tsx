@@ -417,21 +417,53 @@ export default function Navbar() {
       {/* Mobile Bottom Navigation Bar */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-[#0A0B1A]/95 backdrop-blur-xl border-t border-slate-200 dark:border-white/10 pb-safe shadow-lg">
         <div className="flex items-center justify-around h-14 px-2">
-          <Link href="/" title="Home" className="flex flex-col items-center justify-center w-full h-full text-indigo-600 dark:text-indigo-400">
+          <Link 
+            href="/" 
+            title="Home" 
+            className={`flex flex-col items-center justify-center w-full h-full transition-colors ${
+              pathname === '/' 
+                ? 'text-indigo-600 dark:text-indigo-400 font-bold' 
+                : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium'
+            }`}
+          >
             <Gamepad2 className="w-5 h-5 mb-0.5" />
-            <span className="text-[10px] font-bold">Home</span>
+            <span className="text-[10px]">Home</span>
           </Link>
-          <Link href="/categories" title="Categories" className="flex flex-col items-center justify-center w-full h-full text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors">
+          <Link 
+            href="/categories" 
+            title="Categories" 
+            className={`flex flex-col items-center justify-center w-full h-full transition-colors ${
+              pathname?.startsWith('/categories') 
+                ? 'text-indigo-600 dark:text-indigo-400 font-bold' 
+                : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium'
+            }`}
+          >
             <Menu className="w-5 h-5 mb-0.5" />
-            <span className="text-[10px] font-medium">Genres</span>
+            <span className="text-[10px]">Genres</span>
           </Link>
-          <Link href="/games" title="Search" className="flex flex-col items-center justify-center w-full h-full text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors">
+          <Link 
+            href="/games" 
+            title="Search" 
+            className={`flex flex-col items-center justify-center w-full h-full transition-colors ${
+              pathname === '/games' || pathname?.startsWith('/games?')
+                ? 'text-indigo-600 dark:text-indigo-400 font-bold' 
+                : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium'
+            }`}
+          >
             <Search className="w-5 h-5 mb-0.5" />
-            <span className="text-[10px] font-medium">Search</span>
+            <span className="text-[10px]">Search</span>
           </Link>
-          <Link href="/profile" title="Profile" className="flex flex-col items-center justify-center w-full h-full text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors">
+          <Link 
+            href="/profile" 
+            title="Profile" 
+            className={`flex flex-col items-center justify-center w-full h-full transition-colors ${
+              pathname?.startsWith('/profile') 
+                ? 'text-indigo-600 dark:text-indigo-400 font-bold' 
+                : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium'
+            }`}
+          >
             <User className="w-5 h-5 mb-0.5" />
-            <span className="text-[10px] font-medium">Profile</span>
+            <span className="text-[10px]">Profile</span>
           </Link>
         </div>
       </div>
