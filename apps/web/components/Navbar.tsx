@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/client';
 
 import NotificationBell from './NotificationBell';
 import UserDropdown from './UserDropdown';
+import SpotlightSearchModal from './SpotlightSearchModal';
 
 export default function Navbar() {
   const router = useRouter();
@@ -18,12 +19,25 @@ export default function Navbar() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false);
+  const [isSpotlightOpen, setIsSpotlightOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const [user, setUser] = useState<any>(null);
   const supabase = useMemo(() => createClient(), []);
+
+  // Global Cmd+K / Ctrl+K shortcut listener
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsSpotlightOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, []);
 
   useEffect(() => {
     if (navSearch.trim().length < 2) {
@@ -282,7 +296,7 @@ export default function Navbar() {
                   className="bg-transparent text-base sm:text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none w-full"
                   aria-label="Search games"
                 />
-                {navSearch && (
+                {navSearch ? (
                   <button
                     type="button"
                     onClick={() => {
@@ -293,6 +307,15 @@ export default function Navbar() {
                     className="text-slate-400 hover:text-slate-600 dark:hover:text-white ml-1"
                   >
                     <X className="w-3 h-3" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setIsSpotlightOpen(true)}
+                    className="hidden lg:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono font-bold text-gray-400 dark:text-gray-500 bg-white dark:bg-white/10 hover:bg-indigo-500 hover:text-white border border-gray-200 dark:border-white/10 rounded ml-1 transition-colors cursor-pointer"
+                    title="Open Spotlight Search (Cmd+K / Ctrl+K)"
+                  >
+                    ⌘K
                   </button>
                 )}
               </form>
@@ -441,18 +464,15 @@ export default function Navbar() {
             <Menu className="w-5 h-5 mb-0.5" />
             <span className="text-[10px]">Genres</span>
           </Link>
-          <Link 
-            href="/games" 
-            title="Search" 
-            className={`flex flex-col items-center justify-center w-full h-full transition-colors ${
-              pathname === '/games' || pathname?.startsWith('/games?')
-                ? 'text-indigo-600 dark:text-indigo-400 font-bold' 
-                : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium'
-            }`}
+          <button 
+            type="button"
+            onClick={() => setIsSpotlightOpen(true)}
+            title="Search Games" 
+            className="flex flex-col items-center justify-center w-full h-full text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium transition-colors cursor-pointer"
           >
             <Search className="w-5 h-5 mb-0.5" />
             <span className="text-[10px]">Search</span>
-          </Link>
+          </button>
           <Link 
             href="/profile" 
             title="Profile" 
@@ -467,6 +487,12 @@ export default function Navbar() {
           </Link>
         </div>
       </div>
+
+      {/* Spotlight Command Center Search Modal */}
+      <SpotlightSearchModal 
+        isOpen={isSpotlightOpen} 
+        onClose={() => setIsSpotlightOpen(false)} 
+      />
     </>
   );
 }

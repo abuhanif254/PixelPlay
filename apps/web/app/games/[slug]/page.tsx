@@ -8,6 +8,7 @@ import GameDetailsTabs from '@/components/GameDetailsTabs';
 import AdBanner from '@/components/AdBanner';
 import FavoriteButton from '@/components/FavoriteButton';
 import ChallengerBanner from '@/components/ChallengerBanner';
+import OfflineReadyBadge from '@/components/OfflineReadyBadge';
 import { Metadata, ResolvingMetadata } from 'next';
 import { submitScore } from '../actions';
 import { getGameReviews } from './reviews-actions';
@@ -356,7 +357,7 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
 
   const handleGameOver = async (score: number) => {
     'use server';
-    await submitScore(slug, score);
+    return await submitScore(slug, score);
   };
 
   return (
@@ -458,6 +459,8 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
                       </span>
                     </>
                   ) : null}
+                  <div className="w-1 h-1 rounded-full bg-gray-400 dark:bg-gray-600"></div>
+                  <OfflineReadyBadge />
                 </div>
               </div>
             </div>

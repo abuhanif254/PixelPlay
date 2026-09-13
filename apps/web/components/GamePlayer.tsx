@@ -45,6 +45,7 @@ import { toggleFavoriteGame } from '@/app/profile/actions';
 import AdBanner from '@/components/AdBanner';
 import CloudSaveBar from '@/components/CloudSaveBar';
 import ScoreChallengeModal from '@/components/ScoreChallengeModal';
+import PlayNextOverlay from '@/components/PlayNextOverlay';
 
 type PlayerState = 'idle' | 'ad' | 'rewarded_ad' | 'playing' | 'paused' | 'game_over';
 type AspectRatio = '16:9' | '4:3' | '9:16' | 'auto';
@@ -91,7 +92,7 @@ interface GamePlayerProps {
   category?: string;
   image?: string;
   sourceUrl?: string | null;
-  onGameOver?: (score: number) => void;
+  onGameOver?: (score: number) => Promise<any> | void;
   relatedGames?: Array<{
     id?: string;
     slug: string;
@@ -163,6 +164,7 @@ export default function GamePlayer({
   const [cloudSaveStatus, setCloudSaveStatus] = useState<CloudSaveStatus>('idle');
   const cloudSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [showChallengeModal, setShowChallengeModal] = useState(false);
+  const [showPlayNext, setShowPlayNext] = useState(false);
 
   // Feature 4: Aspect Ratio
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>(() => {
@@ -639,7 +641,16 @@ export default function GamePlayer({
               if (scoreToastTimerRef.current) clearTimeout(scoreToastTimerRef.current);
               scoreToastTimerRef.current = setTimeout(() => setShowScoreToast(false), 3000);
             }
-            if (onGameOver && score > 0) onGameOver(score);
+            if (onGameOver && score > 0) {
+              Promise.resolve(onGameOver(score)).then((res: any) => {
+                if (res?.newAchievements && res.newAchievements.length > 0) {
+                  const firstAch = res.newAchievements[0];
+                  setUnlockedAchievement({ title: firstAch.title, xp: firstAch.xp });
+                  if (achievementTimerRef.current) clearTimeout(achievementTimerRef.current);
+                  achievementTimerRef.current = setTimeout(() => setUnlockedAchievement(null), 4500);
+                }
+              }).catch(() => {});
+            }
             break;
           }
 
@@ -654,6 +665,7 @@ export default function GamePlayer({
 
           case 'GAME_OVER':
             setPlayerState('game_over');
+            setShowPlayNext(true);
             break;
 
           case 'SHOW_REWARDED_AD':
@@ -1638,6 +1650,17 @@ export default function GamePlayer({
                 )}
               </AnimatePresence>
 
+              {/* Post-Game "Play Next" Continuous Engagement Overlay */}
+              {showPlayNext && !isMiniPlayer && (
+                <PlayNextOverlay
+                  currentSlug={slug}
+                  category={category}
+                  relatedGames={relatedGames}
+                  onDismiss={() => setShowPlayNext(false)}
+                  onPlayAgain={handleRestart}
+                />
+              )}
+
               {/* Keyboard Shortcuts Guide Modal */}
               <AnimatePresence>
                 {showShortcuts && (
@@ -2288,6 +2311,16 @@ export default function GamePlayer({
               <span>Challenge</span>
             </button>
 
+            {/* Play Next Button */}
+            <button
+              onClick={() => setShowPlayNext(true)}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-gray-700 dark:text-gray-300 hover:text-[#6366F1] bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all cursor-pointer"
+              title="Play Next Game"
+            >
+              <Sparkles size={14} className="text-yellow-400" />
+              <span className="hidden xl:inline">Next Game</span>
+            </button>
+
             {/* Overflow 3-Dot Menu for Mobile & Extended Tools */}
             <div className="relative" ref={overflowMenuRef}>
               <button
@@ -2311,6 +2344,17 @@ export default function GamePlayer({
                     transition={{ duration: 0.15 }}
                     className="absolute bottom-full mb-2 right-0 z-50 bg-white dark:bg-[#1a1b38] border border-gray-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden min-w-[200px]"
                   >
+                    {/* Play Next (Mobile) */}
+                    <button
+                      onClick={() => {
+                        setShowPlayNext(true);
+                        setShowOverflowMenu(false);
+                      }}
+                      className="w-full px-4 py-2.5 text-xs font-semibold flex items-center gap-3 text-indigo-400 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors sm:hidden"
+                    >
+                      <Sparkles size={14} className="text-yellow-400" /> Play Next Game
+                    </button>
+
                     {/* Challenge (Mobile) */}
                     <button
                       onClick={() => {
