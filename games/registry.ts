@@ -1,8 +1,6 @@
 // AUTO-GENERATED FILE. DO NOT EDIT DIRECTLY.
 // Run 'pnpm run generate-registry' in the games/ package to update this file.
 
-import dynamic from 'next/dynamic';
-
 export interface GameConfig {
   title: string;
   category: string;
@@ -67,9 +65,7 @@ export const gamesRegistry: Record<string, { config: GameConfig, component: any 
       "developer": "Gabriele Cirulli / Spielcade",
       "releaseDate": "August 2026",
       "platform": "Browser (Desktop, Mobile)"
-},
-    // Note: We use ssr: false because game engines rely on the browser's window and canvas
-    component: dynamic(() => import('./2048/Game'), { ssr: false })
+    }
   },
   "flappy-bird": {
     config: {
@@ -94,9 +90,7 @@ export const gamesRegistry: Record<string, { config: GameConfig, component: any 
             "Action",
             "Physics"
       ]
-},
-    // Note: We use ssr: false because game engines rely on the browser's window and canvas
-    component: dynamic(() => import('./flappy-bird/Game'), { ssr: false })
+    }
   },
   "snake": {
     config: {
@@ -148,8 +142,6 @@ export const gamesRegistry: Record<string, { config: GameConfig, component: any 
       "developer": "Spielcade Studios",
       "releaseDate": "August 2026",
       "platform": "Browser (Desktop, Mobile)"
-},
-    // Note: We use ssr: false because game engines rely on the browser's window and canvas
-    component: dynamic(() => import('./snake/Game'), { ssr: false })
+    }
   },
 };

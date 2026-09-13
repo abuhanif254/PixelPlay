@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { StartGame } from './engine/PhaserGame';
 import { EventBus } from './engine/EventBus';
-import Phaser from 'phaser';
+import type Phaser from 'phaser';
 
 interface GameProps {
   onGameOver?: (score: number) => void;

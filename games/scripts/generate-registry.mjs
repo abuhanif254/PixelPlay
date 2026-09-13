@@ -36,7 +36,7 @@ export interface GameConfig {
   platform?: string;
 }
 
-export const gamesRegistry: Record<string, { config: GameConfig, component: any }> = {
+export const gamesRegistry: Record<string, { config: GameConfig, component?: any }> = {
 `;
 
 gameFolders.forEach((slug) => {
@@ -48,9 +48,7 @@ gameFolders.forEach((slug) => {
     const configObj = JSON.parse(configRaw);
     
     registryContent += `  "${slug}": {
-    config: ${JSON.stringify(configObj, null, 6).trim()},
-    // Note: We use ssr: false because game engines rely on the browser's window and canvas
-    component: dynamic(() => import('./${slug}/Game'), { ssr: false })
+    config: ${JSON.stringify(configObj, null, 6).trim()}
   },
 `;
   }

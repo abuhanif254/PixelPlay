@@ -1,3 +1,4 @@
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 
-export const EventBus = new Phaser.Events.EventEmitter();
+const EventEmitterClass = Phaser.Events?.EventEmitter || (Phaser as any).default?.Events?.EventEmitter;
+export const EventBus = new EventEmitterClass();

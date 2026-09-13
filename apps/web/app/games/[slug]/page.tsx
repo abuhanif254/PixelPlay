@@ -4,14 +4,14 @@ import { gamesRegistry } from '@spielcade/games/registry';
 import { Star, ChevronRight, Heart, Clock, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Gamepad2 } from 'lucide-react';
 import Link from 'next/link';
 import GamePlayer from '@/components/GamePlayer';
+import LocalGameWrapper from '@/components/LocalGameWrapper';
 import GameDetailsTabs from '@/components/GameDetailsTabs';
 import AdBanner from '@/components/AdBanner';
 import FavoriteButton from '@/components/FavoriteButton';
 import ChallengerBanner from '@/components/ChallengerBanner';
 import OfflineReadyBadge from '@/components/OfflineReadyBadge';
 import { Metadata, ResolvingMetadata } from 'next';
-import { submitScore } from '../actions';
-import { getGameReviews } from '../reviews-actions';
+import { getGameReviews } from '../reviews-data';
 import { createClient } from '@/lib/supabase/server';
 import { 
   generateEnrichedDescription, 
@@ -21,7 +21,7 @@ import {
   generateGameTags 
 } from '@/lib/seo-enricher';
 
-// export const runtime = 'edge';
+export const runtime = 'edge';
 export const revalidate = 600;
 
 interface GamePageProps {
@@ -176,7 +176,7 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
   };
 
   const sourceUrl = config.sourceUrl || ((config as any).type === 'html5' ? `/games/${slug}/index.html` : null);
-  const GameComponent = localGame?.component || null;
+  const isLocalGame = !sourceUrl && !!localGame;
 
   // Check if current user favorited this game
   let isFavorited = false;
@@ -518,7 +518,7 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
                     initialAspectRatio={initialAspectRatio}
                     orientation={explicitOrientation}
                   >
-                    {GameComponent ? <GameComponent /> : null}
+                    {isLocalGame ? <LocalGameWrapper slug={slug} /> : null}
                   </GamePlayer>
                 );
               })()}
