@@ -48,6 +48,7 @@ import CloudSaveBar from '@/components/CloudSaveBar';
 import ScoreChallengeModal from '@/components/ScoreChallengeModal';
 import PlayNextOverlay from '@/components/PlayNextOverlay';
 import { queueOfflineScore, initOfflineSync } from '@/lib/offline-sync';
+import { arcadeAudio } from '@/lib/arcade-audio';
 
 type PlayerState = 'idle' | 'ad' | 'rewarded_ad' | 'playing' | 'paused' | 'game_over';
 type AspectRatio = '16:9' | '4:3' | '9:16' | 'auto';
@@ -65,6 +66,8 @@ const VPAD_KEY_PAIRS: Record<string, { key: string; code: string; secondaryKey?:
   b: { key: 'Shift', code: 'ShiftLeft', secondaryKey: 'z', secondaryCode: 'KeyZ' }, // Run / Dash
   x: { key: 'e', code: 'KeyE', secondaryKey: 'c', secondaryCode: 'KeyC' }, // Interact / Use
   y: { key: 'q', code: 'KeyQ', secondaryKey: 'v', secondaryCode: 'KeyV' }, // Special / Switch
+  space: { key: ' ', code: 'Space' },
+  enter: { key: 'Enter', code: 'Enter' },
 };
 
 const AR_CLASSES: Record<AspectRatio, string> = {
@@ -108,6 +111,8 @@ interface GamePlayerProps {
   initialFavorited?: boolean;
   initialAspectRatio?: AspectRatio;
   orientation?: 'landscape' | 'portrait' | 'auto';
+  challenger?: string;
+  challengerScore?: number;
 }
 
 export default function GamePlayer({
@@ -123,6 +128,8 @@ export default function GamePlayer({
   initialFavorited = false,
   initialAspectRatio,
   orientation,
+  challenger,
+  challengerScore,
 }: GamePlayerProps) {
   const router = useRouter();
   const { addRecentGame } = useRecentGames();
@@ -212,6 +219,44 @@ export default function GamePlayer({
   const [isNewRecord, setIsNewRecord] = useState(false);
   const [showScoreToast, setShowScoreToast] = useState(false);
   const scoreToastTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [hasBeatenChallenge, setHasBeatenChallenge] = useState(false);
+
+  // Speculative pre-warming of iframe CDN connections on component mount
+  useEffect(() => {
+    if (sourceUrl && typeof document !== 'undefined') {
+      try {
+        const parsed = new URL(sourceUrl);
+        const origin = parsed.origin;
+        if (!document.querySelector(`link[rel="preconnect"][href="${origin}"]`)) {
+          const preconn = document.createElement('link');
+          preconn.rel = 'preconnect';
+          preconn.href = origin;
+          preconn.crossOrigin = 'anonymous';
+          document.head.appendChild(preconn);
+
+          const dns = document.createElement('link');
+          dns.rel = 'dns-prefetch';
+          dns.href = origin;
+          document.head.appendChild(dns);
+        }
+      } catch {}
+    }
+  }, [sourceUrl]);
+
+  // Live viral challenger target victory detection
+  useEffect(() => {
+    if (challenger && challengerScore && liveScore !== null && liveScore >= challengerScore) {
+      if (!hasBeatenChallenge) {
+        setHasBeatenChallenge(true);
+        arcadeAudio.playVictory();
+        window.dispatchEvent(
+          new CustomEvent('spielcade:award-xp', {
+            detail: { amount: 150, reason: `Beat @${challenger}'s Score in ${title}!` }
+          })
+        );
+      }
+    }
+  }, [liveScore, challenger, challengerScore, hasBeatenChallenge, title]);
 
   // Improvement 3: Achievement Notifications
   const [unlockedAchievement, setUnlockedAchievement] = useState<{ title: string; xp?: number } | null>(null);
@@ -461,11 +506,19 @@ export default function GamePlayer({
 
   // Play button click
   const handlePlay = () => {
+    arcadeAudio.playBlip();
     setPlayerState('ad');
     setIsIframeLoading(true);
     if (iframeLoadTimeoutRef.current) clearTimeout(iframeLoadTimeoutRef.current);
     iframeLoadTimeoutRef.current = setTimeout(() => setIsIframeLoading(false), 12000);
     addRecentGame({ slug, title, image });
+    try {
+      window.dispatchEvent(
+        new CustomEvent('spielcade:award-xp', {
+          detail: { amount: 25, reason: `Played ${title}` },
+        })
+      );
+    } catch {}
   };
 
   useEffect(() => {
@@ -713,6 +766,13 @@ export default function GamePlayer({
                 setIsNewRecord(true);
                 try {
                   localStorage.setItem(`spielcade_pb_${slug}`, String(score));
+                } catch {}
+                try {
+                  window.dispatchEvent(
+                    new CustomEvent('spielcade:award-xp', {
+                      detail: { amount: 75, reason: `New Personal Best in ${title}!` },
+                    })
+                  );
                 } catch {}
               } else {
                 setIsNewRecord(false);
@@ -1601,6 +1661,76 @@ export default function GamePlayer({
                 </div>
               )}
 
+              {/* In-Game Ghost Target Tracker (Viral Score Challenge) */}
+              {challenger && challengerScore && challengerScore > 0 && !isMiniPlayer && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="absolute top-3 left-4 z-[65] max-w-[calc(100%-120px)] sm:max-w-md pointer-events-auto"
+                >
+                  <div className={`flex items-center gap-2.5 px-3.5 py-2 rounded-2xl backdrop-blur-xl border shadow-2xl transition-all ${
+                    (liveScore || 0) >= challengerScore
+                      ? 'bg-emerald-950/90 border-emerald-400/60 shadow-[0_0_25px_rgba(52,211,153,0.4)]'
+                      : 'bg-[#0B0D21]/90 border-rose-500/40 shadow-xl'
+                  }`}>
+                    {/* Icon */}
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                      (liveScore || 0) >= challengerScore
+                        ? 'bg-emerald-500 text-white animate-bounce'
+                        : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                    }`}>
+                      {(liveScore || 0) >= challengerScore ? <Trophy size={16} /> : <Swords size={16} />}
+                    </div>
+
+                    {/* Target & Score details */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[11px] font-black uppercase tracking-wider text-slate-300 truncate">
+                          Target: <span className="text-amber-400 font-extrabold">@{challenger}</span> ({challengerScore.toLocaleString()} PTS)
+                        </span>
+                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded uppercase ${
+                          (liveScore || 0) >= challengerScore
+                            ? 'bg-emerald-500/20 text-emerald-300'
+                            : 'bg-rose-500/20 text-rose-300'
+                        }`}>
+                          {(liveScore || 0) >= challengerScore ? 'BEATEN!' : 'CHALLENGE'}
+                        </span>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden my-1">
+                        <div
+                          className={`h-full rounded-full transition-all duration-300 ${
+                            (liveScore || 0) >= challengerScore
+                              ? 'bg-emerald-400'
+                              : 'bg-gradient-to-r from-rose-500 to-amber-400'
+                          }`}
+                          style={{
+                            width: `${Math.min(100, Math.max(5, (((liveScore || 0) / challengerScore) * 100)))}%`
+                          }}
+                        />
+                      </div>
+
+                      {/* Live Delta */}
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="font-mono text-white/90">
+                          Score: <span className="font-bold">{(liveScore || 0).toLocaleString()}</span>
+                        </span>
+                        {(liveScore || 0) >= challengerScore ? (
+                          <span className="text-emerald-400 font-black animate-pulse">
+                            +{(liveScore - challengerScore).toLocaleString()} Ahead!
+                          </span>
+                        ) : (
+                          <span className="text-rose-400 font-semibold">
+                            Need +{(challengerScore - (liveScore || 0)).toLocaleString()} to Beat!
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
               {/* Share Toast */}
               <AnimatePresence>
                 {shareToast && (
@@ -2429,16 +2559,21 @@ export default function GamePlayer({
 
             {/* Viral Challenge Button */}
             <button
-              onClick={() => setShowChallengeModal(true)}
+              onClick={() => {
+                arcadeAudio.playBlip();
+                setShowChallengeModal(true);
+              }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-[#6366F1] via-[#8B5CF6] to-[#EC4899] hover:opacity-95 active:scale-95 transition-all cursor-pointer shrink-0 ${
-                isNewRecord
+                hasBeatenChallenge
+                  ? 'ring-2 ring-emerald-400 shadow-lg shadow-emerald-500/50 animate-pulse'
+                  : isNewRecord
                   ? 'ring-2 ring-pink-400 shadow-lg shadow-pink-500/50 animate-pulse'
                   : 'shadow-md shadow-pink-500/20'
               }`}
               title="Challenge a Friend to beat your score!"
             >
               <Swords size={14} className="text-yellow-300" />
-              <span>{isNewRecord ? '⚔️ Challenge Now!' : 'Challenge'}</span>
+              <span>{hasBeatenChallenge ? '⚔️ Counter-Challenge!' : isNewRecord ? '⚔️ Challenge Now!' : 'Challenge'}</span>
             </button>
 
             {/* Play Next Button */}

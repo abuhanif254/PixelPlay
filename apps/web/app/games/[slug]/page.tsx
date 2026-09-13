@@ -465,6 +465,7 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
                   <span className="px-2.5 py-0.5 sm:px-3 sm:py-1 bg-white dark:bg-[#111228] border border-[#6366F1]/30 text-[#6366F1] text-[10px] sm:text-xs font-bold rounded-lg shadow-sm shadow-[#6366F1]/10">
                     {config.category}
                   </span>
+                  {isLocalGame && <OfflineReadyBadge />}
                 </div>
                 
                 <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm font-medium text-gray-400">
@@ -566,6 +567,8 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
                     initialFavorited={isFavorited}
                     initialAspectRatio={initialAspectRatio}
                     orientation={explicitOrientation}
+                    challenger={searchParams?.challenger}
+                    challengerScore={searchParams?.score ? parseInt(searchParams.score, 10) : undefined}
                   >
                     {isLocalGame ? <LocalGameWrapper slug={slug} /> : null}
                   </GamePlayer>

@@ -1,10 +1,26 @@
 'use client';
 
 import React from 'react';
-import { Play, Star, Trophy } from 'lucide-react';
+import { Play, Star, Trophy, Zap } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { arcadeAudio } from '@/lib/arcade-audio';
+
+// Helper for speculative pre-warming of iframe CDN connections
+function prewarmGameOrigins() {
+  if (typeof document === 'undefined') return;
+  const origins = ['https://html5.gamedistribution.com', 'https://img.gamemonetize.com'];
+  origins.forEach((origin) => {
+    if (!document.querySelector(`link[rel="preconnect"][href="${origin}"]`)) {
+      const link = document.createElement('link');
+      link.rel = 'preconnect';
+      link.href = origin;
+      link.crossOrigin = 'anonymous';
+      document.head.appendChild(link);
+    }
+  });
+}
 
 interface GameCardProps {
   title: string;
@@ -43,11 +59,17 @@ export default function GameCard({
     ? slug 
     : (slug.startsWith('#') ? slug : `/games/${slug}`);
 
+  const cleanSlug = slug.replace(/^\/games\//, '').replace(/^#/, '');
+  const isOfflineReady = cleanSlug === 'snake' || cleanSlug === '2048' || cleanSlug === 'flappy-bird' || category === 'Originals';
+
   return (
     <Link 
       href={destinationHref} 
       title={`Play ${title} - Free Online Browser Game`} 
       className="block group h-full select-none"
+      onMouseEnter={prewarmGameOrigins}
+      onTouchStart={prewarmGameOrigins}
+      onClick={() => arcadeAudio.playBlip()}
     >
       <motion.div 
         whileHover={{ y: -6, scale: 1.02 }}
@@ -79,6 +101,16 @@ export default function GameCard({
             <div className="absolute top-2 left-2 z-10">
               <span className="px-2 py-0.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-[9px] font-bold tracking-wider rounded-md uppercase shadow-md shadow-pink-500/30">
                 NEW
+              </span>
+            </div>
+          )}
+
+          {/* Offline Ready Badge overlay */}
+          {isOfflineReady && (
+            <div className="absolute top-2 right-2 z-10">
+              <span className="px-2 py-0.5 bg-emerald-500/90 backdrop-blur-md border border-emerald-400/40 text-white text-[9px] font-black tracking-wider rounded-md uppercase shadow-md shadow-emerald-500/30 flex items-center gap-1">
+                <Zap size={10} className="fill-current text-yellow-300" />
+                <span>Offline</span>
               </span>
             </div>
           )}

@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, X, Gamepad2, ArrowRight, Clock, Star, Sparkles, Smartphone, Keyboard, Flame } from 'lucide-react';
+import { Search, X, Gamepad2, ArrowRight, Clock, Star, Sparkles, Smartphone, Keyboard, Flame, Zap } from 'lucide-react';
+import { arcadeAudio } from '@/lib/arcade-audio';
 const POPULAR_DEFAULT_GAMES = [
   { slug: 'snake', title: 'Neon Snake', category: 'Arcade', rating: 4.9, image: '/images/games/snake.svg', isTouchFriendly: true, isOriginal: true },
   { slug: '2048', title: '2048 Classic', category: 'Puzzle', rating: 4.9, image: '/images/games/2048.svg', isTouchFriendly: true, isOriginal: true },
@@ -145,6 +146,7 @@ export default function SpotlightSearchModal({ isOpen, onClose }: SpotlightSearc
   };
 
   const handleSelectGame = useCallback((slug: string) => {
+    arcadeAudio.playBlip();
     if (query.trim()) {
       saveRecentSearch(query.trim());
     }
@@ -308,6 +310,12 @@ export default function SpotlightSearchModal({ isOpen, onClose }: SpotlightSearc
                             <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-sm shadow-amber-500/20 shrink-0">
                               <Sparkles size={10} className="fill-current" />
                               Original
+                            </span>
+                          ) : null}
+                          {game.isOriginal ? (
+                            <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0">
+                              <Zap size={10} className="fill-current text-yellow-300" />
+                              Offline
                             </span>
                           ) : null}
                           <span className={`text-[10px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded ${

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Menu, X, Sun, Moon, User, ChevronDown, Gamepad2, Sparkles, Loader2, Play, Flame } from 'lucide-react';
+import { Search, Menu, X, Sun, Moon, User, ChevronDown, Gamepad2, Sparkles, Loader2, Play, Flame, Volume2, VolumeX, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { usePathname, useRouter } from 'next/navigation';
@@ -12,6 +12,8 @@ import NotificationBell from './NotificationBell';
 import UserDropdown from './UserDropdown';
 import SpotlightSearchModal from './SpotlightSearchModal';
 import { useDailyStreak } from '@/hooks/useDailyStreak';
+import { usePlayerProgression } from '@/hooks/usePlayerProgression';
+import { arcadeAudio } from '@/lib/arcade-audio';
 
 export default function Navbar() {
   const router = useRouter();
@@ -28,8 +30,41 @@ export default function Navbar() {
   const [user, setUser] = useState<any>(null);
   const supabase = useMemo(() => createClient(), []);
   const { streak, isNewStreakUnlocked, streakXpBonus, dismissStreakReward } = useDailyStreak();
+  const { levelInfo, awardXp } = usePlayerProgression();
+  const [isLevelPopoverOpen, setIsLevelPopoverOpen] = useState(false);
+  const [isSfxMuted, setIsSfxMuted] = useState(false);
   const [isGameplayActive, setIsGameplayActive] = useState(false);
   const [isNavManuallyRestored, setIsNavManuallyRestored] = useState(false);
+  const levelRef = useRef<HTMLDivElement>(null);
+
+  // Initialize SFX mute state
+  useEffect(() => {
+    setIsSfxMuted(arcadeAudio.isMuted());
+  }, []);
+
+  const handleToggleSfx = () => {
+    const next = arcadeAudio.toggleMute();
+    setIsSfxMuted(next);
+    if (!next) arcadeAudio.playBlip();
+  };
+
+  // Automatically award XP bonus when a new daily streak is unlocked
+  useEffect(() => {
+    if (isNewStreakUnlocked && streakXpBonus > 0) {
+      awardXp(streakXpBonus, `Day ${streak} Streak Bonus`);
+    }
+  }, [isNewStreakUnlocked, streakXpBonus, streak, awardXp]);
+
+  // Click-outside listener for Level popover
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (levelRef.current && !levelRef.current.contains(e.target as Node)) {
+        setIsLevelPopoverOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Reset gameplay active state on navigation
   useEffect(() => {
@@ -432,6 +467,70 @@ export default function Navbar() {
               </AnimatePresence>
             </div>
 
+            {/* Global Player Level Badge */}
+            <div className="relative" ref={levelRef}>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsLevelPopoverOpen(prev => !prev);
+                  arcadeAudio.playBlip();
+                }}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/25 text-indigo-600 dark:text-indigo-400 text-xs font-black shrink-0 cursor-pointer select-none shadow-sm shadow-indigo-500/10 transition-all hover:scale-105 active:scale-95"
+                title={`Player Level ${levelInfo.level} (${levelInfo.rankTitle}) - Click for XP progress`}
+              >
+                <span>{levelInfo.rankBadge}</span>
+                <span>Lv.{levelInfo.level}</span>
+              </button>
+
+              {/* Level & XP Dropdown Popover */}
+              <AnimatePresence>
+                {isLevelPopoverOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-[#0E1026] border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl p-3.5 z-50 text-slate-900 dark:text-white"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-base">{levelInfo.rankBadge}</span>
+                        <span className="text-xs font-extrabold text-slate-900 dark:text-white">
+                          {levelInfo.rankTitle}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                        Lv. {levelInfo.level}
+                      </span>
+                    </div>
+
+                    <div className="w-full h-2 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden mb-1.5">
+                      <div
+                        className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
+                        style={{ width: `${levelInfo.progressPercent}%` }}
+                      />
+                    </div>
+
+                    <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                      <span>{levelInfo.xpInCurrentLevel} / {levelInfo.xpNeededForNextLevel} XP</span>
+                      <span>{levelInfo.progressPercent}%</span>
+                    </div>
+
+                    <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-white/5 text-center">
+                      <Link
+                        href="/achievements"
+                        onClick={() => setIsLevelPopoverOpen(false)}
+                        className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline inline-flex items-center gap-1"
+                      >
+                        <Trophy size={12} />
+                        <span>View Trophy Hall & Badges →</span>
+                      </Link>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             {/* Daily Streak Flame Badge */}
             <div 
               className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-black shrink-0 cursor-default select-none shadow-sm shadow-amber-500/10 transition-all hover:scale-105"
@@ -441,9 +540,22 @@ export default function Navbar() {
               <span>{streak}</span>
             </div>
 
+            {/* Arcade Sound FX Mute Toggle */}
+            <button
+              onClick={handleToggleSfx}
+              className="p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white rounded-full hover:bg-slate-100 dark:hover:bg-white/5 transition-colors shrink-0"
+              aria-label={isSfxMuted ? 'Unmute Arcade Sound FX' : 'Mute Arcade Sound FX'}
+              title={isSfxMuted ? 'Unmute Arcade Sound FX' : 'Mute Arcade Sound FX'}
+            >
+              {isSfxMuted ? <VolumeX className="w-4 h-4 text-slate-400" /> : <Volume2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />}
+            </button>
+
             {/* Dark Mode */}
             <button 
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              onClick={() => {
+                setTheme(theme === 'dark' ? 'light' : 'dark');
+                arcadeAudio.playBlip();
+              }}
               className="p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white rounded-full hover:bg-slate-100 dark:hover:bg-white/5 transition-colors shrink-0"
               aria-label="Toggle Dark Mode"
               title="Toggle Dark Mode"

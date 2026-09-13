@@ -3,6 +3,9 @@ import { Inter } from 'next/font/google';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import PwaInstallBanner from '@/components/PwaInstallBanner';
+import PWARegistration from '@/components/PWARegistration';
+import OfflineBanner from '@/components/OfflineBanner';
+import LevelUpModal from '@/components/LevelUpModal';
 import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
@@ -136,12 +139,15 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <PWARegistration />
+          <OfflineBanner />
           <Navbar />
           <main id="main-scroll-container" className="flex-grow w-full max-w-full overflow-x-hidden">
             {children}
           </main>
           <Footer />
           <PwaInstallBanner />
+          <LevelUpModal />
         </ThemeProvider>
       </body>
     </html>
