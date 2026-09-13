@@ -28,6 +28,28 @@ export default function Navbar() {
   const [user, setUser] = useState<any>(null);
   const supabase = useMemo(() => createClient(), []);
   const { streak, isNewStreakUnlocked, streakXpBonus, dismissStreakReward } = useDailyStreak();
+  const [isGameplayActive, setIsGameplayActive] = useState(false);
+  const [isNavManuallyRestored, setIsNavManuallyRestored] = useState(false);
+
+  // Reset gameplay active state on navigation
+  useEffect(() => {
+    setIsGameplayActive(false);
+    setIsNavManuallyRestored(false);
+  }, [pathname]);
+
+  // Listen for active gameplay events dispatched by GamePlayer
+  useEffect(() => {
+    const handleGameplayState = (e: any) => {
+      if (typeof e.detail?.isPlaying === 'boolean') {
+        setIsGameplayActive(e.detail.isPlaying);
+        if (!e.detail.isPlaying) {
+          setIsNavManuallyRestored(false);
+        }
+      }
+    };
+    window.addEventListener('spielcade:gameplay-state', handleGameplayState as EventListener);
+    return () => window.removeEventListener('spielcade:gameplay-state', handleGameplayState as EventListener);
+  }, []);
 
   // Global Cmd+K / Ctrl+K shortcut listener
   useEffect(() => {
@@ -474,13 +496,17 @@ export default function Navbar() {
         )}
       </AnimatePresence>
 
-      {/* Mobile Bottom Navigation Bar */}
-      <div className="lg:hidden fixed bottom-0 inset-x-0 z-50 w-full max-w-[100vw] bg-white/95 dark:bg-[#0A0B1A]/95 backdrop-blur-xl border-t border-slate-200 dark:border-white/10 pb-safe shadow-lg">
+      {/* Mobile Bottom Navigation Bar (Auto-stashed during active gameplay to reclaim 70px+ viewport) */}
+      <div 
+        className={`lg:hidden fixed bottom-0 inset-x-0 z-50 w-full max-w-[100vw] bg-white/95 dark:bg-[#0A0B1A]/95 backdrop-blur-xl border-t border-slate-200 dark:border-white/10 pb-safe shadow-lg transition-transform duration-300 ease-in-out ${
+          isGameplayActive && !isNavManuallyRestored ? 'translate-y-full pointer-events-none' : 'translate-y-0'
+        }`}
+      >
         <div className="flex items-center justify-around h-14 px-2">
           <Link 
             href="/" 
             title="Home" 
-            className={`flex flex-col items-center justify-center w-full h-full transition-colors ${
+            className={`flex flex-col items-center justify-center w-full min-h-[44px] transition-colors ${
               pathname === '/' 
                 ? 'text-indigo-600 dark:text-indigo-400 font-bold' 
                 : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium'
@@ -492,7 +518,7 @@ export default function Navbar() {
           <Link 
             href="/categories" 
             title="Categories" 
-            className={`flex flex-col items-center justify-center w-full h-full transition-colors ${
+            className={`flex flex-col items-center justify-center w-full min-h-[44px] transition-colors ${
               pathname?.startsWith('/categories') 
                 ? 'text-indigo-600 dark:text-indigo-400 font-bold' 
                 : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium'
@@ -505,7 +531,7 @@ export default function Navbar() {
             type="button"
             onClick={() => setIsSpotlightOpen(true)}
             title="Search Games" 
-            className="flex flex-col items-center justify-center w-full h-full text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium transition-colors cursor-pointer"
+            className="flex flex-col items-center justify-center w-full min-h-[44px] text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium transition-colors cursor-pointer"
           >
             <Search className="w-5 h-5 mb-0.5" />
             <span className="text-[10px]">Search</span>
@@ -513,7 +539,7 @@ export default function Navbar() {
           <Link 
             href="/profile" 
             title="Profile" 
-            className={`flex flex-col items-center justify-center w-full h-full transition-colors ${
+            className={`flex flex-col items-center justify-center w-full min-h-[44px] transition-colors ${
               pathname?.startsWith('/profile') 
                 ? 'text-indigo-600 dark:text-indigo-400 font-bold' 
                 : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium'
@@ -524,6 +550,20 @@ export default function Navbar() {
           </Link>
         </div>
       </div>
+
+      {/* Floating Restore Pill when bottom nav is stashed during gameplay */}
+      {isGameplayActive && !isNavManuallyRestored && (
+        <button
+          type="button"
+          onClick={() => setIsNavManuallyRestored(true)}
+          className="lg:hidden fixed bottom-3 right-3 z-40 px-3 py-1.5 rounded-full bg-slate-900/90 hover:bg-slate-800 text-white border border-white/20 shadow-2xl backdrop-blur-md active:scale-95 transition-all flex items-center gap-1.5 text-xs font-bold"
+          title="Show Navigation Bar"
+          aria-label="Restore Navigation Bar"
+        >
+          <Menu className="w-3.5 h-3.5" />
+          <span className="text-[10px]">Menu</span>
+        </button>
+      )}
 
       {/* Spotlight Command Center Search Modal */}
       <SpotlightSearchModal 

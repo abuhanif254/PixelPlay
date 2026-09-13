@@ -444,10 +444,10 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
           </nav>
 
           {/* Game Header Area */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
-            <div className="flex items-center gap-5">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 mb-6 sm:mb-8">
+            <div className="flex items-center gap-3 sm:gap-5">
               {/* Game Icon */}
-              <div className="w-20 h-20 rounded-2xl overflow-hidden bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/10 shrink-0 relative shadow-xl shadow-black/50">
+              <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/10 shrink-0 relative shadow-xl shadow-black/50">
                 {config.image ? (
                   <img src={config.image} alt={config.title} className="w-full h-full object-cover" />
                 ) : (
@@ -457,17 +457,17 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
                 )}
               </div>
               
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-3">
-                  <h1 className="text-3xl md:text-4xl font-extrabold font-outfit text-gray-900 dark:text-white tracking-wide">
+              <div className="flex flex-col gap-1.5 sm:gap-2">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold font-outfit text-gray-900 dark:text-white tracking-wide">
                     {config.title}
                   </h1>
-                  <span className="px-3 py-1 bg-white dark:bg-[#111228] border border-[#6366F1]/30 text-[#6366F1] text-xs font-bold rounded-lg shadow-sm shadow-[#6366F1]/10">
+                  <span className="px-2.5 py-0.5 sm:px-3 sm:py-1 bg-white dark:bg-[#111228] border border-[#6366F1]/30 text-[#6366F1] text-[10px] sm:text-xs font-bold rounded-lg shadow-sm shadow-[#6366F1]/10">
                     {config.category}
                   </span>
                 </div>
                 
-                <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-gray-400">
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm font-medium text-gray-400">
                   <div className="flex items-center gap-1.5">
                     <div className="flex items-center text-[#F59E0B]">
                       <Star size={14} className="fill-current" />
@@ -514,11 +514,11 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
             )}
           </div>
 
-          {/* Main Grid: Game Player & Info Sidebar */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 mb-10">
+          {/* Main Grid: Game Player & Info Sidebar (Optimized 2-column layout on Tablets md: and Desktop lg:) */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8 mb-10">
             
-            {/* Left Column: Player Area */}
-            <div className="lg:col-span-8 flex flex-col gap-6">
+            {/* Left Column: Player Area (8 cols desktop, 7 cols tablet) */}
+            <div className="md:col-span-7 lg:col-span-8 flex flex-col gap-6">
               {/* Leaderboard Ad Above Game */}
               <div className="hidden md:flex justify-center w-full">
                 <AdBanner id="2bd411e3e6c5caac36fa619ee3376222" width={728} height={90} className="w-full max-w-[728px]" />
@@ -573,11 +573,11 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
               })()}
             </div>
 
-            {/* Right Column: Game Info Sidebar */}
-            <div className="lg:col-span-4 flex flex-col gap-6">
+            {/* Right Column: Game Info Sidebar (4 cols desktop, 5 cols tablet) */}
+            <div className="md:col-span-5 lg:col-span-4 flex flex-col gap-6">
               
               {/* Sidebar Ad */}
-              <div className="hidden lg:flex justify-center w-full">
+              <div className="hidden md:flex justify-center w-full">
                 <AdBanner id="2728a9e3df26c1ad90aeab8d28474a82" width={300} height={250} />
               </div>
 

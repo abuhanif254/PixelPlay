@@ -14,6 +14,8 @@ interface GameDetailsTabsProps {
 
 export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTabsProps) {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [activeTab, setActiveTab] = useState('about');
+
   const TABS = [
     { id: 'about', label: 'About' },
     { id: 'media', label: 'Media' },
@@ -29,36 +31,46 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
     }
   };
 
+  const handleTabClick = (id: string) => {
+    setActiveTab(id);
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+      scrollToSection(id);
+    }
+  };
+
   return (
     <div className="w-full mt-10">
-      {/* Anchor Navigation Header */}
-      <div className="flex items-center gap-6 border-b border-gray-200 dark:border-white/5 mb-8 overflow-x-auto custom-scrollbar pb-1">
-        {TABS.map((tab, index) => (
-          <button
-            key={tab.id}
-            onClick={() => scrollToSection(tab.id)}
-            className={`whitespace-nowrap pb-3 text-sm font-bold transition-all relative hover:text-[#6366F1] ${
-              index === 0 ? 'text-[#6366F1]' : 'text-gray-600 dark:text-gray-400'
-            }`}
-          >
-            {tab.label}
-            {index === 0 && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6366F1] rounded-t-full shadow-[0_-2px_10px_rgba(99,102,241,0.5)]" />
-            )}
-          </button>
-        ))}
+      {/* Anchor & Mobile Segmented Navigation Header */}
+      <div className="flex items-center gap-4 sm:gap-6 border-b border-gray-200 dark:border-white/5 mb-8 overflow-x-auto custom-scrollbar pb-1">
+        {TABS.map((tab) => {
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => handleTabClick(tab.id)}
+              className={`whitespace-nowrap pb-3 text-xs sm:text-sm font-bold transition-all relative hover:text-[#6366F1] px-1 sm:px-2 ${
+                isActive ? 'text-[#6366F1]' : 'text-gray-600 dark:text-gray-400'
+              }`}
+            >
+              {tab.label}
+              {isActive && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6366F1] rounded-t-full shadow-[0_-2px_10px_rgba(99,102,241,0.5)]" />
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Grid Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+      {/* Grid Content: 2-column on Tablets (md:) and Desktop (lg:) */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12">
         
-        {/* Left Column - Sequential Content */}
-        <div className="lg:col-span-8 flex flex-col gap-10">
+        {/* Left Column - Sequential on Desktop, Tabbed on Mobile */}
+        <div className="md:col-span-7 lg:col-span-8 flex flex-col gap-8 md:gap-10">
           
           <div className="bg-transparent">
             
             {/* About Section */}
-            <div id="about" className="scroll-mt-32">
+            <div id="about" className={`scroll-mt-32 ${activeTab === 'about' ? 'block' : 'hidden md:block'}`}>
               <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white font-outfit">About {config.title}</h3>
               <p className="text-sm md:text-base leading-relaxed text-gray-600 dark:text-gray-400">
                 {config.description || `${config.title} is a free online game that you can play directly in your browser. No downloads or installations required.`}
@@ -69,16 +81,18 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
             </div>
 
             {/* Media Section */}
-            <GameMedia 
-              title={config.title} 
-              trailerUrl={config.trailerUrl} 
-              screenshots={config.screenshots} 
-            />
-
-            <div className="w-full h-px bg-gray-200 dark:bg-white/5 my-8" />
+            <div id="media" className={`scroll-mt-32 ${activeTab === 'media' ? 'block' : 'hidden md:block'}`}>
+              <div className="hidden md:block w-full h-px bg-gray-200 dark:bg-white/5 my-8" />
+              <GameMedia 
+                title={config.title} 
+                trailerUrl={config.trailerUrl} 
+                screenshots={config.screenshots} 
+              />
+            </div>
 
             {/* Tips Section */}
-            <div id="tips" className="scroll-mt-32">
+            <div id="tips" className={`scroll-mt-32 ${activeTab === 'tips' ? 'block' : 'hidden md:block'}`}>
+              <div className="hidden md:block w-full h-px bg-gray-200 dark:bg-white/5 my-8" />
               <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white font-outfit">Tips & Tricks</h3>
               {config.tips && config.tips.length > 0 ? (
                 <ul className="space-y-2 list-disc pl-5 text-gray-600 dark:text-gray-400 text-sm md:text-base">
@@ -95,18 +109,20 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
             </div>
 
             {/* Reviews Section */}
-            <GameReviews 
-              title={config.title} 
-              slug={config.slug}
-              gameId={config.gameId}
-              rating={config.rating}
-              initialReviews={config.initialReviews}
-            />
-
-            <div className="w-full h-px bg-gray-200 dark:bg-white/5 my-8" />
+            <div id="reviews" className={`scroll-mt-32 ${activeTab === 'reviews' ? 'block' : 'hidden md:block'}`}>
+              <div className="hidden md:block w-full h-px bg-gray-200 dark:bg-white/5 my-8" />
+              <GameReviews 
+                title={config.title} 
+                slug={config.slug}
+                gameId={config.gameId}
+                rating={config.rating}
+                initialReviews={config.initialReviews}
+              />
+            </div>
 
             {/* FAQ Section */}
-            <div id="faq" className="scroll-mt-32">
+            <div id="faq" className={`scroll-mt-32 ${activeTab === 'faq' ? 'block' : 'hidden md:block'}`}>
+              <div className="hidden md:block w-full h-px bg-gray-200 dark:bg-white/5 my-8" />
               <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white font-outfit">Frequently Asked Questions</h3>
               {config.faqs && config.faqs.length > 0 ? (
                 <div className="space-y-3">
@@ -162,8 +178,8 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
 
         </div>
 
-        {/* Right Column - Related Games */}
-        <div className="lg:col-span-4">
+        {/* Right Column - Related Games (5 cols tablet, 4 cols desktop) */}
+        <div className="md:col-span-5 lg:col-span-4">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-base font-bold text-gray-900 dark:text-white font-outfit">Related Games</h3>
             <Link 

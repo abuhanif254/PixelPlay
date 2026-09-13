@@ -95,16 +95,16 @@ export default function GameCard({
           )}
 
           {/* Category Pill overlay */}
-          <div className="absolute bottom-2 left-2 z-10">
-            <span className="px-2 py-0.5 bg-black/70 backdrop-blur-md border border-white/10 text-white text-[9px] sm:text-[10px] font-bold tracking-wider rounded-md uppercase">
+          <div className="absolute bottom-2 left-2 z-10 max-w-[calc(100%-36px)]">
+            <span className="px-2 py-0.5 bg-black/70 backdrop-blur-md border border-white/10 text-white text-[9px] sm:text-[10px] font-bold tracking-wider rounded-md uppercase truncate block">
               {category}
             </span>
           </div>
 
           {/* Glowing Play Button */}
           <div className="absolute bottom-2 right-2 z-10">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] rounded-full flex items-center justify-center text-white transition-all duration-300 group-hover:scale-115 group-hover:rotate-6 shadow-lg shadow-[#6366F1]/50 group-hover:shadow-[0_0_20px_rgba(99,102,241,0.8)]">
-              <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
+            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] rounded-full flex items-center justify-center text-white transition-all duration-300 group-hover:scale-115 group-hover:rotate-6 shadow-lg shadow-[#6366F1]/50 group-hover:shadow-[0_0_20px_rgba(99,102,241,0.8)]">
+              <Play className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-current ml-0.5" />
             </div>
           </div>
         </div>

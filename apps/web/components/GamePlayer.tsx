@@ -35,6 +35,7 @@ import {
   Flame,
   ArrowUpRight,
   Swords,
+  Smartphone,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -254,6 +255,48 @@ export default function GamePlayer({
     return () => {
       cleanup();
       window.removeEventListener('spielcade:scores-synced', handleSync);
+    };
+  }, []);
+
+  // Mobile/Tablet UX 1: Broadcast active gameplay to hide/restore bottom navigation
+  useEffect(() => {
+    const isPlaying = playerState === 'playing';
+    try {
+      window.dispatchEvent(new CustomEvent('spielcade:gameplay-state', { detail: { isPlaying } }));
+    } catch {}
+    return () => {
+      try {
+        window.dispatchEvent(new CustomEvent('spielcade:gameplay-state', { detail: { isPlaying: false } }));
+      } catch {}
+    };
+  }, [playerState]);
+
+  // Mobile/Tablet UX 2: Auto-detect touchscreen and pre-enable virtual gamepad for touch devices
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const isTouch = 'ontouchstart' in window || (navigator && navigator.maxTouchPoints > 0);
+    if (isTouch && playerState === 'playing') {
+      setShowVirtualPad(true);
+    }
+  }, [playerState]);
+
+  // Mobile/Tablet UX 3: Portrait orientation detector for rotate suggestion banner
+  const [isPortraitMobile, setIsPortraitMobile] = useState(false);
+  const [dismissRotateHint, setDismissRotateHint] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const checkOrientation = () => {
+      const isMobile = window.innerWidth < 768;
+      const isPortrait = window.innerHeight > window.innerWidth;
+      setIsPortraitMobile(isMobile && isPortrait);
+    };
+    checkOrientation();
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+    return () => {
+      window.removeEventListener('resize', checkOrientation);
+      window.removeEventListener('orientationchange', checkOrientation);
     };
   }, []);
 
@@ -872,6 +915,9 @@ export default function GamePlayer({
     onPointerDown: (e: React.PointerEvent) => {
       e.preventDefault();
       (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        try { navigator.vibrate(12); } catch {}
+      }
       handleVpadPress(action);
     },
     onPointerUp: (e: React.PointerEvent) => {
@@ -1765,7 +1811,31 @@ export default function GamePlayer({
                 )}
               </AnimatePresence>
 
-              {/* Feature 2: Dual-Mode Mobile Virtual Gamepad (Haptics + Opacity) */}
+              {/* Mobile Portrait Rotation Hint Banner for Widescreen Games */}
+              <AnimatePresence>
+                {playerState === 'playing' && isPortraitMobile && !dismissRotateHint && aspectRatio !== '9:16' && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="absolute top-3 inset-x-3 sm:inset-x-6 z-40 bg-slate-950/90 border border-white/20 rounded-xl px-3 py-2 flex items-center justify-between shadow-2xl backdrop-blur-md pointer-events-auto"
+                  >
+                    <div className="flex items-center gap-2 text-xs font-semibold text-white">
+                      <Smartphone className="w-4 h-4 text-indigo-400 rotate-90 animate-pulse shrink-0" />
+                      <span>Rotate device for full cinema widescreen</span>
+                    </div>
+                    <button
+                      onClick={() => setDismissRotateHint(true)}
+                      className="p-1 text-white/60 hover:text-white rounded-lg transition-colors ml-2 shrink-0"
+                      aria-label="Dismiss rotation hint"
+                    >
+                      <X size={14} />
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Feature 2: Dual-Mode Mobile Virtual Gamepad (Haptics + Opacity + Tablet Corner Anchoring) */}
               <AnimatePresence>
                 {showVirtualPad && !isMiniPlayer && (
                   <motion.div
@@ -1774,13 +1844,13 @@ export default function GamePlayer({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 25 }}
                     transition={{ duration: 0.2 }}
-                    className={`absolute bottom-4 left-0 right-0 z-40 flex items-end px-4 pointer-events-none justify-between ${
+                    className={`absolute bottom-4 sm:bottom-6 md:bottom-8 left-0 right-0 z-40 flex items-end px-4 sm:px-6 md:px-8 pointer-events-none justify-between ${
                       isLeftHanded ? 'flex-row-reverse' : 'flex-row'
                     }`}
                   >
                     {/* D-Pad Cluster */}
                     <div
-                      className={`pointer-events-auto relative w-[136px] h-[136px] select-none rounded-2xl ${
+                      className={`pointer-events-auto relative w-[136px] h-[136px] sm:w-[150px] sm:h-[150px] select-none rounded-2xl ${
                         gamepadOpacity === 'low'
                           ? 'opacity-40'
                           : gamepadOpacity === 'high'
@@ -1834,7 +1904,7 @@ export default function GamePlayer({
 
                     {/* Action Buttons Cluster (A, B, X, Y) */}
                     <div
-                      className={`pointer-events-auto relative w-[136px] h-[136px] select-none rounded-2xl ${
+                      className={`pointer-events-auto relative w-[136px] h-[136px] sm:w-[150px] sm:h-[150px] select-none rounded-2xl ${
                         gamepadOpacity === 'low'
                           ? 'opacity-40'
                           : gamepadOpacity === 'high'
@@ -2128,7 +2198,7 @@ export default function GamePlayer({
             {playerState === 'playing' && (
               <button
                 onClick={togglePause}
-                className="p-2 min-w-[36px] min-h-[36px] justify-center rounded-xl text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all flex items-center gap-1.5 text-xs font-semibold"
+                className="p-2 min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] justify-center rounded-xl text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all flex items-center gap-1.5 text-xs font-semibold"
                 title="Pause Game (P)"
                 aria-label="Pause Game"
               >
@@ -2141,7 +2211,7 @@ export default function GamePlayer({
             <button
               onClick={handleReload}
               disabled={isReloading}
-              className="p-2 min-w-[36px] min-h-[36px] justify-center rounded-xl text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all flex items-center gap-1.5 text-xs font-semibold"
+              className="p-2 min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] justify-center rounded-xl text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all flex items-center gap-1.5 text-xs font-semibold"
               title="Restart Game (R)"
               aria-label="Restart Game"
             >
@@ -2154,29 +2224,21 @@ export default function GamePlayer({
               <button
                 onClick={handleToggleMute}
                 onMouseEnter={() => setShowVolumeSlider(true)}
-                className="p-2 min-w-[36px] min-h-[36px] justify-center rounded-xl text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all flex items-center gap-1.5 text-xs font-semibold"
+                className="p-2 min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] justify-center rounded-xl text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all flex items-center gap-1.5 text-xs font-semibold"
                 title={isMuted ? 'Unmute Sound (M)' : 'Mute Sound (M)'}
                 aria-label="Toggle Sound"
               >
-                {isMuted || volume === 0 ? (
-                  <VolumeX size={15} className="text-red-500" />
-                ) : volume < 50 ? (
-                  <Volume1 size={15} />
-                ) : (
-                  <Volume2 size={15} />
-                )}
-                <span className="hidden xl:inline">{isMuted ? 'Muted' : `${volume}%`}</span>
+                {isMuted ? <VolumeX size={15} className="text-red-400" /> : <Volume2 size={15} />}
               </button>
 
               <AnimatePresence>
                 {showVolumeSlider && (
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.9, y: 4 }}
+                    initial={{ opacity: 0, scale: 0.95, y: 5 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.9, y: 4 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 5 }}
                     transition={{ duration: 0.15 }}
-                    onMouseLeave={() => setShowVolumeSlider(false)}
-                    className="absolute bottom-full mb-2 -left-2 z-50 bg-white dark:bg-[#1a1b38] border border-gray-200 dark:border-white/10 rounded-xl shadow-2xl p-3 flex flex-col items-center gap-2 min-w-[140px]"
+                    className="absolute bottom-full mb-2 right-0 z-50 bg-white dark:bg-[#1a1b38] border border-gray-200 dark:border-white/10 rounded-xl p-3 shadow-2xl w-36 flex flex-col gap-2"
                   >
                     <div className="flex items-center justify-between w-full text-[11px] font-bold text-gray-700 dark:text-gray-300">
                       <span>Volume</span>
@@ -2198,7 +2260,7 @@ export default function GamePlayer({
             {/* Fullscreen */}
             <button
               onClick={toggleFullscreen}
-              className="p-2 min-w-[36px] min-h-[36px] justify-center rounded-xl text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all flex items-center gap-1.5 text-xs font-semibold"
+              className="p-2 min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] justify-center rounded-xl text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all flex items-center gap-1.5 text-xs font-semibold"
               title="Fullscreen (F)"
               aria-label="Fullscreen"
             >
@@ -2213,7 +2275,7 @@ export default function GamePlayer({
                   setShowVirtualPad(p => !p);
                   refocusGame();
                 }}
-                className={`flex p-2 min-w-[36px] min-h-[36px] justify-center rounded-xl transition-all items-center gap-1.5 text-xs font-semibold ${
+                className={`flex p-2 min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] justify-center rounded-xl transition-all items-center gap-1.5 text-xs font-semibold ${
                   showVirtualPad
                     ? 'bg-[#6366F1] text-white shadow-md shadow-[#6366F1]/30'
                     : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10'

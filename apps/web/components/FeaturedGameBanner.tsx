@@ -48,10 +48,10 @@ export default function FeaturedGameBanner({ game }: FeaturedGameProps) {
           </div>
         )}
 
-        <div className="relative z-10 p-6 md:p-12 lg:p-14 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+        <div className="relative z-10 p-6 md:p-10 lg:p-14 grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 items-center">
           
           {/* Left Column: Info & CTA (7 cols) */}
-          <div className="lg:col-span-7 flex flex-col items-start">
+          <div className="md:col-span-7 flex flex-col items-start">
             
             {/* Top Badges */}
             <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -67,7 +67,7 @@ export default function FeaturedGameBanner({ game }: FeaturedGameProps) {
             {/* Game Title */}
             <h2 
               id="game-of-the-week-heading"
-              className="text-3xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight mb-4 font-outfit leading-tight"
+              className="text-3xl md:text-4xl lg:text-6xl font-extrabold text-white tracking-tight mb-4 font-outfit leading-tight"
             >
               {title}
             </h2>
@@ -115,7 +115,7 @@ export default function FeaturedGameBanner({ game }: FeaturedGameProps) {
           </div>
 
           {/* Right Column: Visual Game Showcase (5 cols) */}
-          <div className="lg:col-span-5 flex justify-center">
+          <div className="md:col-span-5 flex justify-center">
             <Link 
               href={`/games/${slug}`}
               className="group relative block w-full max-w-md aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl border-2 border-white/10 group-hover:border-purple-500/50 transition-all duration-500"

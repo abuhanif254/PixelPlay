@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Heart, ShieldCheck, HelpCircle, X, Sparkles } from 'lucide-react';
 
 interface AdBannerProps {
@@ -13,6 +13,24 @@ interface AdBannerProps {
 export default function AdBanner({ id, width, height, className = '' }: AdBannerProps) {
   const [isBlocked, setIsBlocked] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const updateWidth = () => {
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.clientWidth);
+      }
+    };
+    updateWidth();
+    const ro = new ResizeObserver(updateWidth);
+    ro.observe(containerRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  const scale = containerWidth && containerWidth > 0 && containerWidth < width ? containerWidth / width : 1;
+  const effectiveHeight = Math.round(height * scale);
 
   useEffect(() => {
     const handleAdMessage = (event: MessageEvent) => {
@@ -79,8 +97,9 @@ export default function AdBanner({ id, width, height, className = '' }: AdBanner
   return (
     <>
       <div 
+        ref={containerRef}
         className={`flex items-center justify-center bg-[#111228] border border-white/5 rounded-xl overflow-hidden relative shrink-0 ${className}`}
-        style={{ width: `${width}px`, height: `${height}px`, minHeight: `${height}px`, maxWidth: '100%', contain: 'layout size' }}
+        style={{ width: `${width}px`, height: `${effectiveHeight}px`, minHeight: `${effectiveHeight}px`, maxWidth: '100%', contain: 'layout size' }}
       >
         {isBlocked ? (
           /* High-Conversion, Respectful Support Spielcade Banner */
@@ -110,7 +129,19 @@ export default function AdBanner({ id, width, height, className = '' }: AdBanner
             </button>
           </div>
         ) : (
-          <>
+          <div
+            style={{
+              width: `${width}px`,
+              height: `${height}px`,
+              transform: scale < 1 ? `scale(${scale})` : undefined,
+              transformOrigin: 'top center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              flexShrink: 0,
+            }}
+          >
             {/* Fallback/Placeholder UI visible before ad loads */}
             <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-gray-500 uppercase tracking-widest z-0 pointer-events-none">
               Advertisement
@@ -129,7 +160,7 @@ export default function AdBanner({ id, width, height, className = '' }: AdBanner
               srcDoc={adHtml}
               className="z-10 relative"
             />
-          </>
+          </div>
         )}
       </div>
 
