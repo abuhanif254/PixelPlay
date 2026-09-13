@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Menu, X, Sun, Moon, User, ChevronDown, Gamepad2, Sparkles, Loader2, Play } from 'lucide-react';
+import { Search, Menu, X, Sun, Moon, User, ChevronDown, Gamepad2, Sparkles, Loader2, Play, Flame } from 'lucide-react';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { usePathname, useRouter } from 'next/navigation';
@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/client';
 import NotificationBell from './NotificationBell';
 import UserDropdown from './UserDropdown';
 import SpotlightSearchModal from './SpotlightSearchModal';
+import { useDailyStreak } from '@/hooks/useDailyStreak';
 
 export default function Navbar() {
   const router = useRouter();
@@ -26,6 +27,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const [user, setUser] = useState<any>(null);
   const supabase = useMemo(() => createClient(), []);
+  const { streak, isNewStreakUnlocked, streakXpBonus, dismissStreakReward } = useDailyStreak();
 
   // Global Cmd+K / Ctrl+K shortcut listener
   useEffect(() => {
@@ -408,6 +410,15 @@ export default function Navbar() {
               </AnimatePresence>
             </div>
 
+            {/* Daily Streak Flame Badge */}
+            <div 
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-black shrink-0 cursor-default select-none shadow-sm shadow-amber-500/10 transition-all hover:scale-105"
+              title={`Daily Streak: ${streak} Day${streak > 1 ? 's' : ''}! Play daily to multiply your XP rewards.`}
+            >
+              <Flame size={14} className="text-amber-500 fill-amber-500 animate-pulse" />
+              <span>{streak}</span>
+            </div>
+
             {/* Dark Mode */}
             <button 
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -436,6 +447,32 @@ export default function Navbar() {
           </div>
         </div>
       </nav>
+
+      {/* Daily Streak Celebration Toast */}
+      <AnimatePresence>
+        {isNewStreakUnlocked && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className="fixed top-20 right-4 z-50 bg-gradient-to-r from-amber-600 to-rose-600 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-white/20"
+          >
+            <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+              <Flame size={20} className="text-yellow-300 fill-yellow-300 animate-bounce" />
+            </div>
+            <div className="text-left pr-2">
+              <p className="text-xs font-black uppercase tracking-wider text-yellow-200">Daily Streak Active!</p>
+              <p className="text-xs font-bold text-white">Day {streak} Active • +{streakXpBonus} Bonus XP</p>
+            </div>
+            <button
+              onClick={dismissStreakReward}
+              className="p-1 text-white/80 hover:text-white rounded-lg hover:bg-black/20 transition-colors"
+            >
+              <X size={16} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Mobile Bottom Navigation Bar */}
       <div className="lg:hidden fixed bottom-0 inset-x-0 z-50 w-full max-w-[100vw] bg-white/95 dark:bg-[#0A0B1A]/95 backdrop-blur-xl border-t border-slate-200 dark:border-white/10 pb-safe shadow-lg">

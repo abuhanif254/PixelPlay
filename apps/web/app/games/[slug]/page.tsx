@@ -341,45 +341,67 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
     }))
   } : null;
 
-  // Fetch real related games from the database matching the same category
-  const { data: dbRelated } = await supabase
-    .from('games')
-    .select('id, title, slug, image_url, category, rating, total_plays')
-    .eq('status', 'active')
-    .eq('category', config.category)
-    .neq('slug', slug)
-    .order('total_plays', { ascending: false })
-    .limit(12);
-
-  let relatedGames = (dbRelated || []).map((g: any) => ({
-    id: g.id,
-    slug: g.slug,
-    title: g.title,
-    image: g.image_url,
-    category: g.category,
-    rating: g.rating || 4.8,
-    totalPlays: g.total_plays || 10000
-  }));
-
-  // Fallback to top games if fewer than 6 games exist in this specific category
-  if (relatedGames.length < 6) {
-    const { data: fallbackGames } = await supabase
+  // Smart Recommendation Engine: Fetch category games & top platform hits concurrently
+  const [catGamesRes, topGamesRes] = await Promise.all([
+    supabase
+      .from('games')
+      .select('id, title, slug, image_url, category, rating, total_plays')
+      .eq('status', 'active')
+      .eq('category', config.category)
+      .neq('slug', slug)
+      .order('total_plays', { ascending: false })
+      .limit(16),
+    supabase
       .from('games')
       .select('id, title, slug, image_url, category, rating, total_plays')
       .eq('status', 'active')
       .neq('slug', slug)
-      .order('total_plays', { ascending: false })
-      .limit(12);
+      .order('rating', { ascending: false })
+      .limit(16),
+  ]);
 
-    relatedGames = (fallbackGames || []).map((g: any) => ({
-      id: g.id,
-      slug: g.slug,
-      title: g.title,
-      image: g.image_url,
-      category: g.category,
-      rating: g.rating || 4.8,
-      totalPlays: g.total_plays || 10000
-    }));
+  const seenSlugs = new Set<string>();
+  const relatedGames: Array<{
+    id: string;
+    slug: string;
+    title: string;
+    image: string;
+    category: string;
+    rating: number;
+    totalPlays: number;
+  }> = [];
+
+  // Prioritize games in the same category
+  for (const g of (catGamesRes.data || [])) {
+    if (!seenSlugs.has(g.slug)) {
+      seenSlugs.add(g.slug);
+      relatedGames.push({
+        id: g.id,
+        slug: g.slug,
+        title: g.title,
+        image: g.image_url,
+        category: g.category,
+        rating: g.rating || 4.8,
+        totalPlays: g.total_plays || 10000,
+      });
+    }
+  }
+
+  // Backfill with top-rated games across the platform
+  for (const g of (topGamesRes.data || [])) {
+    if (!seenSlugs.has(g.slug)) {
+      seenSlugs.add(g.slug);
+      relatedGames.push({
+        id: g.id,
+        slug: g.slug,
+        title: g.title,
+        image: g.image_url,
+        category: g.category,
+        rating: g.rating || 4.8,
+        totalPlays: g.total_plays || 10000,
+      });
+    }
+    if (relatedGames.length >= 18) break;
   }
 
   return (

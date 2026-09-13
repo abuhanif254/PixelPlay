@@ -450,14 +450,17 @@ export default function GamePlayer({
   // Skip Ad -> transition to playing
   const skipAd = () => {
     setPlayerState('playing');
+    broadcastAudioState(isMuted, volume);
     setTimeout(() => refocusGame(), 100);
   };
 
   const handleIframeLoad = () => {
     if (iframeLoadTimeoutRef.current) clearTimeout(iframeLoadTimeoutRef.current);
+    broadcastAudioState(isMuted, volume);
     setTimeout(() => {
       setIsIframeLoading(false);
       refocusGame();
+      broadcastAudioState(isMuted, volume);
     }, 600);
   };
 

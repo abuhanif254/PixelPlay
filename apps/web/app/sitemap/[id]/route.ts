@@ -1,9 +1,11 @@
 export const runtime = 'edge';
 export const revalidate = 3600;
 
-import { NextResponse } from 'next/server';
-
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://spielcade.com';
+import { generateGameChunkXml } from '../sitemap-generator';
+import { GET as getStaticSitemap } from '../static.xml/route';
+import { GET as getCategoriesSitemap } from '../categories.xml/route';
+import { GET as getTagsSitemap } from '../tags.xml/route';
+import { GET as getBlogSitemap } from '../blog.xml/route';
 
 export async function GET(
   request: Request,
@@ -12,24 +14,24 @@ export async function GET(
   const cleanId = (params.id || '').replace(/\.xml$/, '');
 
   if (cleanId === 'static') {
-    return NextResponse.redirect(`${baseUrl}/sitemap/static.xml`, 301);
+    return getStaticSitemap();
   }
 
   if (cleanId === 'categories' || cleanId === '0') {
-    return NextResponse.redirect(`${baseUrl}/sitemap/categories.xml`, 301);
+    return getCategoriesSitemap();
   }
 
   if (cleanId === 'tags') {
-    return NextResponse.redirect(`${baseUrl}/sitemap/tags.xml`, 301);
+    return getTagsSitemap();
   }
 
   if (cleanId === 'blog') {
-    return NextResponse.redirect(`${baseUrl}/sitemap/blog.xml`, 301);
+    return getBlogSitemap();
   }
 
   const pageNum = parseInt(cleanId, 10);
   if (!isNaN(pageNum) && pageNum > 0) {
-    return NextResponse.redirect(`${baseUrl}/sitemap/games/${pageNum}.xml`, 301);
+    return generateGameChunkXml(pageNum);
   }
 
   return new Response('Not Found', { status: 404 });
