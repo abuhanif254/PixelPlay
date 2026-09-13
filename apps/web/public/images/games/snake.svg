@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 384" width="512" height="384">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070913" />
+      <stop offset="50%" stop-color="#0d1127" />
+      <stop offset="100%" stop-color="#050711" />
+    </linearGradient>
+    <radialGradient id="appleGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FF0055" stop-opacity="1" />
+      <stop offset="60%" stop-color="#FF3366" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#FF0055" stop-opacity="0" />
+    </radialGradient>
+    <filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur1" />
+      <feGaussianBlur in="SourceGraphic" stdDeviation="14" result="blur2" />
+      <feMerge>
+        <feMergeNode in="blur2" />
+        <feMergeNode in="blur1" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M 32 0 L 0 0 0 32" fill="none" stroke="#1E293B" stroke-width="0.75" stroke-opacity="0.45" />
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="384" fill="url(#bgGrad)" />
+  <rect width="512" height="384" fill="url(#grid)" />
+
+  <!-- Ambient Light Orbs -->
+  <circle cx="160" cy="180" r="140" fill="#00FFA3" opacity="0.08" />
+  <circle cx="380" cy="220" r="130" fill="#7928CA" opacity="0.12" />
+
+  <!-- Apple Glow & Apple -->
+  <circle cx="370" cy="140" r="36" fill="url(#appleGlow)" />
+  <circle cx="370" cy="140" r="16" fill="#FF1E56" filter="url(#neonGlow)" />
+  <circle cx="365" cy="135" r="4" fill="#FFFFFF" opacity="0.8" />
+  <path d="M 370 124 Q 374 116 380 114" stroke="#00FFA3" stroke-width="3" fill="none" stroke-linecap="round" />
+
+  <!-- Snake Body Path Glow -->
+  <g filter="url(#neonGlow)">
+    <rect x="80" y="270" width="30" height="30" rx="8" fill="#7928CA" opacity="0.6" />
+    <rect x="120" y="270" width="30" height="30" rx="8" fill="#8B5CF6" opacity="0.7" />
+    <rect x="160" y="270" width="30" height="30" rx="8" fill="#6366F1" opacity="0.8" />
+    <rect x="160" y="230" width="30" height="30" rx="8" fill="#3B82F6" opacity="0.85" />
+    <rect x="160" y="190" width="30" height="30" rx="8" fill="#06B6D4" opacity="0.9" />
+    <rect x="200" y="190" width="30" height="30" rx="8" fill="#00D2FF" opacity="0.95" />
+    <rect x="240" y="190" width="30" height="30" rx="8" fill="#00E5AA" opacity="0.95" />
+    <rect x="280" y="190" width="30" height="30" rx="8" fill="#00FFA3" />
+    <rect x="280" y="150" width="30" height="30" rx="8" fill="#00FFA3" />
+    
+    <!-- Snake Head -->
+    <rect x="280" y="110" width="32" height="32" rx="10" fill="#00FFA3" stroke="#FFFFFF" stroke-width="1.5" />
+    <!-- Snake Eyes -->
+    <circle cx="288" cy="120" r="3.5" fill="#0F172A" />
+    <circle cx="304" cy="120" r="3.5" fill="#0F172A" />
+    <circle cx="289" cy="119" r="1.2" fill="#FFFFFF" />
+    <circle cx="305" cy="119" r="1.2" fill="#FFFFFF" />
+  </g>
+
+  <!-- Cyber Badge & Title -->
+  <rect x="24" y="24" width="130" height="26" rx="13" fill="#00FFA3" fill-opacity="0.12" stroke="#00FFA3" stroke-width="1" />
+  <circle cx="38" cy="37" r="4" fill="#00FFA3" />
+  <text x="50" y="41" fill="#00FFA3" font-family="'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="900" letter-spacing="1.5">ORIGINAL</text>
+
+  <!-- Title Bottom -->
+  <text x="24" y="335" fill="#FFFFFF" font-family="'Segoe UI', system-ui, sans-serif" font-size="28" font-weight="900" letter-spacing="0.5">NEON SNAKE</text>
+  <text x="24" y="358" fill="#94A3B8" font-family="'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" letter-spacing="1">CLASSIC RETRO ARCADE</text>
+</svg>

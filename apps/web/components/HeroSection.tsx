@@ -28,11 +28,12 @@ interface HeroSectionProps {
 }
 
 const DEFAULT_SUGGESTIONS: HeroGameItem[] = [
+  { title: 'Neon Snake', category: 'Arcade', slug: 'snake', rating: 4.9, image_url: '/images/games/snake.svg' },
+  { title: 'Neon Flyer', category: 'Arcade', slug: 'flappy-bird', rating: 4.9, image_url: '/images/games/flappy-bird.svg' },
+  { title: '2048 Online', category: 'Puzzle', slug: '2048', rating: 4.9, image_url: '/images/games/2048.svg' },
   { title: 'Blade Merge', category: 'Strategy', slug: 'blade-merge', rating: 4.8, image_url: 'https://img.gamemonetize.com/f8k0kn2o97v51uxbqkf0it3pvsbdw14s/512x384.jpg' },
   { title: 'Only Up Or Lava', category: 'Adventure', slug: 'only-up-or-lava', rating: 4.7, image_url: 'https://img.gamemonetize.com/cd2qifsgo6o682uu8vufmuxw7hk851gi/512x384.jpg' },
   { title: 'Catchy Ball', category: 'Sports', slug: 'catchy-ball', rating: 4.7, image_url: 'https://img.gamemonetize.com/ixwhz13h3za57hm3ke5g6abpm2aanxth/512x384.jpg' },
-  { title: 'Neon Flyer', category: 'Arcade', slug: 'flappy-bird', rating: 4.9 },
-  { title: '2048 Online', category: 'Puzzle', slug: '2048', rating: 4.9 },
 ];
 
 export const HeroSection: React.FC<HeroSectionProps> = ({ 

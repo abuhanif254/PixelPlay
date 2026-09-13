@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 384" width="512" height="384">
+  <defs>
+    <linearGradient id="puzzleBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F0C20" />
+      <stop offset="50%" stop-color="#181534" />
+      <stop offset="100%" stop-color="#0D0B1C" />
+    </linearGradient>
+    <linearGradient id="tileGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFD700" />
+      <stop offset="50%" stop-color="#FFA500" />
+      <stop offset="100%" stop-color="#FF8C00" />
+    </linearGradient>
+    <filter id="goldGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b1" />
+      <feMerge>
+        <feMergeNode in="b1" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="512" height="384" fill="url(#puzzleBg)" />
+
+  <!-- Board Container -->
+  <g transform="translate(250, 45)">
+    <rect width="230" height="230" rx="18" fill="#1B1736" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" />
+    
+    <!-- 2x2 Grid of Sample Tiles -->
+    <!-- Tile 1: 256 -->
+    <rect x="14" y="14" width="95" height="95" rx="12" fill="#EDC850" />
+    <text x="61" y="70" fill="#FFFFFF" font-family="'Segoe UI', system-ui, sans-serif" font-size="28" font-weight="900" text-anchor="middle">256</text>
+    
+    <!-- Tile 2: 512 -->
+    <rect x="121" y="14" width="95" height="95" rx="12" fill="#EDC53F" />
+    <text x="168" y="70" fill="#FFFFFF" font-family="'Segoe UI', system-ui, sans-serif" font-size="28" font-weight="900" text-anchor="middle">512</text>
+    
+    <!-- Tile 3: 1024 -->
+    <rect x="14" y="121" width="95" height="95" rx="12" fill="#EDC22E" />
+    <text x="61" y="177" fill="#FFFFFF" font-family="'Segoe UI', system-ui, sans-serif" font-size="26" font-weight="900" text-anchor="middle">1024</text>
+    
+    <!-- Tile 4: 2048 Master (Glow) -->
+    <g filter="url(#goldGlow)">
+      <rect x="121" y="121" width="95" height="95" rx="12" fill="url(#tileGold)" stroke="#FFF275" stroke-width="2" />
+      <text x="168" y="177" fill="#FFFFFF" font-family="'Segoe UI', system-ui, sans-serif" font-size="26" font-weight="900" text-anchor="middle">2048</text>
+    </g>
+  </g>
+
+  <!-- Badge -->
+  <rect x="24" y="24" width="130" height="26" rx="13" fill="#FFD700" fill-opacity="0.15" stroke="#FFD700" stroke-width="1" />
+  <circle cx="38" cy="37" r="4" fill="#FFD700" />
+  <text x="50" y="41" fill="#FFD700" font-family="'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="900" letter-spacing="1.5">ORIGINAL</text>
+
+  <!-- Big Hero 2048 Text -->
+  <text x="24" y="150" fill="#FFD700" font-family="'Segoe UI', system-ui, sans-serif" font-size="64" font-weight="900" letter-spacing="-1">2048</text>
+  <text x="24" y="190" fill="#FFFFFF" font-family="'Segoe UI', system-ui, sans-serif" font-size="20" font-weight="800">CLASSIC</text>
+
+  <!-- Title Bottom -->
+  <text x="24" y="335" fill="#FFFFFF" font-family="'Segoe UI', system-ui, sans-serif" font-size="24" font-weight="900" letter-spacing="0.5">2048 ONLINE</text>
+  <text x="24" y="358" fill="#94A3B8" font-family="'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" letter-spacing="1">ADDICTIVE MATH PUZZLE</text>
+</svg>

@@ -672,8 +672,12 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
                   >
                     <div className="relative aspect-video w-full overflow-hidden bg-gray-200 dark:bg-black/30">
                       <img
-                        src={similarGame.image || 'https://spielcade.com/og-default.jpg'}
+                        src={similarGame.image || '/icons/icon-192x192.png'}
                         alt={`Play ${similarGame.title} unblocked free online`}
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = '/icons/icon-192x192.png';
+                        }}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         loading="lazy"
                       />

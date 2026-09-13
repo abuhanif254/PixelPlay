@@ -4,12 +4,13 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, X, Gamepad2, ArrowRight, Clock, Star, Sparkles, Smartphone, Keyboard, Flame } from 'lucide-react';
 const POPULAR_DEFAULT_GAMES = [
-  { slug: 'neon-snake', title: 'Neon Snake', category: 'Arcade', rating: 4.9, image: 'https://spielcade.com/og-default.jpg', isTouchFriendly: true },
-  { slug: '2048', title: '2048 Classic', category: 'Puzzle', rating: 4.8, image: 'https://spielcade.com/og-default.jpg', isTouchFriendly: true },
-  { slug: 'neon-flyer', title: 'Neon Flyer', category: 'Action', rating: 4.7, image: 'https://spielcade.com/og-default.jpg', isTouchFriendly: true },
-  { slug: 'flappy-bird', title: 'Flappy Wings', category: 'Arcade', rating: 4.6, image: 'https://spielcade.com/og-default.jpg', isTouchFriendly: true },
-  { slug: 'chess-master', title: 'Chess Master', category: 'Strategy', rating: 4.8, image: 'https://spielcade.com/og-default.jpg', isTouchFriendly: true },
-  { slug: 'drift-hunters', title: 'Drift Hunters', category: 'Racing', rating: 4.9, image: 'https://spielcade.com/og-default.jpg', isTouchFriendly: true },
+  { slug: 'snake', title: 'Neon Snake', category: 'Arcade', rating: 4.9, image: '/images/games/snake.svg', isTouchFriendly: true, isOriginal: true },
+  { slug: '2048', title: '2048 Classic', category: 'Puzzle', rating: 4.9, image: '/images/games/2048.svg', isTouchFriendly: true, isOriginal: true },
+  { slug: 'flappy-bird', title: 'Neon Flyer', category: 'Arcade', rating: 4.9, image: '/images/games/flappy-bird.svg', isTouchFriendly: true, isOriginal: true },
+  { slug: 'pull-the-pin-3d-help-police', title: 'Pull The Pin 3D: Help Police', category: 'Strategy', rating: 4.8, image: 'https://img.gamemonetize.com/63oksceyfhlzq8pqrbjnwcxbz8tmga1t/512x384.jpg', isTouchFriendly: true },
+  { slug: 'blade-merge', title: 'Blade Merge', category: 'Strategy', rating: 4.8, image: 'https://img.gamemonetize.com/f8k0kn2o97v51uxbqkf0it3pvsbdw14s/512x384.jpg', isTouchFriendly: true },
+  { slug: 'catchy-ball', title: 'Catchy Ball', category: 'Sports', rating: 4.7, image: 'https://img.gamemonetize.com/ixwhz13h3za57hm3ke5g6abpm2aanxth/512x384.jpg', isTouchFriendly: true },
+  { slug: 'only-up-or-lava', title: 'Only Up Or Lava', category: 'Adventure', rating: 4.7, image: 'https://img.gamemonetize.com/cd2qifsgo6o682uu8vufmuxw7hk851gi/512x384.jpg', isTouchFriendly: true },
 ];
 
 interface SpotlightSearchModalProps {
@@ -19,12 +20,14 @@ interface SpotlightSearchModalProps {
 
 const GENRE_CHIPS = [
   'All',
-  'Action',
+  'Originals',
   'Arcade',
   'Puzzle',
-  'Racing',
+  'Action',
   'Strategy',
-  'Sports'
+  'Sports',
+  'Racing',
+  'Adventure'
 ];
 
 export default function SpotlightSearchModal({ isOpen, onClose }: SpotlightSearchModalProps) {
@@ -54,11 +57,12 @@ export default function SpotlightSearchModal({ isOpen, onClose }: SpotlightSearc
       setSelectedIndex(0);
     } else {
       setQuery('');
+      setSelectedGenre('All');
       setSelectedIndex(0);
     }
   }, [isOpen]);
 
-  // Search logic (combines API search with curated games)
+  // Search logic (queries API with fallback to verified curated games)
   useEffect(() => {
     if (!isOpen) return;
 
@@ -67,17 +71,25 @@ export default function SpotlightSearchModal({ isOpen, onClose }: SpotlightSearc
 
     const timer = setTimeout(async () => {
       try {
+        const categoryParam = selectedGenre !== 'All' ? `&category=${encodeURIComponent(selectedGenre)}` : '';
+        const res = await fetch(`/api/search?q=${encodeURIComponent(trimmed)}${categoryParam}`);
+        const data = await res.json();
+        
         let fetchedResults: any[] = [];
-        if (trimmed.length >= 1) {
-          const res = await fetch(`/api/search?q=${encodeURIComponent(trimmed)}`);
-          const data = await res.json();
-          if (Array.isArray(data)) fetchedResults = data;
-          else if (Array.isArray(data?.games)) fetchedResults = data.games;
-        }
+        if (Array.isArray(data)) fetchedResults = data;
+        else if (Array.isArray(data?.games)) fetchedResults = data.games;
 
-        const localMatches = POPULAR_DEFAULT_GAMES.filter(g => 
-          !trimmed || g.title.toLowerCase().includes(trimmed) || g.category.toLowerCase().includes(trimmed)
-        );
+        // Local verified matches fallback / supplement
+        const localMatches = POPULAR_DEFAULT_GAMES.filter(g => {
+          if (selectedGenre === 'Originals') return g.isOriginal;
+          if (selectedGenre !== 'All' && g.category.toLowerCase() !== selectedGenre.toLowerCase()) return false;
+          if (!trimmed) return true;
+          return (
+            g.title.toLowerCase().includes(trimmed) ||
+            g.slug.toLowerCase().includes(trimmed) ||
+            g.category.toLowerCase().includes(trimmed)
+          );
+        });
 
         // Merge without duplicates
         const seen = new Set<string>();
@@ -85,31 +97,41 @@ export default function SpotlightSearchModal({ isOpen, onClose }: SpotlightSearc
         [...fetchedResults, ...localMatches].forEach((game: any) => {
           if (!seen.has(game.slug)) {
             seen.add(game.slug);
+            const isOriginal = game.isOriginal || ['snake', 'flappy-bird', '2048'].includes(game.slug);
+            let image = game.image_url || game.image;
+            if (game.slug === 'snake') image = '/images/games/snake.svg';
+            else if (game.slug === 'flappy-bird') image = '/images/games/flappy-bird.svg';
+            else if (game.slug === '2048') image = '/images/games/2048.svg';
+            else if (!image || image.includes('og-default.jpg')) image = '/icons/icon-192x192.png';
+
             merged.push({
               id: game.id || game.slug,
               slug: game.slug,
               title: game.title,
               category: game.category || 'Arcade',
               rating: game.rating || 4.8,
-              image: game.image_url || game.image || 'https://spielcade.com/og-default.jpg',
+              image,
               isTouchFriendly: true,
+              isOriginal,
             });
           }
         });
 
-        // Filter by genre chip if not 'All'
-        const filtered = selectedGenre === 'All'
-          ? merged
-          : merged.filter(g => g.category?.toLowerCase() === selectedGenre.toLowerCase());
-
-        setResults(filtered.slice(0, 8));
+        setResults(merged.slice(0, 10));
         setSelectedIndex(0);
       } catch {
-        setResults([]);
+        // Safe offline fallback
+        const filtered = POPULAR_DEFAULT_GAMES.filter(g => {
+          if (selectedGenre === 'Originals') return g.isOriginal;
+          if (selectedGenre !== 'All' && g.category.toLowerCase() !== selectedGenre.toLowerCase()) return false;
+          if (!trimmed) return true;
+          return g.title.toLowerCase().includes(trimmed) || g.category.toLowerCase().includes(trimmed);
+        });
+        setResults(filtered.slice(0, 10));
       } finally {
         setIsSearching(false);
       }
-    }, 150);
+    }, 120);
 
     return () => clearTimeout(timer);
   }, [query, selectedGenre, isOpen]);
@@ -265,10 +287,14 @@ export default function SpotlightSearchModal({ isOpen, onClose }: SpotlightSearc
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-200 dark:bg-black/40 shrink-0 border border-white/10">
+                      <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-900 shrink-0 border border-white/10 relative shadow-inner">
                         <img
-                          src={game.image || 'https://spielcade.com/og-default.jpg'}
+                          src={game.image || '/icons/icon-192x192.png'}
                           alt={game.title}
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = '/icons/icon-192x192.png';
+                          }}
                           className="w-full h-full object-cover"
                         />
                       </div>
@@ -278,6 +304,12 @@ export default function SpotlightSearchModal({ isOpen, onClose }: SpotlightSearc
                           <h4 className="text-sm font-bold truncate">
                             {game.title}
                           </h4>
+                          {game.isOriginal ? (
+                            <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-sm shadow-amber-500/20 shrink-0">
+                              <Sparkles size={10} className="fill-current" />
+                              Original
+                            </span>
+                          ) : null}
                           <span className={`text-[10px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded ${
                             isSelected ? 'bg-white/20 text-white' : 'bg-indigo-500/10 text-indigo-400'
                           }`}>

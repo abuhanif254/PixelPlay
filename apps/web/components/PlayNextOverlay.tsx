@@ -38,9 +38,9 @@ export default function PlayNextOverlay({
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const currentGame = candidates[selectedIndex] || {
-    slug: 'neon-snake',
+    slug: 'snake',
     title: 'Neon Snake',
-    image: 'https://spielcade.com/og-default.jpg',
+    image: '/images/games/snake.svg',
     category: 'Arcade',
     rating: 4.9,
   };
@@ -119,8 +119,12 @@ export default function PlayNextOverlay({
         <div className="relative rounded-2xl overflow-hidden bg-gray-900 border border-white/10 shadow-lg group mb-6">
           <div className="aspect-video w-full relative overflow-hidden">
             <img
-              src={currentGame.image || 'https://spielcade.com/og-default.jpg'}
+              src={currentGame.image || '/images/games/snake.svg'}
               alt={currentGame.title}
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = '/icons/icon-192x192.png';
+              }}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />

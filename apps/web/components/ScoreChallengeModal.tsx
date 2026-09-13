@@ -93,8 +93,12 @@ export default function ScoreChallengeModal({
           <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-black/40 dark:to-indigo-950/20 border border-gray-200 dark:border-white/10 rounded-2xl p-4 flex items-center gap-4">
             <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-200 dark:bg-black/50 shrink-0 border border-white/10">
               <img
-                src={gameImage || 'https://spielcade.com/og-default.jpg'}
+                src={gameImage || '/icons/icon-192x192.png'}
                 alt={gameTitle}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = '/icons/icon-192x192.png';
+                }}
                 className="w-full h-full object-cover"
               />
             </div>

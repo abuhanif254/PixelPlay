@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 384" width="512" height="384">
+  <defs>
+    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#08031A" />
+      <stop offset="50%" stop-color="#180B38" />
+      <stop offset="100%" stop-color="#0B0726" />
+    </linearGradient>
+    <linearGradient id="wingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00F0FF" />
+      <stop offset="100%" stop-color="#7000FF" />
+    </linearGradient>
+    <radialGradient id="thrustGlow" cx="100%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#FF007A" stop-opacity="1" />
+      <stop offset="50%" stop-color="#FF7A00" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#FF007A" stop-opacity="0" />
+    </radialGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b1" />
+      <feGaussianBlur in="SourceGraphic" stdDeviation="12" result="b2" />
+      <feMerge>
+        <feMergeNode in="b2" />
+        <feMergeNode in="b1" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="512" height="384" fill="url(#skyGrad)" />
+
+  <!-- Cityscape Silhouette / Cyber Pillars -->
+  <g opacity="0.6" filter="url(#glow)">
+    <rect x="350" y="0" width="50" height="140" rx="6" fill="#1B153D" stroke="#FF007A" stroke-width="2" />
+    <rect x="350" y="240" width="50" height="150" rx="6" fill="#1B153D" stroke="#FF007A" stroke-width="2" />
+    <rect x="440" y="0" width="40" height="90" rx="6" fill="#130D2B" stroke="#00F0FF" stroke-width="1.5" />
+    <rect x="440" y="200" width="40" height="190" rx="6" fill="#130D2B" stroke="#00F0FF" stroke-width="1.5" />
+  </g>
+
+  <!-- Cyber Flyer Craft -->
+  <g transform="translate(130, 165)" filter="url(#glow)">
+    <!-- Thruster fire -->
+    <ellipse cx="-25" cy="12" rx="35" ry="12" fill="url(#thrustGlow)" />
+    <polygon points="-15,6 -55,12 -15,18" fill="#FFDD00" opacity="0.9" />
+    
+    <!-- Wing Top -->
+    <path d="M 10 12 L -20 -15 L 5 -5 Z" fill="url(#wingGrad)" stroke="#00F0FF" stroke-width="1.5" />
+    
+    <!-- Ship Body -->
+    <ellipse cx="15" cy="12" rx="34" ry="16" fill="#0D0B24" stroke="#00F0FF" stroke-width="2.5" />
+    
+    <!-- Cockpit Visor -->
+    <ellipse cx="26" cy="9" rx="14" ry="7" fill="#00F0FF" />
+    <circle cx="32" cy="8" r="2.5" fill="#FFFFFF" />
+
+    <!-- Wing Bottom -->
+    <path d="M 10 12 L -18 35 L 8 22 Z" fill="url(#wingGrad)" stroke="#7000FF" stroke-width="1.5" />
+  </g>
+
+  <!-- Badge -->
+  <rect x="24" y="24" width="130" height="26" rx="13" fill="#00F0FF" fill-opacity="0.12" stroke="#00F0FF" stroke-width="1" />
+  <circle cx="38" cy="37" r="4" fill="#00F0FF" />
+  <text x="50" y="41" fill="#00F0FF" font-family="'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="900" letter-spacing="1.5">ORIGINAL</text>
+
+  <!-- Title Bottom -->
+  <text x="24" y="335" fill="#FFFFFF" font-family="'Segoe UI', system-ui, sans-serif" font-size="28" font-weight="900" letter-spacing="0.5">NEON FLYER</text>
+  <text x="24" y="358" fill="#94A3B8" font-family="'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" letter-spacing="1">HIGH SPEED ENDLESS ARCADE</text>
+</svg>

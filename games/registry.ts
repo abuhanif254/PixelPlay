@@ -29,6 +29,7 @@ export const gamesRegistry: Record<string, { config: GameConfig, component: any 
       "title": "2048",
       "category": "Puzzle",
       "rating": 4.9,
+      "image": "/images/games/2048.svg",
       "description": "Join the numbers and get to the 2048 tile! A highly addictive math puzzle game.",
       "history": "2048 was originally created by Gabriele Cirulli in March 2014. It is a sliding block puzzle game based on 1024 by Veewo Studio and similar to Threes.",
       "strategy": "Keep your highest tile in a corner. The most common strategy is to pick a corner (e.g., bottom right) and only use three directions (down, right, left) to keep the highest numbers trapped there.",
@@ -55,6 +56,8 @@ export const gamesRegistry: Record<string, { config: GameConfig, component: any 
             }
       ],
       "tags": [
+            "Original",
+            "Flagship",
             "Puzzle",
             "Math",
             "Brain",
@@ -73,6 +76,7 @@ export const gamesRegistry: Record<string, { config: GameConfig, component: any 
       "title": "Neon Flyer",
       "category": "Arcade",
       "rating": 4.9,
+      "image": "/images/games/flappy-bird.svg",
       "description": "A high-speed, neon-drenched endless runner. Master the gravity, thread the needle through closing gaps, and chase the global high score!",
       "strategy": "Focus on the rhythm. The game speeds up as your score increases, so keep your eyes focused on the center of the upcoming gaps.",
       "keyboardControls": {
@@ -82,6 +86,8 @@ export const gamesRegistry: Record<string, { config: GameConfig, component: any 
             "Tap Screen": "Engage Thrusters"
       },
       "tags": [
+            "Original",
+            "Flagship",
             "Arcade",
             "Endless",
             "Cyberpunk",
@@ -97,6 +103,7 @@ export const gamesRegistry: Record<string, { config: GameConfig, component: any 
       "title": "Neon Snake",
       "category": "Arcade",
       "rating": 4.8,
+      "image": "/images/games/snake.svg",
       "description": "The classic snake game, reimagined with neon graphics and smooth controls.",
       "history": "Snake is a video game genre where the player maneuvers a growing line that becomes a primary obstacle to itself. The concept originated in the 1976 arcade game Blockade, and the ease of implementing Snake has led to hundreds of versions.",
       "strategy": "Stay near the edges when the snake gets long and plan a clear exit route. Avoid trapping yourself in corners.",
@@ -125,6 +132,8 @@ export const gamesRegistry: Record<string, { config: GameConfig, component: any 
             }
       ],
       "tags": [
+            "Original",
+            "Flagship",
             "Arcade",
             "Classic",
             "Retro",
