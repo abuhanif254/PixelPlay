@@ -95,7 +95,13 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
             </div>
 
             {/* Reviews Section */}
-            <GameReviews title={config.title} rating={config.rating} />
+            <GameReviews 
+              title={config.title} 
+              slug={config.slug}
+              gameId={config.gameId}
+              rating={config.rating}
+              initialReviews={config.initialReviews}
+            />
 
             <div className="w-full h-px bg-gray-200 dark:bg-white/5 my-8" />
 

@@ -7,8 +7,10 @@ import GamePlayer from '@/components/GamePlayer';
 import GameDetailsTabs from '@/components/GameDetailsTabs';
 import AdBanner from '@/components/AdBanner';
 import FavoriteButton from '@/components/FavoriteButton';
+import ChallengerBanner from '@/components/ChallengerBanner';
 import { Metadata, ResolvingMetadata } from 'next';
 import { submitScore } from '../actions';
+import { getGameReviews } from './reviews-actions';
 import { createClient } from '@/lib/supabase/server';
 import { 
   generateEnrichedDescription, 
@@ -24,6 +26,10 @@ export const revalidate = 600; // 10-minute Cloudflare Edge ISR caching for sub-
 interface GamePageProps {
   params: {
     slug: string;
+  };
+  searchParams?: {
+    challenger?: string;
+    score?: string;
   };
 }
 
@@ -114,7 +120,7 @@ export async function generateMetadata(
   };
 }
 
-export default async function GamePage({ params }: GamePageProps) {
+export default async function GamePage({ params, searchParams }: GamePageProps) {
   const { slug } = params;
   
   const supabase = createClient();
@@ -125,6 +131,9 @@ export default async function GamePage({ params }: GamePageProps) {
   if (!dbGame && !localGame) {
     notFound();
   }
+
+  // Fetch real community reviews
+  const initialReviews = await getGameReviews(slug, dbGame?.id);
 
   const rawTitle = dbGame?.title || localGame?.config?.title || 'Unknown Game';
   const rawCat = dbGame?.category || (dbGame?.metadata as any)?.category || localGame?.config?.category || 'Arcade';
@@ -149,6 +158,9 @@ export default async function GamePage({ params }: GamePageProps) {
   // Merge database and local configs (DB takes precedence if available)
   const config = {
     ...(localGame?.config || {}),
+    slug,
+    gameId: dbGame?.id,
+    initialReviews,
     title: rawTitle,
     description: finalDesc,
     image: dbGame?.image_url || localGame?.config?.image,
@@ -467,6 +479,15 @@ export default async function GamePage({ params }: GamePageProps) {
               <div className="flex md:hidden justify-center w-full">
                 <AdBanner id="5a3fd317f38a51c8553f75f8c2a547ef" width={320} height={50} />
               </div>
+
+              {/* Viral Match Challenger Banner */}
+              {searchParams?.challenger && searchParams?.score && (
+                <ChallengerBanner
+                  challenger={searchParams.challenger}
+                  score={searchParams.score}
+                  gameTitle={config.title}
+                />
+              )}
 
               {/* Auto-detect native aspect ratio and orientation from game metadata */}
               {(() => {

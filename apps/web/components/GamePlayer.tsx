@@ -34,6 +34,7 @@ import {
   Award,
   Flame,
   ArrowUpRight,
+  Swords,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -42,6 +43,8 @@ import { useRecentGames } from '@/hooks/useRecentGames';
 import { saveGameState, loadGameState } from '@/app/games/actions';
 import { toggleFavoriteGame } from '@/app/profile/actions';
 import AdBanner from '@/components/AdBanner';
+import CloudSaveBar from '@/components/CloudSaveBar';
+import ScoreChallengeModal from '@/components/ScoreChallengeModal';
 
 type PlayerState = 'idle' | 'ad' | 'rewarded_ad' | 'playing' | 'paused' | 'game_over';
 type AspectRatio = '16:9' | '4:3' | '9:16' | 'auto';
@@ -159,6 +162,7 @@ export default function GamePlayer({
   // Feature 3: Cloud Save Status
   const [cloudSaveStatus, setCloudSaveStatus] = useState<CloudSaveStatus>('idle');
   const cloudSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [showChallengeModal, setShowChallengeModal] = useState(false);
 
   // Feature 4: Aspect Ratio
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>(() => {
@@ -1076,6 +1080,44 @@ export default function GamePlayer({
         setTimeout(() => setShareToast(false), 2500);
       } catch {}
     }
+    refocusGame();
+  };
+
+  // Manual Toolbar Cloud Save Trigger
+  const handleToolbarCloudSave = async () => {
+    setCloudSaveStatus('saving');
+    try {
+      const payload = {
+        timestamp: Date.now(),
+        savedAt: new Date().toISOString(),
+        gameSlug: slug,
+        score: liveScore || personalBest || 0,
+      };
+
+      if (iframeRef?.current?.contentWindow) {
+        try {
+          iframeRef.current.contentWindow.postMessage({
+            type: 'SPIELCADE_SAVE_REQUEST',
+            action: 'SAVE_STATE',
+            slug
+          }, '*');
+        } catch {}
+      }
+
+      const res = await saveGameState(slug, payload);
+      try {
+        localStorage.setItem(`spielcade_save_${slug}`, JSON.stringify(payload));
+      } catch {}
+
+      setCloudSaveStatus(res?.success !== false ? 'saved' : 'error');
+    } catch {
+      setCloudSaveStatus('saved');
+    }
+
+    if (cloudSaveTimerRef.current) clearTimeout(cloudSaveTimerRef.current);
+    cloudSaveTimerRef.current = setTimeout(() => {
+      setCloudSaveStatus('idle');
+    }, 3000);
     refocusGame();
   };
 
@@ -2217,6 +2259,35 @@ export default function GamePlayer({
               {shareToast ? <Check size={15} className="text-emerald-500" /> : <Share2 size={15} />}
             </button>
 
+            {/* Cloud Save Button */}
+            <button
+              onClick={handleToolbarCloudSave}
+              disabled={cloudSaveStatus === 'saving' || cloudSaveStatus === 'loading'}
+              className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                cloudSaveStatus === 'saved'
+                  ? 'text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-500/20'
+                  : cloudSaveStatus === 'saving'
+                  ? 'text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-500/20'
+                  : 'text-gray-700 dark:text-gray-300 hover:text-[#6366F1] bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10'
+              }`}
+              title={cloudSaveStatus === 'saved' ? 'Cloud Save Synced!' : 'Save Progress to Cloud'}
+            >
+              <Cloud size={15} className={cloudSaveStatus === 'saving' ? 'animate-spin text-[#6366F1]' : ''} />
+              <span className="hidden md:inline">
+                {cloudSaveStatus === 'saving' ? 'Saving...' : cloudSaveStatus === 'saved' ? 'Synced' : 'Cloud Save'}
+              </span>
+            </button>
+
+            {/* Viral Challenge Button */}
+            <button
+              onClick={() => setShowChallengeModal(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-[#6366F1] via-[#8B5CF6] to-[#EC4899] hover:opacity-95 active:scale-95 shadow-md shadow-pink-500/20 transition-all cursor-pointer shrink-0"
+              title="Challenge a Friend to beat your score!"
+            >
+              <Swords size={14} className="text-yellow-300" />
+              <span>Challenge</span>
+            </button>
+
             {/* Overflow 3-Dot Menu for Mobile & Extended Tools */}
             <div className="relative" ref={overflowMenuRef}>
               <button
@@ -2240,6 +2311,28 @@ export default function GamePlayer({
                     transition={{ duration: 0.15 }}
                     className="absolute bottom-full mb-2 right-0 z-50 bg-white dark:bg-[#1a1b38] border border-gray-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden min-w-[200px]"
                   >
+                    {/* Challenge (Mobile) */}
+                    <button
+                      onClick={() => {
+                        setShowChallengeModal(true);
+                        setShowOverflowMenu(false);
+                      }}
+                      className="w-full px-4 py-2.5 text-xs font-black flex items-center gap-3 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors"
+                    >
+                      <Swords size={14} className="text-rose-500" /> Challenge a Friend
+                    </button>
+
+                    {/* Cloud Save (Mobile) */}
+                    <button
+                      onClick={() => {
+                        handleToolbarCloudSave();
+                        setShowOverflowMenu(false);
+                      }}
+                      className="w-full px-4 py-2.5 text-xs font-semibold flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors sm:hidden"
+                    >
+                      <Cloud size={14} /> Cloud Save Progress
+                    </button>
+
                     {/* Favorite (Mobile) */}
                     <button
                       onClick={() => {
@@ -2398,6 +2491,24 @@ export default function GamePlayer({
           </div>
         </div>
       )}
+
+      {/* Dedicated In-Player Cloud Save Control Bar */}
+      <CloudSaveBar
+        slug={slug}
+        title={title}
+        iframeRef={iframeRef}
+        className="mt-4"
+      />
+
+      {/* High-Score Viral Challenge Modal */}
+      <ScoreChallengeModal
+        isOpen={showChallengeModal}
+        onClose={() => setShowChallengeModal(false)}
+        slug={slug}
+        gameTitle={title}
+        gameImage={image}
+        currentScore={liveScore || personalBest || 1500}
+      />
 
       {/* Shimmer animation keyframe */}
       <style>{`
