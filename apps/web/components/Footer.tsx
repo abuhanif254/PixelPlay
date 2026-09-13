@@ -81,7 +81,7 @@ export default function Footer() {
                 { name: 'New Releases', path: '/games/new' },
                 { name: 'Popular Hits', path: '/popular' },
                 { name: 'Leaderboard', path: '/leaderboard' },
-                { name: 'Developer Studio', path: '/studio' }
+                { name: 'Developer Studio', path: '/developers' }
               ].map((link) => (
                 <li key={link.name}>
                   <Link 

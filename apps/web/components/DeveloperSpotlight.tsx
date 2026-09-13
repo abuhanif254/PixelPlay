@@ -55,14 +55,14 @@ export default function DeveloperSpotlight() {
 
           <div className="flex flex-wrap items-center gap-4">
             <Link 
-              href="/studio" 
+              href="/developers" 
               className="inline-flex items-center justify-center bg-gradient-to-r from-[#6366F1] via-[#7C3AED] to-[#EC4899] text-white px-7 py-3.5 rounded-full font-bold text-sm sm:text-base hover:shadow-[0_0_25px_rgba(99,102,241,0.6)] hover:scale-105 active:scale-95 transition-all duration-300 shadow-md"
             >
-              <span>Submit Your Game</span>
+              <span>Developer Studio Hub</span>
               <ArrowRight className="ml-2 w-4 h-4" />
             </Link>
             <Link 
-              href="/studio/docs" 
+              href="/developers#sdk-reference" 
               className="inline-flex items-center justify-center bg-white/10 hover:bg-white/20 text-white border border-white/10 px-6 py-3.5 rounded-full font-bold text-sm sm:text-base hover:scale-105 transition-all duration-300"
             >
               Developer SDK Docs
