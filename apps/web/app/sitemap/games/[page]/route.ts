@@ -13,7 +13,8 @@ function escapeXml(unsafe: string): string {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
+    .replace(/'/g, '&apos;')
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '');
 }
 
 export async function GET(
@@ -25,30 +26,36 @@ export async function GET(
   const start = (pageNum - 1) * CHUNK_SIZE;
   const end = start + CHUNK_SIZE - 1;
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder'
-  );
+  let gameList: any[] = [];
 
-  const { data: games, error } = await supabase
-    .from('games')
-    .select('slug, title, image_url, created_at')
-    .eq('status', 'active')
-    .order('created_at', { ascending: false })
-    .range(start, end);
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder'
+    );
 
-  if (error) {
-    console.error('Sitemap games query error:', error);
+    const { data: games, error } = await supabase
+      .from('games')
+      .select('slug, title, image_url, created_at')
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .range(start, end);
+
+    if (error) {
+      console.error('Sitemap games query error:', error);
+    } else if (games) {
+      gameList = games;
+    }
+  } catch (err) {
+    console.error('Sitemap games unexpected error:', err);
   }
-
-  const gameList = games || [];
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 ${gameList
   .map((game: any) => {
-    const loc = `${baseUrl}/games/${game.slug}`;
+    const loc = `${baseUrl}/games/${escapeXml(game.slug)}`;
     const lastmod = new Date(game.created_at || Date.now()).toISOString();
     const imageTag = game.image_url
       ? `\n    <image:image>
@@ -70,7 +77,9 @@ ${gameList
   return new Response(xml, {
     headers: {
       'Content-Type': 'application/xml; charset=utf-8',
-      'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+      'Cache-Control': 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800',
+      'CDN-Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
+      'Cloudflare-CDN-Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
     },
   });
 }

@@ -6,18 +6,26 @@ import { createClient } from '@supabase/supabase-js';
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://spielcade.com';
 
 export async function GET() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder'
-  );
+  let postList: any[] = [];
 
-  const { data: posts } = await supabase
-    .from('blog_posts')
-    .select('slug, created_at, updated_at')
-    .eq('status', 'published')
-    .order('created_at', { ascending: false });
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder'
+    );
 
-  const postList = posts || [];
+    const { data: posts, error } = await supabase
+      .from('blog_posts')
+      .select('slug, created_at, updated_at')
+      .eq('status', 'published')
+      .order('created_at', { ascending: false });
+
+    if (!error && posts) {
+      postList = posts;
+    }
+  } catch (err) {
+    console.error('Blog sitemap unexpected error:', err);
+  }
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -36,7 +44,9 @@ ${postList
   return new Response(xml, {
     headers: {
       'Content-Type': 'application/xml; charset=utf-8',
-      'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+      'Cache-Control': 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800',
+      'CDN-Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
+      'Cloudflare-CDN-Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
     },
   });
 }

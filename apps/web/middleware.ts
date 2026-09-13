@@ -1,7 +1,18 @@
-import { type NextRequest } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // Fast-path: Never run auth or session database queries on sitemaps, robots, or RSS feeds
+  if (
+    pathname.startsWith('/sitemap') ||
+    pathname === '/robots.txt' ||
+    pathname === '/feed.xml'
+  ) {
+    return NextResponse.next()
+  }
+
   return await updateSession(request)
 }
 

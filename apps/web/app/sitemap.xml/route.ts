@@ -5,19 +5,29 @@ import { createClient } from '@supabase/supabase-js';
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://spielcade.com';
 const CHUNK_SIZE = 1000;
+const FALLBACK_TOTAL_GAMES = 20000;
 
 export async function GET() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder'
-  );
+  let gamesCount = FALLBACK_TOTAL_GAMES;
 
-  const { count: totalGames } = await supabase
-    .from('games')
-    .select('*', { count: 'exact', head: true })
-    .eq('status', 'active');
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder'
+    );
 
-  const gamesCount = totalGames || 0;
+    const { count: totalGames, error } = await supabase
+      .from('games')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'active');
+
+    if (!error && typeof totalGames === 'number' && totalGames > 0) {
+      gamesCount = totalGames;
+    }
+  } catch (err) {
+    console.warn('Sitemap index fallback to default chunk count:', err);
+  }
+
   const numChunks = Math.max(1, Math.ceil(gamesCount / CHUNK_SIZE));
 
   const sitemaps = [
@@ -37,7 +47,6 @@ ${sitemaps
   .map(
     (url) => `  <sitemap>
     <loc>${url}</loc>
-    <lastmod>${new Date().toISOString()}</lastmod>
   </sitemap>`
   )
   .join('\n')}
@@ -46,7 +55,9 @@ ${sitemaps
   return new Response(xml, {
     headers: {
       'Content-Type': 'application/xml; charset=utf-8',
-      'Cache-Control': 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400',
+      'Cache-Control': 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800',
+      'CDN-Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
+      'Cloudflare-CDN-Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
     },
   });
 }
