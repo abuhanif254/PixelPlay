@@ -11,7 +11,7 @@ import ChallengerBanner from '@/components/ChallengerBanner';
 import OfflineReadyBadge from '@/components/OfflineReadyBadge';
 import { Metadata, ResolvingMetadata } from 'next';
 import { submitScore } from '../actions';
-import { getGameReviews } from './reviews-actions';
+import { getGameReviews } from '../reviews-actions';
 import { createClient } from '@/lib/supabase/server';
 import { 
   generateEnrichedDescription, 
@@ -21,8 +21,8 @@ import {
   generateGameTags 
 } from '@/lib/seo-enricher';
 
-export const runtime = 'edge';
-export const revalidate = 600; // 10-minute Cloudflare Edge ISR caching for sub-30ms TTFB
+// export const runtime = 'edge';
+export const revalidate = 600;
 
 interface GamePageProps {
   params: {
@@ -176,7 +176,7 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
   };
 
   const sourceUrl = config.sourceUrl || ((config as any).type === 'html5' ? `/games/${slug}/index.html` : null);
-  const GameComponent = localGame?.component || (() => null);
+  const GameComponent = localGame?.component || null;
 
   // Check if current user favorited this game
   let isFavorited = false;
@@ -355,11 +355,6 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
     }));
   }
 
-  const handleGameOver = async (score: number) => {
-    'use server';
-    return await submitScore(slug, score);
-  };
-
   return (
     <>
       <script
@@ -517,14 +512,13 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
                     category={config.category}
                     image={config.image} 
                     sourceUrl={sourceUrl} 
-                    onGameOver={handleGameOver}
                     relatedGames={relatedGames}
                     gameId={dbGame?.id}
                     initialFavorited={isFavorited}
                     initialAspectRatio={initialAspectRatio}
                     orientation={explicitOrientation}
                   >
-                    {GameComponent && <GameComponent onGameOver={handleGameOver} />}
+                    {GameComponent ? <GameComponent /> : null}
                   </GamePlayer>
                 );
               })()}
@@ -674,10 +668,6 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
                       <img
                         src={similarGame.image || '/icons/icon-192x192.png'}
                         alt={`Play ${similarGame.title} unblocked free online`}
-                        onError={(e) => {
-                          e.currentTarget.onerror = null;
-                          e.currentTarget.src = '/icons/icon-192x192.png';
-                        }}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         loading="lazy"
                       />

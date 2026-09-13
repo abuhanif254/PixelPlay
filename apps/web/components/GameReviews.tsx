@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Star, ThumbsUp, MessageSquare, X, Check, ShieldCheck, Sparkles, AlertCircle } from 'lucide-react';
-import { submitReview, voteHelpfulReview, ReviewItem } from '@/app/games/[slug]/reviews-actions';
+import { submitReview, voteHelpfulReview, ReviewItem } from '@/app/games/reviews-actions';
 
 interface GameReviewsProps {
   title: string;
