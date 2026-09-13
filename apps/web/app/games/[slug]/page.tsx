@@ -1,7 +1,7 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
 import { gamesRegistry } from '@spielcade/games/registry';
-import { Star, ChevronRight, Heart, Clock, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Star, ChevronRight, Heart, Clock, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Gamepad2 } from 'lucide-react';
 import Link from 'next/link';
 import GamePlayer from '@/components/GamePlayer';
 import GameDetailsTabs from '@/components/GameDetailsTabs';
@@ -178,6 +178,18 @@ export default async function GamePage({ params }: GamePageProps) {
       if (profile?.favorite_game_ids) {
         isFavorited = profile.favorite_game_ids.includes(dbGame.id);
       }
+    }
+  }
+
+  let developerProfile: { username: string; full_name?: string; avatar_url?: string } | null = null;
+  if (dbGame?.developer_id) {
+    const { data: devProf } = await supabase
+      .from('profiles')
+      .select('username, full_name, avatar_url')
+      .eq('id', dbGame.developer_id)
+      .maybeSingle();
+    if (devProf) {
+      developerProfile = devProf;
     }
   }
 
@@ -415,6 +427,25 @@ export default async function GamePage({ params }: GamePageProps) {
                     <Clock size={14} className="text-gray-500" />
                     <span>{formattedPlays}</span>
                   </div>
+                  {developerProfile ? (
+                    <>
+                      <div className="w-1 h-1 rounded-full bg-gray-400 dark:bg-gray-600"></div>
+                      <Link 
+                        href={`/profile/${developerProfile.username}`}
+                        className="flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+                      >
+                        <Gamepad2 size={13} />
+                        <span>By {developerProfile.full_name || `@${developerProfile.username}`}</span>
+                      </Link>
+                    </>
+                  ) : config.developer && config.developer !== 'Spielcade' ? (
+                    <>
+                      <div className="w-1 h-1 rounded-full bg-gray-400 dark:bg-gray-600"></div>
+                      <span className="flex items-center gap-1 text-xs font-semibold text-gray-500">
+                        <Gamepad2 size={13} /> By {config.developer}
+                      </span>
+                    </>
+                  ) : null}
                 </div>
               </div>
             </div>

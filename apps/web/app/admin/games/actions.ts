@@ -144,7 +144,7 @@ export async function approveGame(id: string) {
 
   const { data: game, error: fetchErr } = await supabase
     .from('games')
-    .select('title, developer_id')
+    .select('title, slug, developer_id')
     .eq('id', id)
     .single();
 
@@ -158,7 +158,7 @@ export async function approveGame(id: string) {
       game.developer_id,
       'system',
       `Your game "${game.title}" has been approved and is now live!`,
-      `/games/${id}`
+      `/games/${game.slug || id}`
     );
   }
 
@@ -181,13 +181,27 @@ export async function rejectGame(id: string, reason: string) {
 
   const { data: game, error: fetchErr } = await supabase
     .from('games')
-    .select('title, developer_id')
+    .select('title, developer_id, metadata')
     .eq('id', id)
     .single();
 
   if (fetchErr) return { success: false, error: fetchErr.message }
 
-  const { error } = await supabase.from('games').update({ status: 'rejected' }).eq('id', id)
+  const currentMeta = (game?.metadata as any) || {}
+  const updatedMeta = {
+    ...currentMeta,
+    rejection_reason: reason,
+    rejected_at: new Date().toISOString()
+  }
+
+  const { error } = await supabase
+    .from('games')
+    .update({ 
+      status: 'rejected',
+      metadata: updatedMeta
+    })
+    .eq('id', id)
+
   if (error) return { success: false, error: error.message }
 
   if (game?.developer_id) {
@@ -201,9 +215,9 @@ export async function rejectGame(id: string, reason: string) {
   try {
     revalidatePath('/admin/games')
     revalidatePath('/admin/games/queue')
+    revalidatePath('/games')
   } catch (e) {
     console.error('revalidatePath error:', e)
   }
   return { success: true }
 }
-

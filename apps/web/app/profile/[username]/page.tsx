@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
-import { Trophy, Gamepad2, Star, Flame, ArrowLeft, Edit3 } from 'lucide-react';
+import { Trophy, Gamepad2, Star, Flame, ArrowLeft, Edit3, Play } from 'lucide-react';
 
 export const revalidate = 60;
 
@@ -189,9 +189,19 @@ export default async function PublicProfilePage({ params }: { params: { username
   const avatarUrl = profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}&backgroundColor=b6e3f4`;
 
   // Determine if indexable developer
-  const { data: devGames } = await supabase.from('games').select('total_plays').eq('developer_id', profile.id).eq('status', 'active');
-  const isIndexableDeveloper = devGames && devGames.length > 0;
-  const totalDevPlays = (devGames || []).reduce((acc: number, curr: any) => acc + (Number(curr.total_plays) || 0), 0);
+  const { data: devGames } = await supabase
+    .from('games')
+    .select('id, title, slug, image_url, category, rating, total_plays, description')
+    .eq('developer_id', profile.id)
+    .eq('status', 'active')
+    .order('total_plays', { ascending: false });
+
+  const publishedDevGames = devGames || [];
+  const isIndexableDeveloper = publishedDevGames.length > 0;
+  const totalDevPlays = publishedDevGames.reduce((acc: number, curr: any) => acc + (Number(curr.total_plays) || 0), 0);
+  const avgDevRating = isIndexableDeveloper
+    ? (publishedDevGames.reduce((acc: number, curr: any) => acc + (Number(curr.rating) || 5.0), 0) / publishedDevGames.length).toFixed(1)
+    : '5.0';
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#0A0B1A] text-gray-900 dark:text-white pt-20 pb-20">
@@ -241,9 +251,16 @@ export default async function PublicProfilePage({ params }: { params: { username
               </div>
             </div>
             
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {profile.full_name || profile.username}
-            </h1>
+            <div className="flex flex-wrap items-center gap-2.5 mb-1">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                {profile.full_name || profile.username}
+              </h1>
+              {isIndexableDeveloper && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/30 shadow-sm">
+                  <Gamepad2 size={13} /> Verified Developer
+                </span>
+              )}
+            </div>
             <p className="text-sm text-gray-400 mb-2">@{profile.username}</p>
             
             <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-300 mt-2 mb-3">
@@ -294,6 +311,97 @@ export default async function PublicProfilePage({ params }: { params: { username
             </div>
           ))}
         </div>
+
+        {/* Developer Studio Showcase Grid */}
+        {isIndexableDeveloper && (
+          <div className="bg-white dark:bg-[#111228]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 border-b border-gray-100 dark:border-white/5 pb-4">
+              <div>
+                <h2 className="text-xl font-bold font-outfit text-gray-900 dark:text-white flex items-center gap-2">
+                  <Gamepad2 size={22} className="text-indigo-500" />
+                  Studio Creations ({publishedDevGames.length})
+                </h2>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  Play original browser games published by @{profile.username} on Spielcade.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs font-bold">
+                <span className="px-3 py-1 bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300 rounded-lg">
+                  {totalDevPlays.toLocaleString()} Total Plays
+                </span>
+                <span className="px-3 py-1 bg-amber-500/10 text-amber-500 rounded-lg">
+                  ★ {avgDevRating} Rating
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {publishedDevGames.map((game: any) => (
+                <div 
+                  key={game.id} 
+                  className="group bg-gray-50 dark:bg-[#0A0B1A] border border-gray-200 dark:border-white/5 rounded-xl overflow-hidden shadow-sm hover:border-indigo-500/40 hover:shadow-indigo-500/10 transition-all flex flex-col"
+                >
+                  <div className="relative aspect-video w-full bg-slate-900 overflow-hidden">
+                    <img 
+                      src={game.image_url || `https://api.dicebear.com/7.x/identicon/svg?seed=${game.slug}`} 
+                      alt={game.title} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                    />
+                    <Link 
+                      href={`/games/${game.slug}`}
+                      className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/40">
+                        <Play size={18} className="fill-current ml-0.5" />
+                      </div>
+                    </Link>
+                  </div>
+
+                  <div className="p-4 flex-1 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between gap-1 mb-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                          {game.category || 'Arcade'}
+                        </span>
+                        <span className="text-xs font-bold text-amber-500 flex items-center gap-0.5">
+                          ★ {Number(game.rating || 5.0).toFixed(1)}
+                        </span>
+                      </div>
+                      <h3 className="font-bold text-sm text-gray-900 dark:text-white group-hover:text-indigo-500 transition-colors truncate">
+                        {game.title}
+                      </h3>
+                      {game.description && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mt-1">
+                          {game.description}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/5 flex items-center justify-between text-xs">
+                      <span className="text-gray-400 font-medium">
+                        {(game.total_plays || 0).toLocaleString()} plays
+                      </span>
+                      <Link 
+                        href={`/games/${game.slug}`}
+                        className="font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                      >
+                        Play Game →
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-gray-100 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-gray-500">
+              <span>Looking to publish your HTML5 or WebGL game?</span>
+              <Link href="/developers" className="font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
+                Explore Spielcade Developer Studio →
+              </Link>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Top Scores */}

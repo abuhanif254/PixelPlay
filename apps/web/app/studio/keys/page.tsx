@@ -11,7 +11,7 @@ export default async function ApiKeysPage() {
   const user = authData?.user || null;
 
   if (!user) {
-    redirect('/auth/login');
+    redirect('/login?next=/studio/keys');
   }
 
   // Fetch developer's API keys
@@ -24,10 +24,10 @@ export default async function ApiKeysPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="bg-white dark:bg-[#111228] p-6 rounded-2xl border border-gray-200 dark:border-white/5 shadow-xl">
-        <h2 className="text-xl font-bold font-outfit text-gray-900 dark:text-white mb-2">API Keys</h2>
-        <p className="text-gray-500 dark:text-gray-400 mb-6">
+        <h2 className="text-xl font-bold font-outfit text-gray-900 dark:text-white mb-2">Master API Keys</h2>
+        <p className="text-gray-500 dark:text-gray-400 mb-6 text-sm">
           Manage your Master API key to authenticate your games with the Spielcade SDK. 
-          You can only have 1 active Master Key at a time.
+          You can maintain 1 active Master Key at a time for your developer account.
         </p>
         
         <KeysClient keys={keys || []} />
