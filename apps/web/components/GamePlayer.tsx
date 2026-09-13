@@ -62,10 +62,10 @@ const VPAD_KEY_PAIRS: Record<string, { key: string; code: string; secondaryKey?:
 };
 
 const AR_CLASSES: Record<AspectRatio, string> = {
-  '16:9': 'aspect-video min-h-[260px] sm:min-h-[380px] md:min-h-[480px] xl:min-h-[560px]',
-  '4:3': 'aspect-[4/3] min-h-[240px] sm:min-h-[360px]',
-  '9:16': 'aspect-[9/16] max-w-[360px] mx-auto min-h-[480px]',
-  'auto': 'min-h-[300px] sm:min-h-[420px] md:min-h-[540px] xl:min-h-[620px]',
+  '16:9': 'aspect-video w-full',
+  '4:3': 'aspect-[4/3] w-full max-w-[840px] mx-auto',
+  '9:16': 'aspect-[9/16] w-full max-w-[420px] mx-auto min-h-[440px] sm:min-h-[500px]',
+  'auto': 'w-full min-h-[300px] sm:min-h-[420px] md:min-h-[540px] xl:min-h-[620px]',
 };
 
 const SHORTCUTS = [
@@ -100,6 +100,8 @@ interface GamePlayerProps {
   }>;
   gameId?: string;
   initialFavorited?: boolean;
+  initialAspectRatio?: AspectRatio;
+  orientation?: 'landscape' | 'portrait' | 'auto';
 }
 
 export default function GamePlayer({
@@ -113,6 +115,8 @@ export default function GamePlayer({
   relatedGames = [],
   gameId,
   initialFavorited = false,
+  initialAspectRatio,
+  orientation,
 }: GamePlayerProps) {
   const router = useRouter();
   const { addRecentGame } = useRecentGames();
@@ -157,8 +161,20 @@ export default function GamePlayer({
   const cloudSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Feature 4: Aspect Ratio
-  const [aspectRatio, setAspectRatio] = useState<AspectRatio>('16:9');
+  const [aspectRatio, setAspectRatio] = useState<AspectRatio>(() => {
+    if (initialAspectRatio) return initialAspectRatio;
+    if (orientation === 'portrait') return '9:16';
+    return '16:9';
+  });
   const [showArMenu, setShowArMenu] = useState(false);
+
+  useEffect(() => {
+    if (initialAspectRatio) {
+      setAspectRatio(initialAspectRatio);
+    } else if (orientation === 'portrait') {
+      setAspectRatio('9:16');
+    }
+  }, [initialAspectRatio, orientation]);
 
   // Feature 5: Ambient Glow
   const ambientColor = useRef<string>('#6366F1');
@@ -363,6 +379,9 @@ export default function GamePlayer({
   // Play button click
   const handlePlay = () => {
     setPlayerState('ad');
+    setIsIframeLoading(true);
+    if (iframeLoadTimeoutRef.current) clearTimeout(iframeLoadTimeoutRef.current);
+    iframeLoadTimeoutRef.current = setTimeout(() => setIsIframeLoading(false), 12000);
     addRecentGame({ slug, title, image });
   };
 
@@ -373,20 +392,24 @@ export default function GamePlayer({
     }
   }, [slug, title, image, addRecentGame]);
 
-  // Pre-roll Ad countdown
+  // Pre-roll Ad countdown with auto-transition
   useEffect(() => {
-    if ((playerState === 'ad' || playerState === 'rewarded_ad') && adCountdown > 0) {
+    if (playerState === 'ad') {
+      if (adCountdown > 0) {
+        const t = setTimeout(() => setAdCountdown(p => p - 1), 1000);
+        return () => clearTimeout(t);
+      } else if (adCountdown === 0) {
+        skipAd();
+      }
+    } else if (playerState === 'rewarded_ad' && adCountdown > 0) {
       const t = setTimeout(() => setAdCountdown(p => p - 1), 1000);
       return () => clearTimeout(t);
     }
   }, [playerState, adCountdown]);
 
-  // Skip Ad -> show buffer
+  // Skip Ad -> transition to playing
   const skipAd = () => {
-    setIsIframeLoading(true);
     setPlayerState('playing');
-    if (iframeLoadTimeoutRef.current) clearTimeout(iframeLoadTimeoutRef.current);
-    iframeLoadTimeoutRef.current = setTimeout(() => setIsIframeLoading(false), 12000);
     setTimeout(() => refocusGame(), 100);
   };
 
@@ -486,6 +509,9 @@ export default function GamePlayer({
       }
     } else if (isWebFullscreen) {
       setIsWebFullscreen(false);
+      if (screen.orientation && (screen.orientation as any).unlock) {
+        try { (screen.orientation as any).unlock(); } catch {}
+      }
     } else if (containerRef.current) {
       try {
         if (containerRef.current.requestFullscreen) {
@@ -494,7 +520,8 @@ export default function GamePlayer({
           setIsTheater(false);
           setIsMiniPlayer(false);
           if (screen.orientation && (screen.orientation as any).lock) {
-            (screen.orientation as any).lock('landscape').catch(() => {});
+            const targetOrientation = aspectRatio === '9:16' ? 'portrait' : 'landscape';
+            (screen.orientation as any).lock(targetOrientation).catch(() => {});
           }
         } else {
           setIsWebFullscreen(true);
@@ -709,9 +736,21 @@ export default function GamePlayer({
   // Dual-Mode Virtual Gamepad Dispatcher with Haptic Feedback
   const dispatchKeyInternal = useCallback((key: string, code: string, type: 'keydown' | 'keyup') => {
     const iframe = iframeRef.current;
-    if (!iframe) return;
 
-    // Dispatch inside same-origin document safely
+    // 1. Dispatch to local React games / window if no iframe
+    if (!iframe) {
+      try {
+        const evt = new KeyboardEvent(type, { key, code, bubbles: true, cancelable: true });
+        window.dispatchEvent(evt);
+        document.dispatchEvent(evt);
+        if (containerRef.current) {
+          containerRef.current.dispatchEvent(evt);
+        }
+      } catch {}
+      return;
+    }
+
+    // 2. Dispatch inside same-origin document safely
     try {
       if (iframe.contentDocument) {
         const evt = new KeyboardEvent(type, { key, code, bubbles: true, cancelable: true });
@@ -719,7 +758,7 @@ export default function GamePlayer({
       }
     } catch {}
 
-    // Dispatch postMessage for cross-origin game engines
+    // 3. Dispatch postMessage for cross-origin game engines
     if (iframe.contentWindow) {
       iframe.contentWindow.postMessage({
         source: 'SPIELCADE_WRAPPER',
@@ -1047,13 +1086,13 @@ export default function GamePlayer({
   const isExpandedMode = isTheater || isFullscreen || isWebFullscreen;
 
   return (
-    <div className="w-full flex flex-col select-none relative">
+    <div className="w-full flex flex-col select-none relative overflow-x-clip">
 
       {/* Feature 5: Cinematic GPU Ambient Back-Glow */}
       {playerState === 'playing' && !isMiniPlayer && (
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -inset-6 rounded-3xl opacity-25 blur-3xl transition-opacity duration-1000 z-0"
+          className="pointer-events-none absolute -inset-6 rounded-3xl opacity-25 blur-3xl transition-opacity duration-1000 z-0 overflow-hidden"
           style={{
             background: `radial-gradient(ellipse at center, ${ambientColor.current}60 0%, transparent 70%)`,
             willChange: 'opacity',
@@ -1082,20 +1121,23 @@ export default function GamePlayer({
       {/* Primary Display Canvas (Seamlessly floats to corner when isMiniPlayer is active) */}
       <div
         ref={containerRef}
+        tabIndex={0}
         onClick={refocusGame}
         onMouseMove={resetHudTimer}
         onMouseEnter={() => setIsCanvasHovered(true)}
         onMouseLeave={() => setIsCanvasHovered(false)}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className={`relative bg-black overflow-hidden shadow-2xl transition-all duration-300 ease-in-out flex flex-col justify-center touch-manipulation ${
+        className={`relative bg-black overflow-hidden shadow-2xl transition-all duration-300 ease-in-out flex flex-col justify-center outline-none ${
+          playerState === 'playing' ? 'touch-none' : 'touch-manipulation'
+        } ${
           isMiniPlayer
             ? 'fixed bottom-6 right-6 z-[999] w-[340px] sm:w-[420px] aspect-video rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.85)] border-2 border-white/20 hidden md:flex'
             : isWebFullscreen
-              ? 'fixed inset-0 z-[1000] w-screen h-screen rounded-none pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]'
+              ? 'fixed inset-0 z-[1000] w-screen h-screen rounded-none pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)] pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)]'
               : isTheater
                 ? 'fixed inset-2 md:inset-6 lg:inset-10 z-[100] rounded-2xl shadow-[0_0_80px_rgba(0,0,0,0.9)] border border-white/10'
-                : `${AR_CLASSES[aspectRatio]} w-full rounded-2xl border border-gray-200 dark:border-white/10`
+                : `${AR_CLASSES[aspectRatio]} rounded-2xl border border-gray-200 dark:border-white/10`
         }`}
       >
         {/* Mini-Player Hover Controls Bar */}
@@ -1131,6 +1173,22 @@ export default function GamePlayer({
         {/* Swipe drag-indicator bar in theater / fullscreen */}
         {isExpandedMode && (
           <div className="absolute top-2 left-1/2 -translate-x-1/2 z-50 w-12 h-1 rounded-full bg-white/25 pointer-events-none" />
+        )}
+
+        {/* Persistent Touch Quick-Exit & Controls Handle in Fullscreen / Theater */}
+        {isExpandedMode && !showHud && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            onClick={() => setShowHud(true)}
+            className="absolute top-3 right-3 z-50 bg-black/70 hover:bg-black/90 text-white/90 border border-white/25 px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-md shadow-2xl flex items-center gap-1.5 active:scale-95 transition-all pointer-events-auto"
+            title="Show Controls / Exit"
+            aria-label="Show Controls"
+          >
+            <MoreHorizontal size={14} />
+            <span className="text-[11px]">Menu</span>
+          </motion.button>
         )}
 
         {/* Theater Mode Background Dimming */}
@@ -1191,27 +1249,31 @@ export default function GamePlayer({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 flex flex-col items-center justify-center bg-gray-950 z-20 p-6"
+              className="absolute inset-0 flex flex-col items-center justify-center bg-gray-950 z-20 p-4 sm:p-6"
             >
-              <div className="absolute top-6 left-6 text-white/60 text-xs tracking-widest uppercase font-bold flex items-center gap-2">
+              <div className="absolute top-4 left-4 sm:top-6 sm:left-6 text-white/60 text-xs tracking-widest uppercase font-bold flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" /> Loading Game Assets
               </div>
-              <div className="w-full max-w-md p-6 flex flex-col items-center text-center">
-                <div className="w-16 h-16 rounded-full border-4 border-[#6366F1] border-t-transparent animate-spin mb-6 shadow-[0_0_20px_rgba(99,102,241,0.5)]" />
-                <h3 className="text-white font-bold text-lg sm:text-xl mb-2 font-outfit">Starting {title}...</h3>
-                <p className="text-gray-400 text-xs sm:text-sm max-w-xs">
+              <div className="w-full max-w-md p-2 sm:p-4 flex flex-col items-center text-center">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-4 border-[#6366F1] border-t-transparent animate-spin mb-3 shadow-[0_0_20px_rgba(99,102,241,0.5)]" />
+                <h3 className="text-white font-bold text-base sm:text-xl mb-1 font-outfit">Starting {title}...</h3>
+                <p className="text-gray-400 text-xs max-w-xs mb-3">
                   Your game is initializing. Support independent game creators by viewing sponsor announcements.
                 </p>
+                {/* Responsive Pre-roll Ad Banner */}
+                <div className="w-full flex justify-center my-1 max-w-[320px]">
+                  <AdBanner id="5a3fd317f38a51c8553f75f8c2a547ef" width={300} height={250} className="rounded-xl shadow-lg" />
+                </div>
               </div>
-              <div className="absolute bottom-6 right-6">
-                {adCountdown > 0 ? (
-                  <div className="px-5 py-2.5 bg-black/60 border border-white/10 text-white/70 rounded-full text-xs font-bold backdrop-blur-md">
-                    Skip Ad in {adCountdown}s
+              <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6">
+                {adCountdown > 2 ? (
+                  <div className="px-4 py-2 bg-black/60 border border-white/10 text-white/70 rounded-full text-xs font-bold backdrop-blur-md">
+                    Skip in {adCountdown}s
                   </div>
                 ) : (
                   <button
                     onClick={skipAd}
-                    className="px-6 py-2.5 bg-white text-black hover:bg-gray-200 hover:scale-105 active:scale-95 rounded-full text-xs sm:text-sm font-bold shadow-2xl transition-all flex items-center gap-2"
+                    className="px-5 py-2 sm:px-6 sm:py-2.5 bg-white text-black hover:bg-gray-200 hover:scale-105 active:scale-95 rounded-full text-xs sm:text-sm font-bold shadow-2xl transition-all flex items-center gap-2"
                   >
                     Play Now <Play size={14} className="fill-black" />
                   </button>
@@ -1262,8 +1324,8 @@ export default function GamePlayer({
               animate={{ opacity: 1 }}
               className="w-full h-full flex flex-row relative z-10 bg-black overflow-hidden"
             >
-              {/* Left Skyscraper Ad (Hidden in mini-player) */}
-              {!isMiniPlayer && (
+              {/* Left Skyscraper Ad (Hidden in mini-player and fullscreen) */}
+              {!isMiniPlayer && !isFullscreen && !isWebFullscreen && (
                 <div className={`hidden ${isTheater ? 'xl:flex' : '2xl:flex'} flex-col justify-center items-center px-3 bg-gray-950 border-r border-white/5 z-20 shrink-0`}>
                   <AdBanner id="f782d4b90dcb09f70975f654ba40ab19" width={160} height={600} />
                 </div>
@@ -1279,8 +1341,8 @@ export default function GamePlayer({
                       src={sourceUrl}
                       onLoad={handleIframeLoad}
                       className="absolute inset-0 w-full h-full border-0"
-                      sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-popups allow-forms allow-modals"
-                      allow="fullscreen; autoplay; gamepad; focus-without-user-activation; accelerometer; gyroscope; clipboard-write; clipboard-read; microphone; camera; midi; payment; xr-spatial-tracking"
+                      sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-forms allow-modals allow-downloads"
+                      allow="fullscreen; autoplay; gamepad; focus-without-user-activation; accelerometer; gyroscope; clipboard-write; clipboard-read; microphone; camera; midi; payment; xr-spatial-tracking; screen-wake-lock"
                       title={title}
                     />
 
@@ -1385,8 +1447,8 @@ export default function GamePlayer({
                 </AnimatePresence>
               </div>
 
-              {/* Right Skyscraper Ad (Hidden in mini-player) */}
-              {!isMiniPlayer && (
+              {/* Right Skyscraper Ad (Hidden in mini-player and fullscreen) */}
+              {!isMiniPlayer && !isFullscreen && !isWebFullscreen && (
                 <div className={`hidden ${isTheater ? 'xl:flex' : '2xl:flex'} flex-col justify-center items-center px-3 bg-gray-950 border-l border-white/5 z-20 shrink-0`}>
                   <AdBanner id="f782d4b90dcb09f70975f654ba40ab19" width={160} height={600} />
                 </div>
@@ -2133,13 +2195,11 @@ export default function GamePlayer({
               <HelpCircle size={15} />
             </button>
 
-            <div className="w-px h-5 bg-gray-200 dark:bg-white/10 mx-0.5" />
-
-            {/* Social & Save Tools */}
+            {/* Social & Save Tools (Visible on sm+, in 3-dot menu on mobile) */}
             <button
               onClick={handleToggleFavorite}
               disabled={isPendingFav}
-              className={`p-2 rounded-xl transition-all ${
+              className={`hidden sm:flex p-2 rounded-xl transition-all ${
                 isFavorited
                   ? 'text-red-500 bg-red-50 dark:bg-red-500/10'
                   : 'text-gray-700 dark:text-gray-300 hover:text-red-500 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10'
@@ -2151,13 +2211,13 @@ export default function GamePlayer({
 
             <button
               onClick={handleShare}
-              className="p-2 rounded-xl text-gray-700 dark:text-gray-300 hover:text-[#6366F1] bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all"
+              className="hidden sm:flex p-2 rounded-xl text-gray-700 dark:text-gray-300 hover:text-[#6366F1] bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all"
               title="Share Game & Score"
             >
               {shareToast ? <Check size={15} className="text-emerald-500" /> : <Share2 size={15} />}
             </button>
 
-            {/* Overflow 3-Dot Menu for Mobile */}
+            {/* Overflow 3-Dot Menu for Mobile & Extended Tools */}
             <div className="relative" ref={overflowMenuRef}>
               <button
                 onClick={() => setShowOverflowMenu(p => !p)}
@@ -2178,8 +2238,56 @@ export default function GamePlayer({
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.92, y: 4 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute bottom-full mb-2 right-0 z-50 bg-white dark:bg-[#1a1b38] border border-gray-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden min-w-[190px]"
+                    className="absolute bottom-full mb-2 right-0 z-50 bg-white dark:bg-[#1a1b38] border border-gray-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden min-w-[200px]"
                   >
+                    {/* Favorite (Mobile) */}
+                    <button
+                      onClick={() => {
+                        handleToggleFavorite();
+                        setShowOverflowMenu(false);
+                      }}
+                      className="w-full px-4 py-2.5 text-xs font-semibold flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors sm:hidden"
+                    >
+                      <Heart size={14} className={isFavorited ? 'fill-red-500 text-red-500' : ''} /> {isFavorited ? 'Favorited' : 'Add to Favorites'}
+                    </button>
+
+                    {/* Share (Mobile) */}
+                    <button
+                      onClick={() => {
+                        handleShare();
+                        setShowOverflowMenu(false);
+                      }}
+                      className="w-full px-4 py-2.5 text-xs font-semibold flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors sm:hidden"
+                    >
+                      <Share2 size={14} /> Share Game & Score
+                    </button>
+
+                    {/* Aspect Ratio Selector (Direct inline picker for mobile) */}
+                    <div className="px-4 py-2.5 border-b border-gray-100 dark:border-white/5 sm:hidden">
+                      <span className="text-[10px] uppercase font-bold text-gray-400 dark:text-gray-500 block mb-1.5 flex items-center gap-1.5">
+                        <LayoutTemplate size={12} /> Aspect Ratio
+                      </span>
+                      <div className="grid grid-cols-4 gap-1">
+                        {(['16:9', '4:3', '9:16', 'auto'] as AspectRatio[]).map(ar => (
+                          <button
+                            key={ar}
+                            onClick={() => {
+                              setAspectRatio(ar);
+                              setShowOverflowMenu(false);
+                              refocusGame();
+                            }}
+                            className={`px-1 py-1 rounded-lg text-[10px] font-bold text-center transition-colors ${
+                              aspectRatio === ar
+                                ? 'bg-[#6366F1] text-white shadow-sm'
+                                : 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-200'
+                            }`}
+                          >
+                            {ar}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
                     {/* Gamepad toggle */}
                     <button
                       onClick={() => {
@@ -2190,17 +2298,6 @@ export default function GamePlayer({
                       className="w-full px-4 py-2.5 text-xs font-semibold flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors sm:hidden"
                     >
                       <Gamepad2 size={14} /> {showVirtualPad ? 'Hide Gamepad' : 'Show Gamepad'}
-                    </button>
-
-                    {/* Aspect Ratio */}
-                    <button
-                      onClick={() => {
-                        setShowArMenu(true);
-                        setShowOverflowMenu(false);
-                      }}
-                      className="w-full px-4 py-2.5 text-xs font-semibold flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors sm:hidden"
-                    >
-                      <LayoutTemplate size={14} /> Aspect Ratio ({aspectRatio})
                     </button>
 
                     {/* Theater */}

@@ -437,19 +437,42 @@ export default async function GamePage({ params }: GamePageProps) {
                 <AdBanner id="5a3fd317f38a51c8553f75f8c2a547ef" width={320} height={50} />
               </div>
 
-              <GamePlayer 
-                title={config.title} 
-                slug={slug} 
-                category={config.category}
-                image={config.image} 
-                sourceUrl={sourceUrl} 
-                onGameOver={handleGameOver}
-                relatedGames={relatedGames}
-                gameId={dbGame?.id}
-                initialFavorited={isFavorited}
-              >
-                {GameComponent && <GameComponent onGameOver={handleGameOver} />}
-              </GamePlayer>
+              {/* Auto-detect native aspect ratio and orientation from game metadata */}
+              {(() => {
+                const rawMeta = (dbGame?.metadata as any) || {};
+                const localCfg = (localGame?.config as any) || {};
+                const metaWidth = Number(rawMeta.width || localCfg.width || 0);
+                const metaHeight = Number(rawMeta.height || localCfg.height || 0);
+                const explicitOrientation = rawMeta.orientation || localCfg.orientation || (metaHeight > metaWidth * 1.15 ? 'portrait' : 'landscape');
+                const explicitAR = rawMeta.aspectRatio || localCfg.aspectRatio;
+
+                let initialAspectRatio: '16:9' | '4:3' | '9:16' | 'auto' = '16:9';
+                if (explicitAR && ['16:9', '4:3', '9:16', 'auto'].includes(explicitAR)) {
+                  initialAspectRatio = explicitAR;
+                } else if (explicitOrientation === 'portrait' || (metaHeight > 0 && metaWidth > 0 && metaHeight > metaWidth * 1.15)) {
+                  initialAspectRatio = '9:16';
+                } else if (metaHeight > 0 && metaWidth > 0 && Math.abs(metaWidth / metaHeight - 4 / 3) < 0.15) {
+                  initialAspectRatio = '4:3';
+                }
+
+                return (
+                  <GamePlayer 
+                    title={config.title} 
+                    slug={slug} 
+                    category={config.category}
+                    image={config.image} 
+                    sourceUrl={sourceUrl} 
+                    onGameOver={handleGameOver}
+                    relatedGames={relatedGames}
+                    gameId={dbGame?.id}
+                    initialFavorited={isFavorited}
+                    initialAspectRatio={initialAspectRatio}
+                    orientation={explicitOrientation}
+                  >
+                    {GameComponent && <GameComponent onGameOver={handleGameOver} />}
+                  </GamePlayer>
+                );
+              })()}
             </div>
 
             {/* Right Column: Game Info Sidebar */}
