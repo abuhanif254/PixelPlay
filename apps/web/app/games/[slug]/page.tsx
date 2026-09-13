@@ -35,7 +35,7 @@ interface GamePageProps {
 }
 
 export async function generateMetadata(
-  { params }: GamePageProps,
+  { params, searchParams }: GamePageProps,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
   const { slug } = params;
@@ -68,9 +68,43 @@ export async function generateMetadata(
 
   const shouldIndex = status === 'approved' || status === 'active';
   
-  const pageTitle = `${title} — Play Free Online Game Unblocked | Spielcade`;
-  const pageDescription = description.length > 160 ? description.slice(0, 157).trimEnd() + "..." : description;
+  // Dynamic viral challenge detection
+  const isChallenge = Boolean(searchParams?.challenger && searchParams?.score);
+  const challengerName = searchParams?.challenger || '';
+  const rawScore = searchParams?.score || '';
+  const formattedScore = !isNaN(Number(rawScore)) ? Number(rawScore).toLocaleString() : rawScore;
+
+  const challengeOgUrl = `https://spielcade.com/api/og/challenge?slug=${slug}&challenger=${encodeURIComponent(challengerName)}&score=${encodeURIComponent(rawScore)}`;
+
+  const pageTitle = isChallenge
+    ? `⚔️ ${challengerName} scored ${formattedScore} in ${title}! Can you beat it? | Spielcade`
+    : `${title} — Play Free Online Game Unblocked | Spielcade`;
+
+  const pageDescription = isChallenge
+    ? `${challengerName} just challenged you to beat their high score of ${formattedScore} in ${title}. Play free online with zero downloads on Spielcade!`
+    : (description.length > 160 ? description.slice(0, 157).trimEnd() + "..." : description);
+
   const canonicalUrl = `https://spielcade.com/games/${slug}`;
+
+  const ogImages = isChallenge
+    ? [
+        {
+          url: challengeOgUrl,
+          width: 1200,
+          height: 630,
+          alt: `⚔️ ${challengerName}'s high score challenge for ${title}`,
+        }
+      ]
+    : [
+        {
+          url: image,
+          width: 1200,
+          height: 630,
+          alt: `${title} — gameplay screenshot`,
+        }
+      ];
+
+  const twitterImages = isChallenge ? [challengeOgUrl] : [image];
 
   return {
     title: pageTitle,
@@ -100,23 +134,16 @@ export async function generateMetadata(
     openGraph: {
       title: pageTitle,
       description: pageDescription,
-      url: canonicalUrl,
+      url: isChallenge ? `${canonicalUrl}?challenger=${encodeURIComponent(challengerName)}&score=${encodeURIComponent(rawScore)}` : canonicalUrl,
       siteName: 'Spielcade',
       type: 'website',
-      images: [
-        {
-          url: image,
-          width: 1200,
-          height: 630,
-          alt: `${title} — gameplay screenshot`,
-        },
-      ],
+      images: ogImages,
     },
     twitter: {
       card: 'summary_large_image',
       title: pageTitle,
       description: pageDescription,
-      images: [image],
+      images: twitterImages,
     },
   };
 }

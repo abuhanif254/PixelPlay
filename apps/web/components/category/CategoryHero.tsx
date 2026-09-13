@@ -3,7 +3,20 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { CategoryData } from '@/lib/mockCategories';
 
-export default function CategoryHero({ category }: { category: CategoryData }) {
+export interface RelatedCategoryItem {
+  slug: string;
+  title: string;
+  icon?: string;
+  color?: string;
+}
+
+export default function CategoryHero({ 
+  category,
+  relatedCategories = []
+}: { 
+  category: CategoryData;
+  relatedCategories?: RelatedCategoryItem[];
+}) {
   return (
     <div className="w-full bg-white dark:bg-[#05050F] relative overflow-hidden border-b border-gray-200 dark:border-white/5 mb-8 transition-colors duration-300">
       {/* Background Glows */}
@@ -84,6 +97,25 @@ export default function CategoryHero({ category }: { category: CategoryData }) {
           </div>
 
         </div>
+
+        {/* Semantic Related Categories Chip Ribbon */}
+        {relatedCategories && relatedCategories.length > 0 && (
+          <div className="pb-5 pt-2 border-t border-gray-100 dark:border-white/5 flex flex-wrap items-center gap-2">
+            <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mr-1">
+              Explore Related Genres:
+            </span>
+            {relatedCategories.map(rc => (
+              <Link
+                key={rc.slug}
+                href={`/categories/${rc.slug}`}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-gray-200 transition-colors border border-transparent hover:border-white/10"
+              >
+                <span>{rc.icon}</span>
+                <span>{rc.title}</span>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

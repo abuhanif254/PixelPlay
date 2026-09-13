@@ -46,6 +46,7 @@ import AdBanner from '@/components/AdBanner';
 import CloudSaveBar from '@/components/CloudSaveBar';
 import ScoreChallengeModal from '@/components/ScoreChallengeModal';
 import PlayNextOverlay from '@/components/PlayNextOverlay';
+import { queueOfflineScore, initOfflineSync } from '@/lib/offline-sync';
 
 type PlayerState = 'idle' | 'ad' | 'rewarded_ad' | 'playing' | 'paused' | 'game_over';
 type AspectRatio = '16:9' | '4:3' | '9:16' | 'auto';
@@ -166,13 +167,28 @@ export default function GamePlayer({
   const [showChallengeModal, setShowChallengeModal] = useState(false);
   const [showPlayNext, setShowPlayNext] = useState(false);
 
-  // Feature 4: Aspect Ratio
+  // Feature 4: Aspect Ratio (persisted across sessions)
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>(() => {
     if (initialAspectRatio) return initialAspectRatio;
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('spielcade_player_ar');
+        if (saved && ['16:9', '4:3', '9:16', 'auto'].includes(saved)) {
+          return saved as AspectRatio;
+        }
+      } catch {}
+    }
     if (orientation === 'portrait') return '9:16';
     return '16:9';
   });
   const [showArMenu, setShowArMenu] = useState(false);
+
+  const handleSelectAspectRatio = (ar: AspectRatio) => {
+    setAspectRatio(ar);
+    try {
+      localStorage.setItem('spielcade_player_ar', ar);
+    } catch {}
+  };
 
   useEffect(() => {
     if (initialAspectRatio) {
@@ -222,6 +238,24 @@ export default function GamePlayer({
   const hasRecordedRef = useRef(false);
   const hudTimerRef = useRef<NodeJS.Timeout | null>(null);
   const wakeLockRef = useRef<any>(null);
+
+  // Improvement 8: Offline Queue Sync
+  const [offlineSyncMsg, setOfflineSyncMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    const cleanup = initOfflineSync();
+    const handleSync = (e: Event) => {
+      const customEvt = e as CustomEvent;
+      const count = customEvt.detail?.count || 1;
+      setOfflineSyncMsg(`🏆 Synced ${count} offline ${count === 1 ? 'score' : 'scores'} to leaderboard!`);
+      setTimeout(() => setOfflineSyncMsg(null), 4000);
+    };
+    window.addEventListener('spielcade:scores-synced', handleSync);
+    return () => {
+      cleanup();
+      window.removeEventListener('spielcade:scores-synced', handleSync);
+    };
+  }, []);
 
   // Initialize stored preferences (volume, muted, personal best)
   useEffect(() => {
@@ -641,15 +675,21 @@ export default function GamePlayer({
               if (scoreToastTimerRef.current) clearTimeout(scoreToastTimerRef.current);
               scoreToastTimerRef.current = setTimeout(() => setShowScoreToast(false), 3000);
             }
-            if (onGameOver && score > 0) {
-              Promise.resolve(onGameOver(score)).then((res: any) => {
-                if (res?.newAchievements && res.newAchievements.length > 0) {
-                  const firstAch = res.newAchievements[0];
-                  setUnlockedAchievement({ title: firstAch.title, xp: firstAch.xp });
-                  if (achievementTimerRef.current) clearTimeout(achievementTimerRef.current);
-                  achievementTimerRef.current = setTimeout(() => setUnlockedAchievement(null), 4500);
-                }
-              }).catch(() => {});
+            if (score > 0) {
+              if (typeof navigator !== 'undefined' && !navigator.onLine) {
+                queueOfflineScore(slug, score);
+              } else if (onGameOver) {
+                Promise.resolve(onGameOver(score)).then((res: any) => {
+                  if (res?.newAchievements && res.newAchievements.length > 0) {
+                    const firstAch = res.newAchievements[0];
+                    setUnlockedAchievement({ title: firstAch.title, xp: firstAch.xp });
+                    if (achievementTimerRef.current) clearTimeout(achievementTimerRef.current);
+                    achievementTimerRef.current = setTimeout(() => setUnlockedAchievement(null), 4500);
+                  }
+                }).catch(() => {
+                  queueOfflineScore(slug, score);
+                });
+              }
             }
             break;
           }
@@ -721,9 +761,13 @@ export default function GamePlayer({
                   localStorage.setItem(`spielcade_pb_${slug}`, String(score));
                 } catch {}
               }
-              if (scoreToastTimerRef.current) clearTimeout(scoreToastTimerRef.current);
-              scoreToastTimerRef.current = setTimeout(() => setShowScoreToast(false), 3000);
-              if (onGameOver) onGameOver(score);
+              if (typeof navigator !== 'undefined' && !navigator.onLine) {
+                queueOfflineScore(slug, score);
+              } else if (onGameOver) {
+                Promise.resolve(onGameOver(score)).catch(() => {
+                  queueOfflineScore(slug, score);
+                });
+              }
             }
           }
         }
@@ -1597,6 +1641,23 @@ export default function GamePlayer({
                 )}
               </AnimatePresence>
 
+              {/* Offline Queue Sync Toast Banner */}
+              <AnimatePresence>
+                {offlineSyncMsg && !isMiniPlayer && (
+                  <motion.div
+                    key="offline-sync"
+                    initial={{ opacity: 0, y: -40, scale: 0.9 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -40, scale: 0.9 }}
+                    transition={{ type: 'spring', stiffness: 350, damping: 22 }}
+                    className="absolute top-20 left-1/2 -translate-x-1/2 z-[85] bg-emerald-950/95 border border-emerald-500/50 text-emerald-200 px-5 py-2.5 rounded-2xl backdrop-blur-xl shadow-2xl flex items-center gap-2.5 font-bold text-xs"
+                  >
+                    <Trophy size={16} className="text-yellow-400" />
+                    <span>{offlineSyncMsg}</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {/* Screenshot Toast Notification */}
               <AnimatePresence>
                 {screenshotToast && (
@@ -2183,7 +2244,7 @@ export default function GamePlayer({
                       <button
                         key={ar}
                         onClick={() => {
-                          setAspectRatio(ar);
+                          handleSelectAspectRatio(ar);
                           setShowArMenu(false);
                           refocusGame();
                         }}
@@ -2304,11 +2365,15 @@ export default function GamePlayer({
             {/* Viral Challenge Button */}
             <button
               onClick={() => setShowChallengeModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-[#6366F1] via-[#8B5CF6] to-[#EC4899] hover:opacity-95 active:scale-95 shadow-md shadow-pink-500/20 transition-all cursor-pointer shrink-0"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-[#6366F1] via-[#8B5CF6] to-[#EC4899] hover:opacity-95 active:scale-95 transition-all cursor-pointer shrink-0 ${
+                isNewRecord
+                  ? 'ring-2 ring-pink-400 shadow-lg shadow-pink-500/50 animate-pulse'
+                  : 'shadow-md shadow-pink-500/20'
+              }`}
               title="Challenge a Friend to beat your score!"
             >
               <Swords size={14} className="text-yellow-300" />
-              <span>Challenge</span>
+              <span>{isNewRecord ? '⚔️ Challenge Now!' : 'Challenge'}</span>
             </button>
 
             {/* Play Next Button */}
@@ -2409,7 +2474,7 @@ export default function GamePlayer({
                           <button
                             key={ar}
                             onClick={() => {
-                              setAspectRatio(ar);
+                              handleSelectAspectRatio(ar);
                               setShowOverflowMenu(false);
                               refocusGame();
                             }}

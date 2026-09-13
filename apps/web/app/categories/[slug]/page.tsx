@@ -11,6 +11,7 @@ import { categoriesData } from '@/lib/mockCategories';
 import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'edge';
+export const revalidate = 600; // 10-minute Edge CDN ISR caching
 
 // Dynamic metadata generation based on slug
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
@@ -23,6 +24,17 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     keywords: [`${category.title} games`, 'free browser games', 'play online', 'spielcade', category.title.toLowerCase()],
     alternates: {
       canonical: `https://spielcade.com/categories/${params.slug}`,
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
     },
     openGraph: {
       title: `${category.title} | Spielcade`,
@@ -143,6 +155,40 @@ export default async function CategoryPage({ params }: { params: { slug: string 
     ]
   };
 
+  // Compute related categories for semantic internal link mesh
+  const allEntries = Object.entries(categoriesData);
+  const relatedCategories = allEntries
+    .filter(([s, c]) => {
+      if (s === params.slug) return false;
+      if (category.parentCategory && c.parentCategory === category.parentCategory) return true;
+      if (c.parentCategory === dbCategoryName) return true;
+      return false;
+    })
+    .slice(0, 8)
+    .map(([_, c]) => ({
+      slug: c.slug,
+      title: c.title,
+      icon: c.icon,
+      color: c.color,
+    }));
+
+  // Fallback to primary genres if fewer than 4 related items exist
+  if (relatedCategories.length < 4) {
+    const canonicalFallback = ['action-games', 'arcade-games', 'puzzle-games', 'racing-games', 'adventure-games', 'sports-games']
+      .filter(s => s !== params.slug && !relatedCategories.some(r => r.slug === s))
+      .slice(0, 6 - relatedCategories.length)
+      .map(s => {
+        const cat = categoriesData[s as keyof typeof categoriesData];
+        return {
+          slug: cat.slug,
+          title: cat.title,
+          icon: cat.icon,
+          color: cat.color,
+        };
+      });
+    relatedCategories.push(...canonicalFallback);
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#05050F] text-gray-900 dark:text-white pt-20 pb-20 transition-colors duration-300">
       <script
@@ -179,8 +225,8 @@ export default async function CategoryPage({ params }: { params: { slug: string 
         dangerouslySetInnerHTML={{ __html: JSON.stringify(richSchemas) }}
       />
       
-      {/* Hero Section with Live Stats */}
-      <CategoryHero category={dynamicCategory} />
+      {/* Hero Section with Live Stats & Semantic Internal Links */}
+      <CategoryHero category={dynamicCategory} relatedCategories={relatedCategories} />
 
       <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-[1400px] pb-24 md:pb-12">
         
