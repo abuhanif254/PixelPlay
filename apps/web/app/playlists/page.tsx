@@ -15,12 +15,68 @@ import {
 } from 'lucide-react';
 import { getAllPlaylists } from '@/lib/playlists';
 import { arcadeAudio } from '@/lib/arcade-audio';
+import { mixtapeManager, CustomMixtape } from '@/lib/mixtape-manager';
+import { Plus, Trash2, Music, Check, Share2 as ShareIcon } from 'lucide-react';
 
 export const runtime = 'edge';
 
 export default function PlaylistsPage() {
   const playlists = getAllPlaylists();
   const featured = playlists.find((p) => p.featured) || playlists[0];
+
+  const [customMixtapes, setCustomMixtapes] = React.useState<CustomMixtape[]>([]);
+  const [copiedId, setCopiedId] = React.useState<string | null>(null);
+  const [isCreatingNew, setIsCreatingNew] = React.useState(false);
+  const [newTitle, setNewTitle] = React.useState('');
+
+  React.useEffect(() => {
+    setCustomMixtapes(mixtapeManager.getMixtapes());
+    const handleUpdate = () => setCustomMixtapes(mixtapeManager.getMixtapes());
+    window.addEventListener('spielcade:mixtapes-updated', handleUpdate);
+    return () => window.removeEventListener('spielcade:mixtapes-updated', handleUpdate);
+  }, []);
+
+  const handleShareMixtape = async (m: CustomMixtape, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    arcadeAudio.playSelect();
+    const encoded = mixtapeManager.encodeMixtapeToUrl(m);
+    const url = `${typeof window !== 'undefined' ? window.location.origin : 'https://spielcade.com'}/playlists/shared?mix=${encoded}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${m.title} - Custom Mixtape`,
+          text: `Check out my custom arcade playlist on Spielcade!`,
+          url,
+        });
+      } catch {}
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        setCopiedId(m.id);
+        setTimeout(() => setCopiedId(null), 2500);
+      } catch {}
+    }
+  };
+
+  const handleDeleteMixtape = (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    arcadeAudio.playBlip();
+    mixtapeManager.deleteMixtape(id);
+    setCustomMixtapes(mixtapeManager.getMixtapes());
+  };
+
+  const handleCreateNewMixtape = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTitle.trim()) return;
+    arcadeAudio.playAchievement();
+    mixtapeManager.createMixtape(newTitle.trim(), 'Custom player playlist', '⚡');
+    setCustomMixtapes(mixtapeManager.getMixtapes());
+    setNewTitle('');
+    setIsCreatingNew(false);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0b0c16] text-gray-900 dark:text-gray-100 font-sans pb-24 transition-colors">
@@ -122,6 +178,156 @@ export default function PlaylistsPage() {
             </div>
           </div>
         )}
+
+        {/* Custom Player Mixtapes Section */}
+        <div className="mb-12">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-pink-500/10 text-pink-500 dark:text-pink-400 border border-pink-500/20">
+                  Player Mixtapes
+                </span>
+                <span className="text-xs text-gray-400 font-mono">({customMixtapes.length} Created)</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black font-outfit text-gray-900 dark:text-white flex items-center gap-2 mt-1">
+                <Music size={22} className="text-pink-500" />
+                My Custom Arcade Mixtapes
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                Curate your personal gaming queues, share them with friends, and binge play seamlessly.
+              </p>
+            </div>
+
+            <button
+              onClick={() => setIsCreatingNew((v) => !v)}
+              className="px-4 py-2 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-400 hover:to-rose-500 text-white font-black text-xs flex items-center gap-1.5 shadow-lg shadow-pink-500/20 active:scale-95 transition-all shrink-0 self-start sm:self-auto"
+            >
+              <Plus size={15} />
+              <span>Create Mixtape</span>
+            </button>
+          </div>
+
+          {/* Quick Create Form Drawer */}
+          {isCreatingNew && (
+            <form onSubmit={handleCreateNewMixtape} className="mb-6 p-4 rounded-3xl bg-white dark:bg-[#111227] border border-pink-500/30 shadow-xl flex flex-col sm:flex-row items-center gap-3">
+              <input
+                type="text"
+                placeholder="Give your mixtape a name (e.g. Cyberpunk Drift)"
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                maxLength={40}
+                autoFocus
+                className="w-full sm:flex-1 px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-black/40 border border-gray-200 dark:border-white/10 text-xs text-gray-900 dark:text-white focus:outline-none focus:border-pink-500"
+              />
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  type="submit"
+                  disabled={!newTitle.trim()}
+                  className="flex-1 sm:flex-initial px-5 py-2.5 rounded-xl bg-pink-500 hover:bg-pink-600 disabled:opacity-50 text-white font-bold text-xs transition-all flex items-center justify-center gap-1.5"
+                >
+                  <Plus size={14} />
+                  <span>Create</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsCreatingNew(false)}
+                  className="px-3 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 text-gray-500 hover:text-gray-900 dark:hover:text-white text-xs font-bold"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Custom Mixtapes Grid */}
+          {customMixtapes.length === 0 ? (
+            <div className="p-8 rounded-3xl bg-white dark:bg-[#111227] border border-dashed border-gray-200 dark:border-white/10 text-center">
+              <Music size={32} className="mx-auto text-gray-400 mb-2" />
+              <h3 className="text-sm font-black font-outfit text-gray-900 dark:text-white">
+                No Custom Mixtapes Created Yet
+              </h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mx-auto mt-1 mb-4">
+                Click &quot;Create Mixtape&quot; above or click the &quot;Add to Mixtape&quot; button while playing any game to build your continuous queue!
+              </p>
+              <button
+                onClick={() => setIsCreatingNew(true)}
+                className="px-4 py-2 rounded-xl bg-pink-500/10 text-pink-500 font-bold text-xs hover:bg-pink-500 hover:text-white transition-all inline-flex items-center gap-1.5"
+              >
+                <Plus size={14} />
+                <span>Create Your First Mixtape</span>
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {customMixtapes.map((m) => {
+                const firstSlug = m.gameSlugs[0] || 'snake';
+                const isCopied = copiedId === m.id;
+                return (
+                  <div
+                    key={m.id}
+                    className="group bg-white dark:bg-[#111227] border border-gray-200 dark:border-white/10 rounded-3xl p-6 shadow-xl hover:shadow-2xl hover:border-pink-500/40 transition-all flex flex-col justify-between"
+                  >
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-3xl">{m.emoji}</span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={(e) => handleShareMixtape(m, e)}
+                            className="p-2 rounded-xl bg-gray-100 dark:bg-white/5 hover:bg-pink-500 hover:text-white text-gray-600 dark:text-gray-300 transition-all"
+                            title="Share Mixtape Link"
+                          >
+                            {isCopied ? <Check size={14} className="text-emerald-400" /> : <ShareIcon size={14} />}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => handleDeleteMixtape(m.id, e)}
+                            className="p-2 rounded-xl bg-gray-100 dark:bg-white/5 hover:bg-rose-500 hover:text-white text-gray-400 transition-all"
+                            title="Delete Mixtape"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <h3 className="text-lg font-black font-outfit text-gray-900 dark:text-white group-hover:text-pink-500 transition-colors">
+                          {m.title}
+                        </h3>
+                        <p className="text-xs text-pink-500 dark:text-pink-400 font-medium mt-0.5">
+                          {m.gameSlugs.length} Continuous Games
+                        </p>
+                      </div>
+
+                      <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
+                        {m.description}
+                      </p>
+                    </div>
+
+                    <div className="mt-6 pt-4 border-t border-gray-100 dark:border-white/5 flex items-center justify-between">
+                      <span className="text-xs font-bold text-gray-400">
+                        {m.gameSlugs.length > 0 ? `Starts with /${firstSlug}` : 'Queue is empty'}
+                      </span>
+
+                      {m.gameSlugs.length > 0 ? (
+                        <Link
+                          href={`/games/${firstSlug}`}
+                          onClick={() => arcadeAudio.playStart()}
+                          className="px-4 py-2 rounded-xl bg-pink-500 hover:bg-pink-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg transition-all active:scale-95"
+                        >
+                          <Play size={13} fill="currentColor" />
+                          <span>Play Mixtape</span>
+                        </Link>
+                      ) : (
+                        <span className="text-xs text-gray-400 italic">Add games to play</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         {/* Section Heading */}
         <div className="flex items-center justify-between gap-4 mb-6">

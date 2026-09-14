@@ -66,4 +66,18 @@
     box-shadow: none !important;
     text-shadow: none !important;
   }
+
+  /* Secret Retro 1990s CRT Scanline Shader */
+  .crt-filter::before {
+    content: " ";
+    display: block;
+    position: fixed;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.22) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+    z-index: 999999;
+    background-size: 100% 3px, 3px 100%;
+    pointer-events: none;
+    opacity: 0.8;
+  }
 }
+

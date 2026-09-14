@@ -61,6 +61,15 @@ class GamepadEngine {
     this.targetWindow = win;
   }
 
+  public simulateKey(type: 'keydown' | 'keyup', key: string, code: string) {
+    if (type === 'keydown') {
+      this.activeKeys.add(key);
+    } else {
+      this.activeKeys.delete(key);
+    }
+    this.dispatchKeyEvent(type, key, code);
+  }
+
   public subscribe(listener: ButtonListener): () => void {
     this.listeners.add(listener);
     // Immediately emit current state if available

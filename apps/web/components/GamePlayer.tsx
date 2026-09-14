@@ -36,6 +36,7 @@ import {
   ArrowUpRight,
   Swords,
   Smartphone,
+  ListPlus,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -55,6 +56,8 @@ import { gamepadEngine } from '@/lib/gamepad-engine';
 import PerformanceToggle from '@/components/PerformanceToggle';
 import ClipRecorderModal from '@/components/ClipRecorderModal';
 import { generateTradingCardSnapshot } from '@/lib/clip-recorder';
+import VirtualControlsOverlay from '@/components/VirtualControlsOverlay';
+import MixtapeModal from '@/components/MixtapeModal';
 
 type PlayerState = 'idle' | 'ad' | 'rewarded_ad' | 'playing' | 'paused' | 'game_over';
 type AspectRatio = '16:9' | '4:3' | '9:16' | 'auto';
@@ -183,6 +186,7 @@ export default function GamePlayer({
   const [showBugReportModal, setShowBugReportModal] = useState(false);
   const [snapshotCardUrl, setSnapshotCardUrl] = useState<string | null>(null);
   const [isSnapshotModalOpen, setIsSnapshotModalOpen] = useState(false);
+  const [isMixtapeModalOpen, setIsMixtapeModalOpen] = useState(false);
 
   // Feature 4: Aspect Ratio (persisted across sessions)
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>(() => {
@@ -1909,119 +1913,13 @@ export default function GamePlayer({
                 )}
               </AnimatePresence>
 
-              {/* Feature 2: Dual-Mode Mobile Virtual Gamepad (Haptics + Opacity + Tablet Corner Anchoring) */}
+              {/* Feature 2: Ergonomic Multi-Touch Virtual Controls Overlay (D-Pad + 360 Analog Stick + Action Diamond) */}
               <AnimatePresence>
                 {showVirtualPad && !isMiniPlayer && (
-                  <motion.div
-                    key="vpad"
-                    initial={{ opacity: 0, y: 25 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 25 }}
-                    transition={{ duration: 0.2 }}
-                    className={`absolute bottom-4 sm:bottom-6 md:bottom-8 left-0 right-0 z-40 flex items-end px-4 sm:px-6 md:px-8 pointer-events-none justify-between ${
-                      isLeftHanded ? 'flex-row-reverse' : 'flex-row'
-                    }`}
-                  >
-                    {/* D-Pad Cluster */}
-                    <div
-                      className={`pointer-events-auto relative w-[136px] h-[136px] sm:w-[150px] sm:h-[150px] select-none rounded-2xl ${
-                        gamepadOpacity === 'low'
-                          ? 'opacity-40'
-                          : gamepadOpacity === 'high'
-                            ? 'opacity-95'
-                            : 'opacity-70'
-                      }`}
-                    >
-                      <button
-                        {...vpadProps('up')}
-                        className="absolute top-0 left-1/2 -translate-x-1/2 w-11 h-11 bg-black/80 border border-white/20 rounded-xl flex items-center justify-center text-white active:bg-[#6366F1] touch-none shadow-lg"
-                        aria-label="Up"
-                      >
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 19V5m0 0-7 7m7-7 7 7"/></svg>
-                      </button>
-                      <button
-                        {...vpadProps('down')}
-                        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-11 h-11 bg-black/80 border border-white/20 rounded-xl flex items-center justify-center text-white active:bg-[#6366F1] touch-none shadow-lg"
-                        aria-label="Down"
-                      >
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 5v14m0 0 7-7m-7 7-7-7"/></svg>
-                      </button>
-                      <button
-                        {...vpadProps('left')}
-                        className="absolute left-0 top-1/2 -translate-y-1/2 w-11 h-11 bg-black/80 border border-white/20 rounded-xl flex items-center justify-center text-white active:bg-[#6366F1] touch-none shadow-lg"
-                        aria-label="Left"
-                      >
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M19 12H5m0 0 7 7M5 12l7-7"/></svg>
-                      </button>
-                      <button
-                        {...vpadProps('right')}
-                        className="absolute right-0 top-1/2 -translate-y-1/2 w-11 h-11 bg-black/80 border border-white/20 rounded-xl flex items-center justify-center text-white active:bg-[#6366F1] touch-none shadow-lg"
-                        aria-label="Right"
-                      >
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 12h14m0 0-7-7m7 7-7 7"/></svg>
-                      </button>
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div className="w-3.5 h-3.5 rounded-full bg-white/10 border border-white/20" />
-                      </div>
-                    </div>
-
-                    {/* Center Mode Switcher Badge */}
-                    <div className="pointer-events-auto flex flex-col items-center gap-1.5 pb-2">
-                      <button
-                        onClick={() => setGamepadMode(m => (m === 'dual' ? 'wasd' : m === 'wasd' ? 'arrows' : 'dual'))}
-                        className="px-2.5 py-1 bg-black/70 border border-white/15 rounded-lg text-[10px] font-bold text-white/80 uppercase tracking-wider backdrop-blur-md active:scale-95 transition-all"
-                        title="Toggle Control Mapping"
-                      >
-                        {gamepadMode === 'dual' ? 'Dual (WASD+Arrows)' : gamepadMode === 'wasd' ? 'WASD' : 'Arrows'}
-                      </button>
-                    </div>
-
-                    {/* Action Buttons Cluster (A, B, X, Y) */}
-                    <div
-                      className={`pointer-events-auto relative w-[136px] h-[136px] sm:w-[150px] sm:h-[150px] select-none rounded-2xl ${
-                        gamepadOpacity === 'low'
-                          ? 'opacity-40'
-                          : gamepadOpacity === 'high'
-                            ? 'opacity-95'
-                            : 'opacity-70'
-                      }`}
-                    >
-                      <button
-                        {...vpadProps('a')}
-                        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-12 bg-emerald-600/90 border border-emerald-400/40 rounded-full flex flex-col items-center justify-center text-white text-xs font-black active:scale-90 touch-none shadow-lg"
-                        aria-label="Action A"
-                      >
-                        <span>A</span>
-                        <span className="text-[8px] opacity-75 font-mono">SPACE</span>
-                      </button>
-                      <button
-                        {...vpadProps('b')}
-                        className="absolute right-0 top-1/2 -translate-y-1/2 w-12 h-12 bg-red-600/90 border border-red-400/40 rounded-full flex flex-col items-center justify-center text-white text-xs font-black active:scale-90 touch-none shadow-lg"
-                        aria-label="Action B"
-                      >
-                        <span>B</span>
-                        <span className="text-[8px] opacity-75 font-mono">SHIFT</span>
-                      </button>
-                      <button
-                        {...vpadProps('x')}
-                        className="absolute left-0 top-1/2 -translate-y-1/2 w-12 h-12 bg-blue-600/90 border border-blue-400/40 rounded-full flex flex-col items-center justify-center text-white text-xs font-black active:scale-90 touch-none shadow-lg"
-                        aria-label="Action X"
-                      >
-                        <span>X</span>
-                        <span className="text-[8px] opacity-75 font-mono">E</span>
-                      </button>
-                      <button
-                        {...vpadProps('y')}
-                        className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-12 bg-amber-500/90 border border-amber-400/40 rounded-full flex flex-col items-center justify-center text-white text-xs font-black active:scale-90 touch-none shadow-lg"
-                        aria-label="Action Y"
-                      >
-                        <span>Y</span>
-                        <span className="text-[8px] opacity-75 font-mono">Q</span>
-                      </button>
-                    </div>
-                  </motion.div>
+                  <VirtualControlsOverlay onClose={() => setShowVirtualPad(false)} />
                 )}
               </AnimatePresence>
+
 
               {/* Floating In-Game HUD (Auto-Hiding in Immersive Modes) */}
               {isExpandedMode && (
@@ -2451,6 +2349,18 @@ export default function GamePlayer({
               </button>
             )}
 
+            {/* Add to Custom Mixtape */}
+            <button
+              onClick={() => {
+                arcadeAudio.playSelect();
+                setIsMixtapeModalOpen(true);
+              }}
+              className="p-2 rounded-xl text-gray-700 dark:text-gray-300 hover:text-pink-500 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all"
+              title="Add to Custom Mixtape"
+            >
+              <ListPlus size={15} />
+            </button>
+
             {/* Low-Spec Turbo Mode & Live FPS Monitor */}
             <div className="hidden sm:flex items-center">
               <PerformanceToggle showFps={true} />
@@ -2674,6 +2584,18 @@ export default function GamePlayer({
                       <Camera size={14} /> Take Screenshot
                     </button>
 
+                    {/* Add to Mixtape */}
+                    <button
+                      onClick={() => {
+                        arcadeAudio.playSelect();
+                        setIsMixtapeModalOpen(true);
+                        setShowOverflowMenu(false);
+                      }}
+                      className="w-full px-4 py-2.5 text-xs font-semibold flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors md:hidden"
+                    >
+                      <ListPlus size={14} /> Add to Mixtape
+                    </button>
+
                     {/* Mini-Player Pin */}
                     {(playerState === 'playing' || playerState === 'paused') && (
                       <button
@@ -2791,6 +2713,14 @@ export default function GamePlayer({
           score={liveScore || personalBest || 0}
         />
       )}
+
+      {/* Custom Arcade Mixtape Modal */}
+      <MixtapeModal
+        isOpen={isMixtapeModalOpen}
+        onClose={() => setIsMixtapeModalOpen(false)}
+        gameSlug={slug}
+        gameTitle={title}
+      />
 
       {/* Shimmer animation keyframe */}
       <style>{`

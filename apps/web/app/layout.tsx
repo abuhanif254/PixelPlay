@@ -7,6 +7,8 @@ import PWARegistration from '@/components/PWARegistration';
 import OfflineBanner from '@/components/OfflineBanner';
 import LevelUpModal from '@/components/LevelUpModal';
 import ArcadeRadio from '@/components/ArcadeRadio';
+import ArcadePulse from '@/components/ArcadePulse';
+import SecretVaultModal from '@/components/SecretVaultModal';
 import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
@@ -150,8 +152,11 @@ export default function RootLayout({
           <PwaInstallBanner />
           <LevelUpModal />
           <ArcadeRadio />
+          <ArcadePulse />
+          <SecretVaultModal />
         </ThemeProvider>
       </body>
     </html>
+
   );
 }
