@@ -16,10 +16,17 @@ export async function GET() {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder'
     );
 
-    const { count: totalGames, error } = await supabase
+    // Timeout after 2500ms to guarantee Googlebot never encounters an edge timeout
+    const fetchPromise = supabase
       .from('games')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'active');
+
+    const timeoutPromise = new Promise<{ count: number | null; error: any }>((resolve) =>
+      setTimeout(() => resolve({ count: FALLBACK_TOTAL_GAMES, error: null }), 2500)
+    );
+
+    const { count: totalGames, error } = await Promise.race([fetchPromise, timeoutPromise]);
 
     if (!error && typeof totalGames === 'number' && totalGames > 0) {
       gamesCount = totalGames;
