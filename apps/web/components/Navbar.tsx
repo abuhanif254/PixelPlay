@@ -32,10 +32,12 @@ export default function Navbar() {
   const { streak, isNewStreakUnlocked, streakXpBonus, dismissStreakReward } = useDailyStreak();
   const { levelInfo, awardXp } = usePlayerProgression();
   const [isLevelPopoverOpen, setIsLevelPopoverOpen] = useState(false);
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [isSfxMuted, setIsSfxMuted] = useState(false);
   const [isGameplayActive, setIsGameplayActive] = useState(false);
   const [isNavManuallyRestored, setIsNavManuallyRestored] = useState(false);
   const levelRef = useRef<HTMLDivElement>(null);
+  const moreRef = useRef<HTMLDivElement>(null);
 
   // Initialize SFX mute state
   useEffect(() => {
@@ -127,10 +129,14 @@ export default function Navbar() {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
         setIsSearchDropdownOpen(false);
       }
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
+        setIsMoreOpen(false);
+      }
     };
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setIsSearchDropdownOpen(false);
+        setIsMoreOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -161,9 +167,8 @@ export default function Navbar() {
     { name: 'All Games', href: '/games', icon: ChevronDown },
     { name: 'Categories', href: '/categories', icon: ChevronDown, isMega: true },
     { name: 'Tournaments', href: '/tournaments' },
-    { name: 'Playlists', href: '/playlists', hideOnLg: true },
-    { name: 'Leaderboard', href: '/leaderboard', hideOnLg: true },
-    { name: 'Blog', href: '/blog', hideOnXl: true },
+    { name: 'Party', href: '/party', hideOnLg: true, icon: Swords },
+    { name: 'Quests', href: '/quests', hideOnLg: true, icon: Star },
   ];
 
   if (pathname?.startsWith('/admin')) return null;
@@ -171,7 +176,7 @@ export default function Navbar() {
   return (
     <>
       <nav className="fixed top-0 inset-x-0 z-50 w-full max-w-[100vw] bg-white/95 dark:bg-[#0A0B1A]/95 backdrop-blur-md border-b border-slate-200/90 dark:border-white/10 shadow-sm transition-colors">
-        <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4 lg:gap-6">
+        <div className="w-full max-w-screen-2xl mx-auto px-3 sm:px-5 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-3 lg:gap-5">
           
           {/* Logo */}
           <Link href="/" aria-label="Spielcade Homepage" title="Go to Spielcade Homepage" className="flex items-center gap-2 shrink-0 group">
@@ -307,10 +312,10 @@ export default function Navbar() {
                   key={link.name} 
                   href={link.href}
                   title={`Go to ${link.name}`}
-                  className={`relative items-center gap-1 h-16 text-xs xl:text-sm font-semibold transition-colors ${hideClass} ${isActive ? 'text-slate-900 dark:text-white font-bold' : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'}`}
+                  className={`relative items-center gap-1.5 h-16 text-xs xl:text-sm font-semibold transition-colors ${hideClass} ${isActive ? 'text-slate-900 dark:text-white font-bold' : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'}`}
                 >
-                  {link.name}
                   {link.icon && <link.icon className="w-3.5 h-3.5" />}
+                  <span>{link.name}</span>
                   {isActive && (
                     <motion.div 
                       layoutId="nav-indicator"
@@ -320,10 +325,119 @@ export default function Navbar() {
                 </Link>
               );
             })}
+
+            {/* More Dropdown (Explore Playlists, Leaderboard, Blog + Party/Quests on LG) */}
+            <div className="relative" ref={moreRef}>
+              <button
+                type="button"
+                onClick={() => setIsMoreOpen(prev => !prev)}
+                className={`flex items-center gap-1 h-16 text-xs xl:text-sm font-semibold transition-colors ${
+                  isMoreOpen || ['/playlists', '/leaderboard', '/blog'].some(p => pathname?.startsWith(p))
+                    ? 'text-indigo-600 dark:text-indigo-400 font-bold'
+                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
+                }`}
+                aria-expanded={isMoreOpen}
+                aria-haspopup="true"
+              >
+                <span>More</span>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isMoreOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              <AnimatePresence>
+                {isMoreOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full left-1/2 -translate-x-1/2 mt-0.5 w-60 rounded-2xl bg-white dark:bg-[#12132A] border border-slate-200 dark:border-white/10 shadow-2xl p-2 z-[60]"
+                  >
+                    {/* On LG viewport, Party and Quests are displayed inside More dropdown */}
+                    <div className="xl:hidden border-b border-slate-100 dark:border-white/5 pb-1 mb-1">
+                      <Link
+                        href="/party"
+                        onClick={() => setIsMoreOpen(false)}
+                        className="flex items-center gap-2.5 p-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-rose-500/10 flex items-center justify-center text-rose-500 shrink-0">
+                          <Swords className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1">
+                            <span className="font-bold">Party Duels</span>
+                            <span className="text-[9px] uppercase font-black px-1.5 py-0.5 rounded-full bg-rose-500/20 text-rose-600 dark:text-rose-400">Live</span>
+                          </div>
+                          <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">1v1 real-time arcade duels</p>
+                        </div>
+                      </Link>
+
+                      <Link
+                        href="/quests"
+                        onClick={() => setIsMoreOpen(false)}
+                        className="flex items-center gap-2.5 p-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-amber-50 dark:hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0">
+                          <Star className="w-3.5 h-3.5 fill-current" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1">
+                            <span className="font-bold">Quests & Pass</span>
+                            <span className="text-[9px] uppercase font-black px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400">XP</span>
+                          </div>
+                          <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">Daily bounties & Season 1</p>
+                        </div>
+                      </Link>
+                    </div>
+
+                    <Link
+                      href="/playlists"
+                      onClick={() => setIsMoreOpen(false)}
+                      className="flex items-center gap-2.5 p-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500 shrink-0">
+                        <Sparkles className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="font-bold">Playlists</span>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">Continuous binge play queues</p>
+                      </div>
+                    </Link>
+
+                    <Link
+                      href="/leaderboard"
+                      onClick={() => setIsMoreOpen(false)}
+                      className="flex items-center gap-2.5 p-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-amber-50 dark:hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0">
+                        <Trophy className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="font-bold">Leaderboard</span>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">Global top score records</p>
+                      </div>
+                    </Link>
+
+                    <Link
+                      href="/blog"
+                      onClick={() => setIsMoreOpen(false)}
+                      className="flex items-center gap-2.5 p-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0">
+                        <Gamepad2 className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="font-bold">Arcade Blog</span>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">Guides, patch notes & radar</p>
+                      </div>
+                    </Link>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
 
           {/* Actions (Responsive Search, Theme, Auth) */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto sm:ml-0">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 ml-auto sm:ml-0">
             {/* Responsive Search Bar with Live Predictive Dropdown */}
             <div ref={searchRef} className="relative hidden md:block">
               <form 
@@ -334,7 +448,7 @@ export default function Navbar() {
                     router.push(`/games?search=${encodeURIComponent(navSearch.trim())}`);
                   }
                 }}
-                className="flex items-center bg-slate-100 dark:bg-[#13142B] rounded-full px-3 py-1.5 w-36 lg:w-44 xl:w-52 focus-within:w-60 border border-slate-200 dark:border-white/5 focus-within:border-indigo-500 transition-all duration-300 shadow-inner"
+                className="flex items-center bg-slate-100 dark:bg-[#13142B] rounded-full px-3 py-1.5 w-32 lg:w-40 xl:w-48 focus-within:w-52 border border-slate-200 dark:border-white/5 focus-within:border-indigo-500 transition-all duration-300 shadow-inner"
               >
                 {isSearching ? (
                   <Loader2 className="w-3.5 h-3.5 text-indigo-500 animate-spin mr-2 shrink-0" />
@@ -472,7 +586,7 @@ export default function Navbar() {
             </div>
 
             {/* Global Player Level Badge */}
-            <div className="relative hidden md:block" ref={levelRef}>
+            <div className="relative hidden lg:block" ref={levelRef}>
               <button
                 type="button"
                 onClick={() => {
@@ -555,26 +669,6 @@ export default function Navbar() {
               <Search className="w-4 h-4" />
             </button>
 
-            {/* Arcade Party Link */}
-            <Link
-              href="/party"
-              className="hidden 2xl:flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/25 text-rose-600 dark:text-rose-400 text-xs font-black shrink-0 transition-all hover:scale-105 active:scale-95"
-              title="Arcade Party Duels - Real-Time Head-to-Head Multiplayer"
-            >
-              <Swords className="w-3.5 h-3.5" />
-              <span>Party</span>
-            </Link>
-
-            {/* Daily Quests Link */}
-            <Link
-              href="/quests"
-              className="hidden 2xl:flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/25 text-amber-600 dark:text-amber-400 text-xs font-black shrink-0 transition-all hover:scale-105 active:scale-95"
-              title="Daily Bounties & Season 1 Battle Pass"
-            >
-              <Star className="w-3.5 h-3.5 fill-current" />
-              <span>Quests</span>
-            </Link>
-
             {/* Arcade Sound FX Mute Toggle */}
             <button
               onClick={handleToggleSfx}
@@ -600,14 +694,14 @@ export default function Navbar() {
             
             {/* Sign In Button & Notifications */}
             {user ? (
-              <div className="flex items-center gap-1 sm:gap-2 shrink-0 pr-0.5">
+              <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 pl-1">
                 <NotificationBell userId={user.id} />
                 <UserDropdown userId={user.id} />
               </div>
             ) : (
               <Link 
                 href="/login" 
-                className="flex items-center gap-1.5 px-3 sm:px-5 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-bold shadow-md hover:shadow-indigo-500/30 hover:scale-105 active:scale-95 transition-all shrink-0"
+                className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-bold shadow-md hover:shadow-indigo-500/30 hover:scale-105 active:scale-95 transition-all shrink-0"
               >
                 <User className="w-3.5 h-3.5" />
                 <span>Sign In</span>

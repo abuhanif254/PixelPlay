@@ -80,22 +80,25 @@ export default function UserDropdown({ userId }: { userId: string }) {
   }
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative shrink-0" ref={dropdownRef}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 pl-2 pr-4 py-1.5 rounded-full bg-gray-100 dark:bg-white/5 border border-black/5 dark:border-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all"
+        className="flex items-center gap-1.5 p-1 sm:px-1.5 sm:py-1 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/10 transition-all shrink-0 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 group"
+        title={`${profile?.username || 'Player'} (Level ${profile?.level || 1})`}
+        aria-label="User Profile and Account Menu"
+        aria-expanded={isOpen}
       >
-        <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-[#6366F1] to-purple-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
+        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm ring-1 ring-black/5 dark:ring-white/20 group-hover:scale-105 transition-transform">
           {profile?.avatar_url ? (
             <img src={profile.avatar_url} alt={profile.username} className="w-full h-full object-cover" />
           ) : (
             profile?.username?.charAt(0).toUpperCase() || 'U'
           )}
         </div>
-        <span className="text-sm font-bold text-gray-900 dark:text-white max-w-[100px] truncate hidden sm:block">
+        <span className="text-xs font-bold text-slate-900 dark:text-white max-w-[85px] truncate hidden 2xl:block">
           {profile?.username}
         </span>
-        <ChevronDown className={`w-3.5 h-3.5 text-gray-500 transition-transform hidden sm:block ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-3 h-3 text-slate-500 dark:text-slate-400 transition-transform hidden 2xl:block ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       <AnimatePresence>
