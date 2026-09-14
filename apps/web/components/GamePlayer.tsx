@@ -359,6 +359,24 @@ export default function GamePlayer({
     } catch {}
   }, [slug]);
 
+  // Cross-device QR checkpoint auto-resume
+  const [resumedCheckpointToast, setResumedCheckpointToast] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const resumeRaw = urlParams.get('resumeState');
+      if (resumeRaw) {
+        const payload = JSON.parse(decodeURIComponent(resumeRaw));
+        localStorage.setItem(`spielcade_save_${slug}`, JSON.stringify(payload));
+        setResumedCheckpointToast(true);
+        arcadeAudio.playVictory();
+        setTimeout(() => setResumedCheckpointToast(false), 6000);
+      }
+    } catch {}
+  }, [slug]);
+
   // Ambient color derived from game category
   useEffect(() => {
     const map: Record<string, string> = {
@@ -553,6 +571,25 @@ export default function GamePlayer({
   const handleIframeLoad = () => {
     if (iframeLoadTimeoutRef.current) clearTimeout(iframeLoadTimeoutRef.current);
     broadcastAudioState(isMuted, volume);
+
+    // Cross-device state injection on load
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const resumeRaw = urlParams.get('resumeState');
+      if (resumeRaw) {
+        const payload = JSON.parse(decodeURIComponent(resumeRaw));
+        const iframe = iframeRef.current || containerRef.current?.querySelector('iframe');
+        if (iframe?.contentWindow) {
+          iframe.contentWindow.postMessage({
+            type: 'SPIELCADE_RESTORE_STATE',
+            action: 'RESTORE_STATE',
+            slug,
+            payload
+          }, '*');
+        }
+      }
+    } catch {}
+
     setTimeout(() => {
       setIsIframeLoading(false);
       refocusGame();
@@ -1833,6 +1870,23 @@ export default function GamePlayer({
                   >
                     <Trophy size={16} className="text-yellow-400" />
                     <span>{offlineSyncMsg}</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Cross-Device Checkpoint Restored Toast Banner */}
+              <AnimatePresence>
+                {resumedCheckpointToast && !isMiniPlayer && (
+                  <motion.div
+                    key="cross-device-resume"
+                    initial={{ opacity: 0, y: -40, scale: 0.9 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -40, scale: 0.9 }}
+                    transition={{ type: 'spring', stiffness: 350, damping: 22 }}
+                    className="absolute top-20 left-1/2 -translate-x-1/2 z-[85] bg-indigo-950/95 border border-indigo-500/50 text-indigo-200 px-5 py-2.5 rounded-2xl backdrop-blur-xl shadow-2xl flex items-center gap-2.5 font-bold text-xs"
+                  >
+                    <Sparkles size={16} className="text-yellow-400 animate-spin" />
+                    <span>📱 Cross-Device Save Checkpoint Restored!</span>
                   </motion.div>
                 )}
               </AnimatePresence>

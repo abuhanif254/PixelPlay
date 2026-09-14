@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Menu, X, Sun, Moon, User, ChevronDown, Gamepad2, Sparkles, Loader2, Play, Flame, Volume2, VolumeX, Trophy } from 'lucide-react';
+import { Search, Menu, X, Sun, Moon, User, ChevronDown, Gamepad2, Sparkles, Loader2, Play, Flame, Volume2, VolumeX, Trophy, Swords, Star } from 'lucide-react';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { usePathname, useRouter } from 'next/navigation';
@@ -539,6 +539,26 @@ export default function Navbar() {
               <Flame size={14} className="text-amber-500 fill-amber-500 animate-pulse" />
               <span>{streak}</span>
             </div>
+
+            {/* Arcade Party Link */}
+            <Link
+              href="/party"
+              className="hidden xl:flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/25 text-rose-600 dark:text-rose-400 text-xs font-black shrink-0 transition-all hover:scale-105 active:scale-95"
+              title="Arcade Party Duels - Real-Time Head-to-Head Multiplayer"
+            >
+              <Swords className="w-3.5 h-3.5" />
+              <span>Party</span>
+            </Link>
+
+            {/* Daily Quests Link */}
+            <Link
+              href="/quests"
+              className="hidden lg:flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/25 text-amber-600 dark:text-amber-400 text-xs font-black shrink-0 transition-all hover:scale-105 active:scale-95"
+              title="Daily Bounties & Season 1 Battle Pass"
+            >
+              <Star className="w-3.5 h-3.5 fill-current" />
+              <span>Quests</span>
+            </Link>
 
             {/* Arcade Sound FX Mute Toggle */}
             <button
