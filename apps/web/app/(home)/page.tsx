@@ -190,7 +190,7 @@ export default async function HomePage() {
   };
 
   return (
-    <div className="flex flex-col gap-14 pb-20 bg-white dark:bg-[#0A0B1A] min-h-screen text-gray-900 dark:text-white relative overflow-x-hidden overflow-hidden">
+    <div className="flex flex-col gap-14 pb-20 bg-white dark:bg-[#0A0B1A] min-h-screen text-gray-900 dark:text-white relative overflow-x-clip">
       {/* Ambient Cyberpunk Atmospheric Glows */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
         <div className="absolute top-[15%] left-[0%] w-[55vw] h-[55vw] rounded-full bg-purple-600/5 blur-[140px]" />

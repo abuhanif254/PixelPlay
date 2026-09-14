@@ -118,7 +118,7 @@ export default function OfflineHubPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#070818] text-white pt-24 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen bg-[#070818] text-white pt-24 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-x-clip">
       {/* Radiant Background Accents */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-cyan-600/10 rounded-full blur-[120px] pointer-events-none" />

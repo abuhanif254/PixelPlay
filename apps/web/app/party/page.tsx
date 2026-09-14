@@ -30,7 +30,7 @@ export default function PartyLobbyPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#070818] text-white pt-24 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen bg-[#070818] text-white pt-24 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-x-clip">
       {/* Radiant Glowing Background */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-gradient-to-tr from-purple-600/15 via-rose-600/10 to-indigo-600/15 rounded-full blur-[140px] pointer-events-none" />
 

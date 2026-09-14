@@ -72,7 +72,7 @@ export default function QuestsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#070818] text-white pt-24 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen bg-[#070818] text-white pt-24 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-x-clip">
       {/* Radiant Background Accents */}
       <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] bg-amber-500/10 rounded-full blur-[130px] pointer-events-none" />
       <div className="absolute top-2/3 right-1/4 w-[500px] h-[500px] bg-purple-500/15 rounded-full blur-[130px] pointer-events-none" />

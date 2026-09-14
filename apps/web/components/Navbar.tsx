@@ -158,13 +158,12 @@ export default function Navbar() {
   }, [supabase]);
 
   const navLinks = [
-    { name: 'Home', href: '/' },
     { name: 'All Games', href: '/games', icon: ChevronDown },
     { name: 'Categories', href: '/categories', icon: ChevronDown, isMega: true },
-    { name: 'Playlists', href: '/playlists' },
     { name: 'Tournaments', href: '/tournaments' },
-    { name: 'Leaderboard', href: '/leaderboard' },
-    { name: 'Blog', href: '/blog' },
+    { name: 'Playlists', href: '/playlists', hideOnLg: true },
+    { name: 'Leaderboard', href: '/leaderboard', hideOnLg: true },
+    { name: 'Blog', href: '/blog', hideOnXl: true },
   ];
 
   if (pathname?.startsWith('/admin')) return null;
@@ -172,32 +171,37 @@ export default function Navbar() {
   return (
     <>
       <nav className="fixed top-0 inset-x-0 z-50 w-full max-w-[100vw] bg-white/95 dark:bg-[#0A0B1A]/95 backdrop-blur-md border-b border-slate-200/90 dark:border-white/10 shadow-sm transition-colors">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3 lg:gap-6">
+        <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4 lg:gap-6">
           
           {/* Logo */}
-          <Link href="/" aria-label="Spielcade Homepage" title="Go to Spielcade Homepage" className="flex items-center gap-2.5 shrink-0 group">
-            <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-indigo-500/50 shadow-[0_0_12px_rgba(99,102,241,0.4)] bg-[#111228] flex items-center justify-center shrink-0">
+          <Link href="/" aria-label="Spielcade Homepage" title="Go to Spielcade Homepage" className="flex items-center gap-2 shrink-0 group">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden border-2 border-indigo-500/50 shadow-[0_0_12px_rgba(99,102,241,0.4)] bg-[#111228] flex items-center justify-center shrink-0">
               <img 
                 src="/logo.png" 
                 alt="Spielcade Logo" 
                 className="w-[120%] h-[120%] object-cover animate-[spin_12s_linear_infinite] group-hover:animate-[spin_3s_linear_infinite] transition-all" 
               />
             </div>
-            <span className="font-extrabold text-xl tracking-tight text-slate-900 dark:text-white">
+            <span className="font-extrabold text-lg sm:text-xl tracking-tight text-slate-900 dark:text-white">
               Spiel<span className="text-indigo-600 dark:text-indigo-400">cade</span>
             </span>
           </Link>
           
           {/* Main Navigation (Desktop) */}
-          <div className="hidden lg:flex items-center gap-5 xl:gap-7">
+          <div className="hidden lg:flex items-center gap-2.5 xl:gap-5">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
+              const hideClass = (link as any).hideOnXl
+                ? 'hidden 2xl:flex'
+                : (link as any).hideOnLg
+                ? 'hidden xl:flex'
+                : 'flex';
               
               if (link.isMega) {
                 return (
                   <div 
                     key={link.name}
-                    className="relative group h-16 flex items-center"
+                    className={`relative group h-16 items-center ${hideClass}`}
                     onMouseEnter={() => setIsCategoriesOpen(true)}
                     onMouseLeave={() => setIsCategoriesOpen(false)}
                   >
@@ -303,7 +307,7 @@ export default function Navbar() {
                   key={link.name} 
                   href={link.href}
                   title={`Go to ${link.name}`}
-                  className={`relative flex items-center gap-1 h-16 text-xs xl:text-sm font-semibold transition-colors ${isActive ? 'text-slate-900 dark:text-white font-bold' : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'}`}
+                  className={`relative items-center gap-1 h-16 text-xs xl:text-sm font-semibold transition-colors ${hideClass} ${isActive ? 'text-slate-900 dark:text-white font-bold' : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'}`}
                 >
                   {link.name}
                   {link.icon && <link.icon className="w-3.5 h-3.5" />}
@@ -330,7 +334,7 @@ export default function Navbar() {
                     router.push(`/games?search=${encodeURIComponent(navSearch.trim())}`);
                   }
                 }}
-                className="flex items-center bg-slate-100 dark:bg-[#13142B] rounded-full px-3.5 py-1.5 w-44 lg:w-56 focus-within:w-72 border border-slate-200 dark:border-white/5 focus-within:border-indigo-500 transition-all duration-300 shadow-inner"
+                className="flex items-center bg-slate-100 dark:bg-[#13142B] rounded-full px-3 py-1.5 w-36 lg:w-44 xl:w-52 focus-within:w-60 border border-slate-200 dark:border-white/5 focus-within:border-indigo-500 transition-all duration-300 shadow-inner"
               >
                 {isSearching ? (
                   <Loader2 className="w-3.5 h-3.5 text-indigo-500 animate-spin mr-2 shrink-0" />
@@ -468,7 +472,7 @@ export default function Navbar() {
             </div>
 
             {/* Global Player Level Badge */}
-            <div className="relative" ref={levelRef}>
+            <div className="relative hidden md:block" ref={levelRef}>
               <button
                 type="button"
                 onClick={() => {
@@ -533,17 +537,28 @@ export default function Navbar() {
 
             {/* Daily Streak Flame Badge */}
             <div 
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-black shrink-0 cursor-default select-none shadow-sm shadow-amber-500/10 transition-all hover:scale-105"
+              className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-black shrink-0 cursor-default select-none shadow-sm shadow-amber-500/10 transition-all hover:scale-105"
               title={`Daily Streak: ${streak} Day${streak > 1 ? 's' : ''}! Play daily to multiply your XP rewards.`}
             >
-              <Flame size={14} className="text-amber-500 fill-amber-500 animate-pulse" />
-              <span>{streak}</span>
+              <Flame size={13} className="text-amber-500 fill-amber-500 animate-pulse" />
+              <span className="text-[11px]">{streak}</span>
             </div>
+
+            {/* Mobile Quick Search Button */}
+            <button
+              type="button"
+              onClick={() => setIsSpotlightOpen(true)}
+              className="md:hidden p-1.5 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white rounded-full hover:bg-slate-100 dark:hover:bg-white/5 transition-colors shrink-0"
+              title="Search Games"
+              aria-label="Search Games"
+            >
+              <Search className="w-4 h-4" />
+            </button>
 
             {/* Arcade Party Link */}
             <Link
               href="/party"
-              className="hidden xl:flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/25 text-rose-600 dark:text-rose-400 text-xs font-black shrink-0 transition-all hover:scale-105 active:scale-95"
+              className="hidden 2xl:flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/25 text-rose-600 dark:text-rose-400 text-xs font-black shrink-0 transition-all hover:scale-105 active:scale-95"
               title="Arcade Party Duels - Real-Time Head-to-Head Multiplayer"
             >
               <Swords className="w-3.5 h-3.5" />
@@ -553,7 +568,7 @@ export default function Navbar() {
             {/* Daily Quests Link */}
             <Link
               href="/quests"
-              className="hidden lg:flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/25 text-amber-600 dark:text-amber-400 text-xs font-black shrink-0 transition-all hover:scale-105 active:scale-95"
+              className="hidden 2xl:flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/25 text-amber-600 dark:text-amber-400 text-xs font-black shrink-0 transition-all hover:scale-105 active:scale-95"
               title="Daily Bounties & Season 1 Battle Pass"
             >
               <Star className="w-3.5 h-3.5 fill-current" />
@@ -563,7 +578,7 @@ export default function Navbar() {
             {/* Arcade Sound FX Mute Toggle */}
             <button
               onClick={handleToggleSfx}
-              className="p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white rounded-full hover:bg-slate-100 dark:hover:bg-white/5 transition-colors shrink-0"
+              className="hidden sm:flex p-1.5 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white rounded-full hover:bg-slate-100 dark:hover:bg-white/5 transition-colors shrink-0"
               aria-label={isSfxMuted ? 'Unmute Arcade Sound FX' : 'Mute Arcade Sound FX'}
               title={isSfxMuted ? 'Unmute Arcade Sound FX' : 'Mute Arcade Sound FX'}
             >
@@ -576,7 +591,7 @@ export default function Navbar() {
                 setTheme(theme === 'dark' ? 'light' : 'dark');
                 arcadeAudio.playBlip();
               }}
-              className="p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white rounded-full hover:bg-slate-100 dark:hover:bg-white/5 transition-colors shrink-0"
+              className="hidden sm:flex p-1.5 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white rounded-full hover:bg-slate-100 dark:hover:bg-white/5 transition-colors shrink-0"
               aria-label="Toggle Dark Mode"
               title="Toggle Dark Mode"
             >
@@ -585,7 +600,7 @@ export default function Navbar() {
             
             {/* Sign In Button & Notifications */}
             {user ? (
-              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <div className="flex items-center gap-1 sm:gap-2 shrink-0 pr-0.5">
                 <NotificationBell userId={user.id} />
                 <UserDropdown userId={user.id} />
               </div>
