@@ -232,8 +232,8 @@ export default function VirtualControlsOverlay({ onClose }: VirtualControlsOverl
       className={`absolute inset-0 z-40 pointer-events-none select-none flex flex-col justify-between p-3 sm:p-5 transition-opacity duration-200 ${OPACITY_CLASSES[opacity]}`}
     >
       {/* Top Floating Mini-Bar (Centered controls) */}
-      <div className="w-full flex items-center justify-between pointer-events-auto">
-        <div className="flex items-center gap-1.5 p-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 shadow-lg">
+      <div className="w-full flex items-center justify-between pointer-events-none">
+        <div className="flex items-center gap-1.5 p-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 shadow-lg pointer-events-auto">
           <button
             type="button"
             onClick={() => setStickMode((m) => (m === 'dpad' ? 'analog' : 'dpad'))}
@@ -277,9 +277,9 @@ export default function VirtualControlsOverlay({ onClose }: VirtualControlsOverl
       </div>
 
       {/* Main Touch Controls: Left D-Pad/Stick & Right Diamond Buttons */}
-      <div className="w-full flex items-end justify-between pb-2 sm:pb-4 pointer-events-auto">
+      <div className="w-full flex items-end justify-between pb-2 sm:pb-4 pointer-events-none">
         {/* Left Control Cluster */}
-        <div className="relative">
+        <div className="relative pointer-events-auto">
           {stickMode === 'dpad' ? (
             /* Tactile Cross D-Pad */
             <div className="relative w-36 h-36 sm:w-44 sm:h-44 flex items-center justify-center">
@@ -382,7 +382,7 @@ export default function VirtualControlsOverlay({ onClose }: VirtualControlsOverl
         </div>
 
         {/* Right Action Diamond Buttons (A, B, X, Y) */}
-        <div className="relative w-40 h-40 sm:w-48 sm:h-48 flex items-center justify-center">
+        <div className="relative w-40 h-40 sm:w-48 sm:h-48 flex items-center justify-center pointer-events-auto">
           {/* Button Y (Top - Special / Q) */}
           <button
             type="button"

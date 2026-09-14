@@ -30,6 +30,11 @@
   button, a, input, select, textarea, [role="button"] {
     touch-action: manipulation;
   }
+
+  /* Ensure game canvases and embedded iframes always receive direct touch events without browser gesture conflicts */
+  iframe, canvas {
+    touch-action: auto;
+  }
 }
 
 @layer utilities {

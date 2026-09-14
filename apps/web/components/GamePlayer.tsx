@@ -329,14 +329,16 @@ export default function GamePlayer({
     };
   }, [playerState]);
 
-  // Mobile/Tablet UX 2: Auto-detect touchscreen and pre-enable virtual gamepad for touch devices
+  // Mobile/Tablet UX 2: Check stored virtual gamepad preference (defaults to off to allow direct touch controls)
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const isTouch = 'ontouchstart' in window || (navigator && navigator.maxTouchPoints > 0);
-    if (isTouch && playerState === 'playing') {
-      setShowVirtualPad(true);
-    }
-  }, [playerState]);
+    try {
+      const storedPad = localStorage.getItem('spielcade_virtual_pad_enabled');
+      if (storedPad === 'true') {
+        setShowVirtualPad(true);
+      }
+    } catch {}
+  }, []);
 
   // Mobile/Tablet UX 3: Portrait orientation detector for rotate suggestion banner
   const [isPortraitMobile, setIsPortraitMobile] = useState(false);
@@ -550,7 +552,7 @@ export default function GamePlayer({
     setPlayerState('ad');
     setIsIframeLoading(true);
     if (iframeLoadTimeoutRef.current) clearTimeout(iframeLoadTimeoutRef.current);
-    iframeLoadTimeoutRef.current = setTimeout(() => setIsIframeLoading(false), 12000);
+    iframeLoadTimeoutRef.current = setTimeout(() => setIsIframeLoading(false), 5000);
     addRecentGame({ slug, title, image });
     try {
       window.dispatchEvent(
@@ -612,11 +614,10 @@ export default function GamePlayer({
       }
     } catch {}
 
-    setTimeout(() => {
-      setIsIframeLoading(false);
-      refocusGame();
-      broadcastAudioState(isMuted, volume);
-    }, 600);
+    // Immediately dismiss loading buffer so the game is touchable right away
+    setIsIframeLoading(false);
+    refocusGame();
+    broadcastAudioState(isMuted, volume);
   };
 
   const completeRewardedAd = () => {
@@ -676,7 +677,7 @@ export default function GamePlayer({
     setSessionTime(0);
     setReloadKey(p => p + 1);
     if (iframeLoadTimeoutRef.current) clearTimeout(iframeLoadTimeoutRef.current);
-    iframeLoadTimeoutRef.current = setTimeout(() => setIsIframeLoading(false), 12000);
+    iframeLoadTimeoutRef.current = setTimeout(() => setIsIframeLoading(false), 5000);
     setTimeout(() => {
       setIsReloading(false);
       refocusGame();
@@ -1055,6 +1056,9 @@ export default function GamePlayer({
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
+    // Never hijack gestures during active gameplay
+    if (playerState === 'playing') return;
+
     const dy = e.changedTouches[0].clientY - touchStartYRef.current;
     const dx = e.changedTouches[0].clientX - touchStartXRef.current;
     if (Math.abs(dy) <= Math.abs(dx)) return;
@@ -1267,7 +1271,7 @@ export default function GamePlayer({
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         className={`relative bg-black overflow-hidden shadow-2xl transition-all duration-300 ease-in-out flex flex-col justify-center outline-none ${
-          playerState === 'playing' ? 'touch-none' : 'touch-manipulation'
+          playerState === 'playing' ? 'touch-auto' : 'touch-manipulation'
         } ${
           isMiniPlayer
             ? 'fixed bottom-6 right-6 z-[999] w-[340px] sm:w-[420px] aspect-video rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.85)] border-2 border-white/20 hidden md:flex'
@@ -1470,7 +1474,10 @@ export default function GamePlayer({
               )}
 
               {/* Game Viewport Container (STAYS CONSTANT IN DOM — NEVER UNMOUNTS) */}
-              <div className="flex-1 h-full relative flex justify-center items-center pointer-events-auto z-10 min-w-0">
+              <div 
+                className="flex-1 h-full relative flex justify-center items-center pointer-events-auto z-10 min-w-0"
+                style={{ touchAction: 'auto' }}
+              >
                 {sourceUrl ? (
                   <>
                     <iframe
@@ -1479,6 +1486,7 @@ export default function GamePlayer({
                       src={sourceUrl}
                       onLoad={handleIframeLoad}
                       className="absolute inset-0 w-full h-full border-0"
+                      style={{ pointerEvents: 'auto', touchAction: 'auto' }}
                       sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-forms allow-modals allow-downloads"
                       allow="fullscreen; autoplay; gamepad; focus-without-user-activation; accelerometer; gyroscope; clipboard-write; clipboard-read; microphone; camera; midi; payment; xr-spatial-tracking; screen-wake-lock"
                       title={title}
@@ -1491,18 +1499,20 @@ export default function GamePlayer({
                           key="loading"
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.3 }}
-                          className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-gray-950"
+                          exit={{ opacity: 0, pointerEvents: 'none' }}
+                          transition={{ duration: 0.2 }}
+                          onClick={() => setIsIframeLoading(false)}
+                          onTouchStart={() => setIsIframeLoading(false)}
+                          className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-gray-950 cursor-pointer"
                         >
                           {image && (
                             <img
                               src={image}
                               alt={title}
-                              className="absolute inset-0 w-full h-full object-cover opacity-20 blur-sm scale-110"
+                              className="absolute inset-0 w-full h-full object-cover opacity-20 blur-sm scale-110 pointer-events-none"
                             />
                           )}
-                          <div className="relative z-10 flex flex-col items-center gap-4 text-center px-4">
+                          <div className="relative z-10 flex flex-col items-center gap-4 text-center px-4 pointer-events-none">
                             <div className="relative w-20 h-20">
                               <div
                                 className="absolute inset-0 rounded-full border-4 border-t-transparent animate-spin"
@@ -1531,6 +1541,7 @@ export default function GamePlayer({
                                 }}
                               />
                             </div>
+                            <p className="text-white/40 text-[10px] mt-1 select-none">Tap anywhere to play</p>
                           </div>
                         </motion.div>
                       )}
@@ -1988,6 +1999,18 @@ export default function GamePlayer({
                           title={isFullscreen || isWebFullscreen ? 'Exit Fullscreen (F)' : 'Fullscreen (F)'}
                         >
                           {isFullscreen || isWebFullscreen ? <Minimize2 size={17} /> : <Maximize2 size={17} />}
+                        </button>
+
+                        {/* Virtual Gamepad Toggle (Fullscreen / Theater HUD) */}
+                        <button
+                          onClick={() => {
+                            setShowVirtualPad(p => !p);
+                            refocusGame();
+                          }}
+                          className={`hover:scale-110 transition-all ${showVirtualPad ? 'text-[#6366F1]' : 'text-white/80 hover:text-white'}`}
+                          title={showVirtualPad ? 'Hide Virtual Gamepad' : 'Show Virtual Gamepad'}
+                        >
+                          <Gamepad2 size={17} />
                         </button>
 
                         <div className="w-px h-5 bg-white/15" />
