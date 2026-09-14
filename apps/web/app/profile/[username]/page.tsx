@@ -5,6 +5,7 @@ import { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { Trophy, Gamepad2, Star, Flame, ArrowLeft, Edit3, Play } from 'lucide-react';
+import GamerDNARadar from '@/components/profile/GamerDNARadar';
 
 export const revalidate = 60;
 
@@ -331,6 +332,15 @@ export default async function PublicProfilePage({ params }: { params: { username
             </div>
           ))}
         </div>
+
+        {/* Gamer DNA Radar Visualization */}
+        <GamerDNARadar
+          level={level}
+          xp={xp}
+          streak={profile.streak ?? 1}
+          achievementsCount={earnedAchievements.length}
+          uniqueGames={uniqueGames}
+        />
 
         {/* Developer Studio Showcase Grid */}
         {isIndexableDeveloper && (

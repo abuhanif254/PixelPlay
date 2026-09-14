@@ -390,6 +390,23 @@ export default function Navbar() {
                     </div>
 
                     <Link
+                      href="/for-you"
+                      onClick={() => setIsMoreOpen(false)}
+                      className="flex items-center gap-2.5 p-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-purple-500/10 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center text-purple-400 shrink-0">
+                        <Sparkles className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold">For You</span>
+                          <span className="text-[9px] uppercase font-black px-1.5 py-0.2 rounded-full bg-purple-500/20 text-purple-400">AI</span>
+                        </div>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">Personalized discovery feed</p>
+                      </div>
+                    </Link>
+
+                    <Link
                       href="/playlists"
                       onClick={() => setIsMoreOpen(false)}
                       className="flex items-center gap-2.5 p-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"

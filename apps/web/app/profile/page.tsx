@@ -8,6 +8,7 @@ import ProfileAchievements from '@/components/profile/ProfileAchievements';
 import ProfileStats from '@/components/profile/ProfileStats';
 import ProfileActivity from '@/components/profile/ProfileActivity';
 import ProfileCollections from '@/components/profile/ProfileCollections';
+import GamerDNARadar from '@/components/profile/GamerDNARadar';
 
 export const revalidate = 0;
 
@@ -187,6 +188,17 @@ export default async function ProfileDashboardPage() {
           viewAllLink="/profile/favorites"
           favoriteIds={favoriteIds}
           showToggle
+        />
+      </div>
+
+      {/* Row: Gamer DNA Profile Radar */}
+      <div className="w-full">
+        <GamerDNARadar
+          level={level}
+          xp={xp}
+          streak={profile?.streak ?? 0}
+          achievementsCount={earnedIds.size}
+          uniqueGames={uniqueGamesPlayed}
         />
       </div>
 

@@ -50,6 +50,11 @@ import PlayNextOverlay from '@/components/PlayNextOverlay';
 import BugReportModal from '@/components/BugReportModal';
 import { queueOfflineScore, initOfflineSync } from '@/lib/offline-sync';
 import { arcadeAudio } from '@/lib/arcade-audio';
+import GamepadHUD from '@/components/GamepadHUD';
+import { gamepadEngine } from '@/lib/gamepad-engine';
+import PerformanceToggle from '@/components/PerformanceToggle';
+import ClipRecorderModal from '@/components/ClipRecorderModal';
+import { generateTradingCardSnapshot } from '@/lib/clip-recorder';
 
 type PlayerState = 'idle' | 'ad' | 'rewarded_ad' | 'playing' | 'paused' | 'game_over';
 type AspectRatio = '16:9' | '4:3' | '9:16' | 'auto';
@@ -176,6 +181,8 @@ export default function GamePlayer({
   const [showChallengeModal, setShowChallengeModal] = useState(false);
   const [showPlayNext, setShowPlayNext] = useState(false);
   const [showBugReportModal, setShowBugReportModal] = useState(false);
+  const [snapshotCardUrl, setSnapshotCardUrl] = useState<string | null>(null);
+  const [isSnapshotModalOpen, setIsSnapshotModalOpen] = useState(false);
 
   // Feature 4: Aspect Ratio (persisted across sessions)
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>(() => {
@@ -400,6 +407,15 @@ export default function GamePlayer({
       } catch {}
     }
   }, [playerState]);
+
+  // Sync Universal Gamepad target window with active game iframe
+  useEffect(() => {
+    if (iframeRef.current?.contentWindow && playerState === 'playing') {
+      gamepadEngine.setTargetWindow(iframeRef.current.contentWindow);
+    } else {
+      gamepadEngine.setTargetWindow(null);
+    }
+  }, [playerState, reloadKey]);
 
   // Cloud status helper with auto-dismiss
   const setCloudStatus = useCallback((status: CloudSaveStatus) => {
@@ -1051,161 +1067,32 @@ export default function GamePlayer({
   };
 
   // Instant High-Resolution Screenshot & Gamer Card Engine
-  const handleScreenshot = () => {
+  const handleScreenshot = async () => {
     try {
+      arcadeAudio.playBlip();
       const iframe = iframeRef.current;
-      let capturedDirectCanvas = false;
-
-      // 1. If game has an accessible same-origin canvas, capture it directly
+      let gameCanvas: HTMLCanvasElement | null = null;
       try {
         if (iframe?.contentDocument) {
-          const gameCanvas = iframe.contentDocument.querySelector('canvas');
-          if (gameCanvas) {
-            gameCanvas.toBlob(blob => {
-              if (blob) {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${slug}-screenshot-${Date.now()}.png`;
-                a.click();
-                URL.revokeObjectURL(url);
-              }
-            });
-            setScreenshotToast('success');
-            capturedDirectCanvas = true;
-          }
+          gameCanvas = iframe.contentDocument.querySelector('canvas');
         }
       } catch {}
 
-      if (capturedDirectCanvas) {
-        setTimeout(() => setScreenshotToast(null), 3500);
-        return;
-      }
+      const cardUrl = await generateTradingCardSnapshot({
+        gameTitle: title,
+        category,
+        score: liveScore || personalBest || 0,
+        gameImageUrl: image,
+        canvasElement: gameCanvas,
+      });
 
-      // 2. Generate an ultra-sharp 1200x630 Gamer Card with Game Poster, High Score & Spielcade Verified Seal
-      const cardCanvas = document.createElement('canvas');
-      cardCanvas.width = 1200;
-      cardCanvas.height = 630;
-      const ctx = cardCanvas.getContext('2d');
-      if (!ctx) {
-        setScreenshotToast('hint');
-        setTimeout(() => setScreenshotToast(null), 3500);
-        return;
-      }
-
-      // Dark futuristic background
-      ctx.fillStyle = '#060611';
-      ctx.fillRect(0, 0, 1200, 630);
-
-      // Radial Category Ambient Glow
-      const grad = ctx.createRadialGradient(600, 315, 60, 600, 315, 600);
-      grad.addColorStop(0, `${ambientColor.current}50`);
-      grad.addColorStop(0.7, '#060611');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 1200, 630);
-
-      // Grid pattern overlay
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
-      ctx.lineWidth = 1;
-      for (let x = 0; x < 1200; x += 40) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, 630);
-        ctx.stroke();
-      }
-      for (let y = 0; y < 630; y += 40) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(1200, y);
-        ctx.stroke();
-      }
-
-      // Branding Header
-      ctx.fillStyle = '#6366F1';
-      ctx.font = 'bold 32px sans-serif';
-      ctx.fillText('SPIELCADE.COM', 80, 85);
-
-      ctx.fillStyle = '#10B981';
-      ctx.font = 'bold 16px sans-serif';
-      ctx.fillText('● VERIFIED GAMEPLAY SNAPSHOT', 360, 82);
-
-      // Game Title
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = '900 64px sans-serif';
-      ctx.fillText(title, 80, 190);
-
-      // Category & Session time
-      ctx.fillStyle = '#A1A1AA';
-      ctx.font = '500 28px sans-serif';
-      ctx.fillText(`Category: ${category || 'Arcade'}  •  Session Time: ${fmtTime(sessionTime)}`, 80, 250);
-
-      // Score / Record Highlight Card
-      const displayScore = liveScore !== null && liveScore > 0 ? liveScore : personalBest;
-      if (displayScore) {
-        // Glowing pill background
-        ctx.fillStyle = 'rgba(245, 158, 11, 0.15)';
-        ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.roundRect(80, 300, 520, 100, 20);
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.fillStyle = '#F59E0B';
-        ctx.font = 'bold 42px sans-serif';
-        ctx.fillText(`★ ${displayScore.toLocaleString()} PTS`, 110, 365);
-
-        ctx.fillStyle = '#E4E4E7';
-        ctx.font = 'bold 20px sans-serif';
-        ctx.fillText('HIGH SCORE RECORD', 380, 360);
-      }
-
-      // Footer
-      ctx.fillStyle = '#71717A';
-      ctx.font = '500 22px sans-serif';
-      ctx.fillText('Play 17,000+ free unblocked online games directly in your browser with no downloads', 80, 550);
-
-      // Draw poster if loaded
-      const exportCanvas = () => {
-        cardCanvas.toBlob(blob => {
-          if (blob) {
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${slug}-snapshot-${Date.now()}.png`;
-            a.click();
-            URL.revokeObjectURL(url);
-            setScreenshotToast('postcard');
-          } else {
-            setScreenshotToast('hint');
-          }
-        });
-      };
-
-      if (image) {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => {
-          try {
-            // Draw thumbnail in corner with rounded border
-            ctx.save();
-            ctx.beginPath();
-            ctx.roundRect(850, 140, 270, 270, 24);
-            ctx.clip();
-            ctx.drawImage(img, 850, 140, 270, 270);
-            ctx.restore();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            ctx.roundRect(850, 140, 270, 270, 24);
-            ctx.stroke();
-          } catch {}
-          exportCanvas();
-        };
-        img.onerror = () => exportCanvas();
-        img.src = image;
+      if (cardUrl) {
+        setSnapshotCardUrl(cardUrl);
+        setIsSnapshotModalOpen(true);
+        arcadeAudio.playAchievement();
+        setScreenshotToast('success');
       } else {
-        exportCanvas();
+        setScreenshotToast('hint');
       }
     } catch {
       setScreenshotToast('hint');
@@ -2564,6 +2451,11 @@ export default function GamePlayer({
               </button>
             )}
 
+            {/* Low-Spec Turbo Mode & Live FPS Monitor */}
+            <div className="hidden sm:flex items-center">
+              <PerformanceToggle showFps={true} />
+            </div>
+
             {/* Shortcuts Guide */}
             <button
               onClick={() => setShowShortcuts(p => !p)}
@@ -2885,6 +2777,20 @@ export default function GamePlayer({
         sessionDurationSec={sessionTime}
         currentScore={liveScore || personalBest}
       />
+
+      {/* Universal Physical Hardware Gamepad HUD */}
+      <GamepadHUD />
+
+      {/* Instant Trading Card Snapshot & Clip Studio Modal */}
+      {snapshotCardUrl && (
+        <ClipRecorderModal
+          isOpen={isSnapshotModalOpen}
+          onClose={() => setIsSnapshotModalOpen(false)}
+          imageUrl={snapshotCardUrl}
+          gameTitle={title}
+          score={liveScore || personalBest || 0}
+        />
+      )}
 
       {/* Shimmer animation keyframe */}
       <style>{`

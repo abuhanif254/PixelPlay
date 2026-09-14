@@ -254,6 +254,31 @@ export default async function HomePage() {
           <ThematicGamingZones />
         </ScrollReveal>
 
+        {/* Personalized Discovery AI Callout */}
+        <ScrollReveal delay={0.1}>
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-purple-900/60 via-indigo-900/60 to-blue-900/60 border border-purple-500/25 p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-2xl">
+            <div className="max-w-xl">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-black uppercase tracking-wider mb-2">
+                <Sparkles size={12} className="text-yellow-400" />
+                <span>AI Taste Vector</span>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-black text-white">
+                Discover Games Tailored Specifically For You
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-300 mt-1">
+                Our client-side affinity engine scores 19,000+ games based on your session depth, favorite genres, and high scores with zero external tracking.
+              </p>
+            </div>
+            <Link
+              href="/for-you"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white text-xs sm:text-sm font-black shadow-lg shadow-indigo-500/30 transition-all hover:scale-105 active:scale-95 shrink-0"
+            >
+              <span>Explore My Feed</span>
+              <Sparkles size={15} />
+            </Link>
+          </div>
+        </ScrollReveal>
+
         {/* 7. New Arrivals Shelf (Horizontal Scroll) */}
         <ScrollReveal delay={0.1}>
           <section aria-labelledby="new-arrivals-heading">
