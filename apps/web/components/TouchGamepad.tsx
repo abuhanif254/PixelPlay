@@ -14,6 +14,7 @@ import {
   X,
   Settings2
 } from 'lucide-react';
+import { haptics } from '@/lib/haptics';
 
 interface TouchGamepadProps {
   iframeRef?: React.RefObject<HTMLIFrameElement>;
@@ -50,11 +51,9 @@ export default function TouchGamepad({ iframeRef, enabled = true, onClose }: Tou
 
     if (!keyInfo) return;
 
-    // Haptic feedback
-    if (type === 'keydown' && typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-      try {
-        navigator.vibrate?.(12);
-      } catch {}
+    // Haptic feedback via haptics engine
+    if (type === 'keydown') {
+      haptics.light();
     }
 
     const eventInit: KeyboardEventInit = {

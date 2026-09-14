@@ -47,6 +47,7 @@ import AdBanner from '@/components/AdBanner';
 import CloudSaveBar from '@/components/CloudSaveBar';
 import ScoreChallengeModal from '@/components/ScoreChallengeModal';
 import PlayNextOverlay from '@/components/PlayNextOverlay';
+import BugReportModal from '@/components/BugReportModal';
 import { queueOfflineScore, initOfflineSync } from '@/lib/offline-sync';
 import { arcadeAudio } from '@/lib/arcade-audio';
 
@@ -174,6 +175,7 @@ export default function GamePlayer({
   const cloudSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [showChallengeModal, setShowChallengeModal] = useState(false);
   const [showPlayNext, setShowPlayNext] = useState(false);
+  const [showBugReportModal, setShowBugReportModal] = useState(false);
 
   // Feature 4: Aspect Ratio (persisted across sessions)
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>(() => {
@@ -1324,7 +1326,8 @@ export default function GamePlayer({
   };
 
   const handleReport = () => {
-    window.open(`/contact?subject=Report%20Game%20Issue&game=${encodeURIComponent(slug)}`, '_blank');
+    arcadeAudio.playSelect();
+    setShowBugReportModal(true);
   };
 
   const isExpandedMode = isTheater || isFullscreen || isWebFullscreen;
@@ -2871,6 +2874,16 @@ export default function GamePlayer({
         gameTitle={title}
         gameImage={image}
         currentScore={liveScore || personalBest || 1500}
+      />
+
+      {/* In-Game Player Bug Diagnostic Modal */}
+      <BugReportModal
+        isOpen={showBugReportModal}
+        onClose={() => setShowBugReportModal(false)}
+        gameSlug={slug}
+        gameTitle={title}
+        sessionDurationSec={sessionTime}
+        currentScore={liveScore || personalBest}
       />
 
       {/* Shimmer animation keyframe */}

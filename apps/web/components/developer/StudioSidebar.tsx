@@ -11,7 +11,8 @@ import {
   FileCode2, 
   ShieldAlert,
   ChevronRight,
-  Terminal
+  Terminal,
+  Bug
 } from 'lucide-react';
 
 interface StudioSidebarProps {
@@ -56,6 +57,12 @@ export default function StudioSidebar({ isAdmin = false }: StudioSidebarProps) {
       href: '/studio/sandbox', 
       icon: Terminal, 
       color: 'text-cyan-400'
+    },
+    { 
+      name: 'Player Feedback', 
+      href: '/studio/feedback', 
+      icon: Bug, 
+      color: 'text-rose-400'
     },
   ];
 

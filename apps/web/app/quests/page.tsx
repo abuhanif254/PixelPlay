@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { getDailyQuests, DailyQuest, SEASON_1_PASS } from '@/lib/quests';
 import { arcadeAudio } from '@/lib/arcade-audio';
+import { haptics } from '@/lib/haptics';
 
 export default function QuestsPage() {
   const [quests, setQuests] = useState<DailyQuest[]>([]);
@@ -45,6 +46,7 @@ export default function QuestsPage() {
     if (quest.isClaimed) return;
 
     arcadeAudio.playLevelUp();
+    haptics.celebrate();
 
     // Award XP globally
     window.dispatchEvent(

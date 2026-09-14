@@ -6,6 +6,7 @@ import PwaInstallBanner from '@/components/PwaInstallBanner';
 import PWARegistration from '@/components/PWARegistration';
 import OfflineBanner from '@/components/OfflineBanner';
 import LevelUpModal from '@/components/LevelUpModal';
+import ArcadeRadio from '@/components/ArcadeRadio';
 import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
@@ -148,6 +149,7 @@ export default function RootLayout({
           <Footer />
           <PwaInstallBanner />
           <LevelUpModal />
+          <ArcadeRadio />
         </ThemeProvider>
       </body>
     </html>

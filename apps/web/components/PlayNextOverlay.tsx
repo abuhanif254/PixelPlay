@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Play, RotateCcw, X, Shuffle, Sparkles, Star, Flame, Keyboard } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getSmartRecommendations } from '@/lib/recommendations';
+import { getNextPlaylistGame } from '@/lib/playlists';
 import { arcadeAudio } from '@/lib/arcade-audio';
 
 interface PlayNextGame {
@@ -32,6 +33,27 @@ export default function PlayNextOverlay({
   onPlayAgain,
 }: PlayNextOverlayProps) {
   const router = useRouter();
+
+  // Check if active session is in a Playlist Binge Queue
+  const [playlistContext, setPlaylistContext] = useState<{ title: string; nextSlug: string; playlistSlug: string } | null>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const plSlug = params.get('playlist');
+      if (plSlug) {
+        const next = getNextPlaylistGame(plSlug, currentSlug);
+        if (next) {
+          setPlaylistContext({
+            title: next.title,
+            nextSlug: next.slug,
+            playlistSlug: plSlug,
+          });
+        }
+      }
+    } catch {}
+  }, [currentSlug]);
 
   // Compute smart recommendations or fallback to relatedGames
   const recommendations = useRef(getSmartRecommendations(currentSlug, category, 6));
@@ -100,7 +122,11 @@ export default function PlayNextOverlay({
 
   const handlePlayNow = () => {
     arcadeAudio.playStart();
-    router.push(`/games/${currentGame.slug}`);
+    if (playlistContext) {
+      router.push(`/games/${playlistContext.nextSlug}?playlist=${playlistContext.playlistSlug}`);
+    } else {
+      router.push(`/games/${currentGame.slug}`);
+    }
   };
 
   const handleCancel = () => {
@@ -184,7 +210,7 @@ export default function PlayNextOverlay({
 
               {/* Match Score Badge */}
               <div className="flex items-center gap-1 bg-amber-500/20 backdrop-blur-md px-2.5 py-1 rounded-lg border border-amber-500/30 text-amber-300 text-xs font-black shrink-0">
-                <span>{currentGame.badge || '🔥 98% Match'}</span>
+                <span>{playlistContext ? `🎵 Next: ${playlistContext.title}` : (currentGame.badge || '🔥 98% Match')}</span>
               </div>
             </div>
           </div>
