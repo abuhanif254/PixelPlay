@@ -13,6 +13,7 @@ import RecentGames from '@/components/RecentGames';
 import { TrendingGamesFilter } from '@/components/TrendingGamesFilter';
 import ThematicGamingZones from '@/components/ThematicGamingZones';
 import FeaturedGameBanner from '@/components/FeaturedGameBanner';
+import DailyCupBanner from '@/components/DailyCupBanner';
 import { ScrollReveal } from '@/components/ScrollReveal';
 import HomeSEOText from '@/components/HomeSEOText';
 import HomeFAQ from '@/components/HomeFAQ';
@@ -223,6 +224,11 @@ export default async function HomePage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-20 sm:space-y-24 relative z-10 w-full">
         
+        {/* Daily Arcade Cup 24-Hour Tournament */}
+        <ScrollReveal>
+          <DailyCupBanner />
+        </ScrollReveal>
+
         {/* 4. Continue Playing (Dynamic from localStorage) */}
         <ScrollReveal>
           <RecentGames />

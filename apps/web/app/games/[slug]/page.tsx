@@ -9,6 +9,7 @@ import GameDetailsTabs from '@/components/GameDetailsTabs';
 import AdBanner from '@/components/AdBanner';
 import FavoriteButton from '@/components/FavoriteButton';
 import ChallengerBanner from '@/components/ChallengerBanner';
+import TournamentMatchRibbon from '@/components/TournamentMatchRibbon';
 import OfflineReadyBadge from '@/components/OfflineReadyBadge';
 import { Metadata, ResolvingMetadata } from 'next';
 import { getGameReviews } from '../reviews-data';
@@ -536,6 +537,12 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
                   gameTitle={config.title}
                 />
               )}
+
+              {/* Daily Arcade Cup Tournament Ribbon */}
+              <TournamentMatchRibbon
+                gameSlug={slug}
+                gameTitle={config.title}
+              />
 
               {/* Auto-detect native aspect ratio and orientation from game metadata */}
               {(() => {

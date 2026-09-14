@@ -12,6 +12,7 @@ export async function GET() {
     { url: `${baseUrl}/popular`, priority: '0.8', changefreq: 'daily' },
     { url: `${baseUrl}/leaderboard`, priority: '0.8', changefreq: 'daily' },
     { url: `${baseUrl}/blog`, priority: '0.8', changefreq: 'daily' },
+    { url: `${baseUrl}/offline`, priority: '0.7', changefreq: 'monthly' },
     { url: `${baseUrl}/help`, priority: '0.5', changefreq: 'monthly' },
     { url: `${baseUrl}/developers`, priority: '0.9', changefreq: 'weekly' },
     { url: `${baseUrl}/contact`, priority: '0.5', changefreq: 'monthly' },

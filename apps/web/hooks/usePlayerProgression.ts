@@ -35,12 +35,12 @@ export function usePlayerProgression() {
       if (user) {
         supabase
           .from('profiles')
-          .select('experience_points, level')
+          .select('xp, level')
           .eq('id', user.id)
           .single()
           .then(({ data }) => {
-            if (data && typeof data.experience_points === 'number') {
-              const cloudXp = Math.max(initialXp, data.experience_points);
+            if (data && typeof (data as any).xp === 'number') {
+              const cloudXp = Math.max(initialXp, (data as any).xp);
               setTotalXp(cloudXp);
               try {
                 localStorage.setItem(STORAGE_KEY_XP, String(cloudXp));
@@ -96,7 +96,7 @@ export function usePlayerProgression() {
             supabase
               .from('profiles')
               .update({
-                experience_points: nextXp,
+                xp: nextXp,
                 level: nextInfo.level,
               })
               .eq('id', user.id)

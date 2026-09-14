@@ -7,6 +7,7 @@ import LeaderboardTable, { PlayerScore } from '@/components/leaderboard/Leaderbo
 import TopChampionCard from '@/components/leaderboard/TopChampionCard';
 import LeaderboardFilters from '@/components/leaderboard/LeaderboardFilters';
 import UserRankCard from '@/components/leaderboard/UserRankCard';
+import DailyCupBanner from '@/components/DailyCupBanner';
 import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'edge';
@@ -102,6 +103,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
         name: name,
         score: Number(s.score).toLocaleString(),
         topGame: game?.title || targetGameTitle,
+        gameSlug: game?.slug || gameSlug || 'neon-snake',
         gamesPlayed: 1,
         avatar: profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`
       });
@@ -120,6 +122,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
         name: p.username,
         score: computedScore.toLocaleString(),
         topGame: gameSlug ? targetGameTitle : (topGameObj?.title || 'Arcade Champion'),
+        gameSlug: gameSlug || topGameObj?.slug || 'neon-snake',
         gamesPlayed: Math.max(3, Math.floor((p.xp || 50) / 40)),
         avatar: p.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.username}`
       });
@@ -153,6 +156,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
           name: seed.name,
           score: dynamicScore.toLocaleString(),
           topGame: gameSlug ? targetGameTitle : (topGameObj?.title || 'Arcade Legend'),
+          gameSlug: gameSlug || topGameObj?.slug || (i % 2 === 0 ? 'neon-snake' : '2048-classic'),
           gamesPlayed: Math.floor(15 + (10 - i) * 3),
           avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed.name}`
         });
@@ -242,6 +246,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
             <Suspense fallback={<div className="w-full h-48 bg-gray-100 dark:bg-white/5 animate-pulse rounded-2xl mb-8" />}>
               <LeaderboardHero />
             </Suspense>
+            <DailyCupBanner className="mb-8" />
             <TopThreePodium topThree={topThree} />
             <LeaderboardTable players={remainingPlayers} />
           </div>

@@ -68,20 +68,27 @@ export default function OfflineBanner() {
         {/* Offline Game Quick-Launch Pills */}
         <div className="flex items-center gap-2 shrink-0">
           <Link
-            href="/games/snake"
-            className="px-2.5 py-1 bg-white/20 hover:bg-white/30 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1 backdrop-blur-sm"
+            href="/offline"
+            className="px-3 py-1 bg-white text-black text-xs font-black rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-1 shadow-sm"
+          >
+            <Gamepad2 size={13} />
+            <span>Offline Hub</span>
+          </Link>
+          <Link
+            href="/games/neon-snake"
+            className="px-2.5 py-1 bg-white/20 hover:bg-white/30 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1 backdrop-blur-sm hidden sm:flex"
           >
             <span>🐍 Snake</span>
           </Link>
           <Link
-            href="/games/2048"
-            className="px-2.5 py-1 bg-white/20 hover:bg-white/30 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1 backdrop-blur-sm"
+            href="/games/2048-classic"
+            className="px-2.5 py-1 bg-white/20 hover:bg-white/30 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1 backdrop-blur-sm hidden sm:flex"
           >
             <span>🔢 2048</span>
           </Link>
           <Link
-            href="/games/flappy-bird"
-            className="px-2.5 py-1 bg-white/20 hover:bg-white/30 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1 backdrop-blur-sm"
+            href="/games/neon-flyer"
+            className="px-2.5 py-1 bg-white/20 hover:bg-white/30 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1 backdrop-blur-sm hidden md:flex"
           >
             <span>🚀 Flyer</span>
           </Link>

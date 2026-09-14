@@ -118,6 +118,9 @@ const withPWA = withPWAInit({
   disable: process.env.NODE_ENV === "development" || process.env.CF_PAGES === "1" || !!process.env.CI,
   register: true,
   skipWaiting: true,
+  fallbacks: {
+    document: "/offline",
+  },
   buildExcludes: [/middleware-manifest\.json$/, /_buildManifest\.js$/],
   workboxOptions: {
     maximumFileSizeToCacheInBytes: 5000000,

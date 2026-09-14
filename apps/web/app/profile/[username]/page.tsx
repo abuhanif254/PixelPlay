@@ -57,6 +57,8 @@ export async function generateMetadata({ params }: { params: { username: string 
 
   const ogImage = profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}&backgroundColor=b6e3f4`;
 
+  const gamerCardOgUrl = `https://spielcade.com/api/og/gamer-card?username=${encodeURIComponent(profile.username)}`;
+
   return {
     title: pageTitle,
     description: pageDescription,
@@ -71,7 +73,7 @@ export async function generateMetadata({ params }: { params: { username: string 
         follow: true,
       },
     },
-    openGraph: shouldIndex ? {
+    openGraph: {
       title: pageTitle,
       description: pageDescription,
       url: canonicalUrl,
@@ -79,13 +81,19 @@ export async function generateMetadata({ params }: { params: { username: string 
       type: 'profile',
       images: [
         {
-          url: ogImage,
-          width: 400,
-          height: 400,
-          alt: `${displayName}'s profile picture`,
+          url: gamerCardOgUrl,
+          width: 1200,
+          height: 630,
+          alt: `${displayName}'s Spielcade Gamer Passport`,
         },
       ],
-    } : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: pageTitle,
+      description: pageDescription,
+      images: [gamerCardOgUrl],
+    },
   };
 }
 
@@ -123,6 +131,7 @@ function DeveloperJsonLd({ profile, totalPlays }: { profile: any, totalPlays: nu
 }
 
 import FollowButton from '@/components/profile/FollowButton';
+import GamerPassportTrigger from '@/components/profile/GamerPassportTrigger';
 
 export default async function PublicProfilePage({ params }: { params: { username: string } }) {
   const supabase = createClient();
@@ -227,10 +236,21 @@ export default async function PublicProfilePage({ params }: { params: { username
               <div className="w-20 h-20 rounded-full border-4 border-white dark:border-[#111228] bg-gray-100 dark:bg-[#0A0B1A] overflow-hidden shadow-lg shrink-0">
                 <img src={avatarUrl} alt={profile.username} className="w-full h-full object-cover" />
               </div>
-              <div className="flex items-center gap-3 mb-1">
+              <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 mb-1">
                 <span className="px-3 py-1 bg-[#6366F1]/20 text-[#6366F1] text-xs font-bold rounded-full">
                   Level {level}
                 </span>
+
+                <GamerPassportTrigger
+                  username={profile.username}
+                  displayName={profile.full_name || profile.username}
+                  avatarUrl={avatarUrl}
+                  level={level}
+                  xp={xp}
+                  streak={profile.streak ?? 1}
+                  uniqueGames={uniqueGames}
+                  achievementsCount={earnedAchievements.length}
+                />
                 
                 {!isOwnProfile && viewerId && (
                   <FollowButton 
