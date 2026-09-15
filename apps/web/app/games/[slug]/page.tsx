@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { cache } from 'react';
 import { notFound } from 'next/navigation';
 import { gamesRegistry } from '@spielcade/games/registry';
 import { Star, ChevronRight, Heart, Clock, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Gamepad2 } from 'lucide-react';
@@ -25,6 +25,12 @@ import {
 export const runtime = 'edge';
 export const revalidate = 600;
 
+const getCachedGame = cache(async (slug: string) => {
+  const supabase = createClient();
+  const { data } = await supabase.from('games').select('*').eq('slug', slug).maybeSingle();
+  return data;
+});
+
 interface GamePageProps {
   params: {
     slug: string;
@@ -41,12 +47,7 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { slug } = params;
   
-  const supabase = createClient();
-  const { data: dbGame } = await supabase
-    .from('games')
-    .select('id, title, slug, description, category, image_url, status, metadata')
-    .eq('slug', slug)
-    .single();
+  const dbGame = await getCachedGame(slug);
   
   const localGame = gamesRegistry[slug];
 
@@ -152,8 +153,8 @@ export async function generateMetadata(
 export default async function GamePage({ params, searchParams }: GamePageProps) {
   const { slug } = params;
   
+  const dbGame = await getCachedGame(slug);
   const supabase = createClient();
-  const { data: dbGame } = await supabase.from('games').select('*').eq('slug', slug).maybeSingle();
   
   const localGame = gamesRegistry[slug];
 

@@ -7,6 +7,7 @@ import GameCardSkeleton from '@/components/GameCardSkeleton';
 import EmptyState from '@/components/EmptyState';
 import NewsletterBanner from '@/components/NewsletterBanner';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Custom hook for debouncing values
@@ -30,32 +31,39 @@ const ITEMS_PER_PAGE = 15; // 5 columns x 3 rows on desktop
 
 export default function AllGamesClient({ 
   initialGames,
-  totalCount
+  totalCount,
+  serverCurrentPage,
+  serverTotalPages,
+  serverCategory
 }: { 
   initialGames: any[];
   totalCount?: number;
+  serverCurrentPage?: number;
+  serverTotalPages?: number;
+  serverCategory?: string;
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   // Initialize state from URL params
-  const [activeCategory, setActiveCategory] = useState(searchParams.get('category') || 'All Games');
+  const [activeCategory, setActiveCategory] = useState(searchParams.get('category') || serverCategory || 'All Games');
   const [activeDiff, setActiveDiff] = useState(searchParams.get('difficulty') || 'All Levels');
   const [activeFeatures, setActiveFeatures] = useState<string[]>(searchParams.get('features')?.split(',') || []);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || searchParams.get('search') || '');
   
-  // Pagination state from URL
+  // Pagination state from server / URL
   const [currentPage, setCurrentPage] = useState(() => {
+    if (serverCurrentPage) return serverCurrentPage;
     const pageParam = searchParams.get('page');
     return pageParam ? parseInt(pageParam, 10) : 1;
   });
   
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [sortBy, setSortBy] = useState('Most Popular');
   
-  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  const debouncedSearchQuery = useDebounce(searchQuery, 350);
 
   // Dynamically compute category counts
   const dynamicCategories = useMemo(() => {
@@ -140,65 +148,33 @@ export default function AllGamesClient({
     if (window.innerWidth < 1024) setIsMobileFiltersOpen(false);
   };
 
-  const [displayGames, setDisplayGames] = useState<any[]>([]);
-  const [totalGames, setTotalGames] = useState(0);
+  const [displayGames, setDisplayGames] = useState<any[]>(initialGames || []);
+  const [totalGames, setTotalGames] = useState(totalCount || initialGames.length);
 
   useEffect(() => {
-    setIsLoading(true);
-    
-    // Simulate network delay for loading state
-    const timer = setTimeout(() => {
-      // 1. Filter the entire dataset
-      let filtered = initialGames.filter(game => {
-        // Filter by Category
-        if (activeCategory !== 'All Games' && game.category !== activeCategory) {
-          return false;
-        }
-        
-        // Filter by Search Query
-        if (debouncedSearchQuery && !game.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase())) {
-          return false;
-        }
+    let sorted = [...initialGames];
+    if (sortBy === 'Most Popular') {
+      sorted.sort((a, b) => (b.totalPlays || 0) - (a.totalPlays || 0));
+    } else if (sortBy === 'Highest Rated') {
+      sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    }
+    setDisplayGames(sorted);
+    setTotalGames(totalCount || initialGames.length);
+    setIsLoading(false);
+  }, [initialGames, sortBy, totalCount]);
 
-        // Difficulty / Features logic would go here if our schema supported it
-        // For now, we'll pretend they pass
+  const totalPages = serverTotalPages || Math.max(1, Math.ceil(totalGames / ITEMS_PER_PAGE));
 
-        return true;
-      });
-
-      // Sort the games
-      if (sortBy === 'Most Popular') {
-        filtered.sort((a, b) => (b.totalPlays || 0) - (a.totalPlays || 0));
-      } else if (sortBy === 'Newest') {
-        // Assuming higher ID or later in list means newer for now since we don't have created_at on all mocks
-        // In real db data, we'd sort by created_at.
-        // Actually since we fetch from supabase ordered by created_at desc, keeping original order works well for "Newest", 
-        // but let's reverse the index if we want it explicit, or assume initial order IS newest.
-        filtered.sort((a, b) => {
-          if (a.created_at && b.created_at) {
-            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-          }
-          return 0; // Fallback to default fetch order
-        });
-      } else if (sortBy === 'Highest Rated') {
-        filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-      }
-
-      // Update total count for pagination
-      setTotalGames(filtered.length);
-
-      // 2. Apply Pagination Slice
-      const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-      const paginatedSlice = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-
-      setDisplayGames(paginatedSlice);
-      setIsLoading(false);
-    }, 400); // 400ms delay to show skeletons
-
-    return () => clearTimeout(timer);
-  }, [initialGames, activeCategory, activeDiff, activeFeatures, debouncedSearchQuery, currentPage, sortBy]);
-
-  const totalPages = Math.max(1, Math.ceil(totalGames / ITEMS_PER_PAGE));
+  const getPageUrl = (page: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (page <= 1) {
+      params.delete('page');
+    } else {
+      params.set('page', page.toString());
+    }
+    const qs = params.toString();
+    return qs ? `${pathname}?${qs}` : pathname;
+  };
 
   // Generate pagination page numbers
   const generatePagination = () => {
@@ -452,23 +428,32 @@ export default function AllGamesClient({
         {/* Pagination */}
         {(!isLoading && totalPages > 1) && (
           <div className="flex items-center justify-center space-x-1.5 mt-10 mb-6">
-            <button 
-              onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
+            <Link 
+              href={getPageUrl(Math.max(1, currentPage - 1))}
+              onClick={() => {
+                setCurrentPage(Math.max(1, currentPage - 1));
+                window.scrollTo({ top: 400, behavior: 'smooth' });
+              }}
+              aria-disabled={currentPage === 1}
+              aria-label="Previous Page"
               className={`w-9 h-9 rounded-lg bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 flex items-center justify-center transition-all ${
-                currentPage === 1 ? 'opacity-50 cursor-not-allowed text-gray-400 dark:text-gray-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 dark:hover:border-white/20'
+                currentPage === 1 ? 'opacity-50 pointer-events-none text-gray-400 dark:text-gray-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 dark:hover:border-white/20'
               }`}
             >
               <ChevronLeft className="w-4 h-4" />
-            </button>
+            </Link>
             
             {generatePagination().map((page, idx) => (
               page === '...' ? (
                 <span key={`dots-${idx}`} className="w-9 h-9 flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm">...</span>
               ) : (
-                <button 
+                <Link 
                   key={page}
-                  onClick={() => handlePageChange(page as number)}
+                  href={getPageUrl(page as number)}
+                  onClick={() => {
+                    setCurrentPage(page as number);
+                    window.scrollTo({ top: 400, behavior: 'smooth' });
+                  }}
                   className={`w-9 h-9 rounded-lg text-sm font-bold flex items-center justify-center transition-all ${
                     page === currentPage 
                       ? 'bg-gradient-to-br from-[#6366F1] to-[#4F46E5] text-white shadow-[0_0_15px_rgba(99,102,241,0.5)] border-none' 
@@ -476,19 +461,24 @@ export default function AllGamesClient({
                   }`}
                 >
                   {page}
-                </button>
+                </Link>
               )
             ))}
             
-            <button 
-              onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages}
+            <Link 
+              href={getPageUrl(Math.min(totalPages, currentPage + 1))}
+              onClick={() => {
+                setCurrentPage(Math.min(totalPages, currentPage + 1));
+                window.scrollTo({ top: 400, behavior: 'smooth' });
+              }}
+              aria-disabled={currentPage === totalPages}
+              aria-label="Next Page"
               className={`w-9 h-9 rounded-lg bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 flex items-center justify-center transition-all ${
-                currentPage === totalPages ? 'opacity-50 cursor-not-allowed text-gray-400 dark:text-gray-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 dark:hover:border-white/20'
+                currentPage === totalPages ? 'opacity-50 pointer-events-none text-gray-400 dark:text-gray-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 dark:hover:border-white/20'
               }`}
             >
               <ChevronRight className="w-4 h-4" />
-            </button>
+            </Link>
           </div>
         )}
 

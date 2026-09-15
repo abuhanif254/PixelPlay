@@ -4,15 +4,40 @@ import { updateSession } from '@/lib/supabase/middleware'
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Fast-path: Never run auth or session database queries on sitemaps, robots, or RSS feeds
+  // 1. Ultra Fast-Path: Static SEO, feeds, search APIs, public assets
   if (
     pathname.startsWith('/sitemap') ||
     pathname === '/robots.txt' ||
-    pathname === '/feed.xml'
+    pathname === '/feed.xml' ||
+    pathname.startsWith('/api/search') ||
+    pathname.startsWith('/api/og') ||
+    pathname.startsWith('/api/indexnow')
   ) {
     return NextResponse.next()
   }
 
+  const isAdminRoute = pathname.startsWith('/admin')
+  const isProtectedRoute = pathname.startsWith('/profile') || pathname.startsWith('/studio') || isAdminRoute
+
+  // 2. Check if request has any Supabase auth session cookies
+  const hasAuthCookie = request.cookies.getAll().some(
+    (c) => c.name.includes('-auth-token') || c.name.startsWith('sb-')
+  )
+
+  // 3. If unauthenticated user tries to access protected route, redirect to /login immediately without hitting DB
+  if (!hasAuthCookie && isProtectedRoute) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
+
+  // 4. If request is on a public route and user has NO auth cookies (99%+ of visitors & Googlebot),
+  // skip all middleware database roundtrips completely!
+  if (!hasAuthCookie && !isProtectedRoute) {
+    return NextResponse.next()
+  }
+
+  // 5. User has auth cookies or is accessing protected route: run session validation
   return await updateSession(request)
 }
 

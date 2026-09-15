@@ -80,33 +80,40 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
-  // Check maintenance mode
-  const { data: config } = await supabase
-    .from('site_config')
-    .select('config_value')
-    .eq('config_key', 'maintenance_mode')
-    .single()
+  // Check maintenance mode with timeout fallback to avoid stalling edge responses
+  try {
+    const timeoutPromise = new Promise<{ data: any }>((resolve) =>
+      setTimeout(() => resolve({ data: null }), 1000)
+    );
+    const maintenancePromise = supabase
+      .from('site_config')
+      .select('config_value')
+      .eq('config_key', 'maintenance_mode')
+      .maybeSingle();
 
-  const isMaintenance = config?.config_value === 'true'
-  
-  if (isMaintenance && !request.nextUrl.pathname.startsWith('/maintenance')) {
-    let isAdmin = false
-    if (user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single()
-      if (profile?.role === 'admin') {
-        isAdmin = true
+    const { data: config } = (await Promise.race([maintenancePromise, timeoutPromise])) as any;
+
+    if (config?.config_value === 'true' && !request.nextUrl.pathname.startsWith('/maintenance')) {
+      let isAdmin = false;
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle();
+        if (profile?.role === 'admin') {
+          isAdmin = true;
+        }
+      }
+
+      if (!isAdmin) {
+        const url = request.nextUrl.clone();
+        url.pathname = '/maintenance';
+        return NextResponse.rewrite(url);
       }
     }
-    
-    if (!isAdmin) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/maintenance'
-      return NextResponse.rewrite(url)
-    }
+  } catch (err) {
+    // Non-fatal if site_config check fails
   }
 
   return supabaseResponse

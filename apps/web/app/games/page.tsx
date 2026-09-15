@@ -17,31 +17,35 @@ const VALID_CATEGORIES = ['Action', 'Adventure', 'Arcade', 'Board', 'Puzzle', 'R
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const category = typeof searchParams.category === 'string' ? searchParams.category : 'All Games';
-  const hasSearch = typeof searchParams.search === 'string' && searchParams.search.trim().length > 0;
+  const searchQuery = typeof searchParams.q === 'string' ? searchParams.q : (typeof searchParams.search === 'string' ? searchParams.search : '');
   const isCanonicalCategory = VALID_CATEGORIES.includes(category);
-  
-  const shouldNoindex = hasSearch || (!isCanonicalCategory && category !== 'All Games');
+  const pageNum = parseInt(typeof searchParams.page === 'string' ? searchParams.page : '1', 10) || 1;
 
-  const title = hasSearch
-    ? `Search Results for "${searchParams.search}" — Free Games | Spielcade`
+  const title = searchQuery
+    ? `Search Results for "${searchQuery}" — Free Online Games | Spielcade`
     : category === 'All Games' 
-      ? 'All Games — Play Free Online HTML5 Games | Spielcade'
-      : `${category} Games — Play Free Online on Spielcade`;
-    
+      ? (pageNum > 1 ? `All Free Online Games (Page ${pageNum}) | Spielcade` : 'All Games — Play Free Online HTML5 Games | Spielcade')
+      : `${category} Games${pageNum > 1 ? ` (Page ${pageNum})` : ''} — Play Free Online on Spielcade`;
+
+  const canonicalPath = isCanonicalCategory && !searchQuery
+    ? (pageNum > 1 ? `/categories/${category.toLowerCase().replace(/\s+/g, '-')}-games?page=${pageNum}` : `/categories/${category.toLowerCase().replace(/\s+/g, '-')}-games`)
+    : (pageNum > 1 ? `/games?page=${pageNum}` : '/games');
+
   return {
     title,
-    description: `Explore our collection of the best free online ${category.toLowerCase()} games. No downloads, no installs - just click and play instantly!`,
+    description: `Explore our collection of the best free online ${category.toLowerCase()} games. No downloads, no installs - click and play instantly!`,
     alternates: {
-      canonical: isCanonicalCategory && !hasSearch
-        ? `https://spielcade.com/categories/${category.toLowerCase().replace(/\s+/g, '-')}-games`
-        : 'https://spielcade.com/games'
+      canonical: `https://spielcade.com${canonicalPath}`,
     },
-    ...(shouldNoindex && {
-      robots: {
-        index: false,
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
         follow: true,
-      }
-    })
+        'max-image-preview': 'large',
+      },
+    },
   };
 }
 
@@ -49,27 +53,43 @@ export default async function AllGamesPage({ searchParams }: Props) {
   try {
     const supabase = createClient();
     const activeCategory = typeof searchParams.category === 'string' ? searchParams.category : 'All Games';
-    
-    // 1. Get exact total count of active games (lightweight metadata request)
-    const { count } = await supabase
+    const searchQuery = typeof searchParams.q === 'string' ? searchParams.q : (typeof searchParams.search === 'string' ? searchParams.search : '');
+    const currentPage = Math.max(1, parseInt(typeof searchParams.page === 'string' ? searchParams.page : '1', 10) || 1);
+    const PAGE_SIZE = 40;
+    const from = (currentPage - 1) * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+
+    // 1. Get exact total count for active category/search filter
+    let countQuery = supabase
       .from('games')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'active');
 
-    const totalCount = count || 0;
+    if (activeCategory !== 'All Games') {
+      countQuery = countQuery.eq('category', activeCategory);
+    }
+    if (searchQuery) {
+      countQuery = countQuery.ilike('title', `%${searchQuery}%`);
+    }
 
-    // 2. Fetch games in a single lightweight query (safe for Cloudflare Edge limits)
+    const { count } = await countQuery;
+    const totalCount = count || 0;
+    const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+
+    // 2. Fetch current page slice with index-friendly order
     let query = supabase
       .from('games')
-      .select('id, title, slug, description, category, image_url, total_plays, rating')
-      .eq('status', 'active')
-      .order('created_at', { ascending: false });
+      .select('id, title, slug, description, category, image_url, total_plays, rating, created_at')
+      .eq('status', 'active');
 
     if (activeCategory !== 'All Games') {
-      query = query.eq('category', activeCategory).limit(200);
-    } else {
-      query = query.limit(200);
+      query = query.eq('category', activeCategory);
     }
+    if (searchQuery) {
+      query = query.ilike('title', `%${searchQuery}%`);
+    }
+
+    query = query.order('created_at', { ascending: false }).range(from, to);
 
     const { data: rawGames } = await query;
 
@@ -81,7 +101,8 @@ export default async function AllGamesPage({ searchParams }: Props) {
       category: game.category,
       image: game.image_url,
       totalPlays: game.total_plays,
-      rating: game.rating
+      rating: game.rating,
+      created_at: game.created_at
     }));
 
     const collectionSchema = {
@@ -89,8 +110,8 @@ export default async function AllGamesPage({ searchParams }: Props) {
       "@type": "CollectionPage",
       "name": activeCategory === 'All Games' ? "All Free Online Games on Spielcade" : `${activeCategory} Games on Spielcade`,
       "description": `Play the best free online ${activeCategory.toLowerCase()} games.`,
-      "url": "https://spielcade.com/games",
-      "hasPart": allGames.slice(0, 50).map(game => ({
+      "url": `https://spielcade.com/games${currentPage > 1 ? `?page=${currentPage}` : ''}`,
+      "hasPart": allGames.slice(0, 40).map(game => ({
         "@type": "SoftwareApplication",
         "name": game.title,
         "applicationCategory": "Game",
@@ -99,8 +120,8 @@ export default async function AllGamesPage({ searchParams }: Props) {
     };
 
     const heroSubtitle = activeCategory === 'All Games'
-      ? `Explore our massive collection of ${totalCount > 0 ? `${totalCount}+` : 'thousands of'} free online games. No downloads, no installs - just click and play your favorite games instantly!`
-      : `Explore the best free online ${activeCategory.toLowerCase()} games. Handpicked, instant play, and 100% free with no downloads required!`;
+      ? `Explore our massive collection of ${totalCount > 0 ? `${totalCount.toLocaleString()}+` : 'thousands of'} free online games. No downloads, no installs - just click and play your favorite games instantly!`
+      : `Explore ${totalCount.toLocaleString()}+ free online ${activeCategory.toLowerCase()} games. Handpicked, instant play, and 100% free with no downloads required!`;
 
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-[#05050F] text-gray-900 dark:text-white pt-24 pb-12 transition-colors duration-300">
@@ -115,6 +136,12 @@ export default async function AllGamesPage({ searchParams }: Props) {
             <Link href="/" className="hover:text-[#6366F1] transition-colors">Home</Link>
             <span>&gt;</span>
             <span className="text-gray-900 dark:text-gray-200">{activeCategory}</span>
+            {currentPage > 1 && (
+              <>
+                <span>&gt;</span>
+                <span className="text-[#6366F1]">Page {currentPage}</span>
+              </>
+            )}
           </div>
         </div>
 
@@ -150,7 +177,13 @@ export default async function AllGamesPage({ searchParams }: Props) {
         <div className="container mx-auto px-4 md:px-8 max-w-[1600px]">
           {/* Interactive Client Section */}
           <Suspense fallback={<div className="w-full h-96 bg-gray-100 dark:bg-white/5 animate-pulse rounded-2xl" />}>
-            <AllGamesClient initialGames={allGames} totalCount={totalCount} />
+            <AllGamesClient 
+              initialGames={allGames} 
+              totalCount={totalCount} 
+              serverCurrentPage={currentPage}
+              serverTotalPages={totalPages}
+              serverCategory={activeCategory}
+            />
           </Suspense>
           
           {/* Dynamic SEO Block */}

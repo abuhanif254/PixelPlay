@@ -89,9 +89,9 @@ const jsonLd = {
       },
       'potentialAction': {
         '@type': 'SearchAction',
-        'target': {
+        target: {
           '@type': 'EntryPoint',
-          'urlTemplate': 'https://spielcade.com/games?search={search_term_string}'
+          urlTemplate: 'https://spielcade.com/games?q={search_term_string}'
         },
         'query-input': 'required name=search_term_string'
       }
@@ -107,13 +107,12 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const monetagZone = process.env.NEXT_PUBLIC_MONETAG_ZONE_ID;
+  const isMonetagLive = monetagZone && monetagZone !== 'mock-zone-id';
 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://img.gamemonetize.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://img.gamemonetize.com" />
         <link rel="dns-prefetch" href="https://www.highperformanceformat.com" />
@@ -124,18 +123,20 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        {/* Monetag Push Notifications Script (Placeholder Zone ID) */}
-        <meta name="monetag" content="mock-verification-code" />
+        {isMonetagLive && (
+          <meta name="monetag" content={monetagZone} />
+        )}
       </head>
       <body className={`${inter.className} bg-background text-foreground antialiased min-h-screen flex flex-col`}>
-        {/* Monetag Script tag injected outside of head for better performance often recommended by Monetag */}
-        <Script 
-          src="https://alwingulla.com/88/tag.min.js" 
-          data-zone="mock-zone-id" 
-          data-cfasync="false" 
-          async 
-          strategy="lazyOnload"
-        />
+        {isMonetagLive && (
+          <Script 
+            src="https://alwingulla.com/88/tag.min.js" 
+            data-zone={monetagZone} 
+            data-cfasync="false" 
+            async 
+            strategy="lazyOnload"
+          />
+        )}
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
