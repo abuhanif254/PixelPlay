@@ -154,7 +154,8 @@ ALTER TABLE public.blog_comments ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Anyone can read blog comments" ON public.blog_comments;
 CREATE POLICY "Anyone can read blog comments" ON public.blog_comments FOR SELECT USING (true);
 
-DROP POLICY IF EXISTS "Users can insert blog comments" ON public.blog_comments FOR INSERT WITH CHECK (auth.uid() = author_id);
+DROP POLICY IF EXISTS "Users can insert blog comments" ON public.blog_comments;
+CREATE POLICY "Users can insert blog comments" ON public.blog_comments FOR INSERT WITH CHECK (auth.uid() = author_id);
 
 -- ─────────────────────────────────────────────
 -- 8. Create user_notifications Table
