@@ -103,7 +103,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
         name: name,
         score: Number(s.score).toLocaleString(),
         topGame: game?.title || targetGameTitle,
-        gameSlug: game?.slug || gameSlug || 'neon-snake',
+        gameSlug: game?.slug || gameSlug || 'snake',
         gamesPlayed: 1,
         avatar: profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`
       });

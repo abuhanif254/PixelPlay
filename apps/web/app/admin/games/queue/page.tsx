@@ -20,13 +20,14 @@ export default async function GameQueuePage() {
       id, title, slug, category, description, image_url, source_url, created_at,
       profiles (username, full_name, avatar_url)
     `)
-    .eq('status', 'pending_review')
+    .in('status', ['pending', 'pending_review'])
     .order('created_at', { ascending: true });
 
   const typedGames = (games || []).map((g: any) => ({
     ...g,
     developer: g.profiles,
   }));
+
 
   return (
     <div className="flex flex-col gap-8">

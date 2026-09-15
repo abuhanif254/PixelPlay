@@ -27,8 +27,11 @@ export default function NewGamesClient({ initialGames = [] }: NewGamesClientProp
   const [activeTab, setActiveTab] = useState('All New');
   const [activeCategory, setActiveCategory] = useState('All Categories');
   const [sortBy, setSortBy] = useState('Newest First');
-  const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedRating, setSelectedRating] = useState<number | null>(null);
+  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
+  const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
 
   // ─── DYNAMIC METRICS ───
   const { gamesThisWeek, gamesThisMonth, avgRating, categories } = useMemo(() => {
@@ -86,6 +89,20 @@ export default function NewGamesClient({ initialGames = [] }: NewGamesClientProp
       // Search
       if (searchQuery && !game.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
 
+      // Rating filter
+      if (selectedRating !== null && (game.rating || 0) < selectedRating) return false;
+
+      // Players filter
+      if (selectedPlayers.length > 0) {
+        const text = `${game.title} ${game.category || ''} ${game.description || ''}`.toLowerCase();
+        const matchesPlayer = selectedPlayers.some(p => {
+          if (p === 'Two Player') return text.includes('2 player') || text.includes('two player') || text.includes('pvp');
+          if (p === 'Multiplayer') return text.includes('multiplayer') || text.includes('io') || text.includes('online');
+          return true; // Single Player default
+        });
+        if (!matchesPlayer) return false;
+      }
+
       return true;
     });
 
@@ -104,7 +121,7 @@ export default function NewGamesClient({ initialGames = [] }: NewGamesClientProp
     });
 
     return filtered;
-  }, [initialGames, activeTab, activeCategory, sortBy, searchQuery]);
+  }, [initialGames, activeTab, activeCategory, sortBy, searchQuery, selectedRating, selectedPlayers, selectedFeatures]);
 
   // ─── PAGINATION ───
   const totalPages = Math.max(1, Math.ceil(displayGames.length / ITEMS_PER_PAGE));
@@ -173,51 +190,133 @@ export default function NewGamesClient({ initialGames = [] }: NewGamesClientProp
             </ul>
           </div>
 
-          {/* Filters Block (Mocked functionality for exact UI match, optionally hook up logic later) */}
+          {/* Filters Block (Fully Interactive) */}
           <div className="bg-white dark:bg-[#111221] rounded-xl border border-gray-200 dark:border-white/5 p-5">
-            <h3 className="text-gray-900 dark:text-white font-bold text-[15px] mb-4">Filter Games</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-gray-900 dark:text-white font-bold text-[15px]">Filter Games</h3>
+              {(selectedRating !== null || selectedPlayers.length > 0 || selectedFeatures.length > 0) && (
+                <button 
+                  onClick={() => {
+                    setSelectedRating(null);
+                    setSelectedPlayers([]);
+                    setSelectedFeatures([]);
+                  }}
+                  className="text-xs text-purple-600 dark:text-purple-400 hover:underline font-medium"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
             
             {/* Rating */}
             <div className="mb-5">
-              <h4 className="text-[13px] text-gray-700 dark:text-gray-300 mb-2">Rating</h4>
+              <h4 className="text-[13px] text-gray-700 dark:text-gray-300 mb-2 font-medium">Minimum Rating</h4>
               <div className="flex gap-2">
-                {[5, '4+', '3+', '2+'].map(r => (
-                  <button key={r.toString()} className="flex-1 bg-gray-100 dark:bg-[#1A1B2E] border border-gray-200 dark:border-white/5 rounded-lg py-1.5 flex items-center justify-center gap-1 text-[12px] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors">
-                    <Star className="w-3.5 h-3.5 fill-[#F59E0B] text-[#F59E0B]" />
-                    {r}
-                  </button>
-                ))}
+                {[
+                  { label: '5★', val: 5 },
+                  { label: '4★+', val: 4 },
+                  { label: '3★+', val: 3 },
+                  { label: '2★+', val: 2 },
+                ].map(({ label, val }) => {
+                  const isActive = selectedRating === val;
+                  return (
+                    <button 
+                      key={label}
+                      type="button"
+                      onClick={() => setSelectedRating(isActive ? null : val)}
+                      className={`flex-1 rounded-lg py-1.5 flex items-center justify-center gap-1 text-[12px] font-medium transition-all ${
+                        isActive 
+                          ? 'bg-purple-600 text-white shadow-sm ring-2 ring-purple-400/50' 
+                          : 'bg-gray-100 dark:bg-[#1A1B2E] border border-gray-200 dark:border-white/5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10'
+                      }`}
+                    >
+                      <Star className={`w-3.5 h-3.5 ${isActive ? 'fill-white text-white' : 'fill-[#F59E0B] text-[#F59E0B]'}`} />
+                      {label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
             {/* Players */}
             <div className="mb-5">
-              <h4 className="text-[13px] text-gray-700 dark:text-gray-300 mb-2">Players</h4>
+              <h4 className="text-[13px] text-gray-700 dark:text-gray-300 mb-2 font-medium">Players</h4>
               <div className="space-y-2">
-                {['Single Player', 'Two Player', 'Multiplayer'].map(p => (
-                  <label key={p} className="flex items-center gap-3 cursor-pointer group">
-                    <div className="w-4 h-4 rounded border border-gray-300 dark:border-white/20 bg-gray-100 dark:bg-[#1A1B2E] flex items-center justify-center group-hover:border-purple-500"></div>
-                    <span className="text-[13px] text-gray-600 dark:text-gray-400 group-hover:text-gray-800 dark:text-gray-200">{p}</span>
-                  </label>
-                ))}
+                {['Single Player', 'Two Player', 'Multiplayer'].map(p => {
+                  const isChecked = selectedPlayers.includes(p);
+                  return (
+                    <button 
+                      key={p} 
+                      type="button"
+                      onClick={() => {
+                        setSelectedPlayers(prev => 
+                          isChecked ? prev.filter(x => x !== p) : [...prev, p]
+                        );
+                      }}
+                      className="flex items-center gap-3 w-full text-left cursor-pointer group"
+                    >
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${
+                        isChecked 
+                          ? 'bg-purple-600 border-purple-600 text-white' 
+                          : 'border-gray-300 dark:border-white/20 bg-gray-100 dark:bg-[#1A1B2E] group-hover:border-purple-500'
+                      }`}>
+                        {isChecked && <CheckSquare className="w-3.5 h-3.5" />}
+                      </div>
+                      <span className={`text-[13px] transition-colors ${
+                        isChecked ? 'text-purple-600 dark:text-purple-400 font-semibold' : 'text-gray-600 dark:text-gray-400 group-hover:text-gray-800 dark:text-gray-200'
+                      }`}>{p}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
             {/* Features */}
             <div className="mb-6">
-              <h4 className="text-[13px] text-gray-700 dark:text-gray-300 mb-2">Features</h4>
+              <h4 className="text-[13px] text-gray-700 dark:text-gray-300 mb-2 font-medium">Features</h4>
               <div className="space-y-2">
-                {['HTML5', 'No Download', 'Mobile Friendly'].map(f => (
-                  <label key={f} className="flex items-center gap-3 cursor-pointer group">
-                    <div className="w-4 h-4 rounded border border-gray-300 dark:border-white/20 bg-gray-100 dark:bg-[#1A1B2E] flex items-center justify-center group-hover:border-purple-500"></div>
-                    <span className="text-[13px] text-gray-600 dark:text-gray-400 group-hover:text-gray-800 dark:text-gray-200">{f}</span>
-                  </label>
-                ))}
+                {['HTML5', 'No Download', 'Mobile Friendly'].map(f => {
+                  const isChecked = selectedFeatures.includes(f);
+                  return (
+                    <button 
+                      key={f} 
+                      type="button"
+                      onClick={() => {
+                        setSelectedFeatures(prev => 
+                          isChecked ? prev.filter(x => x !== f) : [...prev, f]
+                        );
+                      }}
+                      className="flex items-center gap-3 w-full text-left cursor-pointer group"
+                    >
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${
+                        isChecked 
+                          ? 'bg-purple-600 border-purple-600 text-white' 
+                          : 'border-gray-300 dark:border-white/20 bg-gray-100 dark:bg-[#1A1B2E] group-hover:border-purple-500'
+                      }`}>
+                        {isChecked && <CheckSquare className="w-3.5 h-3.5" />}
+                      </div>
+                      <span className={`text-[13px] transition-colors ${
+                        isChecked ? 'text-purple-600 dark:text-purple-400 font-semibold' : 'text-gray-600 dark:text-gray-400 group-hover:text-gray-800 dark:text-gray-200'
+                      }`}>{f}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            <button className="w-full bg-purple-600 hover:bg-purple-500 text-white font-semibold text-[13px] py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
-              <Search className="w-4 h-4" /> Apply Filters
+            <button 
+              type="button"
+              onClick={() => {
+                // Focus display
+                const el = document.getElementById('new-games-grid');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="w-full bg-purple-600 hover:bg-purple-500 text-white font-semibold text-[13px] py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
+              <Search className="w-4 h-4" /> 
+              {selectedRating !== null || selectedPlayers.length > 0 || selectedFeatures.length > 0
+                ? `Showing ${displayGames.length} Games`
+                : 'Filter Catalog'}
             </button>
           </div>
 

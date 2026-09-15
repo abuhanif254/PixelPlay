@@ -235,10 +235,12 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
     }
   }
 
-  const totalPlaysNum = dbGame?.total_plays || (localGame ? 25000 : 12000);
+  const totalPlaysNum = dbGame?.total_plays ?? (localGame ? 25000 : 0);
   const formattedPlays = totalPlaysNum >= 1000000 
     ? `${(totalPlaysNum / 1000000).toFixed(1)}M plays`
-    : `${Math.floor(totalPlaysNum / 1000)}K plays`;
+    : totalPlaysNum >= 1000
+    ? `${Math.floor(totalPlaysNum / 1000)}K plays`
+    : `${totalPlaysNum} plays`;
 
   const votesNum = Math.floor(totalPlaysNum * 0.12);
   const formattedVotes = votesNum >= 1000

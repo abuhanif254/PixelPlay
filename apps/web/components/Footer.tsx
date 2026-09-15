@@ -50,7 +50,7 @@ export default function Footer() {
             <div className="flex items-center gap-3 pt-2">
               {[
                 { Icon: Twitter, label: 'Twitter', href: 'https://twitter.com' },
-                { Icon: Github, label: 'GitHub', href: 'https://github.com' },
+                { Icon: Github, label: 'GitHub', href: 'https://github.com/abuhanif254/PixelPlay' },
                 { Icon: Youtube, label: 'YouTube', href: 'https://youtube.com' }
               ].map(({ Icon, label, href }) => (
                 <motion.a 
@@ -105,6 +105,7 @@ export default function Footer() {
             <ul className="space-y-2.5">
               {[
                 { name: 'Help Center', path: '/help' },
+                { name: 'About Us', path: '/about' },
                 { name: 'Game Guides', path: '/blog' },
                 { name: 'Terms of Service', path: '/terms' },
                 { name: 'Privacy Policy', path: '/privacy' },

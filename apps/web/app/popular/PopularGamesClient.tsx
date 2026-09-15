@@ -35,6 +35,7 @@ export default function PopularGamesClient({ initialGames = [] }: PopularGamesCl
   const [sortBy, setSortBy] = useState('Most Popular');
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedRating, setSelectedRating] = useState<number | null>(null);
 
   // ─── DYNAMIC METRICS ───
   const { totalPlaysStr, avgRating, totalLikesStr, categories } = useMemo(() => {
@@ -94,6 +95,9 @@ export default function PopularGamesClient({ initialGames = [] }: PopularGamesCl
       // Search
       if (searchQuery && !game.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
 
+      // Rating filter
+      if (selectedRating !== null && (game.rating || 0) < selectedRating) return false;
+
       return true;
     });
 
@@ -112,7 +116,7 @@ export default function PopularGamesClient({ initialGames = [] }: PopularGamesCl
     });
 
     return filtered;
-  }, [initialGames, activeTab, activeCategory, sortBy, searchQuery]);
+  }, [initialGames, activeTab, activeCategory, sortBy, searchQuery, selectedRating]);
 
   // ─── PAGINATION ───
   const totalPages = Math.max(1, Math.ceil(displayGames.length / ITEMS_PER_PAGE));
@@ -216,26 +220,63 @@ export default function PopularGamesClient({ initialGames = [] }: PopularGamesCl
               </select>
             </div>
 
-            {/* Rating Stars mock */}
+            {/* Rating Stars Filter */}
             <div className="mb-6">
-              <h4 className="text-[13px] text-gray-700 dark:text-gray-300 mb-2">Rating</h4>
-              <div className="space-y-1.5">
-                {[5, 4, 3].map(r => (
-                  <label key={r} className="flex items-center gap-3 cursor-pointer group">
-                    <div className="w-4 h-4 rounded border border-gray-300 dark:border-white/20 bg-gray-100 dark:bg-[#1A1B2E] flex items-center justify-center group-hover:border-purple-500"></div>
-                    <div className="flex gap-1">
-                      {Array.from({length: 5}).map((_, i) => (
-                        <Star key={i} className={`w-3.5 h-3.5 ${i < r ? 'fill-[#F59E0B] text-[#F59E0B]' : 'text-gray-600'}`} />
-                      ))}
-                    </div>
-                    {r === 3 && <span className="text-[11px] text-gray-500 ml-1">& Below</span>}
-                  </label>
-                ))}
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-[13px] text-gray-700 dark:text-gray-300 font-medium">Minimum Rating</h4>
+                {selectedRating !== null && (
+                  <button 
+                    type="button"
+                    onClick={() => setSelectedRating(null)}
+                    className="text-xs text-purple-600 dark:text-purple-400 hover:underline"
+                  >
+                    Reset
+                  </button>
+                )}
+              </div>
+              <div className="space-y-2">
+                {[5, 4, 3].map(r => {
+                  const isChecked = selectedRating === r;
+                  return (
+                    <button 
+                      key={r}
+                      type="button"
+                      onClick={() => setSelectedRating(isChecked ? null : r)}
+                      className="flex items-center gap-3 w-full text-left cursor-pointer group"
+                    >
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${
+                        isChecked 
+                          ? 'bg-purple-600 border-purple-600 text-white' 
+                          : 'border-gray-300 dark:border-white/20 bg-gray-100 dark:bg-[#1A1B2E] group-hover:border-purple-500'
+                      }`}>
+                        {isChecked && <CheckSquare className="w-3.5 h-3.5" />}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="flex gap-0.5">
+                          {Array.from({length: 5}).map((_, i) => (
+                            <Star key={i} className={`w-3.5 h-3.5 ${i < r ? 'fill-[#F59E0B] text-[#F59E0B]' : 'text-gray-400 dark:text-gray-600'}`} />
+                          ))}
+                        </div>
+                        <span className={`text-[12px] ml-1.5 ${isChecked ? 'text-purple-600 dark:text-purple-400 font-bold' : 'text-gray-600 dark:text-gray-400'}`}>
+                          {r}★ & Up
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            <button className="w-full bg-purple-600 hover:bg-purple-500 text-white font-semibold text-[13px] py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
-              <Search className="w-4 h-4" /> Apply Filters
+            <button 
+              type="button"
+              onClick={() => {
+                const el = document.getElementById('popular-games-grid');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="w-full bg-purple-600 hover:bg-purple-500 text-white font-semibold text-[13px] py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
+              <Search className="w-4 h-4" /> 
+              {selectedRating !== null ? `Showing ${displayGames.length} Games` : 'Apply Filters'}
             </button>
           </div>
 

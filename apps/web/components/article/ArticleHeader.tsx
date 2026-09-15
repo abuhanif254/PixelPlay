@@ -28,9 +28,9 @@ export default function ArticleHeader({ post, likeCount = 0, hasLiked = false }:
       </nav>
 
       <div className="flex flex-col gap-4">
-        {/* Category Pill - Mocked for now */}
+        {/* Dynamic Category Pill */}
         <span className="inline-block px-3 py-1 bg-[#6366F1]/20 text-[#6366F1] text-xs font-bold rounded uppercase tracking-wider w-fit">
-          ARTICLE
+          {((post.tags && post.tags.length > 0 ? post.tags[0] : post.category) || 'ARTICLE').toUpperCase()}
         </span>
 
         {/* Title */}

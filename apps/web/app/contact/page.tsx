@@ -62,9 +62,36 @@ export default function ContactPage() {
                     <MessageSquare className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Live Support</h3>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">Join our Discord community for quick help.</p>
-                    <a href="#" className="text-[#6366F1] font-medium hover:underline">Join Discord Server</a>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Developer & Community</h3>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">Connect with our team and explore the project codebase.</p>
+                    <div className="flex flex-wrap items-center gap-3 text-sm">
+                      <a 
+                        href="https://github.com/abuhanif254/PixelPlay" 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-[#6366F1] font-medium hover:underline flex items-center gap-1"
+                      >
+                        GitHub Project
+                      </a>
+                      <span className="text-gray-400 dark:text-gray-600">•</span>
+                      <a 
+                        href="https://www.linkedin.com/in/md-abu-hanif-mia" 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-[#6366F1] font-medium hover:underline"
+                      >
+                        LinkedIn
+                      </a>
+                      <span className="text-gray-400 dark:text-gray-600">•</span>
+                      <a 
+                        href="https://www.facebook.com/bitulla" 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-[#6366F1] font-medium hover:underline"
+                      >
+                        Facebook
+                      </a>
+                    </div>
                   </div>
                 </div>
 
@@ -75,7 +102,7 @@ export default function ContactPage() {
                   <div>
                     <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Operating Hours</h3>
                     <p className="text-gray-500 dark:text-gray-400 text-sm">Monday - Friday</p>
-                    <p className="text-gray-900 dark:text-gray-300 font-medium text-sm">9:00 AM - 6:00 PM (EST)</p>
+                    <p className="text-gray-900 dark:text-gray-300 font-medium text-sm">9:00 AM - 6:00 PM (BST / UTC+6)</p>
                   </div>
                 </div>
 
@@ -84,11 +111,12 @@ export default function ContactPage() {
                     <MapPin className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Office Location</h3>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
-                      123 Gaming Boulevard<br />
-                      Suite 404<br />
-                      New York, NY 10001
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Headquarters & Physical Address</h3>
+                    <p className="text-gray-900 dark:text-white font-semibold text-sm">MD Abu Hanif Mia</p>
+                    <p className="text-purple-600 dark:text-purple-400 text-xs font-medium mb-1">Founder & Developer</p>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+                      2300 Kishoreganj Sadar<br />
+                      Dhaka, Bangladesh
                     </p>
                   </div>
                 </div>

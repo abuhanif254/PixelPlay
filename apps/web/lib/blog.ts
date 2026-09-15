@@ -1,3 +1,5 @@
+import { createClient } from '@/lib/supabase/server';
+
 export interface BlogPost {
   slug: string;
   title: string;
@@ -90,11 +92,73 @@ const MOCK_POSTS: BlogPost[] = [
 ];
 
 export async function getAllPosts(): Promise<BlogPost[]> {
-  // In the future, replace this with a fetch to your Headless CMS
+  try {
+    const supabase = createClient();
+    const { data: rawPosts, error } = await supabase
+      .from('blog_posts')
+      .select(`
+        id, title, slug, excerpt, content, cover_image, tags,
+        read_time, created_at,
+        profiles:author_id(username, avatar_url)
+      `)
+      .eq('status', 'published')
+      .order('created_at', { ascending: false });
+
+    if (!error && rawPosts && rawPosts.length > 0) {
+      return rawPosts.map((p: any) => ({
+        slug: p.slug,
+        title: p.title,
+        excerpt: p.excerpt || '',
+        content: p.content || '',
+        date: p.created_at ? p.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
+        readTime: `${p.read_time || 5} min read`,
+        category: (p.tags && p.tags.length > 0 ? p.tags[0] : 'Guides'),
+        imageUrl: p.cover_image || 'https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=800&q=80',
+        author: {
+          name: p.profiles?.username || 'Spielcade Team',
+          avatar: p.profiles?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Spielcade',
+        },
+      }));
+    }
+  } catch (err) {
+    console.error('Failed to fetch dynamic blog posts from Supabase:', err);
+  }
   return MOCK_POSTS;
 }
 
 export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
+  try {
+    const supabase = createClient();
+    const { data: p, error } = await supabase
+      .from('blog_posts')
+      .select(`
+        id, title, slug, excerpt, content, cover_image, tags,
+        read_time, created_at,
+        profiles:author_id(username, avatar_url)
+      `)
+      .eq('slug', slug)
+      .eq('status', 'published')
+      .maybeSingle();
+
+    if (!error && p) {
+      return {
+        slug: p.slug,
+        title: p.title,
+        excerpt: p.excerpt || '',
+        content: p.content || '',
+        date: p.created_at ? p.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
+        readTime: `${p.read_time || 5} min read`,
+        category: (p.tags && p.tags.length > 0 ? p.tags[0] : 'Guides'),
+        imageUrl: p.cover_image || 'https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=800&q=80',
+        author: {
+          name: (p as any).profiles?.username || 'Spielcade Team',
+          avatar: (p as any).profiles?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Spielcade',
+        },
+      };
+    }
+  } catch (err) {
+    console.error('Failed to fetch dynamic blog post by slug from Supabase:', err);
+  }
   const post = MOCK_POSTS.find(p => p.slug === slug);
   return post || null;
 }

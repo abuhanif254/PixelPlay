@@ -36,7 +36,7 @@ export function getSmartRecommendations(
     }
 
     // Flagship titles boost
-    if (['neon-snake', '2048-classic', 'neon-flyer', 'blade-merge-master'].includes(game.slug)) {
+    if (['snake', '2048', 'flappy-bird', 'blade-merge'].includes(game.slug)) {
       score += 4;
     }
 

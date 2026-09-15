@@ -28,8 +28,8 @@ interface SdkEventLog {
 
 export default function SdkSandboxPage() {
   const [deviceMode, setDeviceMode] = useState<'desktop' | 'mobile' | 'tablet'>('desktop');
-  const [testUrl, setTestUrl] = useState('/games/neon-snake');
-  const [loadedUrl, setLoadedUrl] = useState('/games/neon-snake');
+  const [testUrl, setTestUrl] = useState('/embed/snake');
+  const [loadedUrl, setLoadedUrl] = useState('/embed/snake');
   const [logs, setLogs] = useState<SdkEventLog[]>([]);
   const [isAdSimulating, setIsAdSimulating] = useState(false);
   const [adCountdown, setAdCountdown] = useState(3);
