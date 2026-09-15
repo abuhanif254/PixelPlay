@@ -17,7 +17,15 @@ export async function middleware(request: NextRequest) {
   }
 
   const isAdminRoute = pathname.startsWith('/admin')
-  const isProtectedRoute = pathname.startsWith('/profile') || pathname.startsWith('/studio') || isAdminRoute
+  const isProtectedProfile =
+    pathname === '/profile' ||
+    pathname.startsWith('/profile/achievements') ||
+    pathname.startsWith('/profile/activity') ||
+    pathname.startsWith('/profile/favorites') ||
+    pathname.startsWith('/profile/history') ||
+    pathname.startsWith('/profile/recent') ||
+    pathname.startsWith('/profile/settings')
+  const isProtectedRoute = isProtectedProfile || pathname.startsWith('/studio') || isAdminRoute
 
   // 2. Check if request has any Supabase auth session cookies
   const hasAuthCookie = request.cookies.getAll().some(

@@ -61,7 +61,7 @@ export default function TournamentMatchRibbon({ gameSlug, gameTitle }: Tournamen
         {/* Right Side: Leaderboard Link + Close */}
         <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
           <Link
-            href={`/leaderboard?game=${gameSlug}`}
+            href="/tournaments"
             onClick={() => arcadeAudio.playSelect()}
             className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 active:scale-95"
           >

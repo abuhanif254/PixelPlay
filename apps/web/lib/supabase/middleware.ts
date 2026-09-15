@@ -54,8 +54,15 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const isAdminRoute = request.nextUrl.pathname.startsWith('/admin')
-  const isProtectedRoute =
-    request.nextUrl.pathname.startsWith('/profile') || isAdminRoute
+  const isProtectedProfile =
+    request.nextUrl.pathname === '/profile' ||
+    request.nextUrl.pathname.startsWith('/profile/achievements') ||
+    request.nextUrl.pathname.startsWith('/profile/activity') ||
+    request.nextUrl.pathname.startsWith('/profile/favorites') ||
+    request.nextUrl.pathname.startsWith('/profile/history') ||
+    request.nextUrl.pathname.startsWith('/profile/recent') ||
+    request.nextUrl.pathname.startsWith('/profile/settings')
+  const isProtectedRoute = isProtectedProfile || isAdminRoute
 
   // If user is NOT logged in and trying to access protected route, redirect to login
   if (!user && isProtectedRoute) {

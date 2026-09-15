@@ -1,13 +1,11 @@
 'use server'
 
-
-
 import { createClient } from '@/lib/supabase/server'
 import { verifyAdminAction } from '@/lib/admin'
 import { revalidatePath } from 'next/cache'
 
 // ─── Update User Role ──────────────────────────────────────────────────────────
-export async function updateUserRole(userId: string, role: 'user' | 'admin') {
+export async function updateUserRole(userId: string, role: 'user' | 'developer' | 'admin') {
   const auth = await verifyAdminAction()
   if (!auth.success) return auth
 
@@ -53,12 +51,16 @@ export async function toggleBan(userId: string, isBanned: boolean, reason?: stri
 
   const supabase = createClient()
   
-  // Note: If you want to store the reason, you would need a 'ban_reason' column in 'profiles'. 
-  // For now, we accept it to fix the type signature from the client call.
-  const { error } = await supabase.from('profiles').update({ is_banned: isBanned }).eq('id', userId)
+  const updatePayload: Record<string, any> = { is_banned: isBanned }
+  if (isBanned) {
+    updatePayload.ban_reason = reason || null
+  } else {
+    updatePayload.ban_reason = null
+  }
+
+  const { error } = await supabase.from('profiles').update(updatePayload).eq('id', userId)
   if (error) return { success: false, error: error.message }
 
   revalidatePath('/admin/users')
   return { success: true }
 }
-

@@ -36,7 +36,7 @@ export function computeCategoryAffinities(): Record<string, number> {
     }
 
     // 2. Scan Favorites (Strongest intent signal)
-    const rawFavs = localStorage.getItem('spielcade_favorites');
+    const rawFavs = localStorage.getItem('spielcade_guest_favorites') || localStorage.getItem('spielcade_favorites');
     if (rawFavs) {
       const favs: string[] = JSON.parse(rawFavs);
       favs.forEach(() => {
@@ -46,7 +46,7 @@ export function computeCategoryAffinities(): Record<string, number> {
     }
 
     // 3. Scan Offline Checkpoints
-    const rawCheckpoints = localStorage.getItem('spielcade_offline_sync_queue');
+    const rawCheckpoints = localStorage.getItem('spielcade_offline_queue') || localStorage.getItem('spielcade_offline_sync_queue');
     if (rawCheckpoints) {
       const q: any[] = JSON.parse(rawCheckpoints);
       q.forEach(() => {

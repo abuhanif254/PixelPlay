@@ -37,7 +37,7 @@ export async function submitScore(gameSlug: string, score: number) {
   try {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('xp, level')
+      .select('xp, level, streak')
       .eq('id', user.id)
       .single();
 
@@ -66,12 +66,13 @@ export async function submitScore(gameSlug: string, score: number) {
         .select('*');
 
       if (allAchievements && allAchievements.length > 0) {
-        // Count distinct games played
+        // Count distinct games played and sum total score
         const { data: userScores } = await supabase
           .from('scores')
-          .select('game_id')
+          .select('game_id, score')
           .eq('user_id', user.id);
         const distinctGamesCount = new Set((userScores || []).map((s: any) => s.game_id)).size;
+        const totalUserScore = (userScores || []).reduce((acc: number, curr: any) => acc + (Number(curr.score) || 0), 0);
 
         for (const ach of allAchievements) {
           if (earnedSet.has(ach.id)) continue;
@@ -80,6 +81,8 @@ export async function submitScore(gameSlug: string, score: number) {
           if (ach.condition_type === 'single_score' && score >= ach.condition_value) isEarned = true;
           else if (ach.condition_type === 'level' && newLevel >= ach.condition_value) isEarned = true;
           else if (ach.condition_type === 'games_played' && distinctGamesCount >= ach.condition_value) isEarned = true;
+          else if (ach.condition_type === 'streak' && (profile?.streak ?? 0) >= ach.condition_value) isEarned = true;
+          else if (ach.condition_type === 'total_score' && totalUserScore >= ach.condition_value) isEarned = true;
 
           if (isEarned) {
             await supabase.from('user_achievements').insert([

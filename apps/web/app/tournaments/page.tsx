@@ -31,6 +31,8 @@ import {
 } from '@/lib/daily-cup';
 import { arcadeAudio } from '@/lib/arcade-audio';
 
+import { createClient } from '@/lib/supabase/client';
+
 export const runtime = 'edge';
 
 export default function TournamentsPage() {
@@ -55,6 +57,73 @@ export default function TournamentsPage() {
     }, 1000);
     return () => clearInterval(timer);
   }, [tournament.nextResetUtcMs]);
+
+  // Query real leaderboard scores for today's tournament game
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function loadLiveTournamentScores() {
+      try {
+        const supabase = createClient();
+        const todayMidnight = new Date();
+        todayMidnight.setUTCHours(0, 0, 0, 0);
+
+        const { data: gameData } = await supabase
+          .from('games')
+          .select('id')
+          .eq('slug', tournament.game.slug)
+          .maybeSingle();
+
+        if (gameData?.id) {
+          const { data: realScores } = await supabase
+            .from('scores')
+            .select('id, score, created_at, profiles:user_id(username, avatar_url)')
+            .eq('game_id', gameData.id)
+            .gte('created_at', todayMidnight.toISOString())
+            .order('score', { ascending: false })
+            .limit(20);
+
+          if (!isCancelled && realScores && realScores.length > 0) {
+            const realStandings: TournamentStanding[] = realScores.map((s: any, idx: number) => ({
+              rank: idx + 1,
+              username: s.profiles?.username || `Player #${idx + 1}`,
+              score: s.score,
+              country: 'Global',
+              avatar: s.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${s.profiles?.username || 'player'}&backgroundColor=b6e3f4`,
+              isVerified: true,
+              timeAgo: 'Today',
+            }));
+
+            if (realStandings.length < 3) {
+              const fallback = tournament.standings.slice(realStandings.length);
+              const merged = [
+                ...realStandings,
+                ...fallback.map((fb, i) => ({ ...fb, rank: realStandings.length + i + 1 })),
+              ];
+              setTournament((prev) => ({
+                ...prev,
+                standings: merged,
+                totalEntrants: Math.max(prev.totalEntrants, realStandings.length),
+              }));
+            } else {
+              setTournament((prev) => ({
+                ...prev,
+                standings: realStandings,
+                totalEntrants: Math.max(prev.totalEntrants, realStandings.length),
+              }));
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Tournament live score fetch fallback:', err);
+      }
+    }
+
+    loadLiveTournamentScores();
+    return () => {
+      isCancelled = true;
+    };
+  }, [tournament.game.slug]);
 
   const handleShareTournament = async () => {
     arcadeAudio.playSelect();

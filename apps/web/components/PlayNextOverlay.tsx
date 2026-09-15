@@ -55,21 +55,45 @@ export default function PlayNextOverlay({
     } catch {}
   }, [currentSlug]);
 
-  // Compute smart recommendations or fallback to relatedGames
+  // Compute smart recommendations or combine with related catalog games
   const recommendations = useRef(getSmartRecommendations(currentSlug, category, 6));
 
-  const candidates = recommendations.current.length > 0
-    ? recommendations.current
-    : relatedGames.filter((g) => g.slug !== currentSlug);
+  const candidates = relatedGames.length > 0
+    ? relatedGames.filter((g) => g.slug !== currentSlug)
+    : (recommendations.current.length > 0
+        ? recommendations.current
+        : [
+            {
+              slug: 'snake',
+              title: 'Snake',
+              image: '/images/games/snake.svg',
+              category: 'Arcade',
+              badge: '🔥 98% Match',
+            },
+            {
+              slug: '2048',
+              title: '2048',
+              image: '/images/games/2048.svg',
+              category: 'Puzzle',
+              badge: '⚡ Trending',
+            },
+            {
+              slug: 'flappy-bird',
+              title: 'Flappy Bird',
+              image: '/images/games/flappy-bird.svg',
+              category: 'Arcade',
+              badge: '⭐ Classic',
+            },
+          ]);
 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [countdown, setCountdown] = useState(5);
   const [isPaused, setIsPaused] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const currentGame = candidates[selectedIndex] || {
-    slug: 'neon-snake',
-    title: 'Neon Snake',
+  const currentGame = candidates[selectedIndex] || candidates[0] || {
+    slug: 'snake',
+    title: 'Snake',
     image: '/images/games/snake.svg',
     category: 'Arcade',
     badge: '🔥 98% Match',

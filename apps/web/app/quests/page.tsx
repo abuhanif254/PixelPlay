@@ -43,7 +43,7 @@ export default function QuestsPage() {
       const recentList = rawRecent ? JSON.parse(rawRecent) : [];
       const playedCount = Array.isArray(recentList) ? recentList.length : 0;
 
-      const rawStreak = localStorage.getItem('spielcade_daily_streak');
+      const rawStreak = localStorage.getItem('spielcade_streak_count') || localStorage.getItem('spielcade_daily_streak');
       const streakVal = parseInt(rawStreak || '0', 10);
 
       let maxScore = 0;

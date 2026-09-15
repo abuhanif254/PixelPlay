@@ -9,7 +9,12 @@ export default function robots(): MetadataRoute.Robots {
       disallow: [
         '/api/',
         '/login/',
-        '/profile/',
+        '/profile/achievements/',
+        '/profile/activity/',
+        '/profile/favorites/',
+        '/profile/history/',
+        '/profile/recent/',
+        '/profile/settings/',
         '/favorites/',
         '/admin/',
         '/studio/',

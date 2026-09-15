@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Wifi, WifiOff, Gamepad2, Play, RefreshCw, Trophy, ShieldCheck, Sparkles, ArrowRight } from 'lucide-react';
 import { arcadeAudio } from '@/lib/arcade-audio';
+import { getOfflineQueue, flushOfflineQueue } from '@/lib/offline-sync';
 
 interface OfflineGameCard {
   id: string;
@@ -18,8 +19,8 @@ interface OfflineGameCard {
 
 const OFFLINE_GAMES: OfflineGameCard[] = [
   {
-    id: 'neon-snake',
-    slug: 'neon-snake',
+    id: 'snake',
+    slug: 'snake',
     title: 'Neon Snake',
     category: 'Arcade',
     icon: '🐍',
@@ -28,8 +29,8 @@ const OFFLINE_GAMES: OfflineGameCard[] = [
     borderColor: 'border-emerald-500/30 hover:border-emerald-500/60',
   },
   {
-    id: '2048-classic',
-    slug: '2048-classic',
+    id: '2048',
+    slug: '2048',
     title: '2048 Classic',
     category: 'Puzzle',
     icon: '🔢',
@@ -38,8 +39,8 @@ const OFFLINE_GAMES: OfflineGameCard[] = [
     borderColor: 'border-amber-500/30 hover:border-amber-500/60',
   },
   {
-    id: 'neon-flyer',
-    slug: 'neon-flyer',
+    id: 'flappy-bird',
+    slug: 'flappy-bird',
     title: 'Neon Flyer',
     category: 'Arcade',
     icon: '🚀',
@@ -59,20 +60,17 @@ export default function OfflineHubPage() {
 
     setIsOnline(navigator.onLine);
 
-    const handleOnline = () => setIsOnline(true);
+    const handleOnline = () => {
+      setIsOnline(true);
+      setPendingScoresCount(getOfflineQueue().length);
+    };
     const handleOffline = () => setIsOnline(false);
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
     // Read offline score queue
-    try {
-      const storedQueue = localStorage.getItem('spielcade_pending_scores');
-      if (storedQueue) {
-        const parsed = JSON.parse(storedQueue);
-        if (Array.isArray(parsed)) setPendingScoresCount(parsed.length);
-      }
-    } catch {}
+    setPendingScoresCount(getOfflineQueue().length);
 
     return () => {
       window.removeEventListener('online', handleOnline);
@@ -89,27 +87,11 @@ export default function OfflineHubPage() {
     setIsSyncing(true);
     arcadeAudio.playSelect();
 
-    // Trigger score queue sync
+    // Trigger score queue sync via genuine offline-sync engine
     try {
-      const stored = localStorage.getItem('spielcade_pending_scores');
-      if (stored) {
-        const queue = JSON.parse(stored);
-        if (Array.isArray(queue) && queue.length > 0) {
-          // Process queue items via API or standard handler
-          for (const item of queue) {
-            try {
-              await fetch('/api/scores', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(item),
-              });
-            } catch {}
-          }
-          localStorage.removeItem('spielcade_pending_scores');
-          setPendingScoresCount(0);
-          arcadeAudio.playLevelUp();
-        }
-      }
+      await flushOfflineQueue();
+      setPendingScoresCount(getOfflineQueue().length);
+      arcadeAudio.playLevelUp();
     } catch (e) {
       console.error(e);
     } finally {

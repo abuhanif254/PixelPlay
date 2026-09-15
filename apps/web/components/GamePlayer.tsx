@@ -42,7 +42,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRecentGames } from '@/hooks/useRecentGames';
-import { saveGameState, loadGameState } from '@/app/games/actions';
+import { saveGameState, loadGameState, submitScore } from '@/app/games/actions';
 import { toggleFavoriteGame } from '@/app/profile/actions';
 import AdBanner from '@/components/AdBanner';
 import CloudSaveBar from '@/components/CloudSaveBar';
@@ -800,7 +800,7 @@ export default function GamePlayer({
 
   // SDK & Game Message Receiver Protocol
   useEffect(() => {
-    if ((playerState !== 'playing' && playerState !== 'paused') || !sourceUrl) return;
+    if ((playerState !== 'playing' && playerState !== 'paused') || (!sourceUrl && !children)) return;
 
     const handle = async (event: MessageEvent) => {
       if (!event.data) return;
@@ -844,8 +844,9 @@ export default function GamePlayer({
             if (score > 0) {
               if (typeof navigator !== 'undefined' && !navigator.onLine) {
                 queueOfflineScore(slug, score);
-              } else if (onGameOver) {
-                Promise.resolve(onGameOver(score)).then((res: any) => {
+              } else {
+                const handler = onGameOver || ((sc: number) => submitScore(slug, sc));
+                Promise.resolve(handler(score)).then((res: any) => {
                   if (res?.newAchievements && res.newAchievements.length > 0) {
                     const firstAch = res.newAchievements[0];
                     setUnlockedAchievement({ title: firstAch.title, xp: firstAch.xp });
@@ -929,8 +930,9 @@ export default function GamePlayer({
               }
               if (typeof navigator !== 'undefined' && !navigator.onLine) {
                 queueOfflineScore(slug, score);
-              } else if (onGameOver) {
-                Promise.resolve(onGameOver(score)).catch(() => {
+              } else {
+                const handler = onGameOver || ((sc: number) => submitScore(slug, sc));
+                Promise.resolve(handler(score)).catch(() => {
                   queueOfflineScore(slug, score);
                 });
               }
@@ -942,7 +944,7 @@ export default function GamePlayer({
 
     window.addEventListener('message', handle);
     return () => window.removeEventListener('message', handle);
-  }, [playerState, sourceUrl, onGameOver, slug, personalBest, setCloudStatus]);
+  }, [playerState, sourceUrl, children, onGameOver, slug, personalBest, setCloudStatus]);
 
   // Clean up timers on unmount
   useEffect(() => () => {

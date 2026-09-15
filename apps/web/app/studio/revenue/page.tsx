@@ -34,37 +34,21 @@ export default async function RevenueDashboard() {
 
   const gamesList = devGames || [];
 
-  // If no records, generate simulated data for demonstration
-  const displayRecords = (revenueRecords && revenueRecords.length > 0) ? revenueRecords : Array.from({ length: 30 }).map((_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - (29 - i));
-    
-    const baseImpressions = 5000 + (i * 200);
-    const impressions = Math.floor(baseImpressions + (Math.random() * 2000 - 1000));
-    const ecpm = 1.20; // $1.20 per 1000 impressions
-    const gross_revenue = (impressions / 1000) * ecpm;
-    
-    return {
-      date: d.toISOString().split('T')[0],
-      impressions,
-      gross_revenue,
-      developer_share: gross_revenue * 0.7,
-      platform_share: gross_revenue * 0.3,
-    };
-  });
+  // Genuine records from developer_revenue table
+  const displayRecords = (revenueRecords && revenueRecords.length > 0) ? revenueRecords : [];
 
-  const totalImpressions = displayRecords.reduce((sum, r) => sum + r.impressions, 0);
-  const totalDevEarnings = displayRecords.reduce((sum, r) => sum + r.developer_share, 0);
-  const currentMonthEarnings = displayRecords.slice(-30).reduce((sum, r) => sum + r.developer_share, 0);
+  const totalImpressions = displayRecords.reduce((sum, r) => sum + (Number(r.impressions) || 0), 0);
+  const totalDevEarnings = displayRecords.reduce((sum, r) => sum + (Number(r.developer_share) || 0), 0);
+  const currentMonthEarnings = displayRecords.slice(-30).reduce((sum, r) => sum + (Number(r.developer_share) || 0), 0);
 
   return (
     <div className="flex flex-col gap-6">
       
-      {/* Top Banner if demo */}
+      {/* Top Banner */}
       {(!revenueRecords || revenueRecords.length === 0) && (
         <div className="p-4 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-indigo-800 dark:text-indigo-300 rounded-xl text-xs flex items-center justify-between">
           <div>
-            <strong>70% Net Ad Revenue Share:</strong> Your revenue will accrue automatically as players view banners, interstitials, and rewarded ads during gameplay.
+            <strong>70% Net Ad Revenue Share Active:</strong> Your revenue will accrue automatically as players view banners, interstitials, and rewarded ads during gameplay.
           </div>
           <PayoutSettingsModal currentBalance={currentMonthEarnings} />
         </div>
@@ -131,9 +115,19 @@ export default async function RevenueDashboard() {
           <PayoutSettingsModal currentBalance={currentMonthEarnings} />
         </div>
         
-        <div className="h-[300px] w-full">
-          <RevenueChart data={displayRecords} />
-        </div>
+        {displayRecords.length > 0 ? (
+          <div className="h-[300px] w-full">
+            <RevenueChart data={displayRecords} />
+          </div>
+        ) : (
+          <div className="h-[200px] w-full flex flex-col items-center justify-center border border-dashed border-gray-200 dark:border-white/10 rounded-xl bg-gray-50/50 dark:bg-black/20 p-6 text-center">
+            <DollarSign className="w-8 h-8 text-indigo-400 mb-2 opacity-60" />
+            <h3 className="font-bold text-sm text-gray-900 dark:text-white">Awaiting First Monetization Event</h3>
+            <p className="text-xs text-gray-500 max-w-md mt-1">
+              As players launch and play your games, in-game ad impressions and rewarded video engagements will automatically log here daily with your guaranteed 70% net publisher share.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Per-Game Revenue Attribution */}
@@ -161,9 +155,9 @@ export default async function RevenueDashboard() {
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-white/5">
                 {gamesList.map((g, idx) => {
-                  const plays = g.total_plays || 1000;
+                  const plays = Number(g.total_plays) || 0;
                   const estImpressions = Math.floor(plays * 2.4);
-                  const estCut = (estImpressions / 1000) * 1.20 * 0.7;
+                  const estCut = plays > 0 ? (estImpressions / 1000) * 1.20 * 0.7 : 0;
 
                   return (
                     <tr key={g.id} className="hover:bg-gray-50/50 dark:hover:bg-white/5 transition-colors">

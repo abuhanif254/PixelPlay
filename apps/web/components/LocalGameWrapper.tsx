@@ -9,16 +9,30 @@ const FlappyBirdGame = dynamic(() => import('@spielcade/games/flappy-bird/Game')
 
 interface LocalGameWrapperProps {
   slug: string;
+  onGameOver?: (score: number) => void;
 }
 
-export default function LocalGameWrapper({ slug }: LocalGameWrapperProps) {
+export default function LocalGameWrapper({ slug, onGameOver }: LocalGameWrapperProps) {
+  const handleGameOver = (score: number) => {
+    if (typeof window !== 'undefined') {
+      window.postMessage({
+        source: 'SPIELCADE_SDK',
+        type: 'SUBMIT_SCORE',
+        payload: { score }
+      }, '*');
+    }
+    if (onGameOver) {
+      onGameOver(score);
+    }
+  };
+
   switch (slug) {
     case 'snake':
-      return <SnakeGame />;
+      return <SnakeGame onGameOver={handleGameOver} />;
     case '2048':
-      return <Game2048 />;
+      return <Game2048 onGameOver={handleGameOver} />;
     case 'flappy-bird':
-      return <FlappyBirdGame />;
+      return <FlappyBirdGame onGameOver={handleGameOver} />;
     default:
       return null;
   }

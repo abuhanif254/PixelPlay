@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { updateStreak } from '@/app/profile/actions';
 
 const STREAK_KEY = 'spielcade_streak_count';
 const LAST_DATE_KEY = 'spielcade_last_active_date';
@@ -25,6 +26,7 @@ export function useDailyStreak() {
         localStorage.setItem(LAST_DATE_KEY, today);
         setIsNewStreakUnlocked(true);
         setStreakXpBonus(50);
+        updateStreak().catch(() => {});
       } else if (lastDate === today) {
         // Already active today
         setStreak(Math.max(1, storedStreak));
@@ -47,6 +49,7 @@ export function useDailyStreak() {
           setIsNewStreakUnlocked(true);
           setStreakXpBonus(50);
         }
+        updateStreak().catch(() => {});
       }
     } catch (err) {
       console.warn('[DailyStreak] error accessing streak storage:', err);
