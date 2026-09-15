@@ -9,7 +9,7 @@ import NewsletterForm from './NewsletterForm';
 
 export default function Footer() {
   const pathname = usePathname();
-  if (pathname?.startsWith('/admin')) return null;
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/embed')) return null;
 
   return (
     <footer className="bg-slate-50 dark:bg-[#070818] border-t border-slate-200/80 dark:border-white/10 pt-16 pb-28 sm:pb-16 transition-colors">

@@ -252,3 +252,39 @@ export async function revokeApiKey(id: string) {
     return { success: false, error: err?.message || String(err) }
   }
 }
+
+export async function saveDeveloperPayoutSettings(data: {
+  method: string
+  account: string
+  taxCertified: boolean
+}) {
+  try {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { success: false, error: 'Unauthorized' }
+
+    const { error } = await supabase.from('contact_messages').insert({
+      name: `Developer Payout Configuration`,
+      email: user.email || 'developer@spielcade.com',
+      subject: `[Payout Settings] Developer ${user.id}`,
+      message: JSON.stringify({
+        userId: user.id,
+        method: data.method,
+        account: data.account,
+        taxCertified: data.taxCertified,
+        updatedAt: new Date().toISOString()
+      }, null, 2),
+      status: 'unread'
+    })
+
+    if (error) {
+      console.error('saveDeveloperPayoutSettings database error:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (err: any) {
+    console.error('saveDeveloperPayoutSettings unexpected error:', err)
+    return { success: false, error: err?.message || 'Failed to save payout settings' }
+  }
+}

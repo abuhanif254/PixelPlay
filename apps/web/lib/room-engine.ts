@@ -39,11 +39,11 @@ export function generateRoomCode(): string {
 }
 
 export const MULTIPLAYER_SUPPORTED_GAMES = [
-  { slug: 'neon-snake', title: 'Neon Snake', category: 'Arcade', icon: '🐍', bg: 'from-emerald-500/20 to-green-600/20' },
-  { slug: '2048-classic', title: '2048 Classic', category: 'Puzzle', icon: '🔢', bg: 'from-amber-500/20 to-orange-600/20' },
-  { slug: 'neon-flyer', title: 'Neon Flyer', category: 'Arcade', icon: '🚀', bg: 'from-cyan-500/20 to-blue-600/20' },
-  { slug: 'blade-merge-master', title: 'Blade Merge Master', category: 'Action', icon: '⚔️', bg: 'from-rose-500/20 to-red-600/20' },
-  { slug: 'block-stack-rush', title: 'Block Stack Rush', category: 'Arcade', icon: '🧱', bg: 'from-fuchsia-500/20 to-pink-600/20' },
+  { slug: 'snake', title: 'Neon Snake', category: 'Arcade', icon: '🐍', bg: 'from-emerald-500/20 to-green-600/20' },
+  { slug: '2048', title: '2048 Classic', category: 'Puzzle', icon: '🔢', bg: 'from-amber-500/20 to-orange-600/20' },
+  { slug: 'flappy-bird', title: 'Neon Flyer', category: 'Arcade', icon: '🚀', bg: 'from-cyan-500/20 to-blue-600/20' },
+  { slug: 'pull-the-pin-3d-help-police', title: 'Pull The Pin 3D', category: 'Strategy', icon: '📌', bg: 'from-rose-500/20 to-red-600/20' },
+  { slug: 'blade-merge', title: 'Blade Merge', category: 'Action', icon: '⚔️', bg: 'from-fuchsia-500/20 to-pink-600/20' },
 ];
 
 /**

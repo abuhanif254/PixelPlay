@@ -11,6 +11,7 @@ import {
   Settings,
   ArrowUpRight
 } from 'lucide-react';
+import { saveDeveloperPayoutSettings } from '@/app/studio/actions';
 
 interface PayoutSettingsProps {
   currentBalance: number;
@@ -35,7 +36,7 @@ export default function PayoutSettingsModal({ currentBalance }: PayoutSettingsPr
     } catch {}
   }, []);
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       localStorage.setItem('spielcade_payout_settings', JSON.stringify({
@@ -44,6 +45,14 @@ export default function PayoutSettingsModal({ currentBalance }: PayoutSettingsPr
         taxCertified,
         updatedAt: new Date().toISOString()
       }));
+
+      // Persist to database so platform administrators receive the payout request
+      await saveDeveloperPayoutSettings({
+        method,
+        account: payoutAccount,
+        taxCertified,
+      });
+
       setSavedSuccess(true);
       setTimeout(() => {
         setSavedSuccess(false);

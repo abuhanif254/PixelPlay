@@ -18,6 +18,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { arcadeAudio } from '@/lib/arcade-audio';
+import { createClient } from '@/lib/supabase/client';
 
 export const runtime = 'edge';
 
@@ -103,20 +104,89 @@ export default function StudioFeedbackPage() {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Load from local storage or seed with samples
+  // Load from Supabase contact_messages or local storage fallback
   useEffect(() => {
-    try {
-      const cached = localStorage.getItem('spielcade_bug_reports');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setReports(parsed);
-          return;
-        }
-      }
-    } catch {}
+    async function loadReports() {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from('contact_messages')
+          .select('*')
+          .ilike('subject', '[Bug Report]%')
+          .order('created_at', { ascending: false })
+          .limit(30);
 
-    setReports(DEFAULT_SAMPLE_REPORTS);
+        if (!error && data && data.length > 0) {
+          const parsedFromDb: BugReport[] = [];
+          for (const item of data) {
+            try {
+              const body = JSON.parse(item.message);
+              parsedFromDb.push({
+                id: item.id,
+                gameSlug: body.gameSlug || 'unknown',
+                gameTitle: body.gameTitle || 'Unknown Game',
+                category: body.category || 'gameplay',
+                description: body.description || item.subject,
+                sessionDurationSec: body.sessionDurationSec || 0,
+                currentScore: body.currentScore || 0,
+                diagnostics: body.diagnostics || {
+                  viewport: 'Unknown',
+                  dpr: 1,
+                  isTouch: false,
+                  os: 'Desktop',
+                  browser: 'Web',
+                },
+                timestamp: item.created_at,
+                status: (item.status === 'read' ? 'resolved' : 'open') as any,
+              });
+            } catch {
+              // Plain text message fallback
+              parsedFromDb.push({
+                id: item.id,
+                gameSlug: 'unknown',
+                gameTitle: item.subject.replace('[Bug Report] ', ''),
+                category: 'feedback',
+                description: item.message,
+                sessionDurationSec: 0,
+                currentScore: 0,
+                diagnostics: {
+                  viewport: 'Standard',
+                  dpr: 1,
+                  isTouch: false,
+                  os: 'Web',
+                  browser: 'Standard',
+                },
+                timestamp: item.created_at,
+                status: 'open',
+              });
+            }
+          }
+
+          if (parsedFromDb.length > 0) {
+            setReports(parsedFromDb);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Could not query database reports, loading cached telemetry:', err);
+      }
+
+      // Local storage fallback
+      try {
+        const cached = localStorage.getItem('spielcade_bug_reports');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setReports(parsed);
+            return;
+          }
+        }
+      } catch {}
+
+      setReports(DEFAULT_SAMPLE_REPORTS);
+    }
+
+    loadReports();
   }, []);
 
   const handleUpdateStatus = (id: string, nextStatus: 'open' | 'investigating' | 'resolved') => {

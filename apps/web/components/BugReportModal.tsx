@@ -14,6 +14,7 @@ import {
   Layers,
 } from 'lucide-react';
 import { arcadeAudio } from '@/lib/arcade-audio';
+import { submitBugReport } from '@/app/contact/actions';
 
 interface BugReportModalProps {
   isOpen: boolean;
@@ -81,7 +82,7 @@ export default function BugReportModal({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!description.trim()) return;
 
@@ -101,7 +102,7 @@ export default function BugReportModal({
       status: 'open',
     };
 
-    // Store in localStorage for Developer Studio inbox
+    // Store in localStorage for instant offline access
     try {
       const existing = localStorage.getItem('spielcade_bug_reports');
       const reports = existing ? JSON.parse(existing) : [];
@@ -109,16 +110,29 @@ export default function BugReportModal({
       localStorage.setItem('spielcade_bug_reports', JSON.stringify(reports));
     } catch {}
 
+    // Dispatch real telemetry to Supabase contact_messages
+    try {
+      await submitBugReport({
+        gameSlug,
+        gameTitle,
+        category,
+        description: description.trim(),
+        sessionDurationSec,
+        currentScore: currentScore || 0,
+        diagnostics,
+      });
+    } catch (err) {
+      console.warn('Telemetry dispatch error:', err);
+    }
+
+    setIsSubmitting(false);
+    setIsSubmitted(true);
+    arcadeAudio.playVictory();
     setTimeout(() => {
-      setIsSubmitting(false);
-      setIsSubmitted(true);
-      arcadeAudio.playVictory();
-      setTimeout(() => {
-        setIsSubmitted(false);
-        setDescription('');
-        onClose();
-      }, 2000);
-    }, 600);
+      setIsSubmitted(false);
+      setDescription('');
+      onClose();
+    }, 2000);
   };
 
   return (

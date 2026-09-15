@@ -171,7 +171,7 @@ export default function Navbar() {
     { name: 'Quests', href: '/quests', hideOnLg: true, icon: Star },
   ];
 
-  if (pathname?.startsWith('/admin')) return null;
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/embed')) return null;
 
   return (
     <>

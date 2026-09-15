@@ -122,7 +122,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
         name: p.username,
         score: computedScore.toLocaleString(),
         topGame: gameSlug ? targetGameTitle : (topGameObj?.title || 'Arcade Champion'),
-        gameSlug: gameSlug || topGameObj?.slug || 'neon-snake',
+        gameSlug: gameSlug || topGameObj?.slug || 'snake',
         gamesPlayed: Math.max(3, Math.floor((p.xp || 50) / 40)),
         avatar: p.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.username}`
       });
@@ -156,7 +156,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
           name: seed.name,
           score: dynamicScore.toLocaleString(),
           topGame: gameSlug ? targetGameTitle : (topGameObj?.title || 'Arcade Legend'),
-          gameSlug: gameSlug || topGameObj?.slug || (i % 2 === 0 ? 'neon-snake' : '2048-classic'),
+          gameSlug: gameSlug || topGameObj?.slug || (i % 2 === 0 ? 'snake' : '2048'),
           gamesPlayed: Math.floor(15 + (10 - i) * 3),
           avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed.name}`
         });

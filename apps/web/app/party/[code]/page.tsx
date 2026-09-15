@@ -18,7 +18,6 @@ import {
 } from 'lucide-react';
 import { createRoomChannel, RoomReaction, MULTIPLAYER_SUPPORTED_GAMES } from '@/lib/room-engine';
 import { arcadeAudio } from '@/lib/arcade-audio';
-import { gamesRegistry } from '@spielcade/games/registry';
 
 export default function ActiveDuelRoomPage() {
   const params = useParams();
@@ -146,8 +145,6 @@ export default function ActiveDuelRoomPage() {
 
   // Resolve Game Details
   const activeGameMeta = MULTIPLAYER_SUPPORTED_GAMES.find((g) => g.slug === gameSlug) || MULTIPLAYER_SUPPORTED_GAMES[0];
-  const registeredGame = gamesRegistry[gameSlug];
-  const sourceUrl = registeredGame?.sourceUrl || `/games/${gameSlug}`;
 
   return (
     <div className="min-h-screen bg-[#070818] text-white pt-20 pb-20 px-3 sm:px-6 relative overflow-hidden">
@@ -255,19 +252,12 @@ export default function ActiveDuelRoomPage() {
 
         {/* Game Stage Viewport */}
         <div className="relative w-full rounded-2xl overflow-hidden border border-white/10 bg-black aspect-[16/9] max-h-[70vh] shadow-2xl">
-          {sourceUrl.startsWith('http') ? (
-            <iframe
-              src={sourceUrl}
-              className="w-full h-full border-0"
-              allow="autoplay; fullscreen; gamepad"
-            />
-          ) : (
-            <iframe
-              src={`/games/${gameSlug}`}
-              className="w-full h-full border-0"
-              allow="autoplay; fullscreen; gamepad"
-            />
-          )}
+          <iframe
+            src={`/embed/${gameSlug}`}
+            className="w-full h-full border-0"
+            allow="autoplay; fullscreen; gamepad"
+            title={activeGameMeta.title}
+          />
         </div>
 
         {/* Live Emoji Reaction Stream Bar */}

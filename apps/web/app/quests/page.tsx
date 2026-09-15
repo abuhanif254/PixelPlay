@@ -37,13 +37,40 @@ export default function QuestsPage() {
 
       const storedStars = localStorage.getItem('spielcade_battle_stars');
       if (storedStars) setBattleStars(parseInt(storedStars, 10) || 6);
+
+      // Compute real progress from local gameplay telemetry
+      const rawRecent = localStorage.getItem('spielcade_recent_games');
+      const recentList = rawRecent ? JSON.parse(rawRecent) : [];
+      const playedCount = Array.isArray(recentList) ? recentList.length : 0;
+
+      const rawStreak = localStorage.getItem('spielcade_daily_streak');
+      const streakVal = parseInt(rawStreak || '0', 10);
+
+      let maxScore = 0;
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('spielcade_pb_')) {
+          const val = parseInt(localStorage.getItem(k) || '0', 10);
+          if (val > maxScore) maxScore = val;
+        }
+      }
+
+      daily.forEach((q) => {
+        if (q.id.startsWith('quest-play')) {
+          q.progress = Math.min(q.target, playedCount);
+        } else if (q.id.startsWith('quest-score')) {
+          q.progress = Math.min(q.target, maxScore);
+        } else if (q.id.startsWith('quest-streak')) {
+          q.progress = streakVal > 0 ? 1 : 0;
+        }
+      });
     } catch {}
 
     setQuests(daily);
   }, []);
 
   const handleClaim = (quest: DailyQuest) => {
-    if (quest.isClaimed) return;
+    if (quest.isClaimed || quest.progress < quest.target) return;
 
     arcadeAudio.playLevelUp();
     haptics.celebrate();
@@ -145,11 +172,13 @@ export default function QuestsPage() {
 
                 <button
                   onClick={() => handleClaim(quest)}
-                  disabled={quest.isClaimed}
+                  disabled={quest.isClaimed || quest.progress < quest.target}
                   className={`w-full py-2.5 px-4 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
                     quest.isClaimed
                       ? 'bg-white/10 text-gray-500 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black shadow-lg shadow-amber-500/25 active:scale-95 cursor-pointer'
+                      : quest.progress >= quest.target
+                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black shadow-lg shadow-amber-500/25 active:scale-95 cursor-pointer animate-pulse'
+                        : 'bg-white/5 border border-white/10 text-gray-400 cursor-not-allowed'
                   }`}
                 >
                   {quest.isClaimed ? (
@@ -157,10 +186,15 @@ export default function QuestsPage() {
                       <CheckCircle2 size={14} className="text-emerald-400" />
                       <span>Claimed</span>
                     </>
-                  ) : (
+                  ) : quest.progress >= quest.target ? (
                     <>
                       <Zap size={14} />
                       <span>Claim Rewards</span>
+                    </>
+                  ) : (
+                    <>
+                      <Lock size={14} />
+                      <span>In Progress ({quest.progress}/{quest.target})</span>
                     </>
                   )}
                 </button>
