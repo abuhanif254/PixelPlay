@@ -12,9 +12,16 @@ interface CommentsSectionProps {
 
 export default function CommentsSection({ postId, comments }: CommentsSectionProps) {
   const [comment, setComment] = useState('');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState('');
   const router = useRouter();
+
+  const sortedComments = [...comments].sort((a, b) => {
+    const timeA = new Date(a.created_at).getTime();
+    const timeB = new Date(b.created_at).getTime();
+    return sortBy === 'newest' ? timeB - timeA : timeA - timeB;
+  });
 
   const handleSubmit = async () => {
     if (!comment.trim()) return;
@@ -39,9 +46,13 @@ export default function CommentsSection({ postId, comments }: CommentsSectionPro
         <h3 className="text-xl font-bold font-outfit text-gray-900 dark:text-white">Comments ({comments.length})</h3>
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-500 dark:text-gray-400">Sort by:</span>
-          <select className="bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#6366F1] cursor-pointer shadow-sm dark:shadow-none">
-            <option>Oldest</option>
-            <option>Newest</option>
+          <select 
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as 'newest' | 'oldest')}
+            className="bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#6366F1] cursor-pointer shadow-sm dark:shadow-none"
+          >
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
           </select>
         </div>
       </div>
@@ -88,7 +99,7 @@ export default function CommentsSection({ postId, comments }: CommentsSectionPro
 
       {/* Comments List */}
       <div className="flex flex-col gap-6">
-        {comments.map((c) => (
+        {sortedComments.map((c) => (
           <div key={c.id} className="flex gap-4">
             <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden border border-gray-200 dark:border-white/5">
               {c.author?.avatar_url ? (

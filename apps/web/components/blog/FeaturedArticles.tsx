@@ -1,7 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getAllBlogPosts } from '@/lib/blogData';
 
 export default function FeaturedArticles({ posts }: { posts: any[] }) {
   // Use first post as main article, next two as secondary if they exist
@@ -55,9 +54,9 @@ export default function FeaturedArticles({ posts }: { posts: any[] }) {
                 <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700" />
                 <span>{mainPost.read_time || 5} min read</span>
               </div>
-              <button className="px-5 py-2 bg-[#6366F1] hover:bg-[#5457DF] text-white text-sm font-bold rounded-lg transition-colors">
+              <span className="px-5 py-2 bg-[#6366F1] group-hover:bg-[#5457DF] text-white text-sm font-bold rounded-lg transition-colors">
                 Read More
-              </button>
+              </span>
             </div>
           </div>
         </Link>

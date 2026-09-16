@@ -143,7 +143,7 @@ export async function submitReview({
         .from('profiles')
         .select('username, avatar_url, level')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
       
       if (profile?.username) {
         author = profile.username;
@@ -161,7 +161,7 @@ export async function submitReview({
         .from('games')
         .select('id')
         .eq('slug', slug)
-        .single();
+        .maybeSingle();
       if (gameData?.id) {
         targetGameId = gameData.id;
       }
@@ -200,7 +200,7 @@ export async function submitReview({
       .from('game_reviews')
       .upsert([insertPayload], { onConflict: targetGameId && userId ? 'game_id, user_id' : undefined })
       .select()
-      .single();
+      .maybeSingle();
 
     if (!error && data?.id) {
       newReviewItem.id = data.id;

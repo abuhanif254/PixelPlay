@@ -9,27 +9,52 @@ import LatestArticles from '@/components/blog/LatestArticles';
 import BlogSidebar from '@/components/blog/BlogSidebar';
 import { createClient } from '@/lib/supabase/server';
 
+import { getAllBlogPosts } from '@/lib/blogData';
+
 export const metadata: Metadata = {
   title: 'Blog & Guides | Spielcade Games',
   description: 'Tips, guides, news and strategies to level up your gaming experience on Spielcade.',
 };
 
-export default async function BlogPage() {
+type BlogPageProps = {
+  searchParams?: {
+    tag?: string;
+    category?: string;
+    q?: string;
+  };
+};
+
+export default async function BlogPage({ searchParams }: BlogPageProps) {
   const supabase = createClient();
-  
-  // Fetch all published posts
-  const { data: rawPosts } = await supabase
+  const q = searchParams?.q?.trim();
+  const category = searchParams?.category?.trim();
+  const tag = searchParams?.tag?.trim();
+
+  let query = supabase
     .from('blog_posts')
     .select(`
       id, title, slug, excerpt, cover_image, tags,
       read_time, created_at,
       profiles:author_id(username, avatar_url)
     `)
-    .eq('status', 'published')
-    .order('created_at', { ascending: false });
+    .eq('status', 'published');
+
+  if (q) {
+    query = query.or(`title.ilike.%${q}%,excerpt.ilike.%${q}%`);
+  }
+
+  if (category && category.toLowerCase() !== 'all posts') {
+    query = query.or(`title.ilike.%${category}%,excerpt.ilike.%${category}%`);
+  }
+
+  if (tag) {
+    query = query.or(`title.ilike.%${tag}%,excerpt.ilike.%${tag}%`);
+  }
+
+  const { data: rawPosts } = await query.order('created_at', { ascending: false });
 
   // Map to the expected UI format
-  const posts = (rawPosts || []).map((p: any) => ({
+  let posts = (rawPosts || []).map((p: any) => ({
     id: p.id,
     title: p.title,
     slug: p.slug,
@@ -41,6 +66,23 @@ export default async function BlogPage() {
     author_avatar: p.profiles?.avatar_url || '',
     created_at: p.created_at,
   }));
+
+  // If table has no posts yet and no specific search query was made, fallback to curated articles
+  if (posts.length === 0 && !q && !category && !tag) {
+    const fallbackList = getAllBlogPosts();
+    posts = fallbackList.map((p, idx) => ({
+      id: `fallback-${idx}`,
+      title: p.title,
+      slug: p.slug,
+      excerpt: p.description,
+      cover_image: p.coverImage,
+      tags: p.keywords,
+      read_time: 5,
+      author: p.author.name,
+      author_avatar: p.author.avatar || '',
+      created_at: p.date,
+    }));
+  }
 
   // SEO JSON-LD Schema
   const blogSchema = {

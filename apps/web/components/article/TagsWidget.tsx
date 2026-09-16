@@ -13,7 +13,7 @@ export default function TagsWidget() {
         {tags.map((tag, index) => (
           <Link 
             key={index} 
-            href={`/blog/tag/${tag.toLowerCase().replace(/\s+/g, '-')}`}
+            href={`/blog?tag=${encodeURIComponent(tag.toLowerCase())}`}
             className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:text-[#6366F1] dark:hover:text-white hover:border-[#6366F1] bg-transparent hover:bg-[#6366F1]/10 text-xs font-bold transition-all"
           >
             {tag}

@@ -21,7 +21,7 @@ export async function toggleFollow(targetUserId: string, targetUsername: string)
     .select('*')
     .eq('follower_id', user.id)
     .eq('following_id', targetUserId)
-    .single();
+    .maybeSingle();
 
   if (existingFollow) {
     // Unfollow
@@ -48,7 +48,7 @@ export async function toggleFollow(targetUserId: string, targetUsername: string)
       .from('profiles')
       .select('username')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
 
     if (followerProfile) {
       await sendNotification(

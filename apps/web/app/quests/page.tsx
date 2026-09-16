@@ -20,7 +20,7 @@ import { haptics } from '@/lib/haptics';
 
 export default function QuestsPage() {
   const [quests, setQuests] = useState<DailyQuest[]>([]);
-  const [battleStars, setBattleStars] = useState(6);
+  const [battleStars, setBattleStars] = useState(0);
 
   useEffect(() => {
     const daily = getDailyQuests();
@@ -36,7 +36,7 @@ export default function QuestsPage() {
       }
 
       const storedStars = localStorage.getItem('spielcade_battle_stars');
-      if (storedStars) setBattleStars(parseInt(storedStars, 10) || 6);
+      if (storedStars) setBattleStars(parseInt(storedStars, 10) || 0);
 
       // Compute real progress from local gameplay telemetry
       const rawRecent = localStorage.getItem('spielcade_recent_games');

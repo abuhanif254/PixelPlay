@@ -21,7 +21,7 @@ export async function requireAdmin() {
     .from('profiles')
     .select('role, username, full_name, avatar_url')
     .eq('id', user.id)
-    .single();
+    .maybeSingle();
 
   if (!profile || profile.role !== 'admin') {
     redirect('/?error=unauthorized');
@@ -50,7 +50,7 @@ export async function verifyAdminAction(): Promise<
     .from('profiles')
     .select('role')
     .eq('id', user.id)
-    .single();
+    .maybeSingle();
 
   if (!profile || profile.role !== 'admin') {
     return { success: false, error: 'Forbidden: admin access required' };

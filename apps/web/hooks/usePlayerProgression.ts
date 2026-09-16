@@ -37,7 +37,7 @@ export function usePlayerProgression() {
           .from('profiles')
           .select('xp, level')
           .eq('id', user.id)
-          .single()
+          .maybeSingle()
           .then(({ data }) => {
             if (data && typeof (data as any).xp === 'number') {
               const cloudXp = Math.max(initialXp, (data as any).xp);

@@ -15,7 +15,7 @@ export async function submitScore(gameSlug: string, score: number) {
     .from('games')
     .select('id, total_plays')
     .eq('slug', gameSlug)
-    .single();
+    .maybeSingle();
 
   if (gameError || !game) {
     return { success: false, error: 'Game not found in database' };
@@ -39,7 +39,7 @@ export async function submitScore(gameSlug: string, score: number) {
       .from('profiles')
       .select('xp, level, streak')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
 
     let newLevel = 1;
     if (profile) {
@@ -152,13 +152,9 @@ export async function loadGameState(gameSlug: string) {
     .select('save_data')
     .eq('user_id', user.id)
     .eq('game_id', gameSlug)
-    .single();
+    .maybeSingle();
 
   if (error) {
-    // PGRST116 means no rows returned, which is fine (no save yet)
-    if (error.code === 'PGRST116') {
-      return { success: true, data: null };
-    }
     return { success: false, error: error.message };
   }
 

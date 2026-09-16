@@ -28,7 +28,7 @@ export default async function Image({ params }: { params: { slug: string } }) {
       .from('games')
       .select('title, category, rating, image_url')
       .eq('slug', params.slug)
-      .single();
+      .maybeSingle();
 
     if (dbGame) {
       title = dbGame.title;

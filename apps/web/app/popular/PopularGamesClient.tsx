@@ -5,6 +5,7 @@ import { Gamepad2, Calendar, Clock, Star, LayoutGrid, List, CheckSquare, Square,
 import Link from 'next/link';
 import Image from 'next/image';
 import GameCard from '@/components/GameCard';
+import { subscribeToNewsletter } from '@/app/newsletter/actions';
 
 // ─── UTILS ────────────────────────────────────────────────
 function isWithinDays(dateString: string | null | undefined, days: number): boolean {
@@ -30,11 +31,14 @@ const ITEMS_PER_PAGE = 16;
 
 export default function PopularGamesClient({ initialGames = [] }: PopularGamesClientProps) {
   // State
-  const [activeTab, setActiveTab] = useState('All Time');
+  const [activeTab, setActiveTab] = useState('All Popular');
   const [activeCategory, setActiveCategory] = useState('All Categories');
-  const [sortBy, setSortBy] = useState('Most Popular');
+  const [sortBy, setSortBy] = useState('Most Plays');
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterStatus, setNewsletterStatus] = useState<{ success?: boolean; error?: string | null } | null>(null);
+  const [isNewsletterPending, setIsNewsletterPending] = useState(false);
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
 
   // ─── DYNAMIC METRICS ───
@@ -552,14 +556,46 @@ export default function PopularGamesClient({ initialGames = [] }: PopularGamesCl
               <p className="text-gray-600 dark:text-gray-400 text-[11px] leading-relaxed mb-4">
                 Subscribe to get updates on the most popular games.
               </p>
-              <input 
-                type="email" 
-                placeholder="Enter your email..." 
-                className="w-full bg-gray-100 dark:bg-black/40 border border-gray-300 dark:border-white/10 rounded-lg px-3 py-2 text-[12px] text-gray-900 dark:text-white focus:outline-none focus:border-purple-500 mb-2"
-              />
-              <button className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold text-[12px] py-2 rounded-lg transition-colors">
-                Subscribe
-              </button>
+              {newsletterStatus?.success ? (
+                <div className="p-3 bg-green-500/20 text-green-400 rounded-lg text-xs font-bold text-center">
+                  🎉 Subscribed! Check your inbox soon.
+                </div>
+              ) : (
+                <form 
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!newsletterEmail) return;
+                    setIsNewsletterPending(true);
+                    const fd = new FormData();
+                    fd.append('email', newsletterEmail);
+                    const res = await subscribeToNewsletter(null, fd);
+                    setNewsletterStatus(res);
+                    setIsNewsletterPending(false);
+                    if (res.success) setNewsletterEmail('');
+                  }}
+                  className="flex flex-col gap-2"
+                >
+                  <input 
+                    type="email" 
+                    value={newsletterEmail}
+                    onChange={(e) => setNewsletterEmail(e.target.value)}
+                    placeholder="Enter your email..." 
+                    className="w-full bg-gray-100 dark:bg-black/40 border border-gray-300 dark:border-white/10 rounded-lg px-3 py-2 text-[12px] text-gray-900 dark:text-white focus:outline-none focus:border-purple-500"
+                    required
+                    disabled={isNewsletterPending}
+                  />
+                  {newsletterStatus?.error && (
+                    <p className="text-[11px] text-red-400">{newsletterStatus.error}</p>
+                  )}
+                  <button 
+                    type="submit"
+                    disabled={isNewsletterPending}
+                    className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold text-[12px] py-2 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {isNewsletterPending ? 'Subscribing...' : 'Subscribe'}
+                  </button>
+                </form>
+              )}
               <p className="text-[10px] text-gray-500 mt-2 text-center">No spam. Unsubscribe anytime.</p>
             </div>
           </div>

@@ -33,7 +33,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
   let targetGameTitle = 'All Games';
 
   if (gameSlug && gameSlug !== 'All Games') {
-    const { data: g } = await supabase.from('games').select('id, title').eq('slug', gameSlug).single();
+    const { data: g } = await supabase.from('games').select('id, title').eq('slug', gameSlug).maybeSingle();
     if (g) {
       gameId = g.id;
       targetGameTitle = g.title;
@@ -189,7 +189,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
     if (userInLeaderboard) {
       userRankData = userInLeaderboard;
     } else {
-      const { data: profile } = await supabase.from('profiles').select('username, avatar_url, xp, level').eq('id', user.id).single();
+      const { data: profile } = await supabase.from('profiles').select('username, avatar_url, xp, level').eq('id', user.id).maybeSingle();
       if (profile) {
         userRankData = {
           rank: 0,

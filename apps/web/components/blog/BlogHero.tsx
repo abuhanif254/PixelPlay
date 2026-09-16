@@ -2,6 +2,8 @@ import React from 'react';
 import { Search } from 'lucide-react';
 import Image from 'next/image';
 
+import Link from 'next/link';
+
 export default function BlogHero() {
   const topics = ['Guides', 'Tips & Tricks', 'News', 'Reviews', 'Walkthroughs'];
 
@@ -28,31 +30,33 @@ export default function BlogHero() {
             Tips, guides, news and strategies to level up your gaming experience.
           </p>
 
-          {/* Search Bar */}
-          <div className="relative flex items-center mt-2 max-w-md">
+          {/* Search Bar Form */}
+          <form action="/blog" method="GET" className="relative flex items-center mt-2 max-w-md">
             <div className="absolute left-4 text-gray-400 dark:text-gray-500">
               <Search size={18} />
             </div>
             <input 
               type="text" 
+              name="q"
               placeholder="Search blog articles..." 
               className="w-full bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-sm rounded-xl py-3.5 pl-12 pr-24 focus:outline-none focus:border-[#6366F1] transition-colors placeholder:text-gray-400 dark:placeholder:text-gray-500 shadow-sm"
             />
-            <button className="absolute right-2 px-4 py-1.5 bg-[#6366F1] hover:bg-[#5457DF] text-white text-sm font-bold rounded-lg transition-colors">
+            <button type="submit" className="absolute right-2 px-4 py-1.5 bg-[#6366F1] hover:bg-[#5457DF] text-white text-sm font-bold rounded-lg transition-colors">
               Search
             </button>
-          </div>
+          </form>
 
           {/* Popular Topics */}
           <div className="flex flex-wrap items-center gap-3 mt-4">
             <span className="text-xs text-gray-600 dark:text-gray-500 font-bold uppercase tracking-wider">Popular Topics:</span>
             {topics.map((topic, i) => (
-              <button 
+              <Link 
                 key={i} 
+                href={`/blog?category=${encodeURIComponent(topic)}`}
                 className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white px-3 py-1 rounded-full border border-gray-300 dark:border-white/10 hover:border-[#6366F1] bg-transparent hover:bg-gray-100 dark:hover:bg-[#6366F1]/10 transition-colors"
               >
                 {topic}
-              </button>
+              </Link>
             ))}
           </div>
         </div>

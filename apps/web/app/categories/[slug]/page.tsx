@@ -101,12 +101,24 @@ export default async function CategoryPage({ params }: { params: { slug: string 
     'Strategy': 1280,
     'Board': 520,
   };
+
+  try {
+    const { data: dbCounts } = await supabase.rpc('get_category_counts');
+    if (dbCounts && Array.isArray(dbCounts)) {
+      dbCounts.forEach((row: any) => {
+        if (row.category && typeof row.count !== 'undefined') {
+          categoryCounts[row.category] = Number(row.count);
+        }
+      });
+    }
+  } catch {}
+
   if (totalMatchCount && categoryCounts[dbCategoryName]) {
     categoryCounts[dbCategoryName] = totalMatchCount;
   }
 
   const activeCount = totalMatchCount || games.length;
-  const totalPlays = games.reduce((sum, g) => sum + (g.total_plays || 10000), 0);
+  const totalPlays = games.reduce((sum, g) => sum + (g.total_plays ?? 0), 0);
   const formattedPlays = totalPlays >= 1000000 
     ? `${(totalPlays / 1000000).toFixed(1)}M+`
     : `${Math.floor(totalPlays / 1000)}K+`;

@@ -146,7 +146,7 @@ export async function approveGame(id: string) {
     .from('games')
     .select('title, slug, developer_id')
     .eq('id', id)
-    .single();
+    .maybeSingle();
 
   if (fetchErr) return { success: false, error: fetchErr.message }
 
@@ -183,7 +183,7 @@ export async function rejectGame(id: string, reason: string) {
     .from('games')
     .select('title, developer_id, metadata')
     .eq('id', id)
-    .single();
+    .maybeSingle();
 
   if (fetchErr) return { success: false, error: fetchErr.message }
 

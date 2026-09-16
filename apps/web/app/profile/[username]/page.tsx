@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: { params: { username: string 
     .from('profiles')
     .select('id, username, full_name, bio, avatar_url, role')
     .eq('username', username)
-    .single();
+    .maybeSingle();
 
   if (!profile) {
     return {
@@ -143,7 +143,7 @@ export default async function PublicProfilePage({ params }: { params: { username
     .from('profiles')
     .select('id, username, full_name, bio, avatar_url, banner_url, xp, level, streak, created_at')
     .eq('username', username)
-    .single();
+    .maybeSingle();
 
   if (!profile) notFound();
 
@@ -166,7 +166,7 @@ export default async function PublicProfilePage({ params }: { params: { username
       .select('follower_id')
       .eq('follower_id', viewerId)
       .eq('following_id', profile.id)
-      .single();
+      .maybeSingle();
     if (followData) isFollowing = true;
   }
 

@@ -54,7 +54,7 @@ export default function AdminTopBar({
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
       // Profile
-      supabase.from('profiles').select('username, avatar_url').eq('id', user.id).single()
+      supabase.from('profiles').select('username, avatar_url').eq('id', user.id).maybeSingle()
         .then(({ data }) => { if (data) setAdminProfile(data); });
       // Notifications
       supabase.from('admin_notifications')

@@ -5,6 +5,7 @@ import { Gamepad2, Calendar, Clock, Star, LayoutGrid, List, CheckSquare, Square,
 import Link from 'next/link';
 import Image from 'next/image';
 import GameCard from '@/components/GameCard';
+import { subscribeToNewsletter } from '@/app/newsletter/actions';
 
 // ─── UTILS ────────────────────────────────────────────────
 function isWithinDays(dateString: string | null | undefined, days: number): boolean {
@@ -28,6 +29,9 @@ export default function NewGamesClient({ initialGames = [] }: NewGamesClientProp
   const [activeCategory, setActiveCategory] = useState('All Categories');
   const [sortBy, setSortBy] = useState('Newest First');
   const [searchQuery, setSearchQuery] = useState('');
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterStatus, setNewsletterStatus] = useState<{ success?: boolean; error?: string | null } | null>(null);
+  const [isNewsletterPending, setIsNewsletterPending] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
@@ -338,7 +342,7 @@ export default function NewGamesClient({ initialGames = [] }: NewGamesClientProp
                   </span>
                 </div>
                 <p className="text-gray-700 dark:text-gray-300 text-sm md:text-[15px] leading-relaxed">
-                  Explore the latest games added to PlayHub.<br/>
+                  Explore the latest games added to Spielcade.<br/>
                   Fresh, fun and exciting games every week!
                 </p>
               </div>
@@ -592,16 +596,48 @@ export default function NewGamesClient({ initialGames = [] }: NewGamesClientProp
               </div>
               <h3 className="text-gray-900 dark:text-white font-bold text-[15px] mb-1">Never Miss New Games!</h3>
               <p className="text-gray-600 dark:text-gray-400 text-[12px] leading-relaxed mb-4">
-                Get notified when new games are added to PlayHub.
+                Get notified when new games are added to Spielcade.
               </p>
-              <input 
-                type="email" 
-                placeholder="Enter your email..." 
-                className="w-full bg-gray-100 dark:bg-black/40 border border-gray-300 dark:border-white/10 rounded-lg px-3 py-2 text-[13px] text-gray-900 dark:text-white focus:outline-none focus:border-purple-500 mb-2"
-              />
-              <button className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold text-[13px] py-2 rounded-lg transition-colors">
-                Subscribe
-              </button>
+              {newsletterStatus?.success ? (
+                <div className="p-3 bg-green-500/20 text-green-400 rounded-lg text-xs font-bold text-center">
+                  🎉 Subscribed! Check your inbox soon.
+                </div>
+              ) : (
+                <form 
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!newsletterEmail) return;
+                    setIsNewsletterPending(true);
+                    const fd = new FormData();
+                    fd.append('email', newsletterEmail);
+                    const res = await subscribeToNewsletter(null, fd);
+                    setNewsletterStatus(res);
+                    setIsNewsletterPending(false);
+                    if (res.success) setNewsletterEmail('');
+                  }}
+                  className="flex flex-col gap-2"
+                >
+                  <input 
+                    type="email" 
+                    value={newsletterEmail}
+                    onChange={(e) => setNewsletterEmail(e.target.value)}
+                    placeholder="Enter your email..." 
+                    className="w-full bg-gray-100 dark:bg-black/40 border border-gray-300 dark:border-white/10 rounded-lg px-3 py-2 text-[13px] text-gray-900 dark:text-white focus:outline-none focus:border-purple-500"
+                    required
+                    disabled={isNewsletterPending}
+                  />
+                  {newsletterStatus?.error && (
+                    <p className="text-[11px] text-red-400">{newsletterStatus.error}</p>
+                  )}
+                  <button 
+                    type="submit"
+                    disabled={isNewsletterPending}
+                    className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold text-[13px] py-2 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {isNewsletterPending ? 'Subscribing...' : 'Subscribe'}
+                  </button>
+                </form>
+              )}
               <p className="text-[10px] text-gray-500 mt-2">No spam, unsubscribe anytime.</p>
             </div>
           </div>

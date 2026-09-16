@@ -24,7 +24,7 @@ export default function AuthorCard() {
         </div>
       </div>
       
-      <Link href="#" className="flex items-center justify-center w-full py-3 bg-gray-50 dark:bg-[#111228] hover:bg-gray-100 dark:hover:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white text-sm font-bold rounded-xl transition-all shadow-sm dark:shadow-none">
+      <Link href="/blog" className="flex items-center justify-center w-full py-3 bg-gray-50 dark:bg-[#111228] hover:bg-gray-100 dark:hover:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white text-sm font-bold rounded-xl transition-all shadow-sm dark:shadow-none">
         View All Posts
       </Link>
     </div>

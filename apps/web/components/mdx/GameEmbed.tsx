@@ -20,7 +20,7 @@ export default function GameEmbed({ id }: GameEmbedProps) {
         .from('games')
         .select('*')
         .eq('slug', id)
-        .single();
+        .maybeSingle();
       if (data) setGame(data);
     };
     if (id) fetchGame();
@@ -32,7 +32,7 @@ export default function GameEmbed({ id }: GameEmbedProps) {
     <div className="my-8 relative overflow-hidden rounded-2xl bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/10 shadow-lg group flex flex-col sm:flex-row">
       <div className="w-full sm:w-1/3 aspect-[4/3] relative overflow-hidden shrink-0">
         <Image 
-          src={game.thumbnail_url || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&q=80'}
+          src={game.image_url || game.thumbnail_url || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&q=80'}
           alt={game.title}
           fill
           sizes="(max-width: 640px) 100vw, 300px"

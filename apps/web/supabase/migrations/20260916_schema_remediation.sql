@@ -293,3 +293,16 @@ BEGIN
   END LOOP;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- D. get_category_counts
+CREATE OR REPLACE FUNCTION public.get_category_counts()
+RETURNS TABLE(category text, count bigint) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT g.category, COUNT(*) 
+  FROM public.games g
+  WHERE g.status = 'active'
+  GROUP BY g.category;
+END;
+$$ LANGUAGE plpgsql STABLE;
+

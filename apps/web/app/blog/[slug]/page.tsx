@@ -36,7 +36,7 @@ async function getPostData(slug: string) {
       profiles:author_id(username, avatar_url)
     `)
     .eq('slug', slug)
-    .single();
+    .maybeSingle();
 
   if (!post || post.status !== 'published') return null;
 
@@ -104,16 +104,42 @@ export default async function SingleArticlePage({ params }: Props) {
     notFound();
   }
 
-  // Fetch engagement data in parallel
-  const [comments, likeCount, userHasLiked] = await Promise.all([
+  // Fetch engagement data and adjacent/related posts in parallel
+  const supabase = createClient();
+  const [comments, likeCount, userHasLiked, relatedRes, prevRes, nextRes] = await Promise.all([
     getComments(post.id),
     getLikeCount(post.id),
-    hasUserLiked(post.id)
+    hasUserLiked(post.id),
+    supabase
+      .from('blog_posts')
+      .select('id, title, slug, cover_image, tags, created_at')
+      .eq('status', 'published')
+      .neq('slug', params.slug)
+      .limit(4),
+    supabase
+      .from('blog_posts')
+      .select('title, slug, cover_image')
+      .eq('status', 'published')
+      .lt('created_at', post.created_at)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('blog_posts')
+      .select('title, slug, cover_image')
+      .eq('status', 'published')
+      .gt('created_at', post.created_at)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle(),
   ]);
+
+  const relatedPosts = relatedRes.data || [];
+  const prevPost = prevRes.data || null;
+  const nextPost = nextRes.data || null;
 
   // Handle views count increment
   try {
-    const supabase = createClient();
     await supabase.rpc('increment_blog_views', { post_id: post.id });
   } catch (err) {
     console.error('Failed to increment views:', err);
@@ -178,14 +204,14 @@ export default async function SingleArticlePage({ params }: Props) {
             {/* <InThisArticle /> */}
             <ArticleContent content={post.content} />
             <ArticleCTA />
-            {/* <PostNavigation /> */}
+            <PostNavigation prev={prevPost} next={nextPost} />
             <CommentsSection postId={post.id} comments={comments} />
           </div>
 
           {/* Right Sidebar Column */}
           <div className="lg:col-span-4 flex flex-col gap-0">
             {/* <AuthorCard /> */}
-            <RelatedPostsWidget />
+            <RelatedPostsWidget posts={relatedPosts} />
             
             {/* Sticky Container for the rest of the sidebar */}
             <div className="sticky top-24">

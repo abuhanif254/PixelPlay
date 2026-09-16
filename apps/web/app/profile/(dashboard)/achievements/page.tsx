@@ -22,7 +22,7 @@ export default async function AchievementsPage() {
     .from('profiles')
     .select('level, streak')
     .eq('id', user.id)
-    .single();
+    .maybeSingle();
 
   // Fetch scores for progress calculation
   const { data: scores } = await supabase

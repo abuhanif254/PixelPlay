@@ -27,7 +27,7 @@ export async function toggleLike(postId: string) {
     .select('id')
     .eq('post_id', postId)
     .eq('user_id', user.id)
-    .single();
+    .maybeSingle();
 
   if (existingLike) {
     // Unlike
@@ -73,7 +73,7 @@ export async function hasUserLiked(postId: string) {
     .select('id')
     .eq('post_id', postId)
     .eq('user_id', user.id)
-    .single();
+    .maybeSingle();
 
   return !!like;
 }

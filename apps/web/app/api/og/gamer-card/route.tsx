@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
       .from('profiles')
       .select('username, full_name, avatar_url, xp, level, streak')
       .eq('username', username)
-      .single();
+      .maybeSingle();
 
     if (profile) {
       if (profile.full_name) displayName = profile.full_name;

@@ -55,9 +55,9 @@ export default function GameCard({
     rankBadge = 'bg-gradient-to-br from-purple-600 to-indigo-700 text-white shadow-md';
   }
 
-  const destinationHref = slug.startsWith('/') 
-    ? slug 
-    : (slug.startsWith('#') ? slug : `/games/${slug}`);
+  const destinationHref = !slug || slug === '#' 
+    ? '/games' 
+    : (slug.startsWith('/') ? slug : `/games/${slug}`);
 
   const cleanSlug = slug.replace(/^\/games\//, '').replace(/^#/, '');
   const isOfflineReady = cleanSlug === 'snake' || cleanSlug === '2048' || cleanSlug === 'flappy-bird' || category === 'Originals';

@@ -18,7 +18,7 @@ export default async function GameQueuePage() {
     .from('games')
     .select(`
       id, title, slug, category, description, image_url, source_url, created_at,
-      profiles (username, full_name, avatar_url)
+      profiles:developer_id (username, full_name, avatar_url)
     `)
     .in('status', ['pending', 'pending_review'])
     .order('created_at', { ascending: true });

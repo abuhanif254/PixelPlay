@@ -21,19 +21,19 @@ export const gameCollections = [
   {
     title: "5-Minute Break Games",
     description: "Quick, satisfying games perfect for a short coffee break or commute.",
-    imageUrls: ["/placeholder.jpg", "/placeholder.jpg", "/placeholder.jpg"],
-    href: "/collections/5-minute-break"
+    imageUrls: ["/images/games/snake.svg", "/images/games/flappy-bird.svg", "/images/games/2048.svg"],
+    href: "/playlists/coffee-break"
   },
   {
-    title: "Hardest Puzzle Games",
-    description: "Brain-melting puzzles that will truly test your cognitive limits.",
-    imageUrls: ["/placeholder.jpg", "/placeholder.jpg", "/placeholder.jpg"],
-    href: "/collections/hardest-puzzles"
+    title: "Hardest Reflex Gauntlet",
+    description: "High-APM reflex test for competitive speedrunners.",
+    imageUrls: ["/images/games/flappy-bird.svg", "/images/games/snake.svg", "/images/games/2048.svg"],
+    href: "/playlists/hardcore-reflexes"
   },
   {
-    title: "Multiplayer Chaos",
-    description: "Jump into arenas and battle players from around the world.",
-    imageUrls: ["/placeholder.jpg", "/placeholder.jpg", "/placeholder.jpg"],
-    href: "/collections/multiplayer-chaos"
+    title: "Zen Mind & Chill Logic",
+    description: "Relaxing spatial puzzles with zero timers and ambient bliss.",
+    imageUrls: ["/images/games/2048.svg", "/images/games/snake.svg", "/images/games/flappy-bird.svg"],
+    href: "/playlists/zen-mind"
   }
 ];

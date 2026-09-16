@@ -112,29 +112,29 @@ export default function HelpCenter() {
         
         {/* Quick Links Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-          <div className="bg-white dark:bg-[#111228] p-6 rounded-2xl shadow-lg border border-gray-100 dark:border-white/5 flex flex-col items-center text-center hover:-translate-y-1 transition-transform">
+          <a href="#account" className="bg-white dark:bg-[#111228] p-6 rounded-2xl shadow-lg border border-gray-100 dark:border-white/5 flex flex-col items-center text-center hover:-translate-y-1 hover:border-[#6366F1]/40 transition-all cursor-pointer">
             <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-4">
               <UserCircle size={32} />
             </div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">My Account</h3>
             <p className="text-gray-500 dark:text-gray-400 text-sm">Manage your profile, password, and privacy settings.</p>
-          </div>
+          </a>
           
-          <div className="bg-white dark:bg-[#111228] p-6 rounded-2xl shadow-lg border border-gray-100 dark:border-white/5 flex flex-col items-center text-center hover:-translate-y-1 transition-transform">
+          <a href="#gameplay" className="bg-white dark:bg-[#111228] p-6 rounded-2xl shadow-lg border border-gray-100 dark:border-white/5 flex flex-col items-center text-center hover:-translate-y-1 hover:border-emerald-500/40 transition-all cursor-pointer">
             <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 mb-4">
               <Gamepad2 size={32} />
             </div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Gameplay</h3>
             <p className="text-gray-500 dark:text-gray-400 text-sm">Troubleshoot lag, saves, and achievement issues.</p>
-          </div>
+          </a>
 
-          <div className="bg-white dark:bg-[#111228] p-6 rounded-2xl shadow-lg border border-gray-100 dark:border-white/5 flex flex-col items-center text-center hover:-translate-y-1 transition-transform">
+          <a href="#developers" className="bg-white dark:bg-[#111228] p-6 rounded-2xl shadow-lg border border-gray-100 dark:border-white/5 flex flex-col items-center text-center hover:-translate-y-1 hover:border-amber-500/40 transition-all cursor-pointer">
             <div className="w-16 h-16 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 mb-4">
               <ShieldQuestion size={32} />
             </div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Trust & Safety</h3>
             <p className="text-gray-500 dark:text-gray-400 text-sm">Report users, understand bans, and read our policies.</p>
-          </div>
+          </a>
         </div>
 
         {/* FAQ Sections */}

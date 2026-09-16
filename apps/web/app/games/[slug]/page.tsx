@@ -386,7 +386,7 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
         image: g.image_url,
         category: g.category,
         rating: g.rating || 4.8,
-        totalPlays: g.total_plays || 10000,
+        totalPlays: g.total_plays ?? 0,
       });
     }
   }
@@ -402,7 +402,7 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
         image: g.image_url,
         category: g.category,
         rating: g.rating || 4.8,
-        totalPlays: g.total_plays || 10000,
+        totalPlays: g.total_plays ?? 0,
       });
     }
     if (relatedGames.length >= 18) break;

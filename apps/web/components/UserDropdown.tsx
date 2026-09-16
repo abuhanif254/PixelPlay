@@ -27,7 +27,7 @@ export default function UserDropdown({ userId }: { userId: string }) {
           .from('profiles')
           .select('username, avatar_url, level, xp, role')
           .eq('id', userId)
-          .single();
+          .maybeSingle();
         
         if (data && !error) {
           setProfile(data);

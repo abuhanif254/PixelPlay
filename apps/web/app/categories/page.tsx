@@ -21,6 +21,7 @@ import Link from 'next/link';
 import CategoryCard from '@/components/CategoryCard';
 import { SectionHeader } from '@/components/SectionHeader';
 import { categoriesData } from '@/lib/mockCategories';
+import { createClient } from '@/lib/supabase/server';
 
 export const metadata: Metadata = {
   title: "All Game Categories & Thematic Hubs | Spielcade",
@@ -49,6 +50,18 @@ export default async function CategoriesIndexPage() {
     'Strategy': 1280,
     'Board': 520,
   };
+
+  try {
+    const supabase = createClient();
+    const { data: dbCounts } = await supabase.rpc('get_category_counts');
+    if (dbCounts && Array.isArray(dbCounts)) {
+      dbCounts.forEach((row: any) => {
+        if (row.category && typeof row.count !== 'undefined') {
+          categoryCounts[row.category] = Number(row.count);
+        }
+      });
+    }
+  } catch {}
 
   const canonicalCards = [
     { name: "Puzzle", icon: <Puzzle className="w-8 h-8" />, colorClass: "text-indigo-500", key: "Puzzle" },

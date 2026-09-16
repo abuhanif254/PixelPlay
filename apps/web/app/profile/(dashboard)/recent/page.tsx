@@ -24,7 +24,7 @@ export default async function RecentGamesPage() {
     .from('profiles')
     .select('favorite_game_ids')
     .eq('id', user.id)
-    .single();
+    .maybeSingle();
 
   const favoriteIds = profile?.favorite_game_ids || [];
 

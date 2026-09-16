@@ -78,7 +78,7 @@ export async function updateDeveloperGame(
     .from('games')
     .select('id, developer_id, metadata, status')
     .eq('id', gameId)
-    .single()
+    .maybeSingle()
 
   if (fetchErr || !existingGame) {
     return { success: false, error: 'Game not found.' }
@@ -143,7 +143,7 @@ export async function deleteDeveloperGame(gameId: string) {
     .from('games')
     .select('id, developer_id, status')
     .eq('id', gameId)
-    .single()
+    .maybeSingle()
 
   if (fetchErr || !existingGame) {
     return { success: false, error: 'Game not found.' }

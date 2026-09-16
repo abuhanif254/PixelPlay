@@ -19,7 +19,7 @@ export async function GET(request: Request) {
           .from('profiles')
           .select('is_banned, ban_reason')
           .eq('id', user.id)
-          .single()
+          .maybeSingle()
 
         if (profile?.is_banned) {
           await supabase.auth.signOut()

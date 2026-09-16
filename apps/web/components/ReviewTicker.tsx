@@ -33,7 +33,7 @@ export default function ReviewTicker() {
         const { data, error } = await supabase
           .from('game_reviews')
           .select(`
-            id, rating, review_text, created_at,
+            id, rating, comment, created_at, author_name,
             profiles:user_id(username),
             games:game_id(title)
           `)
@@ -42,13 +42,13 @@ export default function ReviewTicker() {
 
         if (!error && data && data.length > 0) {
           const liveReviews: Review[] = data
-            .filter((r: any) => r.review_text)
+            .filter((r: any) => r.comment)
             .map((r: any) => ({
               id: r.id,
-              user: (r.profiles as any)?.username || 'Verified Gamer',
+              user: (r.profiles as any)?.username || r.author_name || 'Verified Gamer',
               game: (r.games as any)?.title || 'Arcade Game',
               rating: r.rating || 5,
-              text: r.review_text,
+              text: r.comment,
               timeAgo: 'Recently',
             }));
 

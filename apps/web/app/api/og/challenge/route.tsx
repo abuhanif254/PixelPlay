@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
         .from('games')
         .select('title, category')
         .eq('slug', slug)
-        .single();
+        .maybeSingle();
 
       if (dbGame) {
         title = dbGame.title;
