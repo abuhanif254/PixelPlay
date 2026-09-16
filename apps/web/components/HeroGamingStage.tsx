@@ -172,9 +172,9 @@ export default function HeroGamingStage({ games }: HeroGamingStageProps) {
               </div>
             </div>
             <div className="px-1">
-              <h4 className="font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm truncate">
+              <h3 className="font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm truncate">
                 {stageGames[0].title}
-              </h4>
+              </h3>
               <div className="flex items-center justify-between mt-1 text-[11px] text-slate-500 dark:text-slate-400">
                 <span className="flex items-center text-amber-500 font-bold">
                   <Star className="w-3 h-3 fill-current mr-0.5" />
@@ -216,9 +216,9 @@ export default function HeroGamingStage({ games }: HeroGamingStageProps) {
               </div>
             </div>
             <div className="px-1">
-              <h4 className="font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm truncate">
+              <h3 className="font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm truncate">
                 {stageGames[2].title}
-              </h4>
+              </h3>
               <div className="flex items-center justify-between mt-1 text-[11px] text-slate-500 dark:text-slate-400">
                 <span className="flex items-center text-amber-500 font-bold">
                   <Star className="w-3 h-3 fill-current mr-0.5" />
@@ -271,7 +271,7 @@ export default function HeroGamingStage({ games }: HeroGamingStageProps) {
                 src={stageGames[activeCardIndex].image_url}
                 alt={stageGames[activeCardIndex].title}
                 fill
-                sizes="(max-width: 640px) 280px, 340px"
+                sizes="(max-width: 640px) 280px, (max-width: 1024px) 320px, 340px"
                 priority
                 className="object-cover transition-transform duration-700 group-hover/thumb:scale-110"
               />
@@ -303,9 +303,9 @@ export default function HeroGamingStage({ games }: HeroGamingStageProps) {
             {/* Bottom Controls */}
             <div className="px-1 flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <h3 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white truncate">
+                <h2 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white truncate">
                   {stageGames[activeCardIndex].title}
-                </h3>
+                </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400">Click card or button to play</p>
               </div>
 

@@ -99,6 +99,7 @@ export default function ArcadePulse() {
               <button
                 type="button"
                 onClick={() => setIsExpanded(false)}
+                aria-label="Collapse stream drawer"
                 className="p-1 text-gray-400 hover:text-white rounded-lg transition-colors"
               >
                 <ChevronDown size={16} />
@@ -181,6 +182,7 @@ export default function ArcadePulse() {
             arcadeAudio.playSelect();
             setIsExpanded((p) => !p);
           }}
+          aria-label={isExpanded ? 'Collapse Stream' : 'Expand Stream'}
           className="p-1 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors shrink-0"
           title={isExpanded ? 'Collapse' : 'Expand Stream'}
         >
@@ -194,6 +196,7 @@ export default function ArcadePulse() {
             arcadeAudio.playBlip();
             setIsDismissed(true);
           }}
+          aria-label="Minimize Pulse"
           className="p-1 rounded-full hover:bg-white/10 text-gray-500 hover:text-rose-400 transition-colors shrink-0"
           title="Minimize Pulse"
         >

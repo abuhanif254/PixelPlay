@@ -6,7 +6,7 @@ const nextConfig = {
   transpilePackages: ["@spielcade/games"],
   images: {
     formats: ['image/avif', 'image/webp'],
-    deviceSizes: [640, 750, 828, 1080, 1200],
+    deviceSizes: [360, 420, 640, 750, 828, 1080, 1200],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 31536000,
     remotePatterns: [
@@ -119,7 +119,7 @@ const nextConfig = {
 
 const withPWA = withPWAInit({
   dest: "public",
-  disable: process.env.NODE_ENV === "development" || process.env.CF_PAGES === "1" || !!process.env.CI,
+  disable: true,
   register: true,
   skipWaiting: true,
   fallbacks: {

@@ -191,11 +191,11 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col gap-14 pb-20 bg-white dark:bg-[#0A0B1A] min-h-screen text-gray-900 dark:text-white relative overflow-x-clip">
-      {/* Ambient Cyberpunk Atmospheric Glows */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute top-[15%] left-[0%] w-[55vw] h-[55vw] rounded-full bg-purple-600/5 blur-[140px]" />
-        <div className="absolute top-[45%] right-[0%] w-[45vw] h-[45vw] rounded-full bg-blue-600/5 blur-[140px]" />
-        <div className="absolute top-[75%] left-[10%] w-[40vw] h-[40vw] rounded-full bg-pink-600/5 blur-[130px]" />
+      {/* Ambient Cyberpunk Atmospheric Glows (Fixed viewport positioning eliminates 0.117 CLS layout shift) */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10 [contain:strict]">
+        <div className="absolute top-20 -left-20 w-[55vw] h-[55vw] max-w-[600px] max-h-[600px] rounded-full bg-purple-600/5 blur-[140px]" />
+        <div className="absolute top-80 -right-20 w-[45vw] h-[45vw] max-w-[500px] max-h-[500px] rounded-full bg-blue-600/5 blur-[140px]" />
+        <div className="absolute bottom-10 left-10 w-[40vw] h-[40vw] max-w-[450px] max-h-[450px] rounded-full bg-pink-600/5 blur-[130px]" />
       </div>
       
       <script

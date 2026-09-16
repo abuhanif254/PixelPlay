@@ -262,7 +262,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
             {/* Popular Searches Canonical Cluster Hubs */}
             <div className="flex flex-wrap items-center gap-2 mb-8">
-              <span className="text-slate-500 text-xs font-medium">Popular:</span>
+              <span className="text-slate-600 dark:text-slate-300 text-xs font-semibold">Popular:</span>
               {[
                 { label: 'Car Games', href: '/categories/car-games' },
                 { label: 'Zombie Games', href: '/categories/zombie-games' },

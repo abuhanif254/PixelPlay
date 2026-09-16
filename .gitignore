@@ -44,10 +44,8 @@ next-env.d.ts
 # nested accidental directories
 apps/web/apps/
 
-# generated PWA service worker files
-apps/web/public/sw.js
+# generated PWA service worker temporary files
 apps/web/public/workbox-*.js
-public/sw.js
 public/workbox-*.js
 
 # scripts

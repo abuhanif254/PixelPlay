@@ -67,9 +67,12 @@ export default function DailyCupBanner({ className = '', variant = 'full' }: Dai
                 <Sparkles className="w-3 h-3" />
                 Daily Arcade Cup
               </span>
-              <span className="inline-flex items-center gap-1 text-[11px] font-mono text-amber-200/80 bg-black/40 px-2 py-0.5 rounded-md border border-white/5">
+              <span 
+                suppressHydrationWarning
+                className="inline-flex items-center gap-1 text-[11px] font-mono text-amber-200/80 bg-black/40 px-2 py-0.5 rounded-md border border-white/5"
+              >
                 <Timer className="w-3 h-3 text-amber-400" />
-                Resets: {countdown.formatted}
+                <span suppressHydrationWarning>Resets: {countdown.formatted}</span>
               </span>
             </div>
 

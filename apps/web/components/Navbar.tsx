@@ -41,8 +41,9 @@ export default function Navbar() {
   const levelRef = useRef<HTMLDivElement>(null);
   const moreRef = useRef<HTMLDivElement>(null);
 
-  // Initialize SFX mute state
+  // Initialize SFX mute state & mount flag
   useEffect(() => {
+    setMounted(true);
     setIsSfxMuted(arcadeAudio.isMuted());
   }, []);
 
@@ -750,6 +751,7 @@ export default function Navbar() {
             </div>
             <button
               onClick={dismissStreakReward}
+              aria-label="Dismiss daily streak notification"
               className="p-1 text-white/80 hover:text-white rounded-lg hover:bg-black/20 transition-colors"
             >
               <X size={16} />

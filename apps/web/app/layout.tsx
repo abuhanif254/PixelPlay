@@ -13,7 +13,11 @@ const ArcadeRadio = dynamic(() => import('@/components/ArcadeRadio'), { ssr: fal
 const ArcadePulse = dynamic(() => import('@/components/ArcadePulse'), { ssr: false });
 const SecretVaultModal = dynamic(() => import('@/components/SecretVaultModal'), { ssr: false });
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ 
+  subsets: ['latin'],
+  display: 'swap',
+  preload: true,
+});
 
 export const viewport: Viewport = {
   themeColor: '#0A0B1A',
