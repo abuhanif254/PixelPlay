@@ -25,7 +25,9 @@ export default function Footer() {
                 <img 
                   src="/logo.png" 
                   alt="Spielcade Logo" 
-                  className="w-[120%] h-[120%] object-cover animate-[spin_12s_linear_infinite] group-hover:animate-[spin_3s_linear_infinite] transition-all" 
+                  width="36"
+                  height="36"
+                  className="w-[120%] h-[120%] object-cover transition-transform duration-700 group-hover:rotate-180" 
                 />
               </div>
               <span className="font-extrabold text-2xl tracking-tight text-slate-900 dark:text-white">

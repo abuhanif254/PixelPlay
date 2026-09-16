@@ -2,14 +2,17 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import PwaInstallBanner from '@/components/PwaInstallBanner';
-import PWARegistration from '@/components/PWARegistration';
-import OfflineBanner from '@/components/OfflineBanner';
-import LevelUpModal from '@/components/LevelUpModal';
-import ArcadeRadio from '@/components/ArcadeRadio';
-import ArcadePulse from '@/components/ArcadePulse';
-import SecretVaultModal from '@/components/SecretVaultModal';
+import dynamic from 'next/dynamic';
 import './globals.css';
+
+const PwaInstallBanner = dynamic(() => import('@/components/PwaInstallBanner'), { ssr: false });
+const PWARegistration = dynamic(() => import('@/components/PWARegistration'), { ssr: false });
+const OfflineBanner = dynamic(() => import('@/components/OfflineBanner'), { ssr: false });
+const LevelUpModal = dynamic(() => import('@/components/LevelUpModal'), { ssr: false });
+const ArcadeRadio = dynamic(() => import('@/components/ArcadeRadio'), { ssr: false });
+const ArcadePulse = dynamic(() => import('@/components/ArcadePulse'), { ssr: false });
+const SecretVaultModal = dynamic(() => import('@/components/SecretVaultModal'), { ssr: false });
+
 const inter = Inter({ subsets: ['latin'] });
 
 export const viewport: Viewport = {

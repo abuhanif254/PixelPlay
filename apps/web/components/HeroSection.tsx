@@ -94,7 +94,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     : suggestions.slice(0, 5);
 
   return (
-    <section className="relative w-full pt-28 sm:pt-32 pb-12 sm:pb-16 bg-white dark:bg-[#0A0B1A] text-slate-900 dark:text-white overflow-hidden">
+    <section className="relative w-full pt-20 sm:pt-28 lg:pt-32 pb-10 sm:pb-14 bg-white dark:bg-[#0A0B1A] text-slate-900 dark:text-white overflow-hidden">
       
       {/* Background Ambient Glows & Subtle Patterns */}
       <div className="absolute inset-0 pointer-events-none z-0 opacity-40">
@@ -117,10 +117,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               </span>
             </div>
 
-            {/* Main Headline with High-Contrast Gradient */}
+            {/* Main Headline with Guaranteed High-Performance LCP Fallback */}
             <h1 className="text-3xl sm:text-5xl lg:text-[3.85rem] font-black tracking-tight mb-5 leading-[1.08] text-slate-900 dark:text-white font-outfit">
               Play Free <br className="hidden sm:inline" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400">
+              <span className="text-indigo-600 dark:text-indigo-400 bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400 [supports(background-clip:text)]:text-transparent">
                 Browser Games
               </span> Online
             </h1>

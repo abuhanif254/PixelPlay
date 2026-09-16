@@ -4,7 +4,6 @@ import React from 'react';
 import { Play, Star, Trophy, Zap } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import { arcadeAudio } from '@/lib/arcade-audio';
 
 // Helper for speculative pre-warming of iframe CDN connections
@@ -71,14 +70,11 @@ export default function GameCard({
       onTouchStart={prewarmGameOrigins}
       onClick={() => arcadeAudio.playBlip()}
     >
-      <motion.div 
-        whileHover={{ y: -6, scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        className="relative flex flex-col bg-white dark:bg-[#111228]/95 backdrop-blur-md border border-gray-200 dark:border-white/10 rounded-2xl p-2.5 sm:p-3 h-full shadow-sm hover:border-[#6366F1]/60 hover:shadow-[0_12px_35px_rgba(99,102,241,0.25)] transition-all duration-300 overflow-hidden"
+      <div 
+        className="relative flex flex-col bg-white dark:bg-[#111228]/95 backdrop-blur-md border border-gray-200 dark:border-white/10 rounded-2xl p-2.5 sm:p-3 h-full shadow-sm hover:border-[#6366F1]/60 hover:shadow-[0_12px_35px_rgba(99,102,241,0.25)] hover:-translate-y-1.5 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 overflow-hidden"
       >
         {/* Subtle Ambient Hover Glow */}
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-2xl" />
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-2xl" />
 
         {/* Image Container */}
         <div className="relative aspect-[4/3] w-full rounded-xl overflow-hidden mb-2.5 bg-gray-100 dark:bg-[#070818] border border-black/5 dark:border-white/5">
@@ -87,7 +83,9 @@ export default function GameCard({
               src={imageUrl} 
               alt={title} 
               fill
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
+              sizes="(max-width: 640px) 160px, (max-width: 1024px) 220px, 260px"
+              loading="lazy"
+              decoding="async"
               className="object-cover transition-transform duration-500 group-hover:scale-110" 
             />
           ) : (
@@ -159,7 +157,7 @@ export default function GameCard({
           </div>
         </div>
         
-      </motion.div>
+      </div>
     </Link>
   );
 }

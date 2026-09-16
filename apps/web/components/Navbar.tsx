@@ -10,7 +10,9 @@ import { createClient } from '@/lib/supabase/client';
 
 import NotificationBell from './NotificationBell';
 import UserDropdown from './UserDropdown';
-import SpotlightSearchModal from './SpotlightSearchModal';
+import dynamic from 'next/dynamic';
+
+const SpotlightSearchModal = dynamic(() => import('./SpotlightSearchModal'), { ssr: false });
 import { useDailyStreak } from '@/hooks/useDailyStreak';
 import { usePlayerProgression } from '@/hooks/usePlayerProgression';
 import { arcadeAudio } from '@/lib/arcade-audio';
@@ -184,7 +186,9 @@ export default function Navbar() {
               <img 
                 src="/logo.png" 
                 alt="Spielcade Logo" 
-                className="w-[120%] h-[120%] object-cover animate-[spin_12s_linear_infinite] group-hover:animate-[spin_3s_linear_infinite] transition-all" 
+                width="36"
+                height="36"
+                className="w-[120%] h-[120%] object-cover transition-transform duration-700 group-hover:rotate-180" 
               />
             </div>
             <span className="font-extrabold text-lg sm:text-xl tracking-tight text-slate-900 dark:text-white">

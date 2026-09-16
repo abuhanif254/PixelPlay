@@ -43,6 +43,9 @@ export default function FeaturedGameBanner({ game }: FeaturedGameProps) {
               src={imageUrl}
               alt={title}
               fill
+              sizes="64px"
+              loading="lazy"
+              decoding="async"
               className="object-cover blur-2xl scale-125"
             />
           </div>
@@ -125,6 +128,9 @@ export default function FeaturedGameBanner({ game }: FeaturedGameProps) {
                   src={imageUrl}
                   alt={title}
                   fill
+                  sizes="(max-width: 768px) 100vw, 448px"
+                  loading="lazy"
+                  decoding="async"
                   className="object-cover transition-transform duration-700 group-hover:scale-110"
                 />
               ) : (

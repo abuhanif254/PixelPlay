@@ -29,6 +29,7 @@
     "recharts": "^3.10.1",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
+    "sharp": "^0.35.4",
     "three": "^0.160.0"
   },
   "devDependencies": {

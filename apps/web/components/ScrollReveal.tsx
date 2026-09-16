@@ -1,7 +1,6 @@
-"use client";
+'use client';
 
-import React, { useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface ScrollRevealProps {
   children: React.ReactNode;
@@ -9,19 +8,50 @@ interface ScrollRevealProps {
   className?: string;
 }
 
-export function ScrollReveal({ children, delay = 0, className = "" }: ScrollRevealProps) {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-50px" });
+export function ScrollReveal({ children, delay = 0, className = '' }: ScrollRevealProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    // If reduced motion is requested, display immediately
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setIsVisible(true);
+      return;
+    }
+
+    const element = ref.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '80px' }
+    );
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <motion.div
+    <div
       ref={ref}
-      initial={{ opacity: 0, y: 30 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-      transition={{ duration: 0.6, delay, ease: [0.25, 0.1, 0.25, 1] }}
-      className={className}
+      style={{
+        transitionDuration: '500ms',
+        transitionDelay: `${delay * 1000}ms`,
+        transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+        willChange: isVisible ? 'auto' : 'transform, opacity',
+      }}
+      className={`transition-all ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-90 translate-y-2'
+      } ${className}`}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
+
+export default ScrollReveal;

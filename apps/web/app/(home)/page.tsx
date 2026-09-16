@@ -11,18 +11,18 @@ import BlogPreviewCard from '@/components/BlogPreviewCard';
 import Link from 'next/link';
 import RecentGames from '@/components/RecentGames';
 import { TrendingGamesFilter } from '@/components/TrendingGamesFilter';
-import ThematicGamingZones from '@/components/ThematicGamingZones';
 import FeaturedGameBanner from '@/components/FeaturedGameBanner';
-import DailyCupBanner from '@/components/DailyCupBanner';
 import { ScrollReveal } from '@/components/ScrollReveal';
 import HomeSEOText from '@/components/HomeSEOText';
-import HomeFAQ from '@/components/HomeFAQ';
-import PopularSearches from '@/components/PopularSearches';
 import { homepageFaqs } from '@/lib/constants';
 import { getAllPosts } from '@/lib/blog';
 import dynamic from 'next/dynamic';
 
+const ThematicGamingZones = dynamic(() => import('@/components/ThematicGamingZones'));
+const DailyCupBanner = dynamic(() => import('@/components/DailyCupBanner'));
 const DeveloperSpotlight = dynamic(() => import('@/components/DeveloperSpotlight'));
+const HomeFAQ = dynamic(() => import('@/components/HomeFAQ'));
+const PopularSearches = dynamic(() => import('@/components/PopularSearches'));
 
 import { gamesRegistry } from '@spielcade/games/registry';
 import { createClient } from '@/lib/supabase/server';

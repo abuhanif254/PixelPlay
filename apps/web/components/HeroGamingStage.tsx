@@ -71,6 +71,7 @@ export default function HeroGamingStage({ games }: HeroGamingStageProps) {
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!containerRef.current) return;
+    if (typeof window !== 'undefined' && !window.matchMedia('(pointer: fine)').matches) return;
     const rect = containerRef.current.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width - 0.5;
     const y = (e.clientY - rect.top) / rect.height - 0.5;
@@ -132,7 +133,7 @@ export default function HeroGamingStage({ games }: HeroGamingStageProps) {
 
       {/* Cyber Grid Circle Decoration */}
       <div className="absolute w-[280px] h-[280px] sm:w-[440px] sm:h-[440px] rounded-full border border-purple-500/20 dark:border-white/10 pointer-events-none flex items-center justify-center">
-        <div className="w-[85%] h-[85%] rounded-full border border-dashed border-indigo-500/20 dark:border-white/5 animate-[spin_40s_linear_infinite]" />
+        <div className="w-[85%] h-[85%] rounded-full border border-dashed border-indigo-500/20 dark:border-white/5 motion-safe:animate-[spin_40s_linear_infinite] [will-change:transform]" />
       </div>
 
       {/* 3D Holographic Stage Container */}
@@ -143,6 +144,7 @@ export default function HeroGamingStage({ games }: HeroGamingStageProps) {
 
         {/* Card 0: Left Angled Card */}
         <motion.div
+          initial={false}
           animate={{
             x: activeCardIndex === 0 ? 0 : -90,
             y: activeCardIndex === 0 ? -10 : 20,
@@ -186,6 +188,7 @@ export default function HeroGamingStage({ games }: HeroGamingStageProps) {
 
         {/* Card 2: Right Angled Card */}
         <motion.div
+          initial={false}
           animate={{
             x: activeCardIndex === 2 ? 0 : 90,
             y: activeCardIndex === 2 ? -10 : 20,
@@ -229,6 +232,7 @@ export default function HeroGamingStage({ games }: HeroGamingStageProps) {
 
         {/* Card 1: Main Center Hero Card */}
         <motion.div
+          initial={false}
           animate={{
             x: activeCardIndex === 1 ? 0 : 0,
             y: activeCardIndex === 1 ? -6 : 10,
@@ -251,7 +255,7 @@ export default function HeroGamingStage({ games }: HeroGamingStageProps) {
               </div>
               <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="motion-safe:animate-ping [will-change:transform,opacity] absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
                 <span>Instant Ready</span>
