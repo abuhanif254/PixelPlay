@@ -61,13 +61,49 @@ class GamepadEngine {
     this.targetWindow = win;
   }
 
-  public simulateKey(type: 'keydown' | 'keyup', key: string, code: string) {
+  private static DUAL_KEYS: Record<string, { key: string; code: string }> = {
+    ArrowUp: { key: 'w', code: 'KeyW' },
+    ArrowDown: { key: 's', code: 'KeyS' },
+    ArrowLeft: { key: 'a', code: 'KeyA' },
+    ArrowRight: { key: 'd', code: 'KeyD' },
+    w: { key: 'ArrowUp', code: 'ArrowUp' },
+    s: { key: 'ArrowDown', code: 'ArrowDown' },
+    a: { key: 'ArrowLeft', code: 'ArrowLeft' },
+    d: { key: 'ArrowRight', code: 'ArrowRight' },
+    ' ': { key: 'Enter', code: 'Enter' },
+    Enter: { key: ' ', code: 'Space' },
+    Shift: { key: 'Escape', code: 'Escape' },
+    e: { key: 'x', code: 'KeyX' },
+    q: { key: 'z', code: 'KeyZ' },
+  };
+
+  public simulateKey(
+    type: 'keydown' | 'keyup',
+    key: string,
+    code: string,
+    secondaryKey?: string,
+    secondaryCode?: string
+  ) {
     if (type === 'keydown') {
       this.activeKeys.add(key);
     } else {
       this.activeKeys.delete(key);
     }
     this.dispatchKeyEvent(type, key, code);
+
+    // Dual-dispatch secondary key (e.g. WASD alongside Arrows)
+    const dual = secondaryKey && secondaryCode
+      ? { key: secondaryKey, code: secondaryCode }
+      : GamepadEngine.DUAL_KEYS[key];
+
+    if (dual && dual.key !== key) {
+      if (type === 'keydown') {
+        this.activeKeys.add(dual.key);
+      } else {
+        this.activeKeys.delete(dual.key);
+      }
+      this.dispatchKeyEvent(type, dual.key, dual.code);
+    }
   }
 
   public subscribe(listener: ButtonListener): () => void {
@@ -219,10 +255,10 @@ class GamepadEngine {
     };
 
     // Translate to synthetic keyboard events
-    this.syncKey('ArrowUp', 'KeyW', up);
-    this.syncKey('ArrowDown', 'KeyS', down);
-    this.syncKey('ArrowLeft', 'KeyA', left);
-    this.syncKey('ArrowRight', 'KeyD', right);
+    this.syncKey('ArrowUp', 'ArrowUp', up);
+    this.syncKey('ArrowDown', 'ArrowDown', down);
+    this.syncKey('ArrowLeft', 'ArrowLeft', left);
+    this.syncKey('ArrowRight', 'ArrowRight', right);
     this.syncKey(' ', 'Space', btnA);
     this.syncKey('Shift', 'ShiftLeft', btnB);
     this.syncKey('e', 'KeyE', btnX);
@@ -238,16 +274,15 @@ class GamepadEngine {
     this.prevButtonState[key] = isPressed;
 
     if (isPressed && !wasPressed) {
-      this.dispatchKeyEvent('keydown', key, code);
-      this.activeKeys.add(key);
+      this.simulateKey('keydown', key, code);
     } else if (!isPressed && wasPressed) {
-      this.dispatchKeyEvent('keyup', key, code);
-      this.activeKeys.delete(key);
+      this.simulateKey('keyup', key, code);
     }
   }
 
   private dispatchKeyEvent(type: 'keydown' | 'keyup', key: string, code: string) {
-    const targets = [this.targetWindow, typeof window !== 'undefined' ? window : null];
+    const keyCode = this.getKeyCode(key) || this.getKeyCode(code);
+    const targets: (Window | null)[] = [this.targetWindow, typeof window !== 'undefined' ? window : null];
 
     targets.forEach((target) => {
       if (!target) return;
@@ -255,31 +290,52 @@ class GamepadEngine {
         const evt = new KeyboardEvent(type, {
           key,
           code,
-          keyCode: this.getKeyCode(key),
-          which: this.getKeyCode(key),
           bubbles: true,
           cancelable: true,
           composed: true,
+          repeat: false,
         });
+
+        // Polyfill legacy keyCode and which for older HTML5 game engines
+        Object.defineProperty(evt, 'keyCode', { get: () => keyCode });
+        Object.defineProperty(evt, 'which', { get: () => keyCode });
+        Object.defineProperty(evt, 'charCode', { get: () => (type === 'keypress' ? keyCode : 0) });
+
         target.dispatchEvent(evt);
         if (target.document) {
           target.document.dispatchEvent(evt);
+          if (target.document.activeElement && target.document.activeElement !== target.document.body) {
+            try {
+              target.document.activeElement.dispatchEvent(evt);
+            } catch {}
+          }
         }
       } catch {
         // Cross-origin iframe security prevents direct event injection on non-same-origin frames.
-        // For cross-origin game iframes, send postMessage so SpielcadeSDK can trigger synthetic events.
-        try {
-          target.postMessage(
-            {
-              type: 'SPIELCADE_GAMEPAD_EVENT',
-              eventType: type,
-              key,
-              code,
-            },
-            '*'
-          );
-        } catch {}
       }
+
+      // Broadcast on standard postMessage channels for embedded game SDKs & wrappers
+      try {
+        const payload = {
+          type: 'SPIELCADE_GAMEPAD_EVENT',
+          source: 'SPIELCADE_WRAPPER',
+          eventType: type,
+          key,
+          code,
+          keyCode,
+        };
+        target.postMessage(payload, '*');
+        target.postMessage(
+          {
+            source: 'SPIELCADE_VIRTUAL_PAD',
+            eventType: type,
+            key,
+            code,
+            keyCode,
+          },
+          '*'
+        );
+      } catch {}
     });
   }
 
@@ -289,16 +345,20 @@ class GamepadEngine {
       case 'ArrowDown': return 40;
       case 'ArrowLeft': return 37;
       case 'ArrowRight': return 39;
-      case ' ': return 32;
-      case 'Shift': return 16;
+      case ' ': case 'Space': return 32;
+      case 'Shift': case 'ShiftLeft': return 16;
       case 'Enter': return 13;
       case 'Escape': return 27;
-      case 'e': case 'KeyE': return 69;
-      case 'q': case 'KeyQ': return 81;
-      case 'w': case 'KeyW': return 87;
-      case 's': case 'KeyS': return 83;
-      case 'a': case 'KeyA': return 65;
-      case 'd': case 'KeyD': return 68;
+      case 'e': case 'E': case 'KeyE': return 69;
+      case 'q': case 'Q': case 'KeyQ': return 81;
+      case 'w': case 'W': case 'KeyW': return 87;
+      case 's': case 'S': case 'KeyS': return 83;
+      case 'a': case 'A': case 'KeyA': return 65;
+      case 'd': case 'D': case 'KeyD': return 68;
+      case 'z': case 'Z': case 'KeyZ': return 90;
+      case 'x': case 'X': case 'KeyX': return 88;
+      case 'c': case 'C': case 'KeyC': return 67;
+      case 'v': case 'V': case 'KeyV': return 86;
       default: return 0;
     }
   }

@@ -81,6 +81,47 @@
     }
   };
 
+  // Listen for platform virtual gamepad events dispatched from parent window
+  window.addEventListener('message', function(event) {
+    if (!event || !event.data) return;
+    const data = event.data;
+    if (
+      data.type === 'SPIELCADE_GAMEPAD_EVENT' ||
+      data.source === 'SPIELCADE_WRAPPER' ||
+      data.source === 'SPIELCADE_VIRTUAL_PAD'
+    ) {
+      const eventType = data.eventType || (data.type === 'KEY_DOWN' ? 'keydown' : 'keyup');
+      const key = data.key;
+      const code = data.code;
+      const keyCode = data.keyCode || 0;
+
+      if (!key || !code) return;
+
+      try {
+        const evt = new KeyboardEvent(eventType, {
+          key: key,
+          code: code,
+          bubbles: true,
+          cancelable: true,
+          composed: true,
+        });
+        Object.defineProperty(evt, 'keyCode', { get: function() { return keyCode; } });
+        Object.defineProperty(evt, 'which', { get: function() { return keyCode; } });
+        Object.defineProperty(evt, 'charCode', { get: function() { return eventType === 'keypress' ? keyCode : 0; } });
+
+        window.dispatchEvent(evt);
+        if (document) {
+          document.dispatchEvent(evt);
+          if (document.activeElement && document.activeElement !== document.body) {
+            try {
+              document.activeElement.dispatchEvent(evt);
+            } catch (e) {}
+          }
+        }
+      } catch (err) {}
+    }
+  });
+
   console.log(`[Spielcade SDK] Initialized (v${SDK_VERSION}).`);
 
 })(window);

@@ -1929,7 +1929,11 @@ export default function GamePlayer({
               {/* Feature 2: Ergonomic Multi-Touch Virtual Controls Overlay (D-Pad + 360 Analog Stick + Action Diamond) */}
               <AnimatePresence>
                 {showVirtualPad && !isMiniPlayer && (
-                  <VirtualControlsOverlay onClose={() => setShowVirtualPad(false)} />
+                  <VirtualControlsOverlay
+                    onClose={() => setShowVirtualPad(false)}
+                    refocusGame={refocusGame}
+                    isExternalGame={Boolean(sourceUrl)}
+                  />
                 )}
               </AnimatePresence>
 

@@ -10,16 +10,17 @@ import {
   Compass,
   LayoutGrid,
   Eye,
-  EyeOff,
   Minimize2,
-  Maximize2,
   Gamepad2,
   X,
+  Zap,
 } from 'lucide-react';
 import { gamepadEngine } from '@/lib/gamepad-engine';
 
 interface VirtualControlsOverlayProps {
   onClose?: () => void;
+  refocusGame?: () => void;
+  isExternalGame?: boolean;
 }
 
 type StickMode = 'dpad' | 'analog';
@@ -42,10 +43,15 @@ const OPACITY_CLASSES: Record<OpacityLevel, string> = {
   full: 'opacity-100',
 };
 
-export default function VirtualControlsOverlay({ onClose }: VirtualControlsOverlayProps) {
+export default function VirtualControlsOverlay({
+  onClose,
+  refocusGame,
+  isExternalGame = false,
+}: VirtualControlsOverlayProps) {
   const [stickMode, setStickMode] = useState<StickMode>('dpad');
   const [opacity, setOpacity] = useState<OpacityLevel>('medium');
   const [isMinimized, setIsMinimized] = useState(false);
+  const [directTouchMode, setDirectTouchMode] = useState(false);
 
   // Active pressed buttons state for visual feedback
   const [activeButtons, setActiveButtons] = useState<Record<string, boolean>>({});
@@ -71,7 +77,11 @@ export default function VirtualControlsOverlay({ onClose }: VirtualControlsOverl
   }, []);
 
   // Button Press Handler (Touchstart / Mousedown)
-  const handlePressStart = useCallback((btnKey: string) => {
+  const handlePressStart = useCallback((btnKey: string, e?: React.SyntheticEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     triggerHaptic(12);
     setActiveButtons((prev) => ({ ...prev, [btnKey]: true }));
 
@@ -79,17 +89,27 @@ export default function VirtualControlsOverlay({ onClose }: VirtualControlsOverl
     if (mapping) {
       gamepadEngine.simulateKey('keydown', mapping.key, mapping.code);
     }
-  }, [triggerHaptic]);
+    if (refocusGame) {
+      refocusGame();
+    }
+  }, [triggerHaptic, refocusGame]);
 
   // Button Release Handler (Touchend / Mouseup)
-  const handlePressEnd = useCallback((btnKey: string) => {
+  const handlePressEnd = useCallback((btnKey: string, e?: React.SyntheticEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     setActiveButtons((prev) => ({ ...prev, [btnKey]: false }));
 
     const mapping = KEY_MAPPINGS[btnKey];
     if (mapping) {
       gamepadEngine.simulateKey('keyup', mapping.key, mapping.code);
     }
-  }, []);
+    if (refocusGame) {
+      refocusGame();
+    }
+  }, [refocusGame]);
 
   // Analog Stick Logic
   const updateAnalogDirections = useCallback((dx: number, dy: number) => {
@@ -132,6 +152,7 @@ export default function VirtualControlsOverlay({ onClose }: VirtualControlsOverl
   }, []);
 
   const handleStickTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    e.preventDefault();
     if (stickTouchIdRef.current !== null) return;
     const touch = e.changedTouches[0];
     if (!touch || !stickBaseRef.current) return;
@@ -156,9 +177,11 @@ export default function VirtualControlsOverlay({ onClose }: VirtualControlsOverl
 
     setStickPosition({ x: dx, y: dy });
     updateAnalogDirections(dx, dy);
+    if (refocusGame) refocusGame();
   };
 
   const handleStickTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    e.preventDefault();
     if (stickTouchIdRef.current === null || !stickBaseRef.current) return;
 
     for (let i = 0; i < e.changedTouches.length; i++) {
@@ -187,6 +210,7 @@ export default function VirtualControlsOverlay({ onClose }: VirtualControlsOverl
   };
 
   const handleStickTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    e.preventDefault();
     if (stickTouchIdRef.current === null) return;
 
     for (let i = 0; i < e.changedTouches.length; i++) {
@@ -194,6 +218,7 @@ export default function VirtualControlsOverlay({ onClose }: VirtualControlsOverl
         stickTouchIdRef.current = null;
         setStickPosition({ x: 0, y: 0 });
         updateAnalogDirections(0, 0);
+        if (refocusGame) refocusGame();
         break;
       }
     }
@@ -217,8 +242,11 @@ export default function VirtualControlsOverlay({ onClose }: VirtualControlsOverl
       <div className="absolute bottom-4 left-4 z-40 pointer-events-auto">
         <button
           type="button"
-          onClick={() => setIsMinimized(false)}
-          className="p-3 rounded-full bg-black/75 backdrop-blur-xl border border-indigo-500/40 text-indigo-400 shadow-2xl flex items-center gap-2 text-xs font-black animate-pulse"
+          onClick={() => {
+            setIsMinimized(false);
+            if (refocusGame) refocusGame();
+          }}
+          className="p-3 rounded-full bg-black/80 backdrop-blur-xl border border-indigo-500/40 text-indigo-400 shadow-2xl flex items-center gap-2 text-xs font-black hover:scale-105 transition-all"
         >
           <Gamepad2 size={18} />
           <span>Show Gamepad</span>
@@ -232,17 +260,39 @@ export default function VirtualControlsOverlay({ onClose }: VirtualControlsOverl
       className={`absolute inset-0 z-40 pointer-events-none select-none flex flex-col justify-between p-3 sm:p-5 transition-opacity duration-200 ${OPACITY_CLASSES[opacity]}`}
     >
       {/* Top Floating Mini-Bar (Centered controls) */}
-      <div className="w-full flex items-center justify-between pointer-events-none">
-        <div className="flex items-center gap-1.5 p-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 shadow-lg pointer-events-auto">
+      <div className="w-full flex flex-col items-center gap-2 pointer-events-none">
+        <div className="flex items-center gap-1.5 p-1 rounded-full bg-black/70 backdrop-blur-md border border-white/15 shadow-xl pointer-events-auto">
           <button
             type="button"
-            onClick={() => setStickMode((m) => (m === 'dpad' ? 'analog' : 'dpad'))}
+            onClick={() => {
+              setStickMode((m) => (m === 'dpad' ? 'analog' : 'dpad'));
+              if (refocusGame) refocusGame();
+            }}
             className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1 text-gray-300 hover:text-white transition-colors"
             title={`Switch to ${stickMode === 'dpad' ? 'Analog Stick' : 'D-Pad'}`}
           >
             {stickMode === 'dpad' ? <Compass size={12} className="text-indigo-400" /> : <LayoutGrid size={12} className="text-pink-400" />}
             <span>{stickMode === 'dpad' ? 'D-Pad' : 'Stick'}</span>
           </button>
+
+          {isExternalGame && (
+            <button
+              type="button"
+              onClick={() => {
+                setDirectTouchMode(!directTouchMode);
+                if (refocusGame) refocusGame();
+              }}
+              className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition-all flex items-center gap-1 ${
+                directTouchMode
+                  ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/50'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+              title="Touch Passthrough: Allows your fingers to interact directly with the game canvas"
+            >
+              <Zap size={11} className={directTouchMode ? 'text-emerald-400' : 'text-gray-400'} />
+              <span>{directTouchMode ? 'Passthrough ON' : 'Direct Touch'}</span>
+            </button>
+          )}
 
           <button
             type="button"
@@ -256,7 +306,10 @@ export default function VirtualControlsOverlay({ onClose }: VirtualControlsOverl
 
           <button
             type="button"
-            onClick={() => setIsMinimized(true)}
+            onClick={() => {
+              setIsMinimized(true);
+              if (refocusGame) refocusGame();
+            }}
             className="p-1 rounded-full text-gray-400 hover:text-white transition-colors"
             title="Minimize"
           >
@@ -266,7 +319,10 @@ export default function VirtualControlsOverlay({ onClose }: VirtualControlsOverl
           {onClose && (
             <button
               type="button"
-              onClick={onClose}
+              onClick={() => {
+                onClose();
+                if (refocusGame) refocusGame();
+              }}
               className="p-1 rounded-full text-gray-400 hover:text-rose-400 transition-colors"
               title="Close Virtual Controls"
             >
@@ -274,12 +330,22 @@ export default function VirtualControlsOverlay({ onClose }: VirtualControlsOverl
             </button>
           )}
         </div>
+
+        {/* External Game Guidance Pill */}
+        {isExternalGame && (
+          <div className="bg-black/75 backdrop-blur-md border border-white/10 rounded-full px-3 py-1 text-[10px] text-gray-300 flex items-center gap-2 shadow-xl pointer-events-auto max-w-sm sm:max-w-md text-center">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+            <span className="truncate">
+              External Game: Tap screen directly (mobile) or use WASD/Arrows (PC)
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Main Touch Controls: Left D-Pad/Stick & Right Diamond Buttons */}
       <div className="w-full flex items-end justify-between pb-2 sm:pb-4 pointer-events-none">
         {/* Left Control Cluster */}
-        <div className="relative pointer-events-auto">
+        <div className={`relative transition-opacity ${directTouchMode ? 'pointer-events-none opacity-40' : 'pointer-events-auto'}`}>
           {stickMode === 'dpad' ? (
             /* Tactile Cross D-Pad */
             <div className="relative w-36 h-36 sm:w-44 sm:h-44 flex items-center justify-center">
@@ -289,10 +355,11 @@ export default function VirtualControlsOverlay({ onClose }: VirtualControlsOverl
               {/* Up */}
               <button
                 type="button"
-                onTouchStart={(e) => { e.preventDefault(); handlePressStart('up'); }}
-                onTouchEnd={(e) => { e.preventDefault(); handlePressEnd('up'); }}
-                onMouseDown={() => handlePressStart('up')}
-                onMouseUp={() => handlePressEnd('up')}
+                onTouchStart={(e) => handlePressStart('up', e)}
+                onTouchEnd={(e) => handlePressEnd('up', e)}
+                onTouchCancel={(e) => handlePressEnd('up', e)}
+                onMouseDown={(e) => handlePressStart('up', e)}
+                onMouseUp={(e) => handlePressEnd('up', e)}
                 className={`absolute top-0 w-12 sm:w-14 h-12 sm:h-14 rounded-2xl flex items-center justify-center border transition-all active:scale-95 ${
                   activeButtons.up
                     ? 'bg-indigo-500/80 border-indigo-400 text-white shadow-[0_0_20px_rgba(99,102,241,0.6)]'
@@ -306,10 +373,11 @@ export default function VirtualControlsOverlay({ onClose }: VirtualControlsOverl
               {/* Down */}
               <button
                 type="button"
-                onTouchStart={(e) => { e.preventDefault(); handlePressStart('down'); }}
-                onTouchEnd={(e) => { e.preventDefault(); handlePressEnd('down'); }}
-                onMouseDown={() => handlePressStart('down')}
-                onMouseUp={() => handlePressEnd('down')}
+                onTouchStart={(e) => handlePressStart('down', e)}
+                onTouchEnd={(e) => handlePressEnd('down', e)}
+                onTouchCancel={(e) => handlePressEnd('down', e)}
+                onMouseDown={(e) => handlePressStart('down', e)}
+                onMouseUp={(e) => handlePressEnd('down', e)}
                 className={`absolute bottom-0 w-12 sm:w-14 h-12 sm:h-14 rounded-2xl flex items-center justify-center border transition-all active:scale-95 ${
                   activeButtons.down
                     ? 'bg-indigo-500/80 border-indigo-400 text-white shadow-[0_0_20px_rgba(99,102,241,0.6)]'
@@ -323,10 +391,11 @@ export default function VirtualControlsOverlay({ onClose }: VirtualControlsOverl
               {/* Left */}
               <button
                 type="button"
-                onTouchStart={(e) => { e.preventDefault(); handlePressStart('left'); }}
-                onTouchEnd={(e) => { e.preventDefault(); handlePressEnd('left'); }}
-                onMouseDown={() => handlePressStart('left')}
-                onMouseUp={() => handlePressEnd('left')}
+                onTouchStart={(e) => handlePressStart('left', e)}
+                onTouchEnd={(e) => handlePressEnd('left', e)}
+                onTouchCancel={(e) => handlePressEnd('left', e)}
+                onMouseDown={(e) => handlePressStart('left', e)}
+                onMouseUp={(e) => handlePressEnd('left', e)}
                 className={`absolute left-0 w-12 sm:w-14 h-12 sm:h-14 rounded-2xl flex items-center justify-center border transition-all active:scale-95 ${
                   activeButtons.left
                     ? 'bg-indigo-500/80 border-indigo-400 text-white shadow-[0_0_20px_rgba(99,102,241,0.6)]'
@@ -340,10 +409,11 @@ export default function VirtualControlsOverlay({ onClose }: VirtualControlsOverl
               {/* Right */}
               <button
                 type="button"
-                onTouchStart={(e) => { e.preventDefault(); handlePressStart('right'); }}
-                onTouchEnd={(e) => { e.preventDefault(); handlePressEnd('right'); }}
-                onMouseDown={() => handlePressStart('right')}
-                onMouseUp={() => handlePressEnd('right')}
+                onTouchStart={(e) => handlePressStart('right', e)}
+                onTouchEnd={(e) => handlePressEnd('right', e)}
+                onTouchCancel={(e) => handlePressEnd('right', e)}
+                onMouseDown={(e) => handlePressStart('right', e)}
+                onMouseUp={(e) => handlePressEnd('right', e)}
                 className={`absolute right-0 w-12 sm:w-14 h-12 sm:h-14 rounded-2xl flex items-center justify-center border transition-all active:scale-95 ${
                   activeButtons.right
                     ? 'bg-indigo-500/80 border-indigo-400 text-white shadow-[0_0_20px_rgba(99,102,241,0.6)]'
@@ -382,14 +452,15 @@ export default function VirtualControlsOverlay({ onClose }: VirtualControlsOverl
         </div>
 
         {/* Right Action Diamond Buttons (A, B, X, Y) */}
-        <div className="relative w-40 h-40 sm:w-48 sm:h-48 flex items-center justify-center pointer-events-auto">
+        <div className={`relative w-40 h-40 sm:w-48 sm:h-48 flex items-center justify-center transition-opacity ${directTouchMode ? 'pointer-events-none opacity-40' : 'pointer-events-auto'}`}>
           {/* Button Y (Top - Special / Q) */}
           <button
             type="button"
-            onTouchStart={(e) => { e.preventDefault(); handlePressStart('y'); }}
-            onTouchEnd={(e) => { e.preventDefault(); handlePressEnd('y'); }}
-            onMouseDown={() => handlePressStart('y')}
-            onMouseUp={() => handlePressEnd('y')}
+            onTouchStart={(e) => handlePressStart('y', e)}
+            onTouchEnd={(e) => handlePressEnd('y', e)}
+            onTouchCancel={(e) => handlePressEnd('y', e)}
+            onMouseDown={(e) => handlePressStart('y', e)}
+            onMouseUp={(e) => handlePressEnd('y', e)}
             className={`absolute top-0 w-12 sm:w-14 h-12 sm:h-14 rounded-full flex flex-col items-center justify-center border font-black transition-all active:scale-90 ${
               activeButtons.y
                 ? 'bg-amber-500 border-amber-300 text-black shadow-[0_0_25px_rgba(245,158,11,0.8)]'
@@ -403,10 +474,11 @@ export default function VirtualControlsOverlay({ onClose }: VirtualControlsOverl
           {/* Button X (Left - Interact / E) */}
           <button
             type="button"
-            onTouchStart={(e) => { e.preventDefault(); handlePressStart('x'); }}
-            onTouchEnd={(e) => { e.preventDefault(); handlePressEnd('x'); }}
-            onMouseDown={() => handlePressStart('x')}
-            onMouseUp={() => handlePressEnd('x')}
+            onTouchStart={(e) => handlePressStart('x', e)}
+            onTouchEnd={(e) => handlePressEnd('x', e)}
+            onTouchCancel={(e) => handlePressEnd('x', e)}
+            onMouseDown={(e) => handlePressStart('x', e)}
+            onMouseUp={(e) => handlePressEnd('x', e)}
             className={`absolute left-0 w-12 sm:w-14 h-12 sm:h-14 rounded-full flex flex-col items-center justify-center border font-black transition-all active:scale-90 ${
               activeButtons.x
                 ? 'bg-blue-500 border-blue-300 text-white shadow-[0_0_25px_rgba(59,130,246,0.8)]'
@@ -420,10 +492,11 @@ export default function VirtualControlsOverlay({ onClose }: VirtualControlsOverl
           {/* Button B (Right - Run / Dash / Shift) */}
           <button
             type="button"
-            onTouchStart={(e) => { e.preventDefault(); handlePressStart('b'); }}
-            onTouchEnd={(e) => { e.preventDefault(); handlePressEnd('b'); }}
-            onMouseDown={() => handlePressStart('b')}
-            onMouseUp={() => handlePressEnd('b')}
+            onTouchStart={(e) => handlePressStart('b', e)}
+            onTouchEnd={(e) => handlePressEnd('b', e)}
+            onTouchCancel={(e) => handlePressEnd('b', e)}
+            onMouseDown={(e) => handlePressStart('b', e)}
+            onMouseUp={(e) => handlePressEnd('b', e)}
             className={`absolute right-0 w-12 sm:w-14 h-12 sm:h-14 rounded-full flex flex-col items-center justify-center border font-black transition-all active:scale-90 ${
               activeButtons.b
                 ? 'bg-rose-500 border-rose-300 text-white shadow-[0_0_25px_rgba(244,63,94,0.8)]'
@@ -437,10 +510,11 @@ export default function VirtualControlsOverlay({ onClose }: VirtualControlsOverl
           {/* Button A (Bottom - Jump / Primary / Space) */}
           <button
             type="button"
-            onTouchStart={(e) => { e.preventDefault(); handlePressStart('a'); }}
-            onTouchEnd={(e) => { e.preventDefault(); handlePressEnd('a'); }}
-            onMouseDown={() => handlePressStart('a')}
-            onMouseUp={() => handlePressEnd('a')}
+            onTouchStart={(e) => handlePressStart('a', e)}
+            onTouchEnd={(e) => handlePressEnd('a', e)}
+            onTouchCancel={(e) => handlePressEnd('a', e)}
+            onMouseDown={(e) => handlePressStart('a', e)}
+            onMouseUp={(e) => handlePressEnd('a', e)}
             className={`absolute bottom-0 w-14 sm:w-16 h-14 sm:h-16 rounded-full flex flex-col items-center justify-center border-2 font-black transition-all active:scale-90 ${
               activeButtons.a
                 ? 'bg-emerald-500 border-emerald-300 text-black shadow-[0_0_30px_rgba(16,185,129,0.8)]'
