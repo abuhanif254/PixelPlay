@@ -5,6 +5,8 @@ export type AspectRatio = '16:9' | '4:3' | '9:16' | 'auto';
 export type CloudSaveStatus = 'idle' | 'saving' | 'saved' | 'loading' | 'loaded' | 'error';
 export type GamepadMode = 'dual' | 'wasd' | 'arrows';
 export type GamepadOpacity = 'low' | 'med' | 'high';
+export type WebGLHealthStatus = 'healthy' | 'lost' | 'restoring';
+export type PointerLockStatus = 'unlocked' | 'locked';
 
 export interface RelatedGame {
   id?: string;

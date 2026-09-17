@@ -18,6 +18,9 @@ import {
   Smartphone,
   Loader2,
   Timer,
+  MousePointer,
+  RefreshCw,
+  AlertTriangle,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdBanner from '@/components/AdBanner';
@@ -506,5 +509,69 @@ export function PlayerImmersiveHUD({
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+// 8. 3D Pointer Lock Toast Indicator
+export interface PlayerPointerLockToastProps {
+  isLocked: boolean;
+}
+
+export function PlayerPointerLockToast({ isLocked }: PlayerPointerLockToastProps) {
+  return (
+    <AnimatePresence>
+      {isLocked && (
+        <motion.div
+          initial={{ opacity: 0, y: -20, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -20, scale: 0.95 }}
+          transition={{ duration: 0.2 }}
+          className="absolute top-4 left-1/2 -translate-x-1/2 z-[90] pointer-events-none"
+        >
+          <div className="bg-black/90 text-white border border-white/20 px-4 py-2 rounded-full shadow-2xl backdrop-blur-xl flex items-center gap-2.5 text-xs font-semibold">
+            <MousePointer size={14} className="text-[#6366F1] animate-pulse" />
+            <span>Mouse locked</span>
+            <span className="w-1 h-1 rounded-full bg-white/30" />
+            <span className="text-gray-300">
+              Press <kbd className="px-1.5 py-0.5 bg-white/20 rounded font-mono text-[10px] text-white font-bold">ESC</kbd> to unlock
+            </span>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+// 9. WebGL Context Loss Recovery Overlay (3D GPU Memory Purge Protection)
+export interface PlayerWebGLRecoveryOverlayProps {
+  onRestore: () => void;
+}
+
+export function PlayerWebGLRecoveryOverlay({ onRestore }: PlayerWebGLRecoveryOverlayProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/90 backdrop-blur-md p-6 text-center"
+    >
+      <div className="bg-[#111228]/95 border border-amber-500/30 rounded-2xl p-6 max-w-sm w-full shadow-2xl flex flex-col items-center gap-4">
+        <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
+          <RefreshCw size={24} className="animate-spin" style={{ animationDuration: '4s' }} />
+        </div>
+        <div>
+          <h3 className="text-lg font-black text-white font-outfit">Graphics Memory Restored</h3>
+          <p className="text-xs text-gray-400 mt-1">
+            Your browser freed 3D graphics memory while in the background. Tap below to resume your game instantly.
+          </p>
+        </div>
+        <button
+          onClick={onRestore}
+          className="w-full py-2.5 bg-[#6366F1] hover:bg-[#5356e8] text-white rounded-xl text-xs font-bold transition-all shadow-lg flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
+        >
+          <Play size={14} className="fill-white" /> Resume Game
+        </button>
+      </div>
+    </motion.div>
   );
 }

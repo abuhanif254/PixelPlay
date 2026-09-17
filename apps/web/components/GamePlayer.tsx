@@ -43,6 +43,8 @@ import {
   PlayerPauseOverlay,
   PlayerRotateHint,
   PlayerImmersiveHUD,
+  PlayerPointerLockToast,
+  PlayerWebGLRecoveryOverlay,
 } from './player/PlayerOverlays';
 import PlayerScoreToasts from './player/PlayerScoreToasts';
 import PlayerGameOverScreen from './player/PlayerGameOverScreen';
@@ -171,6 +173,8 @@ export default function GamePlayer({
   const [isPortraitMobile, setIsPortraitMobile] = useState(false);
   const [dismissRotateHint, setDismissRotateHint] = useState(false);
   const [resumedCheckpointToast, setResumedCheckpointToast] = useState(false);
+  const [isPointerLocked, setIsPointerLocked] = useState(false);
+  const [isWebGLContextLost, setIsWebGLContextLost] = useState(false);
 
   // Speculative pre-warming of iframe CDN connections on component mount
   useEffect(() => {
@@ -297,14 +301,33 @@ export default function GamePlayer({
     ambientColor.current = match ? map[match] : '#6366F1';
   }, [category]);
 
+  // WebAudio Autoplay Unlocker for Mobile & Desktop (Web Audio API)
+  const unlockAudioContext = useCallback(() => {
+    try {
+      const AudioCtxClass =
+        typeof window !== 'undefined'
+          ? (window as any).AudioContext || (window as any).webkitAudioContext
+          : null;
+      if (AudioCtxClass) {
+        const tempCtx = new AudioCtxClass();
+        if (tempCtx.state === 'suspended') {
+          tempCtx.resume().then(() => tempCtx.close()).catch(() => {});
+        } else {
+          tempCtx.close().catch(() => {});
+        }
+      }
+    } catch {}
+  }, []);
+
   // Smart Focus Trapper
   const refocusGame = useCallback(() => {
+    unlockAudioContext();
     if (iframeRef.current && playerState === 'playing') {
       try {
         iframeRef.current.focus();
       } catch {}
     }
-  }, [playerState]);
+  }, [playerState, unlockAudioContext]);
 
   // Sync Universal Gamepad target window with active game iframe
   useEffect(() => {
@@ -427,6 +450,7 @@ export default function GamePlayer({
   // Play button click
   const handlePlay = () => {
     arcadeAudio.playBlip();
+    unlockAudioContext();
     setPlayerState('ad');
     setIsIframeLoading(true);
     if (iframeLoadTimeoutRef.current) clearTimeout(iframeLoadTimeoutRef.current);
@@ -439,6 +463,13 @@ export default function GamePlayer({
         })
       );
     } catch {}
+
+    // Mobile Viewport Auto-Dock (Poki / CrazyGames ergonomic standard)
+    if (typeof window !== 'undefined' && window.innerWidth < 768 && containerRef.current) {
+      setTimeout(() => {
+        containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 60);
+    }
   };
 
   useEffect(() => {
@@ -627,6 +658,52 @@ export default function GamePlayer({
     return () => document.removeEventListener('fullscreenchange', h);
   }, []);
 
+  // 3D Heavy Games: Pointer Lock Coordinator
+  useEffect(() => {
+    const handlePointerLockChange = () => {
+      const isLocked = Boolean(
+        document.pointerLockElement &&
+          (containerRef.current?.contains(document.pointerLockElement) ||
+            document.pointerLockElement === iframeRef.current)
+      );
+      setIsPointerLocked(isLocked);
+    };
+    const handlePointerLockError = () => {
+      setIsPointerLocked(false);
+    };
+
+    document.addEventListener('pointerlockchange', handlePointerLockChange);
+    document.addEventListener('pointerlockerror', handlePointerLockError);
+    return () => {
+      document.removeEventListener('pointerlockchange', handlePointerLockChange);
+      document.removeEventListener('pointerlockerror', handlePointerLockError);
+    };
+  }, []);
+
+  // 3D Heavy Games: WebGL Context Loss Lifecycle Supervisor
+  useEffect(() => {
+    const handleContextLost = (e: Event) => {
+      e.preventDefault();
+      setIsWebGLContextLost(true);
+    };
+    const handleContextRestored = () => {
+      setIsWebGLContextLost(false);
+      refocusGame();
+    };
+
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('webglcontextlost', handleContextLost);
+      container.addEventListener('webglcontextrestored', handleContextRestored);
+    }
+    return () => {
+      if (container) {
+        container.removeEventListener('webglcontextlost', handleContextLost);
+        container.removeEventListener('webglcontextrestored', handleContextRestored);
+      }
+    };
+  }, [refocusGame]);
+
   // Keyboard Hotkeys
   useEffect(() => {
     const handle = (e: KeyboardEvent) => {
@@ -656,6 +733,12 @@ export default function GamePlayer({
         e.preventDefault();
         handleReload();
       } else if (e.key === 'Escape') {
+        if (isPointerLocked) {
+          try {
+            if (document.exitPointerLock) document.exitPointerLock();
+          } catch {}
+          setIsPointerLocked(false);
+        }
         if (showShortcuts) {
           setShowShortcuts(false);
           return;
@@ -1087,11 +1170,16 @@ export default function GamePlayer({
           isMiniPlayer
             ? 'fixed bottom-6 right-6 z-[999] w-[340px] sm:w-[420px] aspect-video rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.85)] border-2 border-white/20 hidden md:flex'
             : isWebFullscreen
-            ? 'fixed inset-0 z-[1000] w-screen h-screen rounded-none pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)] pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)]'
+            ? 'fixed inset-0 z-[1000] w-screen h-screen h-[100dvh] rounded-none pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)] pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)] overscroll-none'
             : isTheater
             ? 'fixed inset-2 md:inset-6 lg:inset-10 z-[100] rounded-2xl shadow-[0_0_80px_rgba(0,0,0,0.9)] border border-white/10'
             : `${AR_CLASSES[aspectRatio]} rounded-2xl border border-gray-200 dark:border-white/10`
         }`}
+        style={{
+          contain: 'layout size paint',
+          willChange: 'transform',
+          transform: 'translateZ(0)',
+        }}
       >
         {/* Mini-Player Hover Controls Bar */}
         {isMiniPlayer && (
@@ -1168,7 +1256,7 @@ export default function GamePlayer({
             />
           )}
 
-          {/* 3. ACTIVE PLAYING CANVAS */}
+          {/* 3. ACTIVE PLAYING CANVAS (100% Pure Edge-to-Edge Canvas like Poki & CrazyGames) */}
           {(playerState === 'playing' || playerState === 'paused') && (
             <motion.div
               key="playing"
@@ -1176,15 +1264,6 @@ export default function GamePlayer({
               animate={{ opacity: 1 }}
               className="w-full h-full flex flex-row relative z-10 bg-black overflow-hidden"
             >
-              {/* Left Skyscraper Ad */}
-              {!isMiniPlayer && !isFullscreen && !isWebFullscreen && (
-                <div
-                  className={`hidden ${isTheater ? 'xl:flex' : '2xl:flex'} flex-col justify-center items-center px-3 bg-gray-950 border-r border-white/5 z-20 shrink-0`}
-                >
-                  <AdBanner id="f782d4b90dcb09f70975f654ba40ab19" width={160} height={600} />
-                </div>
-              )}
-
               {/* Game Viewport Container (STAYS CONSTANT IN DOM) */}
               <div
                 className="flex-1 h-full relative flex justify-center items-center pointer-events-auto z-10 min-w-0"
@@ -1217,6 +1296,19 @@ export default function GamePlayer({
                   children
                 )}
 
+                {/* 3D Heavy Games: Pointer Lock Cursor Toast */}
+                <PlayerPointerLockToast isLocked={isPointerLocked} />
+
+                {/* 3D Heavy Games: WebGL Context Loss Recovery Overlay */}
+                {isWebGLContextLost && (
+                  <PlayerWebGLRecoveryOverlay
+                    onRestore={() => {
+                      setIsWebGLContextLost(false);
+                      handleReload();
+                    }}
+                  />
+                )}
+
                 <PlayerPauseOverlay
                   title={title}
                   category={category}
@@ -1230,15 +1322,6 @@ export default function GamePlayer({
                   }}
                 />
               </div>
-
-              {/* Right Skyscraper Ad */}
-              {!isMiniPlayer && !isFullscreen && !isWebFullscreen && (
-                <div
-                  className={`hidden ${isTheater ? 'xl:flex' : '2xl:flex'} flex-col justify-center items-center px-3 bg-gray-950 border-l border-white/5 z-20 shrink-0`}
-                >
-                  <AdBanner id="f782d4b90dcb09f70975f654ba40ab19" width={160} height={600} />
-                </div>
-              )}
 
               {/* Score Toasts & Floating Notifications */}
               <PlayerScoreToasts

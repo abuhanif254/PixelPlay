@@ -51,5 +51,5 @@ export const GAME_IFRAME_SANDBOX =
  * while revoking camera, microphone, payment, and clipboard-read.
  */
 export const GAME_IFRAME_PERMISSIONS = 
-  'fullscreen; autoplay; gamepad; accelerometer; gyroscope; screen-wake-lock; clipboard-write';
+  'fullscreen; autoplay; gamepad; accelerometer; gyroscope; screen-wake-lock; clipboard-write; xr-spatial-tracking; web-share';
 
