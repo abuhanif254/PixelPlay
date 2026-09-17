@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Star, ThumbsUp, MessageSquare, X, Check, ShieldCheck, Sparkles, AlertCircle } from 'lucide-react';
+import { Star, ThumbsUp, MessageSquare, Edit3, X, Check, ShieldCheck, Sparkles, AlertCircle } from 'lucide-react';
 import { submitReview, voteHelpfulReview, ReviewItem } from '@/app/games/reviews-actions';
 import { createClient } from '@/lib/supabase/client';
 
@@ -78,32 +78,99 @@ export default function GameReviews({
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [helpfulVoted, setHelpfulVoted] = useState<Record<string, boolean>>({});
 
+  // Check if current authenticated user already has an existing review for this game
+  const existingReview = currentUser
+    ? reviews.find(
+        r => (r.userId && r.userId === currentUser.id) ||
+             (currentUser.username && r.author?.toLowerCase() === currentUser.username?.toLowerCase())
+      )
+    : null;
+
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => {
-      if (data?.user) {
-        supabase
+    let isMounted = true;
+    const loadUserData = async () => {
+      try {
+        const supabase = createClient();
+        const { data: authData } = await supabase.auth.getUser();
+        if (!authData?.user || !isMounted) {
+          if (isMounted) setCurrentUser(null);
+          return;
+        }
+
+        const uid = authData.user.id;
+        const { data: profile } = await supabase
           .from('profiles')
-          .select('id, username, avatar_url')
-          .eq('id', data.user.id)
-          .maybeSingle()
-          .then(({ data: profile }) => {
-            setCurrentUser({
-              id: data.user.id,
-              username: profile?.username || undefined,
-              avatar_url: profile?.avatar_url || undefined,
-            });
-            if (profile?.username) {
-              setAuthorName(profile.username);
+          .select('id, username, avatar_url, level')
+          .eq('id', uid)
+          .maybeSingle();
+
+        if (!isMounted) return;
+
+        setCurrentUser({
+          id: uid,
+          username: profile?.username || undefined,
+          avatar_url: profile?.avatar_url || undefined,
+        });
+
+        if (profile?.username) {
+          setAuthorName(profile.username);
+        }
+
+        // Verify if user already has a saved review in the database
+        let query = supabase
+          .from('game_reviews')
+          .select('id, rating, comment, helpful_count, created_at, user_id')
+          .eq('user_id', uid);
+
+        if (gameId) {
+          query = query.or(`game_id.eq.${gameId},game_slug.eq.${slug}`);
+        } else {
+          query = query.eq('game_slug', slug);
+        }
+
+        const { data: myRev } = await query.maybeSingle();
+        if (myRev && isMounted) {
+          setReviews(prev => {
+            const hasReal = prev.some(r => !r.id.startsWith('seed-'));
+            const cleanPrev = hasReal ? prev : [];
+            const idx = cleanPrev.findIndex(r => r.id === myRev.id || r.userId === uid);
+            if (idx !== -1) {
+              const next = [...cleanPrev];
+              next[idx] = {
+                ...next[idx],
+                id: myRev.id,
+                userId: uid,
+                rating: myRev.rating,
+                content: myRev.comment,
+                helpful: myRev.helpful_count || 0,
+              };
+              return next;
             }
+            const userItem: ReviewItem = {
+              id: myRev.id,
+              userId: uid,
+              author: profile?.username || 'You',
+              avatarUrl: profile?.avatar_url,
+              level: profile?.level || 1,
+              date: 'Recently',
+              rating: myRev.rating,
+              content: myRev.comment,
+              helpful: myRev.helpful_count || 0,
+              isVerified: true,
+            };
+            return [userItem, ...cleanPrev];
           });
-      } else {
-        setCurrentUser(null);
+        }
+      } catch {
+        if (isMounted) setCurrentUser(null);
       }
-    }).catch(() => {
-      setCurrentUser(null);
-    });
-  }, []);
+    };
+
+    loadUserData();
+    return () => {
+      isMounted = false;
+    };
+  }, [gameId, slug]);
 
   // Compute live rating
   const totalVotes = reviews.length;
@@ -114,6 +181,13 @@ export default function GameReviews({
   const handleOpenModal = () => {
     setSubmitError(null);
     setSubmitSuccess(false);
+    if (existingReview) {
+      setUserRating(existingReview.rating);
+      setComment(existingReview.content);
+    } else {
+      setUserRating(5);
+      setComment('');
+    }
     setIsModalOpen(true);
   };
 
@@ -149,9 +223,24 @@ export default function GameReviews({
       });
 
       if (res.success && res.review) {
-        setReviews(prev => [res.review!, ...prev]);
+        const updated = res.review;
+        setReviews(prev => {
+          // If seed reviews were present, remove them on real review insertion
+          const cleanPrev = prev.filter(r => !r.id.startsWith('seed-') || r.userId);
+          const idx = cleanPrev.findIndex(
+            r => r.id === updated.id ||
+                 (updated.userId && r.userId === updated.userId) ||
+                 (currentUser && r.userId === currentUser.id) ||
+                 (currentUser?.username && r.author?.toLowerCase() === currentUser.username?.toLowerCase())
+          );
+          if (idx !== -1) {
+            const next = [...cleanPrev];
+            next[idx] = updated;
+            return next;
+          }
+          return [updated, ...cleanPrev];
+        });
         setSubmitSuccess(true);
-        setComment('');
         setTimeout(() => {
           setIsModalOpen(false);
           setSubmitSuccess(false);
@@ -162,18 +251,31 @@ export default function GameReviews({
     } catch {
       // Optimistic fallback
       const fallbackReview: ReviewItem = {
-        id: `local-${Date.now()}`,
+        id: existingReview?.id || `local-${Date.now()}`,
+        userId: currentUser?.id,
         author: authorName.trim() || 'Player',
-        date: 'Just now',
+        date: existingReview ? 'Just now (Edited)' : 'Just now',
         rating: userRating,
         content: comment.trim(),
-        helpful: 0,
-        isVerified: false,
+        helpful: existingReview?.helpful || 0,
+        isVerified: true,
         level: 1,
       };
-      setReviews(prev => [fallbackReview, ...prev]);
+      setReviews(prev => {
+        const cleanPrev = prev.filter(r => !r.id.startsWith('seed-') || r.userId);
+        const idx = cleanPrev.findIndex(
+          r => r.id === fallbackReview.id ||
+               (currentUser && r.userId === currentUser.id) ||
+               (currentUser?.username && r.author?.toLowerCase() === currentUser.username?.toLowerCase())
+        );
+        if (idx !== -1) {
+          const next = [...cleanPrev];
+          next[idx] = fallbackReview;
+          return next;
+        }
+        return [fallbackReview, ...cleanPrev];
+      });
       setSubmitSuccess(true);
-      setComment('');
       setTimeout(() => {
         setIsModalOpen(false);
         setSubmitSuccess(false);
@@ -209,7 +311,7 @@ export default function GameReviews({
 
   return (
     <div id="reviews" className="scroll-mt-32 w-full mt-12 pt-8 border-t border-gray-200 dark:border-white/5">
-      {/* Header & Write Review Action */}
+      {/* Header & Write / Edit Review Action */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
           <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white font-outfit flex items-center gap-2.5">
@@ -237,90 +339,141 @@ export default function GameReviews({
           type="button"
           className="px-5 py-2.5 bg-[#6366F1] hover:bg-[#5457DF] active:scale-95 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-[#6366F1]/25 flex items-center justify-center gap-2 shrink-0 cursor-pointer"
         >
-          <MessageSquare size={16} />
-          Write a Review
+          {existingReview ? (
+            <>
+              <Edit3 size={16} />
+              Edit Your Review
+            </>
+          ) : (
+            <>
+              <MessageSquare size={16} />
+              Write a Review
+            </>
+          )}
         </button>
       </div>
 
       {/* Reviews Cards List */}
       <div className="grid gap-4 md:gap-5">
-        {reviews.map(review => (
-          <div
-            key={review.id}
-            className="bg-white dark:bg-[#111228]/60 border border-gray-200 dark:border-white/5 rounded-2xl p-5 hover:border-indigo-500/30 transition-all shadow-sm"
-          >
-            <div className="flex justify-between items-start mb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#6366F1] to-[#3B82F6] flex items-center justify-center font-bold text-white text-sm shadow-md">
-                  {review.author.substring(0, 2).toUpperCase()}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-gray-900 dark:text-white text-sm">{review.author}</span>
-                    {review.isVerified && (
-                      <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full border border-emerald-500/20">
-                        <ShieldCheck size={11} /> Verified Player
-                      </span>
-                    )}
-                    {review.level && (
-                      <span className="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded">
-                        Lvl {review.level}
-                      </span>
-                    )}
+        {reviews.map(review => {
+          const isMyReview = !!currentUser && (
+            (review.userId && review.userId === currentUser.id) ||
+            (currentUser.username && review.author?.toLowerCase() === currentUser.username?.toLowerCase())
+          );
+
+          return (
+            <div
+              key={review.id}
+              className={`bg-white dark:bg-[#111228]/60 border rounded-2xl p-5 transition-all shadow-sm ${
+                isMyReview
+                  ? 'border-indigo-500/50 dark:border-indigo-500/40 bg-indigo-50/[0.15] dark:bg-indigo-950/20 ring-1 ring-indigo-500/20'
+                  : 'border-gray-200 dark:border-white/5 hover:border-indigo-500/30'
+              }`}
+            >
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#6366F1] to-[#3B82F6] flex items-center justify-center font-bold text-white text-sm shadow-md">
+                    {review.author.substring(0, 2).toUpperCase()}
                   </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{review.date}</div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold text-gray-900 dark:text-white text-sm">{review.author}</span>
+                      {isMyReview && (
+                        <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-500/15 px-1.5 py-0.5 rounded border border-indigo-500/30">
+                          You
+                        </span>
+                      )}
+                      {review.isVerified && (
+                        <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full border border-emerald-500/20">
+                          <ShieldCheck size={11} /> Verified Player
+                        </span>
+                      )}
+                      {review.level && (
+                        <span className="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded">
+                          Lvl {review.level}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{review.date}</div>
+                  </div>
+                </div>
+
+                {/* Right Header: Edit Trigger (if own review) & Star Rating */}
+                <div className="flex items-center gap-2">
+                  {isMyReview && (
+                    <button
+                      type="button"
+                      onClick={handleOpenModal}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 px-2.5 py-1 rounded-lg border border-indigo-200 dark:border-indigo-800/50 transition-colors cursor-pointer"
+                    >
+                      <Edit3 size={12} />
+                      Edit
+                    </button>
+                  )}
+                  <div className="flex text-[#F59E0B] bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20">
+                    {[1, 2, 3, 4, 5].map(starNum => (
+                      <Star
+                        key={starNum}
+                        size={13}
+                        className={starNum <= review.rating ? "fill-current" : "fill-current opacity-20 text-gray-400"}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              {/* Star Rating Display */}
-              <div className="flex text-[#F59E0B] bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20">
-                {[1, 2, 3, 4, 5].map(starNum => (
-                  <Star
-                    key={starNum}
-                    size={13}
-                    className={starNum <= review.rating ? "fill-current" : "fill-current opacity-20 text-gray-400"}
-                  />
-                ))}
+              <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed mb-4 whitespace-pre-line">
+                {review.content}
+              </p>
+
+              {/* Helpful Counter Button */}
+              <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-white/5">
+                <button
+                  onClick={() => !isMyReview && handleHelpfulClick(review.id)}
+                  disabled={!!isMyReview}
+                  type="button"
+                  title={isMyReview ? 'You cannot vote on your own review' : undefined}
+                  className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all ${
+                    isMyReview
+                      ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-70'
+                      : helpfulVoted[review.id]
+                        ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/50'
+                        : 'text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-white/5'
+                  }`}
+                >
+                  <ThumbsUp size={13} className={helpfulVoted[review.id] ? 'fill-current' : ''} />
+                  <span>Helpful ({review.helpful})</span>
+                  {helpfulVoted[review.id] && <span className="text-[10px] ml-1 font-bold">✓ Voted</span>}
+                  {isMyReview && <span className="text-[10px] ml-1 font-normal opacity-80">(Your review)</span>}
+                </button>
+
+                <span className="text-[11px] text-gray-400">Online Community Review</span>
               </div>
             </div>
-
-            <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed mb-4 whitespace-pre-line">
-              {review.content}
-            </p>
-
-            {/* Helpful Counter Button */}
-            <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-white/5">
-              <button
-                onClick={() => handleHelpfulClick(review.id)}
-                type="button"
-                className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all ${
-                  helpfulVoted[review.id]
-                    ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/50'
-                    : 'text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-white/5'
-                }`}
-              >
-                <ThumbsUp size={13} className={helpfulVoted[review.id] ? 'fill-current' : ''} />
-                <span>Helpful ({review.helpful})</span>
-                {helpfulVoted[review.id] && <span className="text-[10px] ml-1 font-bold">✓ Voted</span>}
-              </button>
-
-              <span className="text-[11px] text-gray-400">Online Community Review</span>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      {/* Mobile Write a Review Trigger */}
+      {/* Mobile Write / Edit a Review Trigger */}
       <button
         onClick={handleOpenModal}
         type="button"
         className="w-full mt-6 py-3 bg-[#6366F1] hover:bg-[#5457DF] text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-[#6366F1]/20 flex items-center justify-center gap-2 sm:hidden cursor-pointer"
       >
-        <MessageSquare size={16} />
-        Write a Review
+        {existingReview ? (
+          <>
+            <Edit3 size={16} />
+            Edit Your Review
+          </>
+        ) : (
+          <>
+            <MessageSquare size={16} />
+            Write a Review
+          </>
+        )}
       </button>
 
-      {/* Interactive Write Review Modal */}
+      {/* Interactive Write / Edit Review Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
           <div 
@@ -332,10 +485,12 @@ export default function GameReviews({
               <div>
                 <h4 className="text-lg font-bold text-gray-900 dark:text-white font-outfit flex items-center gap-2">
                   <Sparkles size={18} className="text-[#6366F1]" />
-                  Rate & Review {title}
+                  {existingReview ? `Edit Your Review for ${title}` : `Rate & Review ${title}`}
                 </h4>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                  Share your experience with thousands of fellow players
+                  {existingReview
+                    ? 'Update your rating and thoughts about this game'
+                    : 'Share your experience with thousands of fellow players'}
                 </p>
               </div>
               <button
@@ -382,9 +537,13 @@ export default function GameReviews({
                     <div className="w-14 h-14 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mb-3">
                       <Check size={28} />
                     </div>
-                    <h5 className="text-base font-bold text-gray-900 dark:text-white">Review Published!</h5>
+                    <h5 className="text-base font-bold text-gray-900 dark:text-white">
+                      {existingReview ? 'Review Updated!' : 'Review Published!'}
+                    </h5>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Thank you for rating {title}. Your feedback helps other gamers find great games!
+                      {existingReview
+                        ? `Your updated review for ${title} is now live.`
+                        : `Thank you for rating ${title}. Your feedback helps other gamers find great games!`}
                     </p>
                   </div>
                 ) : (
@@ -401,7 +560,9 @@ export default function GameReviews({
                             <Check size={10} /> Verified Player
                           </span>
                         </span>
-                        <span className="text-[10px] text-gray-400">Reviewing as verified player</span>
+                        <span className="text-[10px] text-gray-400">
+                          {existingReview ? 'Updating your existing review' : 'Reviewing as verified player'}
+                        </span>
                       </div>
                     </div>
 
@@ -496,8 +657,10 @@ export default function GameReviews({
                       {isSubmitting ? (
                         <>
                           <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          Publishing...
+                          {existingReview ? 'Saving Changes...' : 'Publishing...'}
                         </>
+                      ) : existingReview ? (
+                        'Update Review'
                       ) : (
                         'Submit Review'
                       )}

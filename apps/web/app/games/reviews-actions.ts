@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 
 export interface ReviewItem {
   id: string;
+  userId?: string;
   author: string;
   avatarUrl?: string;
   level?: number;
@@ -92,6 +93,7 @@ export async function getGameReviews(slug: string, gameId?: string): Promise<Rev
 
       return {
         id: item.id,
+        userId: item.user_id,
         author,
         avatarUrl: user?.avatar_url,
         level: user?.level || 1,
@@ -120,7 +122,7 @@ export async function submitReview({
   rating: number;
   comment: string;
   authorName?: string;
-}): Promise<{ success: boolean; error?: string; review?: ReviewItem }> {
+}): Promise<{ success: boolean; error?: string; review?: ReviewItem; isEdit?: boolean }> {
   if (!comment || comment.trim().length < 5) {
     return { success: false, error: 'Review must be at least 5 characters long.' };
   }
@@ -169,45 +171,103 @@ export async function submitReview({
     } catch {}
   }
 
-  const newReviewItem: ReviewItem = {
-    id: `rev-${Date.now()}`,
-    author,
-    avatarUrl,
-    level,
-    date: 'Just now',
-    rating,
-    content: comment.trim(),
-    helpful: 0,
-    isVerified: true,
-  };
-
   try {
-    const insertPayload: any = {
-      game_slug: slug,
-      user_id: userId,
-      rating,
-      comment: comment.trim(),
-      author_name: author,
-      helpful_count: 0,
-    };
+    // Check if user already submitted a review for this game
+    let existingQuery = supabase
+      .from('game_reviews')
+      .select('id, helpful_count')
+      .eq('user_id', userId);
 
     if (targetGameId) {
-      insertPayload.game_id = targetGameId;
+      existingQuery = existingQuery.eq('game_id', targetGameId);
+    } else {
+      existingQuery = existingQuery.eq('game_slug', slug);
     }
 
-    const { data, error } = await supabase
-      .from('game_reviews')
-      .upsert([insertPayload], { onConflict: targetGameId ? 'game_id, user_id' : undefined })
-      .select()
-      .maybeSingle();
+    const { data: existingReview } = await existingQuery.maybeSingle();
 
-    if (error) {
-      return { success: false, error: error.message };
+    let savedData: any = null;
+    let isEdit = false;
+
+    if (existingReview?.id) {
+      // User already reviewed this game -> UPDATE their existing review
+      isEdit = true;
+      const { data, error } = await supabase
+        .from('game_reviews')
+        .update({
+          rating,
+          comment: comment.trim(),
+          author_name: author,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', existingReview.id)
+        .select()
+        .single();
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+      savedData = data;
+    } else {
+      // First review -> INSERT
+      const insertPayload: any = {
+        game_slug: slug,
+        user_id: userId,
+        rating,
+        comment: comment.trim(),
+        author_name: author,
+        helpful_count: 0,
+      };
+
+      if (targetGameId) {
+        insertPayload.game_id = targetGameId;
+      }
+
+      const { data, error } = await supabase
+        .from('game_reviews')
+        .insert([insertPayload])
+        .select()
+        .single();
+
+      if (error) {
+        // If unique constraint triggers, fallback to update
+        if (error.code === '23505' && targetGameId) {
+          const updateRes = await supabase
+            .from('game_reviews')
+            .update({
+              rating,
+              comment: comment.trim(),
+              author_name: author,
+              updated_at: new Date().toISOString(),
+            })
+            .match({ game_id: targetGameId, user_id: userId })
+            .select()
+            .single();
+          if (updateRes.error) {
+            return { success: false, error: updateRes.error.message };
+          }
+          savedData = updateRes.data;
+          isEdit = true;
+        } else {
+          return { success: false, error: error.message };
+        }
+      } else {
+        savedData = data;
+      }
     }
 
-    if (data?.id) {
-      newReviewItem.id = data.id;
-    }
+    const reviewResult: ReviewItem = {
+      id: savedData?.id || `rev-${Date.now()}`,
+      userId: userId,
+      author,
+      avatarUrl,
+      level,
+      date: isEdit ? 'Just now (Edited)' : 'Just now',
+      rating,
+      content: comment.trim(),
+      helpful: savedData?.helpful_count || 0,
+      isVerified: true,
+    };
 
     try {
       revalidatePath(`/games/${slug}`);
@@ -215,16 +275,27 @@ export async function submitReview({
       // Cloudflare Pages edge runtime does not support static generation store in server actions
     }
 
-    return { success: true, review: newReviewItem };
+    return { success: true, isEdit, review: reviewResult };
   } catch (err: any) {
     console.error('Database write error:', err);
     return { success: false, error: err?.message || 'Failed to submit review. Please try again.' };
   }
 }
 
-export async function voteHelpfulReview(reviewId: string): Promise<{ success: boolean }> {
+export async function voteHelpfulReview(reviewId: string): Promise<{ success: boolean; error?: string }> {
   const supabase = createClient();
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: rev } = await supabase
+        .from('game_reviews')
+        .select('user_id')
+        .eq('id', reviewId)
+        .maybeSingle();
+      if (rev && rev.user_id === user.id) {
+        return { success: false, error: 'You cannot vote on your own review.' };
+      }
+    }
     // Attempt SQL increment
     await supabase.rpc('increment_review_helpful', { review_id: reviewId });
     return { success: true };

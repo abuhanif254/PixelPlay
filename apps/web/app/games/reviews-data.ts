@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 
 export interface ReviewItem {
   id: string;
+  userId?: string;
   author: string;
   avatarUrl?: string;
   level?: number;
@@ -86,6 +87,7 @@ export async function getGameReviews(slug: string, gameId?: string): Promise<Rev
 
       return {
         id: r.id,
+        userId: r.user_id,
         author: r.user?.username || r.author_name || 'Anonymous Player',
         avatarUrl: r.user?.avatar_url,
         level: r.user?.level || 1,
