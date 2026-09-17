@@ -357,18 +357,27 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- 14. Trigger to automatically create a profile when a new auth user signs up
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS trigger AS $$
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
 BEGIN
-  INSERT INTO public.profiles (id, username, avatar_url, role)
+  INSERT INTO public.profiles (
+    id,
+    username,
+    avatar_url,
+    role
+  )
   VALUES (
-    new.id, 
-    new.raw_user_meta_data->>'username', 
-    new.raw_user_meta_data->>'avatar_url',
-    COALESCE(new.raw_user_meta_data->>'role', 'user')
+    new.id,
+    COALESCE(new.raw_user_meta_data->>'username', new.email),
+    COALESCE(new.raw_user_meta_data->>'avatar_url', ''),
+    'user'
   );
   RETURN new;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
