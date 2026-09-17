@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { verifyAdminAction } from '@/lib/admin'
 import { revalidatePath } from 'next/cache'
 import { gamesRegistry } from '@spielcade/games/registry'
+import { submitUrlsToIndexNow, INDEXNOW_HOST } from '@/lib/indexnow'
 
 // ─── Sync Plugin Registry → Supabase ──────────────────────────────────────────
 export async function syncGames() {
@@ -160,6 +161,12 @@ export async function approveGame(id: string) {
       `Your game "${game.title}" has been approved and is now live!`,
       `/games/${game.slug || id}`
     );
+  }
+
+  // Trigger real-time search engine crawling via IndexNow
+  if (game?.slug) {
+    submitUrlsToIndexNow([`https://${INDEXNOW_HOST}/games/${game.slug}`])
+      .catch(err => console.warn('Background IndexNow ping on approveGame ignored:', err));
   }
 
   try {
