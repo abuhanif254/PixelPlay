@@ -116,13 +116,22 @@ export default function StudioGameRowActions({ game }: GameRowProps) {
       
       {/* Active Game */}
       {game.status === 'active' && (
-        <Link
-          href={`/games/${game.slug}`}
-          target="_blank"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 rounded-lg text-xs font-bold transition-colors"
-        >
-          <ExternalLink size={13} /> View Live
-        </Link>
+        <div className="flex items-center gap-1.5">
+          <Link
+            href={`/games/${game.slug}`}
+            target="_blank"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 rounded-lg text-xs font-bold transition-colors"
+          >
+            <ExternalLink size={13} /> View Live
+          </Link>
+          <button
+            onClick={() => setIsEditOpen(true)}
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+            title="Update game build (requires moderation review)"
+          >
+            <Edit3 size={12} /> Update
+          </button>
+        </div>
       )}
 
       {/* Pending Game */}
@@ -225,11 +234,18 @@ export default function StudioGameRowActions({ game }: GameRowProps) {
               <div>
                 <h3 className="text-lg font-bold font-outfit text-gray-900 dark:text-white flex items-center gap-2">
                   <Sliders size={18} className="text-indigo-500" />
-                  Edit & Resubmit: {game.title}
+                  {game.status === 'active' ? `Update Game Build: ${game.title}` : `Edit & Resubmit: ${game.title}`}
                 </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                  Update your game build, URLs, or aspect ratio. Resubmitting will queue it for immediate review.
-                </p>
+                {game.status === 'active' ? (
+                  <p className="text-xs text-amber-600 dark:text-amber-400 font-medium mt-1 flex items-center gap-1.5 bg-amber-50 dark:bg-amber-500/10 p-2 rounded-lg border border-amber-200 dark:border-amber-500/20">
+                    <AlertCircle size={14} className="shrink-0" />
+                    Submitting changes to a published game moves it to Pending Review to protect players from unverified code.
+                  </p>
+                ) : (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    Update your game build, URLs, or aspect ratio. Resubmitting will queue it for immediate review.
+                  </p>
+                )}
               </div>
               <button 
                 onClick={() => setIsEditOpen(false)}

@@ -88,6 +88,11 @@ export async function updateDeveloperGame(
     return { success: false, error: 'Unauthorized. You do not own this game.' }
   }
 
+  // Any update to a game's build, source URL, or metadata queues it for moderation review.
+  // Active games revert to 'pending' to prevent unvetted code injection (SEC-03).
+  const isReModeration = existingGame.status === 'active'
+  const nextStatus = 'pending'
+
   const currentMeta = (existingGame.metadata as any) || {}
   const updatedMeta = {
     ...currentMeta,
@@ -99,11 +104,9 @@ export async function updateDeveloperGame(
     updated_at: new Date().toISOString(),
     // Clear previous rejection reason upon resubmission
     rejection_reason: null,
-    resubmitted_at: new Date().toISOString()
+    resubmitted_at: new Date().toISOString(),
+    re_moderation: isReModeration ? true : undefined,
   }
-
-  // If game was rejected or draft, automatically move back to pending for review
-  const nextStatus = existingGame.status === 'rejected' ? 'pending' : existingGame.status
 
   const { error } = await supabase
     .from('games')
@@ -124,10 +127,13 @@ export async function updateDeveloperGame(
 
   try {
     revalidatePath('/studio')
+    if (isReModeration) {
+      revalidatePath('/admin/games/queue')
+    }
   } catch (e) {
     console.error('revalidatePath error in updateDeveloperGame:', e)
   }
-  return { success: true }
+  return { success: true, reModeration: isReModeration }
 }
 
 export async function deleteDeveloperGame(gameId: string) {
@@ -153,8 +159,8 @@ export async function deleteDeveloperGame(gameId: string) {
     return { success: false, error: 'Unauthorized. You do not own this game.' }
   }
 
-  if (existingGame.status === 'active') {
-    return { success: false, error: 'Active games cannot be deleted directly. Please contact support.' }
+  if (existingGame.status === 'active' || existingGame.status === 'pending') {
+    return { success: false, error: 'Active or in-review games cannot be deleted directly. Please contact platform support.' }
   }
 
   const { error } = await supabase

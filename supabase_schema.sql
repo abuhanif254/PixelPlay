@@ -88,12 +88,71 @@ CREATE POLICY "Only admins can modify games"
 DROP POLICY IF EXISTS "Developers can insert games" ON public.games;
 CREATE POLICY "Developers can insert games"
   ON public.games FOR INSERT
-  WITH CHECK (auth.uid() = developer_id OR auth.uid() IN (SELECT id FROM public.profiles WHERE role = 'admin'));
+  WITH CHECK (
+    (auth.uid() = developer_id AND status IN ('draft', 'pending'))
+    OR auth.uid() IN (SELECT id FROM public.profiles WHERE role = 'admin')
+  );
 
 DROP POLICY IF EXISTS "Developers can update own pending games" ON public.games;
 CREATE POLICY "Developers can update own pending games"
   ON public.games FOR UPDATE
-  USING (auth.uid() = developer_id OR auth.uid() IN (SELECT id FROM public.profiles WHERE role = 'admin'));
+  USING (
+    (auth.uid() = developer_id AND status IN ('draft', 'pending', 'rejected', 'active'))
+    OR auth.uid() IN (SELECT id FROM public.profiles WHERE role = 'admin')
+  )
+  WITH CHECK (
+    (auth.uid() = developer_id AND status IN ('draft', 'pending'))
+    OR auth.uid() IN (SELECT id FROM public.profiles WHERE role = 'admin')
+  );
+
+DROP POLICY IF EXISTS "Developers can delete own draft games" ON public.games;
+CREATE POLICY "Developers can delete own draft games"
+  ON public.games FOR DELETE
+  USING (
+    (auth.uid() = developer_id AND status IN ('draft', 'rejected'))
+    OR auth.uid() IN (SELECT id FROM public.profiles WHERE role = 'admin')
+  );
+
+-- Defense-in-Depth Trigger: Protect against metrics tampering, status fraud & ownership hijacking
+CREATE OR REPLACE FUNCTION public.protect_game_moderation()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  is_admin boolean;
+BEGIN
+  -- Determine whether current session is an admin
+  SELECT (role = 'admin') INTO is_admin
+  FROM public.profiles
+  WHERE id = auth.uid();
+
+  -- If admin, allow all operations
+  IF is_admin IS TRUE THEN
+    RETURN NEW;
+  END IF;
+
+  -- Disallow non-admins from promoting ANY game to 'active' or 'maintenance'
+  IF NEW.status IN ('active', 'maintenance') AND (OLD.status IS NULL OR OLD.status != NEW.status) THEN
+    RAISE EXCEPTION 'Unauthorized: Only platform administrators can approve games to active or maintenance status.';
+  END IF;
+
+  -- Disallow non-admins from altering platform metrics
+  NEW.rating := OLD.rating;
+  NEW.total_plays := OLD.total_plays;
+
+  -- Always preserve original developer_id (anti-hijack)
+  NEW.developer_id := OLD.developer_id;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_protect_game_moderation ON public.games;
+CREATE TRIGGER trg_protect_game_moderation
+  BEFORE UPDATE ON public.games
+  FOR EACH ROW EXECUTE PROCEDURE public.protect_game_moderation();
 
 
 -- 3. Create Scores Table
