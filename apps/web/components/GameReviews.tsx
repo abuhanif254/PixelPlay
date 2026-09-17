@@ -506,6 +506,7 @@ export default function GameReviews({
                 </>
               )}
             </form>
+            )}
           </div>
         </div>
       )}
