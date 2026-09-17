@@ -108,6 +108,7 @@ export default function CategoryGameGrid({
               category={game.category || category.title.replace(' Games', '')}
               slug={game.slug || game.id}
               plays={`${Math.floor((game.total_plays || 10000) / 1000)}K plays`}
+              priority={i < 6}
             />
           </div>
         ))}

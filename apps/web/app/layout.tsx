@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Outfit } from 'next/font/google';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import dynamic from 'next/dynamic';
@@ -18,6 +18,14 @@ const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
   preload: true,
+  variable: '--font-inter',
+});
+
+const outfit = Outfit({
+  subsets: ['latin'],
+  display: 'swap',
+  preload: true,
+  variable: '--font-outfit',
 });
 
 export const viewport: Viewport = {
@@ -123,6 +131,8 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://img.gamemonetize.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://img.gamemonetize.com" />
+        <link rel="preconnect" href="https://img.gamedistribution.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://img.gamedistribution.com" />
         <link rel="dns-prefetch" href="https://www.highperformanceformat.com" />
         <link rel="preconnect" href="https://html5.gamedistribution.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://html5.gamedistribution.com" />
@@ -135,7 +145,7 @@ export default function RootLayout({
           <meta name="monetag" content={monetagZone} />
         )}
       </head>
-      <body className={`${inter.className} bg-background text-foreground antialiased min-h-screen flex flex-col`}>
+      <body className={`${inter.className} ${inter.variable} ${outfit.variable} bg-background text-foreground antialiased min-h-screen flex flex-col`}>
         {isMonetagLive && (
           <Script 
             src="https://alwingulla.com/88/tag.min.js" 

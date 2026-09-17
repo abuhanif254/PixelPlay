@@ -31,6 +31,7 @@ interface GameCardProps {
   plays?: string;
   isNew?: boolean;
   rank?: number;
+  priority?: boolean;
 }
 
 export default function GameCard({ 
@@ -41,7 +42,8 @@ export default function GameCard({
   slug = '#',
   plays = '50K plays',
   isNew = false,
-  rank
+  rank,
+  priority = false,
 }: GameCardProps) {
   // Determine badge styling based on rank
   let rankBadge = null;
@@ -84,8 +86,10 @@ export default function GameCard({
               src={imageUrl} 
               alt={title} 
               fill
-              sizes="(max-width: 640px) 160px, (max-width: 1024px) 220px, 260px"
-              loading="lazy"
+              sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 240px"
+              priority={priority}
+              loading={priority ? 'eager' : 'lazy'}
+              fetchPriority={priority ? 'high' : 'auto'}
               decoding="async"
               unoptimized={!isWhitelistedImage(imageUrl)}
               className="object-cover transition-transform duration-500 group-hover:scale-110" 

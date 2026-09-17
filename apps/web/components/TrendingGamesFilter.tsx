@@ -140,6 +140,7 @@ export function TrendingGamesFilter({ games }: TrendingGamesFilterProps) {
                   slug={uniqueId}
                   plays={playsStr}
                   rank={activeTabId === 'all' && index < 3 ? index + 1 : undefined}
+                  priority={index < 6}
                 />
               </motion.div>
             );

@@ -417,6 +417,7 @@ export default function PopularGamesClient({ initialGames = [] }: PopularGamesCl
                     plays={formatNumber(game.totalPlays || 0) + ' plays'}
                     slug={game.slug || game.id}
                     rank={absoluteRank}
+                    priority={index < 6}
                   />
                 );
               })}

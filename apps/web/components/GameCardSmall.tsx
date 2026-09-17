@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Star } from 'lucide-react';
+import { isWhitelistedImage } from '@/lib/image-helpers';
 
 interface GameCardSmallProps {
   title: string;
@@ -18,10 +19,14 @@ export default function GameCardSmall({ title, slug, rating = 4.5, imageUrl }: G
     >
       <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 shadow-sm">
         {imageUrl ? (
-          <img
+          <Image
             src={imageUrl}
             alt={title}
+            fill
+            sizes="(max-width: 640px) 100vw, 300px"
             loading="lazy"
+            decoding="async"
+            unoptimized={!isWhitelistedImage(imageUrl)}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (

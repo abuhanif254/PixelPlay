@@ -410,7 +410,7 @@ export default function AllGamesClient({
                 <GameCardSkeleton key={idx} />
               ))
             ) : (
-              displayGames.map((game) => (
+              displayGames.map((game, idx) => (
                 <GameCard 
                   key={game.id}
                   title={game.title}
@@ -419,6 +419,7 @@ export default function AllGamesClient({
                   plays={`${Math.floor((game.totalPlays || 1000) / 1000)}K plays`}
                   rating={game.rating || 5.0}
                   imageUrl={game.image}
+                  priority={idx < 4}
                 />
               ))
             )}
