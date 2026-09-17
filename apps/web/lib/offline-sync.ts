@@ -71,7 +71,8 @@ export async function flushOfflineQueue(): Promise<{ synced: number; failed: num
   let failed = 0;
   const remainingQueue: QueuedScoreItem[] = [];
 
-  for (const item of queue) {
+  for (let i = 0; i < queue.length; i++) {
+    const item = queue[i];
     try {
       const res = await submitScore(item.gameSlug, item.score);
       if (res && res.success) {
@@ -84,6 +85,11 @@ export async function flushOfflineQueue(): Promise<{ synced: number; failed: num
     } catch {
       remainingQueue.push(item);
       failed++;
+    }
+
+    // Pace consecutive score synchronizations to respect anti-cheat cooldown
+    if (i < queue.length - 1) {
+      await new Promise((resolve) => setTimeout(resolve, 3100));
     }
   }
 

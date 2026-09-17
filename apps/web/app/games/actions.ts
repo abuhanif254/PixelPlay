@@ -10,10 +10,20 @@ export async function submitScore(gameSlug: string, score: number) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: 'User not logged in' };
 
-  // Get game ID from slug
+  // 1. Validate score type, finiteness, and bounds (0 to 10,000,000)
+  if (typeof score !== 'number' || !Number.isFinite(score)) {
+    return { success: false, error: 'Invalid score: must be a valid number' };
+  }
+
+  const cleanScore = Math.floor(score);
+  if (cleanScore < 0 || cleanScore > 10_000_000) {
+    return { success: false, error: 'Invalid score: must be between 0 and 10,000,000' };
+  }
+
+  // 2. Get game ID from slug and ensure active status
   const { data: game, error: gameError } = await supabase
     .from('games')
-    .select('id, total_plays')
+    .select('id, total_plays, status')
     .eq('slug', gameSlug)
     .maybeSingle();
 
@@ -21,11 +31,35 @@ export async function submitScore(gameSlug: string, score: number) {
     return { success: false, error: 'Game not found in database' };
   }
 
-  // Insert score
+  if (game.status !== 'active') {
+    return { success: false, error: 'Scores can only be submitted for active games' };
+  }
+
+  // 3. Anti-cheat rate limit cooldown (3-second debounce per user/game)
+  const { data: recentScore } = await supabase
+    .from('scores')
+    .select('created_at')
+    .eq('user_id', user.id)
+    .eq('game_id', game.id)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (recentScore?.created_at) {
+    const elapsedMs = Date.now() - new Date(recentScore.created_at).getTime();
+    if (elapsedMs < 3000) {
+      return { 
+        success: false, 
+        error: 'Rate limit: please wait a moment before submitting another score' 
+      };
+    }
+  }
+
+  // 4. Insert validated score
   const { error: insertError } = await supabase
     .from('scores')
     .insert([
-      { user_id: user.id, game_id: game.id, score }
+      { user_id: user.id, game_id: game.id, score: cleanScore }
     ]);
 
   if (insertError) {
@@ -43,7 +77,7 @@ export async function submitScore(gameSlug: string, score: number) {
 
     let newLevel = 1;
     if (profile) {
-      const addedXp = Math.max(25, Math.min(500, Math.floor(score / 100)));
+      const addedXp = Math.max(25, Math.min(500, Math.floor(cleanScore / 100)));
       const newXp = (profile.xp || 0) + addedXp;
       newLevel = Math.floor(newXp / 500) + 1;
       await supabase
@@ -78,7 +112,7 @@ export async function submitScore(gameSlug: string, score: number) {
           if (earnedSet.has(ach.id)) continue;
 
           let isEarned = false;
-          if (ach.condition_type === 'single_score' && score >= ach.condition_value) isEarned = true;
+          if (ach.condition_type === 'single_score' && cleanScore >= ach.condition_value) isEarned = true;
           else if (ach.condition_type === 'level' && newLevel >= ach.condition_value) isEarned = true;
           else if (ach.condition_type === 'games_played' && distinctGamesCount >= ach.condition_value) isEarned = true;
           else if (ach.condition_type === 'streak' && (profile?.streak ?? 0) >= ach.condition_value) isEarned = true;

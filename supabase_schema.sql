@@ -160,7 +160,7 @@ CREATE TABLE IF NOT EXISTS public.scores (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
   game_id uuid REFERENCES public.games(id) ON DELETE CASCADE NOT NULL,
-  score integer NOT NULL,
+  score integer NOT NULL CONSTRAINT chk_scores_range CHECK (score >= 0 AND score <= 10000000),
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -173,6 +173,55 @@ CREATE POLICY "Scores are viewable by everyone."
 DROP POLICY IF EXISTS "Users can insert their own scores." ON public.scores;
 CREATE POLICY "Users can insert their own scores." 
   ON public.scores FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE INDEX IF NOT EXISTS idx_scores_user_game_created
+  ON public.scores (user_id, game_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_scores_game_score
+  ON public.scores (game_id, score DESC);
+
+-- Anti-Cheat Score Validation & Rate-Limit Trigger
+CREATE OR REPLACE FUNCTION public.validate_score_submission()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_game_status text;
+  v_last_time timestamptz;
+BEGIN
+  IF NEW.score < 0 OR NEW.score > 10000000 THEN
+    RAISE EXCEPTION 'Gaming Integrity Violation: Score must be between 0 and 10,000,000 (received: %)', NEW.score;
+  END IF;
+
+  SELECT status INTO v_game_status
+  FROM public.games
+  WHERE id = NEW.game_id;
+
+  IF v_game_status IS NULL THEN
+    RAISE EXCEPTION 'Gaming Integrity Violation: Referenced game does not exist';
+  END IF;
+
+  IF v_game_status != 'active' THEN
+    RAISE EXCEPTION 'Gaming Integrity Violation: Scores can only be submitted for active games (game status: %)', v_game_status;
+  END IF;
+
+  SELECT created_at INTO v_last_time
+  FROM public.scores
+  WHERE user_id = NEW.user_id AND game_id = NEW.game_id
+  ORDER BY created_at DESC
+  LIMIT 1;
+
+  IF v_last_time IS NOT NULL AND (now() - v_last_time) < INTERVAL '2 seconds' THEN
+    RAISE EXCEPTION 'Rate Limit Exceeded: Score submissions must be at least 2 seconds apart';
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trg_validate_score_submission ON public.scores;
+CREATE TRIGGER trg_validate_score_submission
+  BEFORE INSERT ON public.scores
+  FOR EACH ROW
+  EXECUTE FUNCTION public.validate_score_submission();
 
 
 -- 4. Create Blog Posts Table
