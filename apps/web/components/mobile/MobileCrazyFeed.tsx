@@ -25,6 +25,8 @@ function getCountryFlag(): string {
           127397 + countryCode.charCodeAt(1)
         );
       }
+    } else if (parts.length === 1 && parts[0].toLowerCase() === 'en') {
+      return '🇺🇸';
     }
   } catch {
     // Graceful fallback
@@ -60,7 +62,7 @@ export default function MobileCrazyFeed({
   const grid5: MobileGameItem[] = (topRated.length >= 8 ? topRated : trending).slice(2, 8);
 
   return (
-    <div className="flex flex-col w-full pb-20 pt-1 bg-white dark:bg-[#070818] text-slate-900 dark:text-white min-h-screen">
+    <div className="flex flex-col w-full pb-28 pt-[72px] sm:pt-20 bg-white dark:bg-[#070818] text-slate-900 dark:text-white min-h-screen">
       {/* 1. Top Quick Vibe / Mood Cards Scroller (Screenshot 2) */}
       <MobileVibeScroller />
 

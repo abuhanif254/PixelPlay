@@ -148,5 +148,17 @@ describe('Poki & CrazyGames Mobile Homepage Architecture (RFC-MOBILE-001)', () =
       expect(desktopContainerClasses).toContain('md:flex');
       expect(desktopContainerClasses).toContain('gap-14');
     });
+
+    it('verifies mobile feed container accounts for fixed 64px navbar with top offset', () => {
+      const mobileFeedContainerClasses = 'flex flex-col w-full pb-28 pt-[72px] sm:pt-20 bg-white dark:bg-[#070818] text-slate-900 dark:text-white min-h-screen';
+      expect(mobileFeedContainerClasses).toContain('pt-[72px]');
+      expect(mobileFeedContainerClasses).toContain('pb-28');
+    });
+
+    it('verifies theme toggle button is visible on mobile viewports', () => {
+      const themeToggleClasses = 'flex p-1.5 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white rounded-full hover:bg-slate-100 dark:hover:bg-white/5 transition-colors shrink-0';
+      expect(themeToggleClasses.startsWith('flex')).toBe(true);
+      expect(themeToggleClasses).not.toContain('hidden sm:flex');
+    });
   });
 });

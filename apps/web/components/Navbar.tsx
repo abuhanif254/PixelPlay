@@ -707,7 +707,7 @@ export default function Navbar() {
                 setTheme(theme === 'dark' ? 'light' : 'dark');
                 arcadeAudio.playBlip();
               }}
-              className="hidden sm:flex p-1.5 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white rounded-full hover:bg-slate-100 dark:hover:bg-white/5 transition-colors shrink-0"
+              className="flex p-1.5 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white rounded-full hover:bg-slate-100 dark:hover:bg-white/5 transition-colors shrink-0"
               aria-label="Toggle Dark Mode"
               title="Toggle Dark Mode"
             >

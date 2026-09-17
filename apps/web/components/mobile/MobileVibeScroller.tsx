@@ -50,7 +50,7 @@ function renderVibeIcon(iconName: VibeItemConfig['iconName']) {
 
 export default function MobileVibeScroller() {
   return (
-    <div className="w-full pt-1 pb-3">
+    <div className="w-full pt-2 pb-3.5">
       <div 
         className="flex items-center gap-2.5 overflow-x-auto snap-x snap-mandatory px-3.5 sm:px-4 no-scrollbar scroll-smooth"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
