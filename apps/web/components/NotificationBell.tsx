@@ -193,8 +193,10 @@ export default function NotificationBell({ userId }: { userId: string }) {
                       </div>
                     );
 
-                    return notif.link ? (
-                      <Link key={notif.id} href={notif.link} onClick={() => setIsOpen(false)}>
+                    const safeHref = notif.link && notif.link.startsWith('/') && !notif.link.startsWith('//') && !notif.link.includes('\\') ? notif.link : null;
+
+                    return safeHref ? (
+                      <Link key={notif.id} href={safeHref} onClick={() => setIsOpen(false)}>
                         <Content />
                       </Link>
                     ) : (

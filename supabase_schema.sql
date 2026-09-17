@@ -303,7 +303,12 @@ DROP POLICY IF EXISTS "Users can manage own notifications" ON public.user_notifi
 CREATE POLICY "Users can manage own notifications" ON public.user_notifications FOR ALL USING (auth.uid() = user_id);
 
 DROP POLICY IF EXISTS "Users can insert notifications" ON public.user_notifications;
-CREATE POLICY "Users can insert notifications" ON public.user_notifications FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Authorized notification insert" ON public.user_notifications;
+CREATE POLICY "Authorized notification insert" ON public.user_notifications FOR INSERT 
+  WITH CHECK (
+    auth.uid() IN (SELECT id FROM public.profiles WHERE role = 'admin')
+    OR auth.uid() = user_id
+  );
 
 
 -- 10. Create User Follows Table
@@ -321,6 +326,64 @@ CREATE POLICY "Anyone can view follows" ON public.user_follows FOR SELECT USING 
 
 DROP POLICY IF EXISTS "Users can manage own follows" ON public.user_follows;
 CREATE POLICY "Users can manage own follows" ON public.user_follows FOR ALL USING (auth.uid() = follower_id);
+
+CREATE OR REPLACE FUNCTION public.handle_user_follow_notification()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_follower_username text;
+BEGIN
+  SELECT username INTO v_follower_username
+  FROM public.profiles
+  WHERE id = NEW.follower_id;
+
+  INSERT INTO public.user_notifications (user_id, type, message, link)
+  VALUES (
+    NEW.following_id,
+    'follower',
+    '@' || COALESCE(v_follower_username, 'Someone') || ' started following you!',
+    '/profile/' || COALESCE(v_follower_username, '')
+  );
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_on_user_follow ON public.user_follows;
+CREATE TRIGGER trg_on_user_follow
+  AFTER INSERT ON public.user_follows
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_user_follow_notification();
+
+CREATE OR REPLACE FUNCTION public.handle_user_unfollow_notification()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_follower_username text;
+BEGIN
+  SELECT username INTO v_follower_username
+  FROM public.profiles
+  WHERE id = OLD.follower_id;
+
+  DELETE FROM public.user_notifications
+  WHERE user_id = OLD.following_id
+    AND type = 'follower'
+    AND link = '/profile/' || COALESCE(v_follower_username, '');
+  RETURN OLD;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_on_user_unfollow ON public.user_follows;
+CREATE TRIGGER trg_on_user_unfollow
+  AFTER DELETE ON public.user_follows
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_user_unfollow_notification();
+
 
 
 -- 11. Create API Keys Table

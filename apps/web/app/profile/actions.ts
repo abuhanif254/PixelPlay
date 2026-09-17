@@ -152,14 +152,40 @@ export async function updateStreak() {
 export async function sendNotification(userId: string, type: string, message: string, link: string | null = null) {
   try {
     const supabase = createClient();
-    await supabase.from('user_notifications').insert({
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.warn('sendNotification rejected: Unauthenticated session');
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    // SEC-06: Strict link sanitization: only internal relative paths are permitted
+    let safeLink: string | null = null;
+    if (link && typeof link === 'string') {
+      const trimmed = link.trim();
+      if (trimmed.startsWith('/') && !trimmed.startsWith('//') && !trimmed.includes('\\')) {
+        safeLink = trimmed;
+      } else {
+        console.warn(`[Security Alert] Rejected non-relative notification link: "${link}"`);
+      }
+    }
+
+    const { error } = await supabase.from('user_notifications').insert({
       user_id: userId,
-      type,
-      message,
-      link
+      type: String(type).trim().slice(0, 50),
+      message: String(message).trim().slice(0, 500),
+      link: safeLink
     });
-  } catch (err) {
-    console.error('Error sending notification:', err)
+
+    if (error) {
+      console.error('sendNotification database error:', error.message);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('Error sending notification:', err);
+    return { success: false, error: err?.message || 'Failed to send notification' };
   }
 }
+
 

@@ -2,7 +2,6 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
-import { sendNotification } from '@/app/profile/actions';
 
 export async function toggleFollow(targetUserId: string, targetUsername: string) {
   const supabase = createClient();
@@ -43,21 +42,7 @@ export async function toggleFollow(targetUserId: string, targetUsername: string)
       
     if (error) return { success: false, error: error.message };
 
-    // Get follower's username for notification
-    const { data: followerProfile } = await supabase
-      .from('profiles')
-      .select('username')
-      .eq('id', user.id)
-      .maybeSingle();
-
-    if (followerProfile) {
-      await sendNotification(
-        targetUserId,
-        'new_follower',
-        `@${followerProfile.username} started following you!`,
-        `/profile/${followerProfile.username}`
-      );
-    }
+    // Note: Follow notification is automatically dispatched by the trg_on_user_follow database trigger
   }
 
   revalidatePath(`/profile/${targetUsername}`);
