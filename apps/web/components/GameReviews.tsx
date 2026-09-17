@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Star, ThumbsUp, MessageSquare, X, Check, ShieldCheck, Sparkles, AlertCircle } from 'lucide-react';
 import { submitReview, voteHelpfulReview, ReviewItem } from '@/app/games/reviews-actions';
+import { createClient } from '@/lib/supabase/client';
 
 interface GameReviewsProps {
   title: string;
@@ -65,6 +67,7 @@ export default function GameReviews({
     return initialReviews.length > 0 ? initialReviews : DEFAULT_SEED_REVIEWS;
   });
 
+  const [currentUser, setCurrentUser] = useState<{ id: string; username?: string; avatar_url?: string } | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [userRating, setUserRating] = useState<number>(5);
   const [hoverRating, setHoverRating] = useState<number>(0);
@@ -74,6 +77,33 @@ export default function GameReviews({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [helpfulVoted, setHelpfulVoted] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user) {
+        supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .eq('id', data.user.id)
+          .maybeSingle()
+          .then(({ data: profile }) => {
+            setCurrentUser({
+              id: data.user.id,
+              username: profile?.username || undefined,
+              avatar_url: profile?.avatar_url || undefined,
+            });
+            if (profile?.username) {
+              setAuthorName(profile.username);
+            }
+          });
+      } else {
+        setCurrentUser(null);
+      }
+    }).catch(() => {
+      setCurrentUser(null);
+    });
+  }, []);
 
   // Compute live rating
   const totalVotes = reviews.length;
@@ -318,63 +348,92 @@ export default function GameReviews({
             </div>
 
             {/* Modal Body / Form */}
-            <form onSubmit={handleSubmitReview} className="p-6 space-y-5">
-              {submitSuccess ? (
-                <div className="py-8 text-center flex flex-col items-center">
-                  <div className="w-14 h-14 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mb-3">
-                    <Check size={28} />
-                  </div>
-                  <h5 className="text-base font-bold text-gray-900 dark:text-white">Review Published!</h5>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Thank you for rating {title}. Your feedback helps other gamers find great games!
-                  </p>
+            {!currentUser ? (
+              <div className="p-8 text-center flex flex-col items-center">
+                <div className="w-14 h-14 bg-[#6366F1]/10 text-[#6366F1] rounded-2xl flex items-center justify-center mb-4">
+                  <ShieldCheck size={30} />
                 </div>
-              ) : (
-                <>
-                  {/* Star Rating Picker */}
-                  <div className="space-y-2">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
-                      Your Rating
-                    </label>
-                    <div className="flex items-center gap-1.5 py-1">
-                      {[1, 2, 3, 4, 5].map(starIndex => {
-                        const isFilled = (hoverRating || userRating) >= starIndex;
-                        return (
-                          <button
-                            key={starIndex}
-                            type="button"
-                            onMouseEnter={() => setHoverRating(starIndex)}
-                            onMouseLeave={() => setHoverRating(0)}
-                            onClick={() => setUserRating(starIndex)}
-                            className="p-1 text-gray-300 dark:text-gray-600 hover:scale-125 active:scale-95 transition-transform cursor-pointer"
-                          >
-                            <Star
-                              size={30}
-                              className={isFilled ? 'text-[#F59E0B] fill-[#F59E0B]' : 'text-gray-300 dark:text-gray-700'}
-                            />
-                          </button>
-                        );
-                      })}
-                      <span className="text-xs font-bold text-amber-500 ml-2">
-                        {getRatingLabel(hoverRating || userRating)}
-                      </span>
+                <h5 className="text-base font-bold text-gray-900 dark:text-white font-outfit">
+                  Player Sign-In Required
+                </h5>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 max-w-sm leading-relaxed">
+                  To protect game ratings against spam and bots, only registered players can post reviews. Sign in to rate <strong>{title}</strong> and earn XP!
+                </p>
+                <div className="flex items-center gap-3 mt-6">
+                  <Link
+                    href={`/login?next=/games/${slug}`}
+                    className="px-6 py-2.5 bg-[#6366F1] hover:bg-[#5558E6] text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-500/20 transition-all flex items-center gap-2"
+                  >
+                    Sign In / Create Account
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleCloseModal}
+                    className="px-4 py-2.5 text-xs font-semibold text-gray-500 hover:text-gray-700 dark:hover:text-white transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmitReview} className="p-6 space-y-5">
+                {submitSuccess ? (
+                  <div className="py-8 text-center flex flex-col items-center">
+                    <div className="w-14 h-14 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mb-3">
+                      <Check size={28} />
                     </div>
+                    <h5 className="text-base font-bold text-gray-900 dark:text-white">Review Published!</h5>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Thank you for rating {title}. Your feedback helps other gamers find great games!
+                    </p>
                   </div>
+                ) : (
+                  <>
+                    {/* Verified Player Badge */}
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-100 dark:border-white/5">
+                      <div className="w-8 h-8 rounded-full bg-[#6366F1]/20 flex items-center justify-center text-[#6366F1] font-bold text-xs">
+                        {currentUser.username ? currentUser.username[0].toUpperCase() : 'P'}
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                          {currentUser.username || 'Player'}
+                          <span className="text-[10px] bg-emerald-500/10 text-emerald-500 font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-1">
+                            <Check size={10} /> Verified Player
+                          </span>
+                        </span>
+                        <span className="text-[10px] text-gray-400">Reviewing as verified player</span>
+                      </div>
+                    </div>
 
-                  {/* Nickname Input (Optional for guests) */}
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
-                      Your Gamer Tag / Nickname
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. ShadowRacer (optional)"
-                      value={authorName}
-                      onChange={e => setAuthorName(e.target.value)}
-                      maxLength={30}
-                      className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-black/30 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#6366F1]"
-                    />
-                  </div>
+                    {/* Star Rating Picker */}
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
+                        Your Rating
+                      </label>
+                      <div className="flex items-center gap-1.5 py-1">
+                        {[1, 2, 3, 4, 5].map(starIndex => {
+                          const isFilled = (hoverRating || userRating) >= starIndex;
+                          return (
+                            <button
+                              key={starIndex}
+                              type="button"
+                              onMouseEnter={() => setHoverRating(starIndex)}
+                              onMouseLeave={() => setHoverRating(0)}
+                              onClick={() => setUserRating(starIndex)}
+                              className="p-1 text-gray-300 dark:text-gray-600 hover:scale-125 active:scale-95 transition-transform cursor-pointer"
+                            >
+                              <Star
+                                size={30}
+                                className={isFilled ? 'text-[#F59E0B] fill-[#F59E0B]' : 'text-gray-300 dark:text-gray-700'}
+                              />
+                            </button>
+                          );
+                        })}
+                        <span className="text-xs font-bold text-amber-500 ml-2">
+                          {getRatingLabel(hoverRating || userRating)}
+                        </span>
+                      </div>
+                    </div>
 
                   {/* Quick Tag Pills */}
                   <div className="space-y-2">

@@ -130,26 +130,27 @@ export async function submitReview({
   }
 
   const supabase = createClient();
-  let userId: string | null = null;
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return { success: false, error: 'You must be signed in to submit a review.' };
+  }
+
+  const userId = user.id;
   let author = authorName?.trim() || 'Player';
   let avatarUrl: string | undefined;
   let level = 1;
 
   try {
-    const { data: authData } = await supabase.auth.getUser();
-    if (authData?.user) {
-      userId = authData.user.id;
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('username, avatar_url, level')
-        .eq('id', userId)
-        .maybeSingle();
-      
-      if (profile?.username) {
-        author = profile.username;
-        avatarUrl = profile.avatar_url;
-        level = profile.level || 1;
-      }
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('username, avatar_url, level')
+      .eq('id', userId)
+      .maybeSingle();
+    
+    if (profile?.username) {
+      author = profile.username;
+      avatarUrl = profile.avatar_url;
+      level = profile.level || 1;
     }
   } catch {}
 
@@ -177,12 +178,13 @@ export async function submitReview({
     rating,
     content: comment.trim(),
     helpful: 0,
-    isVerified: !!userId,
+    isVerified: true,
   };
 
   try {
     const insertPayload: any = {
       game_slug: slug,
+      user_id: userId,
       rating,
       comment: comment.trim(),
       author_name: author,
@@ -192,26 +194,26 @@ export async function submitReview({
     if (targetGameId) {
       insertPayload.game_id = targetGameId;
     }
-    if (userId) {
-      insertPayload.user_id = userId;
-    }
 
     const { data, error } = await supabase
       .from('game_reviews')
-      .upsert([insertPayload], { onConflict: targetGameId && userId ? 'game_id, user_id' : undefined })
+      .upsert([insertPayload], { onConflict: targetGameId ? 'game_id, user_id' : undefined })
       .select()
       .maybeSingle();
 
-    if (!error && data?.id) {
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    if (data?.id) {
       newReviewItem.id = data.id;
     }
 
     revalidatePath(`/games/${slug}`);
     return { success: true, review: newReviewItem };
   } catch (err: any) {
-    console.error('Database write error (returning optimistic review):', err);
-    // Return success optimistically so visitors can still review even if remote table is waiting on migration
-    return { success: true, review: newReviewItem };
+    console.error('Database write error:', err);
+    return { success: false, error: err?.message || 'Failed to submit review. Please try again.' };
   }
 }
 
