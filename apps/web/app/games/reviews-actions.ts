@@ -209,7 +209,12 @@ export async function submitReview({
       newReviewItem.id = data.id;
     }
 
-    revalidatePath(`/games/${slug}`);
+    try {
+      revalidatePath(`/games/${slug}`);
+    } catch (revalError) {
+      // Cloudflare Pages edge runtime does not support static generation store in server actions
+    }
+
     return { success: true, review: newReviewItem };
   } catch (err: any) {
     console.error('Database write error:', err);
