@@ -1,59 +1,72 @@
 export const runtime = 'edge';
 
-import { createClient } from '@supabase/supabase-js';
-
-const INDEXNOW_KEY = 'c64b58e7a6374f1797c271e89cf29bb8';
-const HOST = 'spielcade.com';
-const KEY_LOCATION = `https://${HOST}/${INDEXNOW_KEY}.txt`;
-
-async function submitToIndexNow(urlList: string[]) {
-  const payload = {
-    host: HOST,
-    key: INDEXNOW_KEY,
-    keyLocation: KEY_LOCATION,
-    urlList: urlList.slice(0, 10000),
-  };
-
-  const res = await fetch('https://api.indexnow.org/indexnow', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json; charset=utf-8',
-    },
-    body: JSON.stringify(payload),
-  });
-
-  return {
-    status: res.status,
-    ok: res.ok || res.status === 200 || res.status === 202,
-  };
-}
+import { createClient } from '@/lib/supabase/server';
+import { 
+  verifyIndexNowAuth, 
+  sanitizeAndFilterIndexNowUrls, 
+  submitUrlsToIndexNow, 
+  INDEXNOW_HOST 
+} from '@/lib/indexnow';
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json().catch(() => ({}));
-    const urls: string[] = Array.isArray(body.urls) ? body.urls : [];
-
-    if (urls.length === 0) {
-      return Response.json({ error: 'No URLs provided in payload' }, { status: 400 });
+    // 1. Authorization check (Secret token or Admin session required)
+    const auth = await verifyIndexNowAuth(request);
+    if (!auth.authorized) {
+      return Response.json(
+        { error: auth.reason || 'Unauthorized' }, 
+        { status: 401 }
+      );
     }
 
-    const result = await submitToIndexNow(urls);
+    // 2. Parse & sanitize payload
+    const body = await request.json().catch(() => ({}));
+    const rawUrls = Array.isArray(body.urls) ? body.urls : [];
+
+    if (rawUrls.length === 0) {
+      return Response.json(
+        { error: 'No URLs provided in payload' }, 
+        { status: 400 }
+      );
+    }
+
+    const validUrls = sanitizeAndFilterIndexNowUrls(rawUrls);
+    if (validUrls.length === 0) {
+      return Response.json(
+        { error: `No valid https://${INDEXNOW_HOST} URLs provided in payload` }, 
+        { status: 400 }
+      );
+    }
+
+    // 3. Dispatch to IndexNow
+    const result = await submitUrlsToIndexNow(validUrls);
     return Response.json({
       success: result.ok,
-      submitted: urls.length,
+      submitted: result.submitted,
       indexnowStatus: result.status,
-    });
+      urls: validUrls,
+      error: result.error,
+    }, { status: result.ok ? 200 : (result.status >= 400 && result.status < 600 ? result.status : 500) });
   } catch (error: any) {
-    return Response.json({ error: error.message || 'Submission failed' }, { status: 500 });
+    return Response.json(
+      { error: error.message || 'Submission failed' }, 
+      { status: 500 }
+    );
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder'
-    );
+    // 1. Authorization check (Secret token or Admin session required)
+    const auth = await verifyIndexNowAuth(request);
+    if (!auth.authorized) {
+      return Response.json(
+        { error: auth.reason || 'Unauthorized' }, 
+        { status: 401 }
+      );
+    }
+
+    const supabase = createClient();
 
     const { data: latestGames } = await supabase
       .from('games')
@@ -62,25 +75,30 @@ export async function GET() {
       .order('created_at', { ascending: false })
       .limit(25);
 
-    const urls = (latestGames || []).map((g: any) => `https://${HOST}/games/${g.slug}`);
+    const rawUrls = (latestGames || []).map((g: any) => `https://${INDEXNOW_HOST}/games/${g.slug}`);
 
     // Add root hubs
-    urls.unshift(`https://${HOST}/`);
-    urls.push(`https://${HOST}/categories/car-games`);
-    urls.push(`https://${HOST}/categories/zombie-games`);
-    urls.push(`https://${HOST}/categories/stickman-games`);
-    urls.push(`https://${HOST}/categories/2-player-games`);
-    urls.push(`https://${HOST}/categories/unblocked-games`);
+    rawUrls.unshift(`https://${INDEXNOW_HOST}/`);
+    rawUrls.push(`https://${INDEXNOW_HOST}/categories/car-games`);
+    rawUrls.push(`https://${INDEXNOW_HOST}/categories/zombie-games`);
+    rawUrls.push(`https://${INDEXNOW_HOST}/categories/stickman-games`);
+    rawUrls.push(`https://${INDEXNOW_HOST}/categories/2-player-games`);
+    rawUrls.push(`https://${INDEXNOW_HOST}/categories/unblocked-games`);
 
-    const result = await submitToIndexNow(urls);
+    const validUrls = sanitizeAndFilterIndexNowUrls(rawUrls);
+    const result = await submitUrlsToIndexNow(validUrls);
 
     return Response.json({
       success: result.ok,
-      submitted: urls.length,
+      submitted: result.submitted,
       indexnowStatus: result.status,
-      urls,
-    });
+      urls: validUrls,
+      error: result.error,
+    }, { status: result.ok ? 200 : (result.status >= 400 && result.status < 600 ? result.status : 500) });
   } catch (error: any) {
-    return Response.json({ error: error.message || 'Auto-submit failed' }, { status: 500 });
+    return Response.json(
+      { error: error.message || 'Auto-submit failed' }, 
+      { status: 500 }
+    );
   }
 }
