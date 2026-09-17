@@ -18,6 +18,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import Link from 'next/link';
+import { GAME_IFRAME_SANDBOX, GAME_IFRAME_PERMISSIONS } from '@/lib/constants';
 
 const CATEGORIES = [
   'Arcade', 
@@ -388,8 +389,8 @@ export default function SubmitGamePage() {
                   title="Live Preview"
                   src={form.source_url}
                   className="w-full h-full border-0"
-                  allow="autoplay; fullscreen; gamepad"
-                  sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                  allow={GAME_IFRAME_PERMISSIONS}
+                  sandbox={GAME_IFRAME_SANDBOX}
                 />
               </div>
             </div>

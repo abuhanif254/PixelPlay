@@ -53,6 +53,7 @@ import { queueOfflineScore, initOfflineSync } from '@/lib/offline-sync';
 import { arcadeAudio } from '@/lib/arcade-audio';
 import GamepadHUD from '@/components/GamepadHUD';
 import { gamepadEngine } from '@/lib/gamepad-engine';
+import { GAME_IFRAME_SANDBOX, GAME_IFRAME_PERMISSIONS } from '@/lib/constants';
 import PerformanceToggle from '@/components/PerformanceToggle';
 import ClipRecorderModal from '@/components/ClipRecorderModal';
 import { generateTradingCardSnapshot } from '@/lib/clip-recorder';
@@ -1489,8 +1490,8 @@ export default function GamePlayer({
                       onLoad={handleIframeLoad}
                       className="absolute inset-0 w-full h-full border-0"
                       style={{ pointerEvents: 'auto', touchAction: 'auto' }}
-                      sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-forms allow-modals allow-downloads"
-                      allow="fullscreen; autoplay; gamepad; focus-without-user-activation; accelerometer; gyroscope; clipboard-write; clipboard-read; microphone; camera; midi; payment; xr-spatial-tracking; screen-wake-lock"
+                      sandbox={GAME_IFRAME_SANDBOX}
+                      allow={GAME_IFRAME_PERMISSIONS}
                       title={title}
                     />
 

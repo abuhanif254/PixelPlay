@@ -16,6 +16,7 @@ import {
   Monitor,
   Code2
 } from 'lucide-react';
+import { GAME_IFRAME_SANDBOX, GAME_IFRAME_PERMISSIONS } from '@/lib/constants';
 
 interface SdkEventLog {
   id: string;
@@ -480,8 +481,8 @@ export default function StudioSdkTester() {
                     title="Custom Game Test"
                     src={targetUrl}
                     className="w-full h-full border-0"
-                    allow="autoplay; fullscreen; gamepad"
-                    sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                    allow={GAME_IFRAME_PERMISSIONS}
+                    sandbox={GAME_IFRAME_SANDBOX}
                   />
                 )}
               </div>

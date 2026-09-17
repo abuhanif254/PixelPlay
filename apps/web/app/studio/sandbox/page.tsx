@@ -17,6 +17,7 @@ import {
   Zap
 } from 'lucide-react';
 import { arcadeAudio } from '@/lib/arcade-audio';
+import { GAME_IFRAME_SANDBOX, GAME_IFRAME_PERMISSIONS } from '@/lib/constants';
 
 interface SdkEventLog {
   id: string;
@@ -242,7 +243,8 @@ export default function SdkSandboxPage() {
               ref={iframeRef}
               src={loadedUrl}
               className="w-full h-full border-0"
-              allow="autoplay; fullscreen; gamepad"
+              sandbox={GAME_IFRAME_SANDBOX}
+              allow={GAME_IFRAME_PERMISSIONS}
             />
           </div>
         </div>

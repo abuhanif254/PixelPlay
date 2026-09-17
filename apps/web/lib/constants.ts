@@ -37,3 +37,19 @@ export const gameCollections = [
     href: "/playlists/zen-mind"
   }
 ];
+
+/**
+ * Hardened Least-Privilege Iframe Sandbox Policy (SEC-07)
+ * Strictly blocks drive-by downloads and un-sandboxed popups.
+ */
+export const GAME_IFRAME_SANDBOX = 
+  'allow-scripts allow-same-origin allow-pointer-lock allow-popups allow-forms allow-modals';
+
+/**
+ * Hardened Feature / Permissions Policy (SEC-07)
+ * Permits essential gaming APIs (WebGL, audio, gamepad, orientation)
+ * while revoking camera, microphone, payment, and clipboard-read.
+ */
+export const GAME_IFRAME_PERMISSIONS = 
+  'fullscreen; autoplay; gamepad; accelerometer; gyroscope; screen-wake-lock; clipboard-write';
+

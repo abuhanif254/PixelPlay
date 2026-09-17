@@ -20,6 +20,7 @@ import {
 import Image from 'next/image';
 import { FeedProvider, RawGameFeedItem } from '@/lib/game-feeds';
 import { fetchFeedPreview, importSingleChunk, finishImportJob } from './actions';
+import { GAME_IFRAME_SANDBOX, GAME_IFRAME_PERMISSIONS } from '@/lib/constants';
 
 type PreviewItem = RawGameFeedItem & { slug: string; isImported: boolean };
 
@@ -481,8 +482,8 @@ export default function ImporterClient() {
               <iframe
                 src={previewGame.url}
                 className="w-full h-full border-0"
-                sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-forms"
-                allow="fullscreen; autoplay; gamepad"
+                sandbox={GAME_IFRAME_SANDBOX}
+                allow={GAME_IFRAME_PERMISSIONS}
                 title={previewGame.title}
               />
             </div>

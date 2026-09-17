@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { createRoomChannel, RoomReaction, MULTIPLAYER_SUPPORTED_GAMES } from '@/lib/room-engine';
 import { arcadeAudio } from '@/lib/arcade-audio';
+import { GAME_IFRAME_SANDBOX, GAME_IFRAME_PERMISSIONS } from '@/lib/constants';
 
 export default function ActiveDuelRoomPage() {
   const params = useParams();
@@ -255,7 +256,8 @@ export default function ActiveDuelRoomPage() {
           <iframe
             src={`/embed/${gameSlug}`}
             className="w-full h-full border-0"
-            allow="autoplay; fullscreen; gamepad"
+            allow={GAME_IFRAME_PERMISSIONS}
+            sandbox={GAME_IFRAME_SANDBOX}
             title={activeGameMeta.title}
           />
         </div>

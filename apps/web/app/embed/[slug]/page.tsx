@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import LocalGameWrapper from '@/components/LocalGameWrapper';
 import { gamesRegistry } from '@spielcade/games/registry';
+import { GAME_IFRAME_SANDBOX, GAME_IFRAME_PERMISSIONS } from '@/lib/constants';
 
 export const runtime = 'edge';
 
@@ -63,8 +64,8 @@ export default async function EmbedGamePage({ params }: EmbedPageProps) {
       <iframe
         src={game.source_url}
         className="w-full h-full border-0"
-        allow="autoplay; fullscreen; gamepad; accelerometer; gyroscope"
-        sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-popups allow-forms"
+        allow={GAME_IFRAME_PERMISSIONS}
+        sandbox={GAME_IFRAME_SANDBOX}
         title={game.title}
       />
     </div>
