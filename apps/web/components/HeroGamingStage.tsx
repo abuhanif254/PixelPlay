@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { Play, Star, Sparkles, Flame, ShieldCheck, Gamepad2 } from 'lucide-react';
+import { isWhitelistedImage } from '@/lib/image-helpers';
 
 interface StageGame {
   title: string;
@@ -165,6 +166,7 @@ export default function HeroGamingStage({ games }: HeroGamingStageProps) {
                 alt={stageGames[0].title}
                 fill
                 sizes="270px"
+                unoptimized={!isWhitelistedImage(stageGames[0].image_url)}
                 className="object-cover"
               />
               <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-md text-[10px] font-bold text-white uppercase">
@@ -209,6 +211,7 @@ export default function HeroGamingStage({ games }: HeroGamingStageProps) {
                 alt={stageGames[2].title}
                 fill
                 sizes="270px"
+                unoptimized={!isWhitelistedImage(stageGames[2].image_url)}
                 className="object-cover"
               />
               <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-md text-[10px] font-bold text-white uppercase">
@@ -273,6 +276,7 @@ export default function HeroGamingStage({ games }: HeroGamingStageProps) {
                 fill
                 sizes="(max-width: 640px) 280px, (max-width: 1024px) 320px, 340px"
                 priority
+                unoptimized={!isWhitelistedImage(stageGames[activeCardIndex].image_url)}
                 className="object-cover transition-transform duration-700 group-hover/thumb:scale-110"
               />
               

@@ -12,12 +12,52 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '**',
+        hostname: 'spielcade.com',
       },
       {
-        protocol: 'http',
-        hostname: '**',
-      }
+        protocol: 'https',
+        hostname: '*.spielcade.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: 'api.dicebear.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'img.gamemonetize.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.gamemonetize.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'img.gamedistribution.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.gamedistribution.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.gamepix.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
+      },
     ],
   },
   eslint: { ignoreDuringBuilds: true },

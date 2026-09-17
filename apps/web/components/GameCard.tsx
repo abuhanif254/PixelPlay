@@ -5,6 +5,7 @@ import { Play, Star, Trophy, Zap } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { arcadeAudio } from '@/lib/arcade-audio';
+import { isWhitelistedImage } from '@/lib/image-helpers';
 
 // Helper for speculative pre-warming of iframe CDN connections
 function prewarmGameOrigins() {
@@ -86,6 +87,7 @@ export default function GameCard({
               sizes="(max-width: 640px) 160px, (max-width: 1024px) 220px, 260px"
               loading="lazy"
               decoding="async"
+              unoptimized={!isWhitelistedImage(imageUrl)}
               className="object-cover transition-transform duration-500 group-hover:scale-110" 
             />
           ) : (
