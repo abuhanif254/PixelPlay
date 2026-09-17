@@ -2,15 +2,18 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Heart, ShieldCheck, HelpCircle, X, Sparkles } from 'lucide-react';
+import { fetchAdImpressionToken, sendAdImpressionBeacon } from '@/lib/analytics/beacon-client';
 
 interface AdBannerProps {
   id: string; // Adsterra Zone ID
   width: number;
   height: number;
   className?: string;
+  gameId?: string;
+  slotName?: string;
 }
 
-export default function AdBanner({ id, width, height, className = '' }: AdBannerProps) {
+export default function AdBanner({ id, width, height, className = '', gameId, slotName }: AdBannerProps) {
   const [isBlocked, setIsBlocked] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -43,6 +46,103 @@ export default function AdBanner({ id, width, height, className = '' }: AdBanner
     window.addEventListener('message', handleAdMessage);
     return () => window.removeEventListener('message', handleAdMessage);
   }, [id]);
+
+  // Anti-Cheat Cryptographic Ad Impression Token & Viewability Tracking (RFC-AD-001)
+  const tokenRef = useRef<string | null>(null);
+  const impressionClaimedRef = useRef<boolean>(false);
+  const visibleSinceRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchAdImpressionToken({ slotId: id, gameId }).then((token) => {
+      if (isMounted && token) {
+        tokenRef.current = token;
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [id, gameId]);
+
+  useEffect(() => {
+    if (!containerRef.current || isBlocked) return;
+
+    let dwellTimer: NodeJS.Timeout | null = null;
+
+    const checkAndDispatch = (elapsedMs: number) => {
+      if (impressionClaimedRef.current || !tokenRef.current) return;
+      if (elapsedMs >= 1000) {
+        impressionClaimedRef.current = true;
+        sendAdImpressionBeacon({
+          token: tokenRef.current,
+          viewabilityMs: elapsedMs,
+          gameId,
+          slotId: id,
+        });
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState !== 'visible') {
+        if (visibleSinceRef.current) {
+          const elapsed = Date.now() - visibleSinceRef.current;
+          checkAndDispatch(elapsed);
+        }
+        visibleSinceRef.current = null;
+        if (dwellTimer) clearInterval(dwellTimer);
+      }
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        const isVisible =
+          entry &&
+          entry.isIntersecting &&
+          entry.intersectionRatio >= 0.5 &&
+          typeof document !== 'undefined' &&
+          document.visibilityState === 'visible';
+
+        if (isVisible) {
+          if (!visibleSinceRef.current) {
+            visibleSinceRef.current = Date.now();
+          }
+          if (!dwellTimer) {
+            dwellTimer = setInterval(() => {
+              if (visibleSinceRef.current) {
+                const elapsed = Date.now() - visibleSinceRef.current;
+                if (elapsed >= 1000) {
+                  checkAndDispatch(elapsed);
+                  if (dwellTimer) clearInterval(dwellTimer);
+                }
+              }
+            }, 250);
+          }
+        } else {
+          if (visibleSinceRef.current) {
+            const elapsed = Date.now() - visibleSinceRef.current;
+            checkAndDispatch(elapsed);
+          }
+          visibleSinceRef.current = null;
+          if (dwellTimer) clearInterval(dwellTimer);
+        }
+      },
+      { threshold: [0.5] }
+    );
+
+    observer.observe(containerRef.current);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      observer.disconnect();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (dwellTimer) clearInterval(dwellTimer);
+      if (visibleSinceRef.current && !impressionClaimedRef.current) {
+        const elapsed = Date.now() - visibleSinceRef.current;
+        checkAndDispatch(elapsed);
+      }
+    };
+  }, [id, gameId, isBlocked]);
 
   const adHtml = `
     <!DOCTYPE html>
