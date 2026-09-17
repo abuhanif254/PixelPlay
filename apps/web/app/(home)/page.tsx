@@ -23,6 +23,7 @@ const DailyCupBanner = dynamic(() => import('@/components/DailyCupBanner'));
 const DeveloperSpotlight = dynamic(() => import('@/components/DeveloperSpotlight'));
 const HomeFAQ = dynamic(() => import('@/components/HomeFAQ'));
 const PopularSearches = dynamic(() => import('@/components/PopularSearches'));
+import MobileCrazyFeed from '@/components/mobile/MobileCrazyFeed';
 
 import { gamesRegistry } from '@spielcade/games/registry';
 import { createClient } from '@/lib/supabase/server';
@@ -190,7 +191,7 @@ export default async function HomePage() {
   };
 
   return (
-    <div className="flex flex-col gap-14 pb-20 bg-white dark:bg-[#0A0B1A] min-h-screen text-gray-900 dark:text-white relative overflow-x-clip">
+    <div className="flex flex-col bg-white dark:bg-[#0A0B1A] min-h-screen text-gray-900 dark:text-white relative overflow-x-clip">
       {/* Ambient Cyberpunk Atmospheric Glows (Fixed viewport positioning eliminates 0.117 CLS layout shift) */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10 [contain:strict]">
         <div className="absolute top-20 -left-20 w-[55vw] h-[55vw] max-w-[600px] max-h-[600px] rounded-full bg-purple-600/5 blur-[140px]" />
@@ -203,14 +204,31 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       
-      {/* 1. Dynamic Hero Section */}
-      <HeroSection 
-        totalGamesCount={totalActiveGames} 
-        featuredGame={featuredGame as any}
-        randomPool={randomPool}
-        liveSuggestions={trending.slice(0, 6) as any}
-        spotlightGames={trending.slice(0, 3) as any}
-      />
+      {/* ========================================================================= */}
+      {/* MOBILE-ONLY POKI & CRAZYGAMES APP FEED (< 768px Phones)                   */}
+      {/* ========================================================================= */}
+      <div className="block md:hidden w-full">
+        <MobileCrazyFeed 
+          trending={trending as any}
+          newGames={newGames as any}
+          topRated={topRated as any}
+          totalGamesCount={totalActiveGames}
+          blogPosts={blogPosts}
+        />
+      </div>
+
+      {/* ========================================================================= */}
+      {/* DESKTOP & TABLET UNTOUCHED (>= 768px iPads, Tablets, Laptops & Desktops)  */}
+      {/* ========================================================================= */}
+      <div className="hidden md:flex flex-col gap-14 pb-20 w-full">
+        {/* 1. Dynamic Hero Section */}
+        <HeroSection 
+          totalGamesCount={totalActiveGames} 
+          featuredGame={featuredGame as any}
+          randomPool={randomPool}
+          liveSuggestions={trending.slice(0, 6) as any}
+          spotlightGames={trending.slice(0, 3) as any}
+        />
       
       {/* 2. Live Gaming Pulse Ticker */}
       <GamingPulseTicker 
@@ -422,6 +440,7 @@ export default async function HomePage() {
           </section>
         </ScrollReveal>
 
+      </div>
       </div>
     </div>
   );
