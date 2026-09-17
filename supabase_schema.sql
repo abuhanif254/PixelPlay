@@ -650,6 +650,14 @@ CREATE TABLE IF NOT EXISTS public.developer_revenue (
 
 ALTER TABLE public.developer_revenue ENABLE ROW LEVEL SECURITY;
 
+-- Ensure all columns exist even if developer_revenue was pre-created in earlier schemas
+ALTER TABLE public.developer_revenue 
+  ADD COLUMN IF NOT EXISTS game_id uuid REFERENCES public.games(id) ON DELETE CASCADE,
+  ADD COLUMN IF NOT EXISTS impressions integer DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS gross_revenue numeric(10,4) DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS developer_share numeric(10,4) DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS platform_share numeric(10,4) DEFAULT 0;
+
 DO $$
 BEGIN
   IF NOT EXISTS (
