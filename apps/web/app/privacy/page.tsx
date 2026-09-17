@@ -102,9 +102,20 @@ export default function PrivacyPolicy() {
               To exercise any of these rights, please contact us using the information provided below.
             </p>
 
-            <h2>6. Policy for Children (COPPA)</h2>
+            <h2>6. Policy for Children (COPPA & GDPR Art. 8 Compliance)</h2>
             <p>
-              We do not knowingly solicit information from or market to children under the age of 13. If you become aware of any data we have collected from children under age 13, please contact us using the contact information provided below so that we can immediately delete such information.
+              Spielcade is committed to protecting the online privacy of children and complying with the <strong>Children&apos;s Online Privacy Protection Act (COPPA)</strong> in the United States and <strong>Article 8 of the General Data Protection Regulation (GDPR)</strong> in the European Economic Area and United Kingdom.
+            </p>
+            <p>
+              <strong>Age Gating & Safe Harbor Controls:</strong> Our platform incorporates an upfront age certification and cookie consent mechanism. If a user indicates they are under 13 years of age (or under 16 in the EEA/UK):
+            </p>
+            <ul>
+              <li><strong>Zero Behavioral Profiling:</strong> We do not track, profile, or serve personalized interest-based advertisements to minors.</li>
+              <li><strong>Zero Non-Essential Cookies:</strong> All marketing trackers, analytics cookies, and cross-site beacons remain permanently disabled.</li>
+              <li><strong>Functional Gameplay Only:</strong> Only strictly essential, non-identifying local storage (such as saving local level progress and game audio preferences) is utilized.</li>
+            </ul>
+            <p>
+              <strong>Parental Rights:</strong> Parents and legal guardians have the right to review any information collected from their child, request immediate deletion of any such data, and refuse further collection or use. If you believe your child has provided us with personal information without parental consent, please contact our Data Protection Officer immediately at <a href="mailto:privacy@spielcade.com"><strong>privacy@spielcade.com</strong></a> or via our <Link href="/contact">Contact Page</Link>, and we will delete the data within 24 hours.
             </p>
 
             <h2>7. Security of Your Information</h2>

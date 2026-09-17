@@ -12,6 +12,7 @@ const LevelUpModal = dynamic(() => import('@/components/LevelUpModal'), { ssr: f
 const ArcadeRadio = dynamic(() => import('@/components/ArcadeRadio'), { ssr: false });
 const ArcadePulse = dynamic(() => import('@/components/ArcadePulse'), { ssr: false });
 const SecretVaultModal = dynamic(() => import('@/components/SecretVaultModal'), { ssr: false });
+const CookieConsentBanner = dynamic(() => import('@/components/CookieConsentBanner'), { ssr: false });
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -162,6 +163,7 @@ export default function RootLayout({
           <ArcadeRadio />
           <ArcadePulse />
           <SecretVaultModal />
+          <CookieConsentBanner />
         </ThemeProvider>
       </body>
     </html>

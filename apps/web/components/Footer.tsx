@@ -6,6 +6,7 @@ import { Gamepad2, Twitter, Github, Youtube, ShieldCheck, Zap, Globe, Sparkles }
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import NewsletterForm from './NewsletterForm';
+import { openConsentModal } from '@/lib/consent';
 
 export default function Footer() {
   const pathname = usePathname();
@@ -221,10 +222,17 @@ export default function Footer() {
           <p>
             © {new Date().getFullYear()} Spielcade Platform. All games are the property of their respective creators.
           </p>
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6">
             <Link href="/terms" className="hover:text-slate-900 dark:hover:text-white transition-colors">Terms of Use</Link>
             <Link href="/privacy" className="hover:text-slate-900 dark:hover:text-white transition-colors">Privacy Policy</Link>
             <Link href="/cookies" className="hover:text-slate-900 dark:hover:text-white transition-colors">Cookie Policy</Link>
+            <button
+              type="button"
+              onClick={() => openConsentModal()}
+              className="hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer underline underline-offset-4 decoration-dotted"
+            >
+              Cookie Preferences
+            </button>
           </div>
         </div>
 

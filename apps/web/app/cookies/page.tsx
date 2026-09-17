@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
+import CookiePreferencesButton from '@/components/CookiePreferencesButton';
 
 export const metadata: Metadata = {
   title: 'Cookie Policy | Spielcade',
@@ -86,8 +87,11 @@ export default function CookiePolicy() {
 
             <h2>5. How Can I Control Cookies?</h2>
             <p>
-              You have the right to decide whether to accept or reject cookies. You can exercise your cookie rights by setting your preferences in the Cookie Consent Manager that appears when you first visit our site.
+              You have the right to decide whether to accept or reject non-essential cookies at any time. You can view or adjust your preferences immediately using our interactive preferences manager:
             </p>
+            <div className="not-prose my-4">
+              <CookiePreferencesButton />
+            </div>
             <p>
               You can also set or amend your web browser controls to accept or refuse cookies. If you choose to reject cookies, you may still use our website, but your access to some functionality and areas of our website (like saving game progress or keeping you logged in) may be severely restricted.
             </p>
