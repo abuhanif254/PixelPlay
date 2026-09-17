@@ -68,8 +68,7 @@ const nextConfig = {
     return config;
   },
   experimental: {
-    cpus: 1,
-    memoryBasedWorkersCount: true
+    ...(process.env.CF_PAGES === '1' ? { cpus: 1, memoryBasedWorkersCount: true } : {}),
   },
   async headers() {
     return [
@@ -87,6 +86,15 @@ const nextConfig = {
           {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
+          },
+        ],
+      },
+      {
+        source: '/(games|popular|categories|categories/:slug*|games/:slug*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=60, s-maxage=600, stale-while-revalidate=86400',
           },
         ],
       },
@@ -329,4 +337,4 @@ const withPWA = withPWAInit({
   }
 });
 
-export default withPWA(nextConfig);
+export default nextConfig;

@@ -92,6 +92,9 @@ const MOCK_POSTS: BlogPost[] = [
 ];
 
 export async function getAllPosts(): Promise<BlogPost[]> {
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    return MOCK_POSTS;
+  }
   try {
     const supabase = createClient();
     const { data: rawPosts, error } = await supabase

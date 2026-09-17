@@ -153,10 +153,18 @@ export default function Navbar() {
   useEffect(() => {
     setMounted(true);
     
-    // Check active session
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
-    });
+    // Check active session (deferred via idle callback to allow initial paint to finish with zero thread blocking)
+    const checkSession = () => {
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        setUser(user);
+      });
+    };
+
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(checkSession, { timeout: 1000 });
+    } else {
+      setTimeout(checkSession, 120);
+    }
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {

@@ -24,9 +24,9 @@ const DeveloperSpotlight = dynamic(() => import('@/components/DeveloperSpotlight
 const HomeFAQ = dynamic(() => import('@/components/HomeFAQ'));
 const PopularSearches = dynamic(() => import('@/components/PopularSearches'));
 import MobileCrazyFeed from '@/components/mobile/MobileCrazyFeed';
+import { getCachedCatalogData } from '@/lib/catalog-cache';
 
 import { gamesRegistry } from '@spielcade/games/registry';
-import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'edge';
 export const revalidate = 300; // 5-minute Edge CDN ISR caching
@@ -63,27 +63,12 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const blogPosts = await getAllPosts();
-  const supabase = createClient();
-  
-  // High-reliability local fallback games derived from registry
-  const fallbackGames = Object.entries(gamesRegistry).map(([slug, item]) => ({
-    id: slug,
-    slug,
-    title: item.config.title,
-    category: item.config.category || 'Arcade',
-    rating: item.config.rating || 4.9,
-    image: item.config.image || '',
-    image_url: item.config.image || '',
-    total_plays: 100000,
-    description: 'Instant free HTML5 browser game playable on any device.',
-    created_at: new Date().toISOString()
-  }));
+  const [blogPosts, catalog] = await Promise.all([
+    getAllPosts(),
+    getCachedCatalogData(),
+  ]);
 
-  let trending = fallbackGames;
-  let newGames = fallbackGames;
-  let topRated = fallbackGames;
-  let totalActiveGames = 17125;
+  const { trending, newGames, topRated, totalActiveGames } = catalog;
 
   const baselineCounts: Record<string, number> = {
     'Puzzle': 3450,
@@ -96,30 +81,8 @@ export default async function HomePage() {
     'Sports': 1050,
   };
 
-  try {
-    // Parallel Supabase queries with zero table scanning
-    const [
-      { data: trendingGames },
-      { data: newArrivals },
-      { data: topRatedGames },
-      { count: exactCount }
-    ] = await Promise.all([
-      supabase.from('games').select('id, title, slug, image_url, category, total_plays, rating, description').eq('status', 'active').order('total_plays', { ascending: false }).limit(36),
-      supabase.from('games').select('id, title, slug, image_url, category, total_plays, rating').eq('status', 'active').order('created_at', { ascending: false }).limit(16),
-      supabase.from('games').select('id, title, slug, image_url, category, total_plays, rating').eq('status', 'active').order('rating', { ascending: false }).limit(12),
-      supabase.from('games').select('*', { count: 'exact', head: true }).eq('status', 'active')
-    ]);
-
-    if (exactCount) totalActiveGames = exactCount;
-    if (trendingGames && trendingGames.length > 0) trending = trendingGames as any;
-    if (newArrivals && newArrivals.length > 0) newGames = newArrivals as any;
-    if (topRatedGames && topRatedGames.length > 0) topRated = topRatedGames as any;
-  } catch (error) {
-    console.error('Edge Supabase fetch fallback engaged:', error);
-  }
-
   // Derive today's featured game & random game pool for instant play
-  const featuredGame = trending.find(g => (g.image_url || (g as any).image) && g.title) || trending[0] || fallbackGames[0];
+  const featuredGame = trending.find(g => (g.image_url || (g as any).image) && g.title) || trending[0];
   const randomPool = Array.from(new Set([
     ...trending.map(g => g.slug),
     ...newGames.map(g => g.slug),

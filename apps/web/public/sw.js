@@ -93,36 +93,77 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // A. Navigation Requests (HTML Pages): Network-First with 2500ms timeout ➔ Cache ➔ /offline
+  // A. Navigation Requests (HTML Pages): SWR for Catalog Routes, Network-First for Protected/Auth
   if (request.mode === 'navigate') {
+    const isCatalogRoute =
+      url.pathname === '/' ||
+      url.pathname === '/games' ||
+      url.pathname === '/popular' ||
+      url.pathname === '/categories' ||
+      url.pathname.startsWith('/categories/') ||
+      url.pathname.startsWith('/games/');
+
     event.respondWith(
       (async () => {
-        try {
-          const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Network timeout')), 2500)
-          );
+        const cache = await caches.open(CACHE_NAME);
 
-          const networkResponse = await Promise.race([
-            fetch(request),
-            timeoutPromise,
-          ]);
+        // For public catalog routes, serve from local cache immediately (5ms-10ms TTFB) with background SWR update
+        if (isCatalogRoute) {
+          const cachedResponse = await cache.match(request);
 
-          if (networkResponse instanceof Response && networkResponse.status === 200) {
-            const cache = await caches.open(CACHE_NAME);
-            cache.put(request, networkResponse.clone());
-            return networkResponse;
+          // Background revalidation promise
+          const networkUpdatePromise = fetch(request)
+            .then((networkRes) => {
+              if (networkRes && networkRes.status === 200) {
+                cache.put(request, networkRes.clone());
+              }
+              return networkRes;
+            })
+            .catch(() => null);
+
+          if (cachedResponse) {
+            // Keep SW alive until background update completes
+            event.waitUntil(networkUpdatePromise);
+            return cachedResponse;
           }
-        } catch {
-          // Network failed or timed out — check cache
+
+          // First visit (cache miss): wait for network
+          try {
+            const freshResponse = await networkUpdatePromise;
+            if (freshResponse && freshResponse.status === 200) {
+              return freshResponse;
+            }
+          } catch {
+            // Fall through to offline fallback
+          }
+        } else {
+          // Protected/auth routes: Network-First with 2500ms timeout
+          try {
+            const timeoutPromise = new Promise((_, reject) =>
+              setTimeout(() => reject(new Error('Network timeout')), 2500)
+            );
+
+            const networkResponse = await Promise.race([
+              fetch(request),
+              timeoutPromise,
+            ]);
+
+            if (networkResponse instanceof Response && networkResponse.status === 200) {
+              cache.put(request, networkResponse.clone());
+              return networkResponse;
+            }
+          } catch {
+            // Fall through to cache
+          }
+
+          const cachedResponse = await cache.match(request);
+          if (cachedResponse) {
+            return cachedResponse;
+          }
         }
 
-        const cachedResponse = await caches.match(request);
-        if (cachedResponse) {
-          return cachedResponse;
-        }
-
-        // Fallback to offline hub
-        const offlineFallback = await caches.match('/offline');
+        // Fallback to offline hub if offline
+        const offlineFallback = await cache.match('/offline');
         if (offlineFallback) {
           return offlineFallback;
         }

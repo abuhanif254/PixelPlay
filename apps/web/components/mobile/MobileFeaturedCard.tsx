@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { Play, RotateCw, Video, Sparkles, Flame } from 'lucide-react';
 import { arcadeAudio } from '@/lib/arcade-audio';
 import { isWhitelistedImage } from '@/lib/image-helpers';
@@ -19,13 +20,24 @@ export default function MobileFeaturedCard({
   priority = false,
   badge = 'video',
 }: MobileFeaturedCardProps) {
+  const router = useRouter();
   const imageUrl = game.image_url || game.image || '';
   const destinationHref = !game.slug || game.slug === '#' ? '/games' : `/games/${game.slug}`;
+
+  const handlePrewarm = () => {
+    if (destinationHref && destinationHref !== '/games') {
+      try {
+        router.prefetch(destinationHref);
+      } catch {}
+    }
+  };
 
   return (
     <div className="px-3.5 sm:px-4 my-2">
       <Link
         href={destinationHref}
+        onMouseEnter={handlePrewarm}
+        onTouchStart={handlePrewarm}
         onClick={() => arcadeAudio.playBlip()}
         className="block group relative aspect-[16/9] w-full rounded-2xl sm:rounded-3xl overflow-hidden border border-black/10 dark:border-white/10 shadow-xl bg-slate-900 active:scale-[0.98] transition-transform select-none"
       >

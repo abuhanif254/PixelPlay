@@ -54,9 +54,18 @@ export async function middleware(request: NextRequest) {
   }
 
   // 4. If request is on a public route and user has NO auth cookies (99%+ of visitors & Googlebot),
-  // skip all middleware database roundtrips completely!
+  // skip all middleware database roundtrips completely and inject Edge CDN SWR headers!
   if (!hasAuthCookie && !isProtectedRoute) {
-    return NextResponse.next()
+    const response = NextResponse.next()
+    
+    // Inject Cloudflare / Edge CDN Stale-While-Revalidate caching on public content routes
+    if (!pathname.startsWith('/api') && !pathname.startsWith('/auth')) {
+      response.headers.set(
+        'Cache-Control',
+        'public, max-age=60, s-maxage=600, stale-while-revalidate=86400'
+      )
+    }
+    return response
   }
 
   // 5. User has auth cookies or is accessing protected route: run session validation
