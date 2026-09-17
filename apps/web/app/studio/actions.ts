@@ -259,6 +259,39 @@ export async function revokeApiKey(id: string) {
   }
 }
 
+export async function getDeveloperPayoutSettings() {
+  try {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { success: false, error: 'Unauthorized', data: null }
+
+    const { data, error } = await supabase
+      .from('developer_payout_profiles')
+      .select('payout_method, payout_account, tax_certified, status, updated_at')
+      .eq('developer_id', user.id)
+      .maybeSingle()
+
+    if (error) {
+      console.error('getDeveloperPayoutSettings database error:', error)
+      return { success: false, error: error.message, data: null }
+    }
+
+    return {
+      success: true,
+      data: data ? {
+        method: data.payout_method,
+        account: data.payout_account,
+        taxCertified: Boolean(data.tax_certified),
+        status: data.status,
+        updatedAt: data.updated_at
+      } : null
+    }
+  } catch (err: any) {
+    console.error('getDeveloperPayoutSettings unexpected error:', err)
+    return { success: false, error: err?.message || 'Failed to retrieve payout settings', data: null }
+  }
+}
+
 export async function saveDeveloperPayoutSettings(data: {
   method: string
   account: string
@@ -269,23 +302,48 @@ export async function saveDeveloperPayoutSettings(data: {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { success: false, error: 'Unauthorized' }
 
-    const { error } = await supabase.from('contact_messages').insert({
-      name: `Developer Payout Configuration`,
-      email: user.email || 'developer@spielcade.com',
-      subject: `[Payout Settings] Developer ${user.id}`,
-      message: JSON.stringify({
-        userId: user.id,
-        method: data.method,
-        account: data.account,
-        taxCertified: data.taxCertified,
-        updatedAt: new Date().toISOString()
-      }, null, 2),
-      status: 'unread'
-    })
+    const cleanMethod = String(data.method || '').toLowerCase().trim()
+    if (!['paypal', 'stripe', 'wire'].includes(cleanMethod)) {
+      return { success: false, error: 'Invalid payout method selected.' }
+    }
+
+    const cleanAccount = String(data.account || '').trim()
+    if (!cleanAccount || cleanAccount.length < 3 || cleanAccount.length > 255) {
+      return { success: false, error: 'Please enter a valid payout account identifier.' }
+    }
+
+    const isTaxCertified = Boolean(data.taxCertified)
+
+    const payload: {
+      developer_id: string
+      payout_method: string
+      payout_account: string
+      tax_certified: boolean
+      tax_certified_at?: string
+    } = {
+      developer_id: user.id,
+      payout_method: cleanMethod,
+      payout_account: cleanAccount,
+      tax_certified: isTaxCertified,
+    }
+
+    if (isTaxCertified) {
+      payload.tax_certified_at = new Date().toISOString()
+    }
+
+    const { error } = await supabase
+      .from('developer_payout_profiles')
+      .upsert(payload, { onConflict: 'developer_id' })
 
     if (error) {
       console.error('saveDeveloperPayoutSettings database error:', error)
       return { success: false, error: error.message }
+    }
+
+    try {
+      revalidatePath('/studio/revenue')
+    } catch (revalError) {
+      console.error('revalidatePath error in saveDeveloperPayoutSettings:', revalError)
     }
 
     return { success: true }
@@ -294,3 +352,4 @@ export async function saveDeveloperPayoutSettings(data: {
     return { success: false, error: err?.message || 'Failed to save payout settings' }
   }
 }
+

@@ -354,6 +354,77 @@ DROP POLICY IF EXISTS "Developers can read own revenue" ON public.developer_reve
 CREATE POLICY "Developers can read own revenue" ON public.developer_revenue FOR SELECT USING (auth.uid() = developer_id);
 
 
+-- 12b. Create Developer Payout Profiles Table (SEC-04)
+CREATE TABLE IF NOT EXISTS public.developer_payout_profiles (
+  developer_id uuid PRIMARY KEY REFERENCES public.profiles(id) ON DELETE CASCADE,
+  payout_method text NOT NULL CHECK (payout_method IN ('paypal', 'stripe', 'wire')),
+  payout_account text NOT NULL,
+  tax_certified boolean NOT NULL DEFAULT false,
+  tax_certified_at timestamp with time zone,
+  status text NOT NULL DEFAULT 'verified' CHECK (status IN ('pending', 'verified', 'suspended')),
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+ALTER TABLE public.developer_payout_profiles ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Developers and admins can view payout profiles" ON public.developer_payout_profiles;
+CREATE POLICY "Developers and admins can view payout profiles"
+ON public.developer_payout_profiles
+FOR SELECT
+USING (
+  auth.uid() = developer_id 
+  OR auth.uid() IN (SELECT id FROM public.profiles WHERE role = 'admin')
+);
+
+DROP POLICY IF EXISTS "Developers can insert own payout profile" ON public.developer_payout_profiles;
+CREATE POLICY "Developers can insert own payout profile"
+ON public.developer_payout_profiles
+FOR INSERT
+WITH CHECK (
+  auth.uid() = developer_id
+  AND auth.uid() IN (SELECT id FROM public.profiles WHERE role IN ('developer', 'admin'))
+);
+
+DROP POLICY IF EXISTS "Developers and admins can update payout profile" ON public.developer_payout_profiles;
+CREATE POLICY "Developers and admins can update payout profile"
+ON public.developer_payout_profiles
+FOR UPDATE
+USING (
+  auth.uid() = developer_id 
+  OR auth.uid() IN (SELECT id FROM public.profiles WHERE role = 'admin')
+)
+WITH CHECK (
+  auth.uid() = developer_id 
+  OR auth.uid() IN (SELECT id FROM public.profiles WHERE role = 'admin')
+);
+
+DROP POLICY IF EXISTS "Only admins can delete payout profiles" ON public.developer_payout_profiles;
+CREATE POLICY "Only admins can delete payout profiles"
+ON public.developer_payout_profiles
+FOR DELETE
+USING (
+  auth.uid() IN (SELECT id FROM public.profiles WHERE role = 'admin')
+);
+
+CREATE OR REPLACE FUNCTION public.handle_payout_profile_updated_at()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+  NEW.updated_at = timezone('utc'::text, now());
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_developer_payout_profiles_updated_at ON public.developer_payout_profiles;
+CREATE TRIGGER trg_developer_payout_profiles_updated_at
+  BEFORE UPDATE ON public.developer_payout_profiles
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_payout_profile_updated_at();
+
+
 -- 13. Stored Procedures & RPC Functions
 CREATE OR REPLACE FUNCTION public.increment_blog_views(post_id uuid)
 RETURNS void AS $$
