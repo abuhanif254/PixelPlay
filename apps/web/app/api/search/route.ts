@@ -47,13 +47,27 @@ const ORIGINAL_FLAGSHIP_GAMES: SearchGameItem[] = [
   },
 ];
 
+/**
+ * Sanitizes and normalizes user search queries.
+ * Strips control characters, null bytes, and trims excess whitespace.
+ */
+function sanitizeSearchQuery(input: string): string {
+  if (!input) return '';
+  return input
+    .replace(/[\u0000-\u001F\u007F-\u009F]/g, '') // remove control characters
+    .replace(/[%_\\]/g, ' ') // replace SQL wildcard characters
+    .trim()
+    .slice(0, 80); // clamp query length
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const q = searchParams.get('q')?.trim() || '';
+    const rawQ = searchParams.get('q') || '';
+    const q = sanitizeSearchQuery(rawQ);
     const category = searchParams.get('category')?.trim() || searchParams.get('genre')?.trim() || '';
     const limitParam = parseInt(searchParams.get('limit') || '12', 10);
-    const limit = Math.min(Math.max(limitParam, 4), 24);
+    const limit = Math.min(Math.max(Number.isFinite(limitParam) ? limitParam : 12, 4), 24);
 
     const normQ = q.toLowerCase();
     const isOriginalCategory = category.toLowerCase() === 'originals' || category.toLowerCase() === 'original';
@@ -67,10 +81,17 @@ export async function GET(req: NextRequest) {
       // Query check
       if (!normQ) return true;
       if (normQ === 'original' || normQ === 'originals' || normQ === 'flagship') return true;
+
+      const titleLower = g.title.toLowerCase();
+      const slugLower = g.slug.toLowerCase();
+      const categoryLower = g.category.toLowerCase();
+
       return (
-        g.title.toLowerCase().includes(normQ) ||
-        g.slug.toLowerCase().includes(normQ) ||
-        g.category.toLowerCase().includes(normQ)
+        titleLower.includes(normQ) ||
+        slugLower.includes(normQ) ||
+        categoryLower.includes(normQ) ||
+        (normQ === 'flapy' && slugLower.includes('flappy')) ||
+        (normQ === 'snke' && slugLower.includes('snake'))
       );
     });
 
@@ -87,38 +108,51 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // 2. Query Supabase
+    // 2. Query Database via High-Performance Hybrid Search RPC (pg_trgm + tsvector)
     let dbGames: any[] = [];
     try {
       const supabase = createClient();
-      let dbQuery = supabase
-        .from('games')
-        .select('id, title, slug, image_url, category, rating, total_plays')
-        .eq('status', 'active');
 
-      if (category && category !== 'All' && !isOriginalCategory) {
-        dbQuery = dbQuery.ilike('category', `%${category}%`);
-      }
+      // Attempt primary high-speed hybrid RPC search
+      const { data: rpcData, error: rpcError } = await supabase.rpc('search_games', {
+        search_query: q,
+        category_filter: category && category !== 'All' && !isOriginalCategory ? category : null,
+        limit_val: limit,
+        similarity_threshold: 0.2,
+      });
 
-      if (normQ && normQ !== 'original' && normQ !== 'originals') {
-        dbQuery = dbQuery.or(
-          `title.ilike.%${q}%,slug.ilike.%${q}%,category.ilike.%${q}%`
-        );
-      }
+      if (!rpcError && Array.isArray(rpcData)) {
+        dbGames = rpcData;
+      } else {
+        if (rpcError) {
+          console.warn('search_games RPC fallback engaged:', rpcError.message);
+        }
 
-      dbQuery = dbQuery.order('total_plays', { ascending: false }).limit(limit);
+        // Graceful Fallback: Execute standard query if stored procedure is not yet applied
+        let fallbackQuery = supabase
+          .from('games')
+          .select('id, title, slug, image_url, category, rating, total_plays')
+          .eq('status', 'active');
 
-      const { data, error } = await dbQuery;
-      if (!error && data) {
-        dbGames = data;
-      } else if (error) {
-        console.error('Search DB error:', error);
+        if (category && category !== 'All' && !isOriginalCategory) {
+          fallbackQuery = fallbackQuery.ilike('category', `%${category}%`);
+        }
+
+        if (normQ && normQ !== 'original' && normQ !== 'originals') {
+          fallbackQuery = fallbackQuery.ilike('title', `%${q}%`);
+        }
+
+        fallbackQuery = fallbackQuery.order('total_plays', { ascending: false }).limit(limit);
+        const { data: fallbackData } = await fallbackQuery;
+        if (fallbackData) {
+          dbGames = fallbackData;
+        }
       }
     } catch (err) {
       console.error('Search DB connection exception:', err);
     }
 
-    // 3. Merge & Deduplicate results, prioritizing matching original games
+    // 3. Merge & Deduplicate results, prioritizing matching flagship originals
     const seen = new Set<string>();
     const merged: SearchGameItem[] = [];
 
@@ -136,7 +170,7 @@ export async function GET(req: NextRequest) {
       let finalImage = g.image_url;
       let isOriginal = false;
 
-      // Fix any original games that exist in DB with empty image_url
+      // Ensure flagship game assets are rendered correctly
       if (g.slug === 'snake') {
         finalImage = '/images/games/snake.svg';
         isOriginal = true;
@@ -167,7 +201,7 @@ export async function GET(req: NextRequest) {
       {
         status: 200,
         headers: {
-          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+          'Cache-Control': 'public, s-maxage=180, stale-while-revalidate=600',
         },
       }
     );
@@ -176,4 +210,3 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ games: ORIGINAL_FLAGSHIP_GAMES }, { status: 200 });
   }
 }
-

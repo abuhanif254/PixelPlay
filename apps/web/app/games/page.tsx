@@ -59,39 +59,63 @@ export default async function AllGamesPage({ searchParams }: Props) {
     const from = (currentPage - 1) * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
 
-    // 1. Get exact total count for active category/search filter
-    let countQuery = supabase
-      .from('games')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'active');
+    let rawGames: any[] = [];
+    let totalCount = 0;
 
-    if (activeCategory !== 'All Games') {
-      countQuery = countQuery.eq('category', activeCategory);
-    }
     if (searchQuery) {
-      countQuery = countQuery.ilike('title', `%${searchQuery}%`);
+      // 1. Attempt high-speed hybrid search via search_games RPC
+      const { data: rpcResults, error: rpcErr } = await supabase.rpc('search_games', {
+        search_query: searchQuery,
+        category_filter: activeCategory !== 'All Games' ? activeCategory : null,
+        limit_val: PAGE_SIZE,
+      });
+
+      if (!rpcErr && Array.isArray(rpcResults)) {
+        rawGames = rpcResults;
+        totalCount = rpcResults.length;
+      } else {
+        let fallbackQuery = supabase
+          .from('games')
+          .select('id, title, slug, description, category, image_url, total_plays, rating, created_at')
+          .eq('status', 'active');
+        if (activeCategory !== 'All Games') {
+          fallbackQuery = fallbackQuery.eq('category', activeCategory);
+        }
+        fallbackQuery = fallbackQuery.ilike('title', `%${searchQuery}%`).order('total_plays', { ascending: false }).range(from, to);
+        const { data } = await fallbackQuery;
+        rawGames = data || [];
+        totalCount = rawGames.length;
+      }
+    } else {
+      // 1. Get exact total count for active category filter
+      let countQuery = supabase
+        .from('games')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'active');
+
+      if (activeCategory !== 'All Games') {
+        countQuery = countQuery.eq('category', activeCategory);
+      }
+
+      const { count } = await countQuery;
+      totalCount = count || 0;
+
+      // 2. Fetch current page slice with index-friendly order
+      let query = supabase
+        .from('games')
+        .select('id, title, slug, description, category, image_url, total_plays, rating, created_at')
+        .eq('status', 'active');
+
+      if (activeCategory !== 'All Games') {
+        query = query.eq('category', activeCategory);
+      }
+
+      query = query.order('created_at', { ascending: false }).range(from, to);
+      const { data } = await query;
+      rawGames = data || [];
     }
 
-    const { count } = await countQuery;
-    const totalCount = count || 0;
     const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
-
-    // 2. Fetch current page slice with index-friendly order
-    let query = supabase
-      .from('games')
-      .select('id, title, slug, description, category, image_url, total_plays, rating, created_at')
-      .eq('status', 'active');
-
-    if (activeCategory !== 'All Games') {
-      query = query.eq('category', activeCategory);
-    }
-    if (searchQuery) {
-      query = query.ilike('title', `%${searchQuery}%`);
-    }
-
-    query = query.order('created_at', { ascending: false }).range(from, to);
-
-    const { data: rawGames } = await query;
 
     const allGames = (rawGames || []).map(game => ({
       id: game.id,
