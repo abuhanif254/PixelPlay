@@ -299,7 +299,7 @@ class GamepadEngine {
         // Polyfill legacy keyCode and which for older HTML5 game engines
         Object.defineProperty(evt, 'keyCode', { get: () => keyCode });
         Object.defineProperty(evt, 'which', { get: () => keyCode });
-        Object.defineProperty(evt, 'charCode', { get: () => (type === 'keypress' ? keyCode : 0) });
+        Object.defineProperty(evt, 'charCode', { get: () => ((type as string) === 'keypress' ? keyCode : 0) });
 
         target.dispatchEvent(evt);
         if (target.document) {

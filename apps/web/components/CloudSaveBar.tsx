@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Cloud, CloudCheck, Save, RefreshCw, AlertCircle, Check, Sparkles, UserCheck, QrCode, Smartphone, X, Copy } from 'lucide-react';
+import { Cloud, Save, RefreshCw, AlertCircle, Check, Sparkles, UserCheck, QrCode, Smartphone, X, Copy } from 'lucide-react';
 import { saveGameState, loadGameState } from '@/app/games/actions';
 import { arcadeAudio } from '@/lib/arcade-audio';
 

@@ -2,45 +2,13 @@
 
 import React, { useState, useRef, useEffect, useCallback, useTransition } from 'react';
 import {
-  Play,
-  Pause,
-  Maximize2,
-  Minimize2,
-  Monitor,
-  MonitorX,
-  Volume2,
-  Volume1,
-  VolumeX,
-  RotateCcw,
-  Share2,
-  Heart,
-  Flag,
-  Check,
-  X,
-  Gamepad2,
-  Cloud,
-  CloudOff,
-  Loader2,
-  LayoutTemplate,
-  Camera,
-  HelpCircle,
-  MoreHorizontal,
-  Timer,
-  Trophy,
-  Pin,
-  PinOff,
-  Zap,
-  Sparkles,
-  Award,
-  Flame,
   ArrowUpRight,
-  Swords,
-  Smartphone,
-  ListPlus,
+  Volume2,
+  VolumeX,
+  X,
+  MoreHorizontal,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useRecentGames } from '@/hooks/useRecentGames';
 import { saveGameState, loadGameState, submitScore } from '@/app/games/actions';
 import { toggleFavoriteGame } from '@/app/profile/actions';
@@ -54,76 +22,32 @@ import { arcadeAudio } from '@/lib/arcade-audio';
 import GamepadHUD from '@/components/GamepadHUD';
 import { gamepadEngine } from '@/lib/gamepad-engine';
 import { GAME_IFRAME_SANDBOX, GAME_IFRAME_PERMISSIONS } from '@/lib/constants';
-import PerformanceToggle from '@/components/PerformanceToggle';
 import ClipRecorderModal from '@/components/ClipRecorderModal';
 import { generateTradingCardSnapshot } from '@/lib/clip-recorder';
 import VirtualControlsOverlay from '@/components/VirtualControlsOverlay';
 import MixtapeModal from '@/components/MixtapeModal';
 
-type PlayerState = 'idle' | 'ad' | 'rewarded_ad' | 'playing' | 'paused' | 'game_over';
-type AspectRatio = '16:9' | '4:3' | '9:16' | 'auto';
-type CloudSaveStatus = 'idle' | 'saving' | 'saved' | 'loading' | 'loaded' | 'error';
-type GamepadMode = 'dual' | 'wasd' | 'arrows';
-type GamepadOpacity = 'low' | 'med' | 'high';
-
-// Virtual Gamepad key mappings (WASD + Arrows simultaneously)
-const VPAD_KEY_PAIRS: Record<string, { key: string; code: string; secondaryKey?: string; secondaryCode?: string }> = {
-  up: { key: 'ArrowUp', code: 'ArrowUp', secondaryKey: 'w', secondaryCode: 'KeyW' },
-  down: { key: 'ArrowDown', code: 'ArrowDown', secondaryKey: 's', secondaryCode: 'KeyS' },
-  left: { key: 'ArrowLeft', code: 'ArrowLeft', secondaryKey: 'a', secondaryCode: 'KeyA' },
-  right: { key: 'ArrowRight', code: 'ArrowRight', secondaryKey: 'd', secondaryCode: 'KeyD' },
-  a: { key: ' ', code: 'Space', secondaryKey: 'x', secondaryCode: 'KeyX' }, // Jump / Primary Action
-  b: { key: 'Shift', code: 'ShiftLeft', secondaryKey: 'z', secondaryCode: 'KeyZ' }, // Run / Dash
-  x: { key: 'e', code: 'KeyE', secondaryKey: 'c', secondaryCode: 'KeyC' }, // Interact / Use
-  y: { key: 'q', code: 'KeyQ', secondaryKey: 'v', secondaryCode: 'KeyV' }, // Special / Switch
-  space: { key: ' ', code: 'Space' },
-  enter: { key: 'Enter', code: 'Enter' },
-};
-
-const AR_CLASSES: Record<AspectRatio, string> = {
-  '16:9': 'aspect-video w-full',
-  '4:3': 'aspect-[4/3] w-full max-w-[840px] mx-auto',
-  '9:16': 'aspect-[9/16] w-full max-w-[420px] mx-auto min-h-[440px] sm:min-h-[500px]',
-  'auto': 'w-full min-h-[300px] sm:min-h-[420px] md:min-h-[540px] xl:min-h-[620px]',
-};
-
-const SHORTCUTS = [
-  { key: 'F', label: 'Fullscreen' },
-  { key: 'T', label: 'Theater Mode' },
-  { key: 'P', label: 'Pause / Resume' },
-  { key: 'M', label: 'Mute / Unmute' },
-  { key: 'R', label: 'Restart Game' },
-  { key: 'Esc', label: 'Exit Fullscreen' },
-  { key: '?', label: 'Keyboard Guide' },
-];
-
-const fmtTime = (s: number) =>
-  String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
-
-interface GamePlayerProps {
-  children?: React.ReactNode;
-  title: string;
-  slug: string;
-  category?: string;
-  image?: string;
-  sourceUrl?: string | null;
-  onGameOver?: (score: number) => Promise<any> | void;
-  relatedGames?: Array<{
-    id?: string;
-    slug: string;
-    title: string;
-    image?: string;
-    category?: string;
-    rating?: number;
-    totalPlays?: number;
-  }>;
-  gameId?: string;
-  initialFavorited?: boolean;
-  initialAspectRatio?: AspectRatio;
-  orientation?: 'landscape' | 'portrait' | 'auto';
-  challenger?: string;
-  challengerScore?: number;
-}
+// Sub-modules
+import {
+  PlayerState,
+  AspectRatio,
+  CloudSaveStatus,
+  GamePlayerProps,
+  AR_CLASSES,
+} from './player/types';
+import {
+  PlayerIdleOverlay,
+  PlayerAdOverlay,
+  PlayerRewardedAdOverlay,
+  PlayerLoadingOverlay,
+  PlayerPauseOverlay,
+  PlayerRotateHint,
+  PlayerImmersiveHUD,
+} from './player/PlayerOverlays';
+import PlayerScoreToasts from './player/PlayerScoreToasts';
+import PlayerGameOverScreen from './player/PlayerGameOverScreen';
+import PlayerKeyboardGuide from './player/PlayerKeyboardGuide';
+import PlayerControlDeck from './player/PlayerControlDeck';
 
 export default function GamePlayer({
   children,
@@ -141,18 +65,16 @@ export default function GamePlayer({
   challenger,
   challengerScore,
 }: GamePlayerProps) {
-  const router = useRouter();
   const { addRecentGame } = useRecentGames();
 
   // Core player states
   const [playerState, setPlayerState] = useState<PlayerState>('idle');
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState<number>(100);
-  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [isTheater, setIsTheater] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isWebFullscreen, setIsWebFullscreen] = useState(false);
-  const [isMiniPlayer, setIsMiniPlayer] = useState(false); // Bulletproof In-Page Floating Mini-Player
+  const [isMiniPlayer, setIsMiniPlayer] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const [isReloading, setIsReloading] = useState(false);
   const [adCountdown, setAdCountdown] = useState(5);
@@ -166,20 +88,16 @@ export default function GamePlayer({
   const [showHud, setShowHud] = useState(true);
 
   // Focus tracking
-  const [isCanvasHovered, setIsCanvasHovered] = useState(false);
+  const [, setIsCanvasHovered] = useState(false);
 
-  // Feature 1: Iframe Loading Buffer
+  // Iframe Loading Buffer
   const [isIframeLoading, setIsIframeLoading] = useState(false);
   const iframeLoadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Feature 2: Mobile Virtual Gamepad (Dual Mode & Haptics)
+  // Virtual Gamepad
   const [showVirtualPad, setShowVirtualPad] = useState(false);
-  const [gamepadMode, setGamepadMode] = useState<GamepadMode>('dual');
-  const [gamepadOpacity, setGamepadOpacity] = useState<GamepadOpacity>('med');
-  const [isLeftHanded, setIsLeftHanded] = useState(false);
-  const pressedKeysRef = useRef<Set<string>>(new Set());
 
-  // Feature 3: Cloud Save Status
+  // Cloud Save Status
   const [cloudSaveStatus, setCloudSaveStatus] = useState<CloudSaveStatus>('idle');
   const cloudSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [showChallengeModal, setShowChallengeModal] = useState(false);
@@ -189,7 +107,7 @@ export default function GamePlayer({
   const [isSnapshotModalOpen, setIsSnapshotModalOpen] = useState(false);
   const [isMixtapeModalOpen, setIsMixtapeModalOpen] = useState(false);
 
-  // Feature 4: Aspect Ratio (persisted across sessions)
+  // Aspect Ratio (persisted across sessions)
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>(() => {
     if (initialAspectRatio) return initialAspectRatio;
     if (typeof window !== 'undefined') {
@@ -203,13 +121,13 @@ export default function GamePlayer({
     if (orientation === 'portrait') return '9:16';
     return '16:9';
   });
-  const [showArMenu, setShowArMenu] = useState(false);
 
   const handleSelectAspectRatio = (ar: AspectRatio) => {
     setAspectRatio(ar);
     try {
       localStorage.setItem('spielcade_player_ar', ar);
     } catch {}
+    refocusGame();
   };
 
   useEffect(() => {
@@ -220,20 +138,39 @@ export default function GamePlayer({
     }
   }, [initialAspectRatio, orientation]);
 
-  // Feature 5: Ambient Glow
+  // Ambient Glow
   const ambientColor = useRef<string>('#6366F1');
 
-  // Improvement 1: Session Timer
+  // Session Timer
   const [sessionTime, setSessionTime] = useState(0);
   const sessionIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Improvement 2: Score Toast & Personal Best
+  // Score Toast & Personal Best
   const [liveScore, setLiveScore] = useState<number | null>(null);
   const [personalBest, setPersonalBest] = useState<number | null>(null);
   const [isNewRecord, setIsNewRecord] = useState(false);
   const [showScoreToast, setShowScoreToast] = useState(false);
   const scoreToastTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [hasBeatenChallenge, setHasBeatenChallenge] = useState(false);
+
+  // Achievements & Toasts
+  const [unlockedAchievement, setUnlockedAchievement] = useState<{ title: string; xp?: number } | null>(null);
+  const achievementTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const touchStartYRef = useRef(0);
+  const touchStartXRef = useRef(0);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const shortcutTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [screenshotToast, setScreenshotToast] = useState<'success' | 'postcard' | 'hint' | null>(null);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const hasRecordedRef = useRef(false);
+  const hudTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const wakeLockRef = useRef<any>(null);
+  const [offlineSyncMsg, setOfflineSyncMsg] = useState<string | null>(null);
+  const [isPortraitMobile, setIsPortraitMobile] = useState(false);
+  const [dismissRotateHint, setDismissRotateHint] = useState(false);
+  const [resumedCheckpointToast, setResumedCheckpointToast] = useState(false);
 
   // Speculative pre-warming of iframe CDN connections on component mount
   useEffect(() => {
@@ -247,61 +184,12 @@ export default function GamePlayer({
           preconn.href = origin;
           preconn.crossOrigin = 'anonymous';
           document.head.appendChild(preconn);
-
-          const dns = document.createElement('link');
-          dns.rel = 'dns-prefetch';
-          dns.href = origin;
-          document.head.appendChild(dns);
         }
       } catch {}
     }
   }, [sourceUrl]);
 
-  // Live viral challenger target victory detection
-  useEffect(() => {
-    if (challenger && challengerScore && liveScore !== null && liveScore >= challengerScore) {
-      if (!hasBeatenChallenge) {
-        setHasBeatenChallenge(true);
-        arcadeAudio.playVictory();
-        window.dispatchEvent(
-          new CustomEvent('spielcade:award-xp', {
-            detail: { amount: 150, reason: `Beat @${challenger}'s Score in ${title}!` }
-          })
-        );
-      }
-    }
-  }, [liveScore, challenger, challengerScore, hasBeatenChallenge, title]);
-
-  // Improvement 3: Achievement Notifications
-  const [unlockedAchievement, setUnlockedAchievement] = useState<{ title: string; xp?: number } | null>(null);
-  const achievementTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Improvement 4: Swipe Gestures
-  const touchStartYRef = useRef(0);
-  const touchStartXRef = useRef(0);
-
-  // Improvement 5: Shortcuts Modal
-  const [showShortcuts, setShowShortcuts] = useState(false);
-  const shortcutTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Improvement 6: Screenshot Engine
-  const [screenshotToast, setScreenshotToast] = useState<'success' | 'postcard' | 'hint' | null>(null);
-
-  // Improvement 7: Overflow Menu
-  const [showOverflowMenu, setShowOverflowMenu] = useState(false);
-  const overflowMenuRef = useRef<HTMLDivElement>(null);
-  const volumeMenuRef = useRef<HTMLDivElement>(null);
-
-  // DOM Refs
-  const containerRef = useRef<HTMLDivElement>(null);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const hasRecordedRef = useRef(false);
-  const hudTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const wakeLockRef = useRef<any>(null);
-
-  // Improvement 8: Offline Queue Sync
-  const [offlineSyncMsg, setOfflineSyncMsg] = useState<string | null>(null);
-
+  // Offline Queue Sync
   useEffect(() => {
     const cleanup = initOfflineSync();
     const handleSync = (e: Event) => {
@@ -317,7 +205,7 @@ export default function GamePlayer({
     };
   }, []);
 
-  // Mobile/Tablet UX 1: Broadcast active gameplay to hide/restore bottom navigation
+  // Broadcast active gameplay to hide/restore bottom navigation on mobile
   useEffect(() => {
     const isPlaying = playerState === 'playing';
     try {
@@ -330,7 +218,7 @@ export default function GamePlayer({
     };
   }, [playerState]);
 
-  // Mobile/Tablet UX 2: Check stored virtual gamepad preference (defaults to off to allow direct touch controls)
+  // Check stored virtual gamepad preference
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
@@ -341,10 +229,7 @@ export default function GamePlayer({
     } catch {}
   }, []);
 
-  // Mobile/Tablet UX 3: Portrait orientation detector for rotate suggestion banner
-  const [isPortraitMobile, setIsPortraitMobile] = useState(false);
-  const [dismissRotateHint, setDismissRotateHint] = useState(false);
-
+  // Mobile portrait orientation detector
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const checkOrientation = () => {
@@ -361,7 +246,7 @@ export default function GamePlayer({
     };
   }, []);
 
-  // Initialize stored preferences (volume, muted, personal best)
+  // Stored preferences
   useEffect(() => {
     try {
       const storedVol = localStorage.getItem('spielcade_player_volume');
@@ -376,8 +261,6 @@ export default function GamePlayer({
   }, [slug]);
 
   // Cross-device QR checkpoint auto-resume
-  const [resumedCheckpointToast, setResumedCheckpointToast] = useState(false);
-
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
@@ -396,17 +279,25 @@ export default function GamePlayer({
   // Ambient color derived from game category
   useEffect(() => {
     const map: Record<string, string> = {
-      action: '#EF4444', adventure: '#F59E0B', puzzle: '#8B5CF6',
-      racing: '#F97316', sports: '#10B981', shooting: '#EF4444',
-      strategy: '#3B82F6', arcade: '#EC4899', rpg: '#A855F7',
-      horror: '#6B7280', simulation: '#14B8A6', platform: '#F59E0B',
+      action: '#EF4444',
+      adventure: '#F59E0B',
+      puzzle: '#8B5CF6',
+      racing: '#F97316',
+      sports: '#10B981',
+      shooting: '#EF4444',
+      strategy: '#3B82F6',
+      arcade: '#EC4899',
+      rpg: '#A855F7',
+      horror: '#6B7280',
+      simulation: '#14B8A6',
+      platform: '#F59E0B',
     };
     const key = (category || '').toLowerCase();
     const match = Object.keys(map).find(k => key.includes(k));
     ambientColor.current = match ? map[match] : '#6366F1';
   }, [category]);
 
-  // Smart Focus Trapper: restore focus to iframe smoothly
+  // Smart Focus Trapper
   const refocusGame = useCallback(() => {
     if (iframeRef.current && playerState === 'playing') {
       try {
@@ -424,7 +315,7 @@ export default function GamePlayer({
     }
   }, [playerState, reloadKey]);
 
-  // Cloud status helper with auto-dismiss
+  // Cloud status helper
   const setCloudStatus = useCallback((status: CloudSaveStatus) => {
     setCloudSaveStatus(status);
     if (cloudSaveTimerRef.current) clearTimeout(cloudSaveTimerRef.current);
@@ -445,7 +336,7 @@ export default function GamePlayer({
     };
   }, [playerState]);
 
-  // Visibility change persistence (WakeLock + Tab switch)
+  // Visibility change persistence
   useEffect(() => {
     if (playerState !== 'playing') return;
     const handleVisibility = async () => {
@@ -470,21 +361,7 @@ export default function GamePlayer({
     return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, [playerState, refocusGame]);
 
-  // Click-outside listener for menus
-  useEffect(() => {
-    const handle = (e: MouseEvent) => {
-      if (overflowMenuRef.current && !overflowMenuRef.current.contains(e.target as Node)) {
-        setShowOverflowMenu(false);
-      }
-      if (volumeMenuRef.current && !volumeMenuRef.current.contains(e.target as Node)) {
-        setShowVolumeSlider(false);
-      }
-    };
-    document.addEventListener('mousedown', handle);
-    return () => document.removeEventListener('mousedown', handle);
-  }, []);
-
-  // Sync initialFavorited with guest localStorage support
+  // Sync initialFavorited with guest localStorage
   useEffect(() => {
     try {
       const guestFavs: string[] = JSON.parse(localStorage.getItem('spielcade_guest_favorites') || '[]');
@@ -571,7 +448,7 @@ export default function GamePlayer({
     }
   }, [slug, title, image, addRecentGame]);
 
-  // Pre-roll Ad countdown with auto-transition
+  // Pre-roll Ad countdown
   useEffect(() => {
     if (playerState === 'ad') {
       if (adCountdown > 0) {
@@ -586,7 +463,21 @@ export default function GamePlayer({
     }
   }, [playerState, adCountdown]);
 
-  // Skip Ad -> transition to playing
+  // Audio Engine
+  const broadcastAudioState = useCallback((muted: boolean, volLevel: number) => {
+    const iframe = iframeRef.current || containerRef.current?.querySelector('iframe');
+    if (iframe?.contentWindow) {
+      const normalizedVol = muted ? 0 : volLevel / 100;
+      iframe.contentWindow.postMessage({ type: 'SET_MUTE', isMuted: muted, mute: muted }, '*');
+      iframe.contentWindow.postMessage({ type: 'SET_VOLUME', volume: normalizedVol, value: normalizedVol }, '*');
+      iframe.contentWindow.postMessage(
+        { source: 'SPIELCADE_WRAPPER', type: 'AUDIO_STATE', payload: { isMuted: muted, volume: normalizedVol } },
+        '*'
+      );
+      iframe.contentWindow.postMessage(JSON.stringify({ action: muted ? 'mute' : 'unmute', volume: normalizedVol }), '*');
+    }
+  }, []);
+
   const skipAd = () => {
     setPlayerState('playing');
     broadcastAudioState(isMuted, volume);
@@ -597,7 +488,6 @@ export default function GamePlayer({
     if (iframeLoadTimeoutRef.current) clearTimeout(iframeLoadTimeoutRef.current);
     broadcastAudioState(isMuted, volume);
 
-    // Cross-device state injection on load
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const resumeRaw = urlParams.get('resumeState');
@@ -605,17 +495,19 @@ export default function GamePlayer({
         const payload = JSON.parse(decodeURIComponent(resumeRaw));
         const iframe = iframeRef.current || containerRef.current?.querySelector('iframe');
         if (iframe?.contentWindow) {
-          iframe.contentWindow.postMessage({
-            type: 'SPIELCADE_RESTORE_STATE',
-            action: 'RESTORE_STATE',
-            slug,
-            payload
-          }, '*');
+          iframe.contentWindow.postMessage(
+            {
+              type: 'SPIELCADE_RESTORE_STATE',
+              action: 'RESTORE_STATE',
+              slug,
+              payload,
+            },
+            '*'
+          );
         }
       }
     } catch {}
 
-    // Immediately dismiss loading buffer so the game is touchable right away
     setIsIframeLoading(false);
     refocusGame();
     broadcastAudioState(isMuted, volume);
@@ -626,29 +518,20 @@ export default function GamePlayer({
     if (rewardedAdMsgId !== null) {
       const iframe = iframeRef.current || containerRef.current?.querySelector('iframe');
       if (iframe?.contentWindow) {
-        iframe.contentWindow.postMessage({
-          source: 'SPIELCADE_WRAPPER',
-          type: 'REWARDED_AD_COMPLETE',
-          payload: { success: true },
-          msgId: rewardedAdMsgId,
-        }, '*');
+        iframe.contentWindow.postMessage(
+          {
+            source: 'SPIELCADE_WRAPPER',
+            type: 'REWARDED_AD_COMPLETE',
+            payload: { success: true },
+            msgId: rewardedAdMsgId,
+          },
+          '*'
+        );
       }
       setRewardedAdMsgId(null);
     }
     refocusGame();
   };
-
-  // Audio Engine: Volume & Mute control
-  const broadcastAudioState = useCallback((muted: boolean, volLevel: number) => {
-    const iframe = iframeRef.current || containerRef.current?.querySelector('iframe');
-    if (iframe?.contentWindow) {
-      const normalizedVol = muted ? 0 : volLevel / 100;
-      iframe.contentWindow.postMessage({ type: 'SET_MUTE', isMuted: muted, mute: muted }, '*');
-      iframe.contentWindow.postMessage({ type: 'SET_VOLUME', volume: normalizedVol, value: normalizedVol }, '*');
-      iframe.contentWindow.postMessage({ source: 'SPIELCADE_WRAPPER', type: 'AUDIO_STATE', payload: { isMuted: muted, volume: normalizedVol } }, '*');
-      iframe.contentWindow.postMessage(JSON.stringify({ action: muted ? 'mute' : 'unmute', volume: normalizedVol }), '*');
-    }
-  }, []);
 
   const handleToggleMute = () => {
     const next = !isMuted;
@@ -671,7 +554,6 @@ export default function GamePlayer({
     broadcastAudioState(unmuted, newVol);
   };
 
-  // Reload Game
   const handleReload = () => {
     setIsReloading(true);
     setIsIframeLoading(true);
@@ -685,7 +567,6 @@ export default function GamePlayer({
     }, 600);
   };
 
-  // Pause / Resume Engine
   const togglePause = () => {
     if (playerState === 'playing') {
       setPlayerState('paused');
@@ -699,7 +580,6 @@ export default function GamePlayer({
     }
   };
 
-  // Fullscreen Engine
   const toggleFullscreen = async () => {
     if (document.fullscreenElement) {
       await document.exitFullscreen().catch(() => {});
@@ -806,7 +686,6 @@ export default function GamePlayer({
     const handle = async (event: MessageEvent) => {
       if (!event.data) return;
 
-      // 1. SPIELCADE_SDK
       if (event.data.source === 'SPIELCADE_SDK') {
         switch (event.data.type) {
           case 'GAME_READY':
@@ -821,7 +700,10 @@ export default function GamePlayer({
               setLiveScore(score);
               setShowScoreToast(true);
 
-              // Check personal best
+              if (challengerScore && score > challengerScore) {
+                setHasBeatenChallenge(true);
+              }
+
               if (personalBest === null || score > personalBest) {
                 setPersonalBest(score);
                 setIsNewRecord(true);
@@ -847,16 +729,18 @@ export default function GamePlayer({
                 queueOfflineScore(slug, score);
               } else {
                 const handler = onGameOver || ((sc: number) => submitScore(slug, sc));
-                Promise.resolve(handler(score)).then((res: any) => {
-                  if (res?.newAchievements && res.newAchievements.length > 0) {
-                    const firstAch = res.newAchievements[0];
-                    setUnlockedAchievement({ title: firstAch.title, xp: firstAch.xp });
-                    if (achievementTimerRef.current) clearTimeout(achievementTimerRef.current);
-                    achievementTimerRef.current = setTimeout(() => setUnlockedAchievement(null), 4500);
-                  }
-                }).catch(() => {
-                  queueOfflineScore(slug, score);
-                });
+                Promise.resolve(handler(score))
+                  .then((res: any) => {
+                    if (res?.newAchievements && res.newAchievements.length > 0) {
+                      const firstAch = res.newAchievements[0];
+                      setUnlockedAchievement({ title: firstAch.title, xp: firstAch.xp });
+                      if (achievementTimerRef.current) clearTimeout(achievementTimerRef.current);
+                      achievementTimerRef.current = setTimeout(() => setUnlockedAchievement(null), 4500);
+                    }
+                  })
+                  .catch(() => {
+                    queueOfflineScore(slug, score);
+                  });
               }
             }
             break;
@@ -885,12 +769,15 @@ export default function GamePlayer({
           case 'SAVE_DATA': {
             setCloudStatus('saving');
             const res = await saveGameState(slug, event.data.payload.data);
-            event.source?.postMessage({
-              source: 'SPIELCADE_WRAPPER',
-              type: 'SAVE_DATA_RESPONSE',
-              payload: res,
-              msgId: event.data.msgId,
-            }, { targetOrigin: '*' });
+            event.source?.postMessage(
+              {
+                source: 'SPIELCADE_WRAPPER',
+                type: 'SAVE_DATA_RESPONSE',
+                payload: res,
+                msgId: event.data.msgId,
+              },
+              { targetOrigin: '*' }
+            );
             setCloudStatus(res ? 'saved' : 'error');
             break;
           }
@@ -898,26 +785,35 @@ export default function GamePlayer({
           case 'LOAD_DATA': {
             setCloudStatus('loading');
             const res = await loadGameState(slug);
-            event.source?.postMessage({
-              source: 'SPIELCADE_WRAPPER',
-              type: 'LOAD_DATA_RESPONSE',
-              payload: res,
-              msgId: event.data.msgId,
-            }, { targetOrigin: '*' });
+            event.source?.postMessage(
+              {
+                source: 'SPIELCADE_WRAPPER',
+                type: 'LOAD_DATA_RESPONSE',
+                payload: res,
+                msgId: event.data.msgId,
+              },
+              { targetOrigin: '*' }
+            );
             setCloudStatus(res ? 'loaded' : 'error');
             break;
           }
         }
       }
 
-      // 2. Generic HTML5 / Poki / CrazyGames fallback events
+      // Generic HTML5 / Poki / CrazyGames fallback events
       try {
         const raw = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
         if (raw) {
           if (raw.type === 'gameReady' || raw.type === 'loadingStop' || raw.event === 'gameLoaded') {
             setIsIframeLoading(false);
           }
-          if (raw.type === 'score' || raw.type === 'gameover' || raw.action === 'game_over' || raw.event === 'gameover' || raw.name === 'gameOver') {
+          if (
+            raw.type === 'score' ||
+            raw.type === 'gameover' ||
+            raw.action === 'game_over' ||
+            raw.event === 'gameover' ||
+            raw.name === 'gameOver'
+          ) {
             const score = Number(raw.score || raw.points || raw.value || raw.finalScore || 0);
             if (score > 0) {
               setLiveScore(score);
@@ -945,111 +841,26 @@ export default function GamePlayer({
 
     window.addEventListener('message', handle);
     return () => window.removeEventListener('message', handle);
-  }, [playerState, sourceUrl, children, onGameOver, slug, personalBest, setCloudStatus]);
+  }, [playerState, sourceUrl, children, onGameOver, slug, personalBest, challengerScore, setCloudStatus, title]);
 
   // Clean up timers on unmount
-  useEffect(() => () => {
-    [
-      iframeLoadTimeoutRef,
-      cloudSaveTimerRef,
-      hudTimerRef,
-      scoreToastTimerRef,
-      achievementTimerRef,
-      shortcutTimerRef,
-    ].forEach(r => {
-      if (r.current) clearTimeout(r.current);
-    });
-    if (sessionIntervalRef.current) clearInterval(sessionIntervalRef.current);
-  }, []);
-
-  // Dual-Mode Virtual Gamepad Dispatcher with Haptic Feedback
-  const dispatchKeyInternal = useCallback((key: string, code: string, type: 'keydown' | 'keyup') => {
-    const iframe = iframeRef.current;
-
-    // 1. Dispatch to local React games / window if no iframe
-    if (!iframe) {
-      try {
-        const evt = new KeyboardEvent(type, { key, code, bubbles: true, cancelable: true });
-        window.dispatchEvent(evt);
-        document.dispatchEvent(evt);
-        if (containerRef.current) {
-          containerRef.current.dispatchEvent(evt);
-        }
-      } catch {}
-      return;
-    }
-
-    // 2. Dispatch inside same-origin document safely
-    try {
-      if (iframe.contentDocument) {
-        const evt = new KeyboardEvent(type, { key, code, bubbles: true, cancelable: true });
-        iframe.contentDocument.dispatchEvent(evt);
-      }
-    } catch {}
-
-    // 3. Dispatch postMessage for cross-origin game engines
-    if (iframe.contentWindow) {
-      iframe.contentWindow.postMessage({
-        source: 'SPIELCADE_WRAPPER',
-        type: type === 'keydown' ? 'KEY_DOWN' : 'KEY_UP',
-        key,
-        code,
-      }, '*');
-    }
-  }, []);
-
-  const handleVpadPress = useCallback((action: string) => {
-    const pair = VPAD_KEY_PAIRS[action];
-    if (!pair) return;
-
-    // Haptic feedback for tactile arcade feel
-    if (typeof navigator !== 'undefined' && navigator.vibrate) {
-      try { navigator.vibrate(12); } catch {}
-    }
-
-    if (!pressedKeysRef.current.has(pair.key)) {
-      pressedKeysRef.current.add(pair.key);
-      dispatchKeyInternal(pair.key, pair.code, 'keydown');
-    }
-
-    // Dual-dispatch WASD if in dual mode or wasd mode
-    if (pair.secondaryKey && (gamepadMode === 'dual' || gamepadMode === 'wasd')) {
-      if (!pressedKeysRef.current.has(pair.secondaryKey)) {
-        pressedKeysRef.current.add(pair.secondaryKey);
-        dispatchKeyInternal(pair.secondaryKey, pair.secondaryCode || 'Key' + pair.secondaryKey.toUpperCase(), 'keydown');
-      }
-    }
-  }, [dispatchKeyInternal, gamepadMode]);
-
-  const handleVpadRelease = useCallback((action: string) => {
-    const pair = VPAD_KEY_PAIRS[action];
-    if (!pair) return;
-
-    pressedKeysRef.current.delete(pair.key);
-    dispatchKeyInternal(pair.key, pair.code, 'keyup');
-
-    if (pair.secondaryKey) {
-      pressedKeysRef.current.delete(pair.secondaryKey);
-      dispatchKeyInternal(pair.secondaryKey, pair.secondaryCode || 'Key' + pair.secondaryKey.toUpperCase(), 'keyup');
-    }
-  }, [dispatchKeyInternal]);
-
-  const vpadProps = (action: string) => ({
-    onPointerDown: (e: React.PointerEvent) => {
-      e.preventDefault();
-      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-      if (typeof navigator !== 'undefined' && navigator.vibrate) {
-        try { navigator.vibrate(12); } catch {}
-      }
-      handleVpadPress(action);
+  useEffect(
+    () => () => {
+      [
+        iframeLoadTimeoutRef,
+        cloudSaveTimerRef,
+        hudTimerRef,
+        scoreToastTimerRef,
+        achievementTimerRef,
+        shortcutTimerRef,
+        favToastTimerRef,
+        sessionIntervalRef,
+      ].forEach(r => {
+        if (r.current) clearTimeout(r.current as any);
+      });
     },
-    onPointerUp: (e: React.PointerEvent) => {
-      e.preventDefault();
-      handleVpadRelease(action);
-    },
-    onPointerLeave: () => handleVpadRelease(action),
-    onPointerCancel: () => handleVpadRelease(action),
-  });
+    []
+  );
 
   // Mobile Swipe Gestures
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -1059,9 +870,7 @@ export default function GamePlayer({
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    // Never hijack gestures during active gameplay
     if (playerState === 'playing') return;
-
     const dy = e.changedTouches[0].clientY - touchStartYRef.current;
     const dx = e.changedTouches[0].clientX - touchStartXRef.current;
     if (Math.abs(dy) <= Math.abs(dx)) return;
@@ -1077,7 +886,7 @@ export default function GamePlayer({
     }
   };
 
-  // Instant High-Resolution Screenshot & Gamer Card Engine
+  // Screenshot & Gamer Card Engine
   const handleScreenshot = async () => {
     try {
       arcadeAudio.playBlip();
@@ -1112,9 +921,8 @@ export default function GamePlayer({
     setTimeout(() => setScreenshotToast(null), 3500);
   };
 
-  // Mini-Player Toggle (Crash-proof, stays in same React tree)
+  // Mini-Player Toggle
   const toggleMiniPlayer = () => {
-    // On small mobile screens (< 768px), floating miniplayer causes screen collision with bottom bar; scroll into view instead
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
       containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
@@ -1124,7 +932,7 @@ export default function GamePlayer({
     refocusGame();
   };
 
-  // Favorite toggle (Works seamlessly for guests + authenticated users)
+  // Favorite toggle
   const handleToggleFavorite = () => {
     const next = !isFavorited;
     setIsFavorited(next);
@@ -1132,7 +940,6 @@ export default function GamePlayer({
     if (favToastTimerRef.current) clearTimeout(favToastTimerRef.current);
     favToastTimerRef.current = setTimeout(() => setFavToast(null), 2500);
 
-    // Persist immediately in guest localStorage
     try {
       const guestFavs: string[] = JSON.parse(localStorage.getItem('spielcade_guest_favorites') || '[]');
       const keysToAdd = [slug, ...(gameId ? [gameId] : [])];
@@ -1147,7 +954,6 @@ export default function GamePlayer({
       console.warn('Failed to save favorite in localStorage:', e);
     }
 
-    // Sync to Supabase in background if gameId exists
     if (gameId) {
       startTransition(async () => {
         try {
@@ -1185,7 +991,7 @@ export default function GamePlayer({
     refocusGame();
   };
 
-  // Manual Toolbar Cloud Save Trigger
+  // Toolbar Cloud Save Trigger
   const handleToolbarCloudSave = async () => {
     setCloudSaveStatus('saving');
     try {
@@ -1198,11 +1004,14 @@ export default function GamePlayer({
 
       if (iframeRef?.current?.contentWindow) {
         try {
-          iframeRef.current.contentWindow.postMessage({
-            type: 'SPIELCADE_SAVE_REQUEST',
-            action: 'SAVE_STATE',
-            slug
-          }, '*');
+          iframeRef.current.contentWindow.postMessage(
+            {
+              type: 'SPIELCADE_SAVE_REQUEST',
+              action: 'SAVE_STATE',
+              slug,
+            },
+            '*'
+          );
         } catch {}
       }
 
@@ -1232,8 +1041,7 @@ export default function GamePlayer({
 
   return (
     <div className="w-full flex flex-col select-none relative overflow-x-clip">
-
-      {/* Feature 5: Cinematic GPU Ambient Back-Glow */}
+      {/* Cinematic GPU Ambient Back-Glow */}
       {playerState === 'playing' && !isMiniPlayer && (
         <div
           aria-hidden="true"
@@ -1245,7 +1053,7 @@ export default function GamePlayer({
         />
       )}
 
-      {/* Mini-Player Placeholder when game is pinned to corner */}
+      {/* Mini-Player Placeholder */}
       {isMiniPlayer && (
         <div
           onClick={() => setIsMiniPlayer(false)}
@@ -1263,7 +1071,7 @@ export default function GamePlayer({
         </div>
       )}
 
-      {/* Primary Display Canvas (Seamlessly floats to corner when isMiniPlayer is active) */}
+      {/* Primary Display Canvas */}
       <div
         ref={containerRef}
         tabIndex={0}
@@ -1279,10 +1087,10 @@ export default function GamePlayer({
           isMiniPlayer
             ? 'fixed bottom-6 right-6 z-[999] w-[340px] sm:w-[420px] aspect-video rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.85)] border-2 border-white/20 hidden md:flex'
             : isWebFullscreen
-              ? 'fixed inset-0 z-[1000] w-screen h-screen rounded-none pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)] pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)]'
-              : isTheater
-                ? 'fixed inset-2 md:inset-6 lg:inset-10 z-[100] rounded-2xl shadow-[0_0_80px_rgba(0,0,0,0.9)] border border-white/10'
-                : `${AR_CLASSES[aspectRatio]} rounded-2xl border border-gray-200 dark:border-white/10`
+            ? 'fixed inset-0 z-[1000] w-screen h-screen rounded-none pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)] pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)]'
+            : isTheater
+            ? 'fixed inset-2 md:inset-6 lg:inset-10 z-[100] rounded-2xl shadow-[0_0_80px_rgba(0,0,0,0.9)] border border-white/10'
+            : `${AR_CLASSES[aspectRatio]} rounded-2xl border border-gray-200 dark:border-white/10`
         }`}
       >
         {/* Mini-Player Hover Controls Bar */}
@@ -1338,127 +1146,26 @@ export default function GamePlayer({
 
         {/* Theater Mode Background Dimming */}
         {isTheater && !document.fullscreenElement && (
-          <div
-            className="fixed inset-0 bg-black/95 z-[-1] backdrop-blur-md"
-            onClick={() => setIsTheater(false)}
-          />
+          <div className="fixed inset-0 bg-black/95 z-[-1] backdrop-blur-md" onClick={() => setIsTheater(false)} />
         )}
 
         <AnimatePresence mode="wait">
-
-          {/* 1. IDLE STATE: Poster & Play Button */}
+          {/* 1. IDLE STATE */}
           {playerState === 'idle' && (
-            <motion.div
-              key="idle"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-20 group cursor-pointer"
-              onClick={handlePlay}
-            >
-              {image && (
-                <img
-                  src={image}
-                  alt={title}
-                  className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-105 group-hover:opacity-50 transition-all duration-700"
-                />
-              )}
-              <div className="relative z-10 flex flex-col items-center gap-5 p-4 text-center">
-                <button
-                  onClick={e => {
-                    e.stopPropagation();
-                    handlePlay();
-                  }}
-                  aria-label={`Play ${title}`}
-                  className="relative flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-[#6366F1] text-white hover:scale-110 active:scale-95 transition-all duration-300 shadow-[0_0_50px_rgba(99,102,241,0.7)]"
-                >
-                  <div className="absolute inset-0 rounded-full bg-[#6366F1] animate-ping opacity-30" />
-                  <Play size={40} className="ml-2 fill-white" />
-                </button>
-                <div className="space-y-1">
-                  <h2 className="text-2xl sm:text-4xl font-black text-white tracking-wide drop-shadow-xl font-outfit">
-                    Play {title}
-                  </h2>
-                  <p className="text-xs sm:text-sm text-gray-300 font-medium">
-                    Free Instant Play • No Downloads • Unblocked
-                  </p>
-                </div>
-              </div>
-            </motion.div>
+            <PlayerIdleOverlay title={title} image={image} onPlay={handlePlay} />
           )}
 
           {/* 2. PRE-ROLL AD STATE */}
           {playerState === 'ad' && (
-            <motion.div
-              key="ad"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 flex flex-col items-center justify-center bg-gray-950 z-20 p-4 sm:p-6"
-            >
-              <div className="absolute top-4 left-4 sm:top-6 sm:left-6 text-white/60 text-xs tracking-widest uppercase font-bold flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" /> Loading Game Assets
-              </div>
-              <div className="w-full max-w-md p-2 sm:p-4 flex flex-col items-center text-center">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-4 border-[#6366F1] border-t-transparent animate-spin mb-3 shadow-[0_0_20px_rgba(99,102,241,0.5)]" />
-                <h3 className="text-white font-bold text-base sm:text-xl mb-1 font-outfit">Starting {title}...</h3>
-                <p className="text-gray-400 text-xs max-w-xs mb-3">
-                  Your game is initializing. Support independent game creators by viewing sponsor announcements.
-                </p>
-                {/* Responsive Pre-roll Ad Banner */}
-                <div className="w-full flex justify-center my-1 max-w-[320px]">
-                  <AdBanner id="5a3fd317f38a51c8553f75f8c2a547ef" width={300} height={250} className="rounded-xl shadow-lg" />
-                </div>
-              </div>
-              <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6">
-                {adCountdown > 2 ? (
-                  <div className="px-4 py-2 bg-black/60 border border-white/10 text-white/70 rounded-full text-xs font-bold backdrop-blur-md">
-                    Skip in {adCountdown}s
-                  </div>
-                ) : (
-                  <button
-                    onClick={skipAd}
-                    className="px-5 py-2 sm:px-6 sm:py-2.5 bg-white text-black hover:bg-gray-200 hover:scale-105 active:scale-95 rounded-full text-xs sm:text-sm font-bold shadow-2xl transition-all flex items-center gap-2"
-                  >
-                    Play Now <Play size={14} className="fill-black" />
-                  </button>
-                )}
-              </div>
-            </motion.div>
+            <PlayerAdOverlay title={title} adCountdown={adCountdown} onSkipAd={skipAd} />
           )}
 
           {/* 2.5 REWARDED AD STATE */}
           {playerState === 'rewarded_ad' && (
-            <motion.div
-              key="rewarded_ad"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 flex flex-col items-center justify-center bg-black/95 z-40 backdrop-blur-sm p-6"
-            >
-              <div className="absolute top-6 left-6 text-white/60 text-xs tracking-widest uppercase font-bold flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" /> Rewarded Sponsor
-              </div>
-              <div className="w-full max-w-md p-6 flex flex-col items-center text-center">
-                <div className="w-16 h-16 rounded-full border-4 border-yellow-400 border-t-transparent animate-spin mb-6 shadow-[0_0_20px_rgba(234,179,8,0.5)]" />
-                <h3 className="text-white font-bold text-lg sm:text-xl mb-2 font-outfit">Claiming In-Game Reward...</h3>
-                <p className="text-gray-400 text-xs sm:text-sm">Please do not close this window while the reward verifies.</p>
-              </div>
-              <div className="absolute bottom-6 right-6">
-                {adCountdown > 0 ? (
-                  <div className="px-5 py-2.5 bg-black/60 border border-white/10 text-white/70 rounded-full text-xs font-bold backdrop-blur-md">
-                    Reward in {adCountdown}s
-                  </div>
-                ) : (
-                  <button
-                    onClick={completeRewardedAd}
-                    className="px-6 py-2.5 bg-yellow-400 text-black hover:bg-yellow-300 hover:scale-105 active:scale-95 rounded-full text-xs sm:text-sm font-bold shadow-[0_0_25px_rgba(234,179,8,0.5)] transition-all flex items-center gap-2"
-                  >
-                    Claim Reward <Play size={14} className="fill-black" />
-                  </button>
-                )}
-              </div>
-            </motion.div>
+            <PlayerRewardedAdOverlay
+              adCountdown={adCountdown}
+              onCompleteRewardedAd={completeRewardedAd}
+            />
           )}
 
           {/* 3. ACTIVE PLAYING CANVAS */}
@@ -1469,15 +1176,17 @@ export default function GamePlayer({
               animate={{ opacity: 1 }}
               className="w-full h-full flex flex-row relative z-10 bg-black overflow-hidden"
             >
-              {/* Left Skyscraper Ad (Hidden in mini-player and fullscreen) */}
+              {/* Left Skyscraper Ad */}
               {!isMiniPlayer && !isFullscreen && !isWebFullscreen && (
-                <div className={`hidden ${isTheater ? 'xl:flex' : '2xl:flex'} flex-col justify-center items-center px-3 bg-gray-950 border-r border-white/5 z-20 shrink-0`}>
+                <div
+                  className={`hidden ${isTheater ? 'xl:flex' : '2xl:flex'} flex-col justify-center items-center px-3 bg-gray-950 border-r border-white/5 z-20 shrink-0`}
+                >
                   <AdBanner id="f782d4b90dcb09f70975f654ba40ab19" width={160} height={600} />
                 </div>
               )}
 
-              {/* Game Viewport Container (STAYS CONSTANT IN DOM — NEVER UNMOUNTS) */}
-              <div 
+              {/* Game Viewport Container (STAYS CONSTANT IN DOM) */}
+              <div
                 className="flex-1 h-full relative flex justify-center items-center pointer-events-auto z-10 min-w-0"
                 style={{ touchAction: 'auto' }}
               >
@@ -1495,439 +1204,81 @@ export default function GamePlayer({
                       title={title}
                     />
 
-                    {/* Feature 1: Iframe Loading Buffer */}
-                    <AnimatePresence>
-                      {isIframeLoading && !isMiniPlayer && (
-                        <motion.div
-                          key="loading"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0, pointerEvents: 'none' }}
-                          transition={{ duration: 0.2 }}
-                          onClick={() => setIsIframeLoading(false)}
-                          onTouchStart={() => setIsIframeLoading(false)}
-                          className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-gray-950 cursor-pointer"
-                        >
-                          {image && (
-                            <img
-                              src={image}
-                              alt={title}
-                              className="absolute inset-0 w-full h-full object-cover opacity-20 blur-sm scale-110 pointer-events-none"
-                            />
-                          )}
-                          <div className="relative z-10 flex flex-col items-center gap-4 text-center px-4 pointer-events-none">
-                            <div className="relative w-20 h-20">
-                              <div
-                                className="absolute inset-0 rounded-full border-4 border-t-transparent animate-spin"
-                                style={{ borderColor: `${ambientColor.current} transparent transparent transparent` }}
-                              />
-                              <div className="absolute inset-2 rounded-full border-2 border-white/10 animate-pulse" />
-                              {image ? (
-                                <img src={image} alt="" className="absolute inset-3 rounded-full object-cover" />
-                              ) : (
-                                <div className="absolute inset-3 rounded-full bg-white/10 flex items-center justify-center">
-                                  <Loader2 size={20} className="text-white/60 animate-spin" />
-                                </div>
-                              )}
-                            </div>
-                            <div>
-                              <p className="text-white font-bold text-base sm:text-lg font-outfit">Loading {title}</p>
-                              <p className="text-gray-400 text-xs mt-1">Initializing WebGL engine & assets...</p>
-                            </div>
-                            <div className="w-48 h-1 rounded-full bg-white/10 overflow-hidden">
-                              <div
-                                className="h-full w-full rounded-full opacity-80"
-                                style={{
-                                  background: `linear-gradient(90deg, transparent 0%, ${ambientColor.current} 50%, transparent 100%)`,
-                                  backgroundSize: '200% 100%',
-                                  animation: 'shimmer 1.5s ease-in-out infinite',
-                                }}
-                              />
-                            </div>
-                            <p className="text-white/40 text-[10px] mt-1 select-none">Tap anywhere to play</p>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                    <PlayerLoadingOverlay
+                      title={title}
+                      image={image}
+                      ambientColor={ambientColor.current}
+                      isIframeLoading={isIframeLoading}
+                      isMiniPlayer={isMiniPlayer}
+                      onDismiss={() => setIsIframeLoading(false)}
+                    />
                   </>
                 ) : (
                   children
                 )}
 
-                {/* Pause Overlay (Hidden in mini-player) */}
-                <AnimatePresence>
-                  {playerState === 'paused' && !isMiniPlayer && (
-                    <motion.div
-                      key="pause-screen"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/85 backdrop-blur-md p-6 text-center"
-                    >
-                      <div className="bg-[#111228]/90 border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl flex flex-col items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-[#6366F1]/20 border border-[#6366F1]/40 flex items-center justify-center text-[#6366F1]">
-                          <Pause size={24} />
-                        </div>
-                        <div>
-                          <h3 className="text-xl font-black text-white font-outfit">Game Paused</h3>
-                          <p className="text-xs text-gray-400 mt-0.5">{title} • {category}</p>
-                        </div>
-
-                        {sessionTime > 0 && (
-                          <div className="flex items-center gap-2 text-xs font-mono text-gray-400 bg-white/5 px-3 py-1.5 rounded-lg">
-                            <Timer size={13} /> <span>Session Time: {fmtTime(sessionTime)}</span>
-                          </div>
-                        )}
-
-                        <div className="w-full flex flex-col gap-2 mt-2">
-                          <button
-                            onClick={togglePause}
-                            className="w-full py-2.5 bg-[#6366F1] hover:bg-[#5356e8] text-white rounded-xl text-xs font-bold transition-all shadow-lg flex items-center justify-center gap-2"
-                          >
-                            <Play size={14} className="fill-white" /> Resume (P)
-                          </button>
-                          <button
-                            onClick={() => { togglePause(); handleReload(); }}
-                            className="w-full py-2.5 bg-white/10 hover:bg-white/15 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
-                          >
-                            <RotateCcw size={14} /> Restart Run
-                          </button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                <PlayerPauseOverlay
+                  title={title}
+                  category={category}
+                  sessionTime={sessionTime}
+                  isPaused={playerState === 'paused'}
+                  isMiniPlayer={isMiniPlayer}
+                  onResume={togglePause}
+                  onRestart={() => {
+                    togglePause();
+                    handleReload();
+                  }}
+                />
               </div>
 
-              {/* Right Skyscraper Ad (Hidden in mini-player and fullscreen) */}
+              {/* Right Skyscraper Ad */}
               {!isMiniPlayer && !isFullscreen && !isWebFullscreen && (
-                <div className={`hidden ${isTheater ? 'xl:flex' : '2xl:flex'} flex-col justify-center items-center px-3 bg-gray-950 border-l border-white/5 z-20 shrink-0`}>
+                <div
+                  className={`hidden ${isTheater ? 'xl:flex' : '2xl:flex'} flex-col justify-center items-center px-3 bg-gray-950 border-l border-white/5 z-20 shrink-0`}
+                >
                   <AdBanner id="f782d4b90dcb09f70975f654ba40ab19" width={160} height={600} />
                 </div>
               )}
 
-              {/* In-Game Ghost Target Tracker (Viral Score Challenge) */}
-              {challenger && challengerScore && challengerScore > 0 && !isMiniPlayer && (
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="absolute top-3 left-4 z-[65] max-w-[calc(100%-120px)] sm:max-w-md pointer-events-auto"
-                >
-                  <div className={`flex items-center gap-2.5 px-3.5 py-2 rounded-2xl backdrop-blur-xl border shadow-2xl transition-all ${
-                    (liveScore || 0) >= challengerScore
-                      ? 'bg-emerald-950/90 border-emerald-400/60 shadow-[0_0_25px_rgba(52,211,153,0.4)]'
-                      : 'bg-[#0B0D21]/90 border-rose-500/40 shadow-xl'
-                  }`}>
-                    {/* Icon */}
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                      (liveScore || 0) >= challengerScore
-                        ? 'bg-emerald-500 text-white animate-bounce'
-                        : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                    }`}>
-                      {(liveScore || 0) >= challengerScore ? <Trophy size={16} /> : <Swords size={16} />}
-                    </div>
+              {/* Score Toasts & Floating Notifications */}
+              <PlayerScoreToasts
+                isMiniPlayer={isMiniPlayer}
+                challenger={challenger}
+                challengerScore={challengerScore}
+                liveScore={liveScore}
+                isNewRecord={isNewRecord}
+                showScoreToast={showScoreToast}
+                unlockedAchievement={unlockedAchievement}
+                shareToast={shareToast}
+                favToast={favToast}
+                screenshotToast={screenshotToast}
+                offlineSyncMsg={offlineSyncMsg}
+                resumedCheckpointToast={resumedCheckpointToast}
+                cloudSaveStatus={cloudSaveStatus}
+              />
 
-                    {/* Target & Score details */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-[11px] font-black uppercase tracking-wider text-slate-300 truncate">
-                          Target: <span className="text-amber-400 font-extrabold">@{challenger}</span> ({challengerScore.toLocaleString()} PTS)
-                        </span>
-                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded uppercase ${
-                          (liveScore || 0) >= challengerScore
-                            ? 'bg-emerald-500/20 text-emerald-300'
-                            : 'bg-rose-500/20 text-rose-300'
-                        }`}>
-                          {(liveScore || 0) >= challengerScore ? 'BEATEN!' : 'CHALLENGE'}
-                        </span>
-                      </div>
-
-                      {/* Progress Bar */}
-                      <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden my-1">
-                        <div
-                          className={`h-full rounded-full transition-all duration-300 ${
-                            (liveScore || 0) >= challengerScore
-                              ? 'bg-emerald-400'
-                              : 'bg-gradient-to-r from-rose-500 to-amber-400'
-                          }`}
-                          style={{
-                            width: `${Math.min(100, Math.max(5, (((liveScore || 0) / challengerScore) * 100)))}%`
-                          }}
-                        />
-                      </div>
-
-                      {/* Live Delta */}
-                      <div className="flex items-center justify-between text-[10px]">
-                        <span className="font-mono text-white/90">
-                          Score: <span className="font-bold">{(liveScore || 0).toLocaleString()}</span>
-                        </span>
-                        {(liveScore || 0) >= challengerScore ? (
-                          <span className="text-emerald-400 font-black animate-pulse">
-                            +{(liveScore - challengerScore).toLocaleString()} Ahead!
-                          </span>
-                        ) : (
-                          <span className="text-rose-400 font-semibold">
-                            Need +{(challengerScore - (liveScore || 0)).toLocaleString()} to Beat!
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Share Toast */}
-              <AnimatePresence>
-                {shareToast && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className="absolute top-6 left-1/2 -translate-x-1/2 z-[70] bg-emerald-600 text-white px-5 py-2.5 rounded-full text-xs font-bold shadow-2xl flex items-center gap-2 border border-emerald-400/30"
-                  >
-                    <Check size={14} className="stroke-[3]" /> Link copied with your score!
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Favorite Toast */}
-              <AnimatePresence>
-                {favToast && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className={`absolute top-6 left-1/2 -translate-x-1/2 z-[70] px-5 py-2.5 rounded-full text-xs font-bold shadow-2xl flex items-center gap-2 border backdrop-blur-md ${
-                      favToast === 'added'
-                        ? 'bg-red-600/95 text-white border-red-400/40 shadow-red-500/25'
-                        : 'bg-gray-800/95 text-gray-200 border-white/20'
-                    }`}
-                  >
-                    <Heart size={14} className={favToast === 'added' ? 'fill-white stroke-[2.5]' : 'stroke-[2.5]'} />
-                    {favToast === 'added' ? 'Added to your favorites!' : 'Removed from favorites'}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Score Toast & New Record Banner */}
-              <AnimatePresence>
-                {showScoreToast && liveScore !== null && !isMiniPlayer && (
-                  <motion.div
-                    key="score"
-                    initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.8, y: -20 }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                    className="absolute top-1/4 left-1/2 -translate-x-1/2 z-[70] pointer-events-none"
-                  >
-                    <div className="bg-black/90 border border-yellow-400/40 text-yellow-300 px-6 py-3 rounded-2xl text-lg font-black backdrop-blur-md shadow-2xl flex flex-col items-center gap-1">
-                      <div className="flex items-center gap-2.5">
-                        <Trophy size={20} className="text-yellow-400" />
-                        <span>+{liveScore.toLocaleString()} pts</span>
-                        <Zap size={16} className="text-yellow-300" />
-                      </div>
-                      {isNewRecord && (
-                        <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
-                          <Flame size={12} /> NEW PERSONAL RECORD!
-                        </span>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Achievement Notification Banner (Xbox / Steam Style) */}
-              <AnimatePresence>
-                {unlockedAchievement && !isMiniPlayer && (
-                  <motion.div
-                    key="ach"
-                    initial={{ opacity: 0, y: -40, scale: 0.9 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -40, scale: 0.9 }}
-                    transition={{ type: 'spring', stiffness: 350, damping: 22 }}
-                    className="absolute top-5 left-1/2 -translate-x-1/2 z-[80] bg-[#111228]/95 border border-yellow-500/40 text-white px-5 py-3 rounded-2xl backdrop-blur-xl shadow-[0_10px_35px_rgba(234,179,8,0.3)] flex items-center gap-3.5"
-                  >
-                    <div className="w-10 h-10 rounded-xl bg-yellow-500/20 border border-yellow-400/50 flex items-center justify-center text-yellow-400 shrink-0">
-                      <Award size={22} />
-                    </div>
-                    <div>
-                      <span className="text-[10px] uppercase font-black text-yellow-400 tracking-wider flex items-center gap-1">
-                        <Sparkles size={11} /> Achievement Unlocked
-                      </span>
-                      <h4 className="text-sm font-bold text-white font-outfit">{unlockedAchievement.title}</h4>
-                    </div>
-                    {unlockedAchievement.xp && (
-                      <span className="ml-2 px-2.5 py-1 bg-yellow-400/10 border border-yellow-400/30 text-yellow-300 rounded-lg text-xs font-black">
-                        +{unlockedAchievement.xp} XP
-                      </span>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Offline Queue Sync Toast Banner */}
-              <AnimatePresence>
-                {offlineSyncMsg && !isMiniPlayer && (
-                  <motion.div
-                    key="offline-sync"
-                    initial={{ opacity: 0, y: -40, scale: 0.9 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -40, scale: 0.9 }}
-                    transition={{ type: 'spring', stiffness: 350, damping: 22 }}
-                    className="absolute top-20 left-1/2 -translate-x-1/2 z-[85] bg-emerald-950/95 border border-emerald-500/50 text-emerald-200 px-5 py-2.5 rounded-2xl backdrop-blur-xl shadow-2xl flex items-center gap-2.5 font-bold text-xs"
-                  >
-                    <Trophy size={16} className="text-yellow-400" />
-                    <span>{offlineSyncMsg}</span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Cross-Device Checkpoint Restored Toast Banner */}
-              <AnimatePresence>
-                {resumedCheckpointToast && !isMiniPlayer && (
-                  <motion.div
-                    key="cross-device-resume"
-                    initial={{ opacity: 0, y: -40, scale: 0.9 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -40, scale: 0.9 }}
-                    transition={{ type: 'spring', stiffness: 350, damping: 22 }}
-                    className="absolute top-20 left-1/2 -translate-x-1/2 z-[85] bg-indigo-950/95 border border-indigo-500/50 text-indigo-200 px-5 py-2.5 rounded-2xl backdrop-blur-xl shadow-2xl flex items-center gap-2.5 font-bold text-xs"
-                  >
-                    <Sparkles size={16} className="text-yellow-400 animate-spin" />
-                    <span>📱 Cross-Device Save Checkpoint Restored!</span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Screenshot Toast Notification */}
-              <AnimatePresence>
-                {screenshotToast && (
-                  <motion.div
-                    key="sshot"
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className={`absolute top-6 right-4 z-[70] px-4 py-2 rounded-full text-xs font-bold shadow-2xl flex items-center gap-2 ${
-                      screenshotToast === 'success'
-                        ? 'bg-emerald-600 text-white border border-emerald-400/30'
-                        : screenshotToast === 'postcard'
-                          ? 'bg-[#6366F1] text-white border border-indigo-400/30'
-                          : 'bg-gray-800 text-gray-200 border border-white/10'
-                    }`}
-                  >
-                    <Camera size={13} />
-                    {screenshotToast === 'success' && 'Gameplay snapshot downloaded!'}
-                    {screenshotToast === 'postcard' && 'Gamer card saved to downloads!'}
-                    {screenshotToast === 'hint' && 'Use Windows+Shift+S / Cmd+Shift+4'}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Cloud Save Pill */}
-              <AnimatePresence>
-                {cloudSaveStatus !== 'idle' && !isMiniPlayer && (
-                  <motion.div
-                    key="cloud"
-                    initial={{ opacity: 0, y: -16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -16 }}
-                    transition={{ duration: 0.25 }}
-                    className={`absolute top-4 left-1/2 -translate-x-1/2 z-[60] px-4 py-1.5 rounded-full text-xs font-bold border backdrop-blur-md flex items-center gap-2 shadow-lg pointer-events-none ${
-                      cloudSaveStatus === 'error'
-                        ? 'bg-red-900/80 border-red-500/30 text-red-300'
-                        : cloudSaveStatus === 'saving' || cloudSaveStatus === 'loading'
-                          ? 'bg-blue-900/80 border-blue-500/30 text-blue-200'
-                          : 'bg-emerald-900/80 border-emerald-500/30 text-emerald-200'
-                    }`}
-                  >
-                    {(cloudSaveStatus === 'saving' || cloudSaveStatus === 'loading') && (
-                      <Loader2 size={12} className="animate-spin" />
-                    )}
-                    {cloudSaveStatus === 'saving' && '💾 Saving to cloud...'}
-                    {cloudSaveStatus === 'saved' && '☁️ Cloud Save Synced'}
-                    {cloudSaveStatus === 'loading' && '☁️ Loading Save...'}
-                    {cloudSaveStatus === 'loaded' && '☁️ Save Loaded'}
-                    {cloudSaveStatus === 'error' && '⚠️ Save Error'}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {/* Mobile Portrait Rotation Hint */}
+              <PlayerRotateHint
+                isVisible={playerState === 'playing' && isPortraitMobile && !dismissRotateHint && aspectRatio !== '9:16'}
+                onDismiss={() => setDismissRotateHint(true)}
+              />
 
               {/* Post-Game "Play Next" Continuous Engagement Overlay */}
               {showPlayNext && !isMiniPlayer && (
                 <PlayNextOverlay
                   currentSlug={slug}
-                  category={category}
+                  category={category || 'Arcade'}
                   relatedGames={relatedGames}
                   onDismiss={() => setShowPlayNext(false)}
-                  onPlayAgain={handleRestart}
+                  onPlayAgain={() => {
+                    setPlayerState('playing');
+                    setSessionTime(0);
+                    handleReload();
+                  }}
                 />
               )}
 
-              {/* Keyboard Shortcuts Guide Modal */}
-              <AnimatePresence>
-                {showShortcuts && (
-                  <motion.div
-                    key="shortcuts"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute inset-0 z-[200] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4"
-                    onClick={() => setShowShortcuts(false)}
-                  >
-                    <div
-                      className="bg-[#111228] border border-white/10 rounded-2xl p-6 shadow-2xl max-w-xs w-full"
-                      onClick={e => e.stopPropagation()}
-                    >
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-white font-bold text-sm font-outfit flex items-center gap-2">
-                          <HelpCircle size={16} className="text-[#6366F1]" /> Keyboard Shortcuts
-                        </h3>
-                        <button onClick={() => setShowShortcuts(false)} className="text-white/40 hover:text-white transition-colors">
-                          <X size={16} />
-                        </button>
-                      </div>
-                      <div className="grid grid-cols-1 gap-2">
-                        {SHORTCUTS.map(({ key, label }) => (
-                          <div key={key} className="flex items-center justify-between py-1 border-b border-white/5 last:border-0">
-                            <span className="text-gray-400 text-xs">{label}</span>
-                            <kbd className="px-2.5 py-1 bg-white/10 border border-white/15 rounded-md text-white text-xs font-mono font-bold shadow-sm">
-                              {key}
-                            </kbd>
-                          </div>
-                        ))}
-                      </div>
-                      <p className="text-gray-500 text-[11px] text-center mt-4">Auto-closes in 5s • Press ? to toggle</p>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Mobile Portrait Rotation Hint Banner for Widescreen Games */}
-              <AnimatePresence>
-                {playerState === 'playing' && isPortraitMobile && !dismissRotateHint && aspectRatio !== '9:16' && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className="absolute top-3 inset-x-3 sm:inset-x-6 z-40 bg-slate-950/90 border border-white/20 rounded-xl px-3 py-2 flex items-center justify-between shadow-2xl backdrop-blur-md pointer-events-auto"
-                  >
-                    <div className="flex items-center gap-2 text-xs font-semibold text-white">
-                      <Smartphone className="w-4 h-4 text-indigo-400 rotate-90 animate-pulse shrink-0" />
-                      <span>Rotate device for full cinema widescreen</span>
-                    </div>
-                    <button
-                      onClick={() => setDismissRotateHint(true)}
-                      className="p-1 text-white/60 hover:text-white rounded-lg transition-colors ml-2 shrink-0"
-                      aria-label="Dismiss rotation hint"
-                    >
-                      <X size={14} />
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Feature 2: Ergonomic Multi-Touch Virtual Controls Overlay (D-Pad + 360 Analog Stick + Action Diamond) */}
+              {/* Multi-Touch Virtual Controls Overlay */}
               <AnimatePresence>
                 {showVirtualPad && !isMiniPlayer && (
                   <VirtualControlsOverlay
@@ -1938,777 +1289,121 @@ export default function GamePlayer({
                 )}
               </AnimatePresence>
 
-
-              {/* Floating In-Game HUD (Auto-Hiding in Immersive Modes) */}
+              {/* Floating In-Game HUD in Expanded Mode */}
               {isExpandedMode && (
-                <AnimatePresence>
-                  {showHud && (
-                    <motion.div
-                      initial={{ y: 50, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      exit={{ y: 50, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="absolute bottom-6 left-0 right-0 flex justify-center pointer-events-none z-50 px-4"
-                    >
-                      <div className="bg-black/90 backdrop-blur-xl border border-white/15 rounded-2xl px-5 py-2.5 flex items-center gap-3 sm:gap-5 shadow-2xl pointer-events-auto">
-                        <span className="text-xs font-bold text-white max-w-[120px] sm:max-w-xs truncate font-outfit">
-                          {title}
-                        </span>
-                        {sessionTime > 0 && (
-                          <span className="text-[10px] text-white/50 font-mono hidden sm:inline">
-                            {fmtTime(sessionTime)}
-                          </span>
-                        )}
-
-                        <div className="w-px h-5 bg-white/15" />
-
-                        {/* Pause */}
-                        <button
-                          onClick={togglePause}
-                          className="text-white/80 hover:text-white hover:scale-110 transition-all"
-                          title={playerState === 'paused' ? 'Resume (P)' : 'Pause (P)'}
-                        >
-                          {playerState === 'paused' ? <Play size={17} className="fill-white" /> : <Pause size={17} />}
-                        </button>
-
-                        {/* Reload */}
-                        <button
-                          onClick={handleReload}
-                          className="text-white/80 hover:text-white hover:scale-110 transition-all"
-                          title="Restart (R)"
-                        >
-                          <RotateCcw size={17} className={isReloading ? 'animate-spin text-[#6366F1]' : ''} />
-                        </button>
-
-                        {/* Mute */}
-                        <button
-                          onClick={handleToggleMute}
-                          className="text-white/80 hover:text-white hover:scale-110 transition-all"
-                          title={isMuted ? 'Unmute (M)' : 'Mute (M)'}
-                        >
-                          {isMuted ? <VolumeX size={17} className="text-red-400" /> : <Volume2 size={17} />}
-                        </button>
-
-                        {isTheater && (
-                          <button
-                            onClick={() => setIsTheater(false)}
-                            className="text-[#6366F1] hover:text-white hover:scale-110 transition-all"
-                            title="Exit Theater (T)"
-                          >
-                            <MonitorX size={17} />
-                          </button>
-                        )}
-
-                        {/* Fullscreen */}
-                        <button
-                          onClick={toggleFullscreen}
-                          className="text-white/80 hover:text-white hover:scale-110 transition-all"
-                          title={isFullscreen || isWebFullscreen ? 'Exit Fullscreen (F)' : 'Fullscreen (F)'}
-                        >
-                          {isFullscreen || isWebFullscreen ? <Minimize2 size={17} /> : <Maximize2 size={17} />}
-                        </button>
-
-                        {/* Virtual Gamepad Toggle (Fullscreen / Theater HUD) */}
-                        <button
-                          onClick={() => {
-                            setShowVirtualPad(p => !p);
-                            refocusGame();
-                          }}
-                          className={`hover:scale-110 transition-all ${showVirtualPad ? 'text-[#6366F1]' : 'text-white/80 hover:text-white'}`}
-                          title={showVirtualPad ? 'Hide Virtual Gamepad' : 'Show Virtual Gamepad'}
-                        >
-                          <Gamepad2 size={17} />
-                        </button>
-
-                        <div className="w-px h-5 bg-white/15" />
-
-                        {/* Favorite */}
-                        <button
-                          onClick={handleToggleFavorite}
-                          className={`hover:scale-110 transition-all ${isFavorited ? 'text-red-500' : 'text-white/80 hover:text-white'}`}
-                          title="Favorite"
-                        >
-                          <Heart size={17} className={isFavorited ? 'fill-red-500' : ''} />
-                        </button>
-
-                        {/* Share */}
-                        <button
-                          onClick={handleShare}
-                          className="text-white/80 hover:text-white hover:scale-110 transition-all"
-                          title="Share"
-                        >
-                          {shareToast ? <Check size={17} className="text-emerald-400" /> : <Share2 size={17} />}
-                        </button>
-
-                        {/* Exit button */}
-                        <button
-                          onClick={() => {
-                            if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-                            setIsFullscreen(false);
-                            setIsWebFullscreen(false);
-                            setIsTheater(false);
-                          }}
-                          className="bg-white/10 hover:bg-white/20 text-white rounded-lg p-1.5 transition-colors ml-1"
-                          title="Exit Immersive Mode (Esc)"
-                        >
-                          <X size={15} />
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                <PlayerImmersiveHUD
+                  title={title}
+                  sessionTime={sessionTime}
+                  isPaused={playerState === 'paused'}
+                  isMuted={isMuted}
+                  isReloading={isReloading}
+                  isTheater={isTheater}
+                  isFullscreen={isFullscreen}
+                  isWebFullscreen={isWebFullscreen}
+                  showVirtualPad={showVirtualPad}
+                  isFavorited={isFavorited}
+                  shareToast={shareToast}
+                  showHud={showHud}
+                  onTogglePause={togglePause}
+                  onReload={handleReload}
+                  onToggleMute={handleToggleMute}
+                  onToggleTheater={() => {
+                    setIsTheater(false);
+                    refocusGame();
+                  }}
+                  onToggleFullscreen={toggleFullscreen}
+                  onToggleVirtualPad={() => {
+                    setShowVirtualPad(p => !p);
+                    refocusGame();
+                  }}
+                  onToggleFavorite={handleToggleFavorite}
+                  onShare={handleShare}
+                  onExitImmersive={() => {
+                    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+                    setIsFullscreen(false);
+                    setIsWebFullscreen(false);
+                    setIsTheater(false);
+                  }}
+                />
               )}
             </motion.div>
           )}
 
           {/* 4. GAME OVER STATE */}
           {playerState === 'game_over' && (
-            <motion.div
-              key="game_over"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="absolute inset-0 flex flex-col items-center justify-center bg-black/95 z-30 p-4 md:p-8"
-            >
-              <h2 className="text-3xl md:text-4xl font-black text-white mb-1 font-outfit tracking-wide">Game Over</h2>
-
-              {/* Score display */}
-              {liveScore !== null && liveScore > 0 && (
-                <div className="flex flex-col items-center gap-1 mb-3 px-6 py-2.5 bg-yellow-500/10 border border-yellow-400/25 rounded-2xl">
-                  <div className="flex items-center gap-2">
-                    <Trophy size={20} className="text-yellow-400" />
-                    <span className="text-yellow-300 font-black text-2xl">{liveScore.toLocaleString()}</span>
-                    <span className="text-yellow-400/60 text-xs font-semibold">pts</span>
-                  </div>
-                  {isNewRecord && (
-                    <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
-                      <Flame size={12} /> New Personal Best Record!
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {/* Session Time & Record */}
-              <div className="flex items-center gap-4 mb-5 text-gray-400 text-xs">
-                {sessionTime > 0 && (
-                  <div className="flex items-center gap-1">
-                    <Timer size={13} /> <span>Played: {fmtTime(sessionTime)}</span>
-                  </div>
-                )}
-                {personalBest && (
-                  <div className="flex items-center gap-1 text-amber-400/90 font-semibold">
-                    <Award size={13} /> <span>Record: {personalBest.toLocaleString()} pts</span>
-                  </div>
-                )}
-              </div>
-
-              <p className="text-gray-400 mb-5 text-xs sm:text-sm">
-                Ready for your next run? Pick another challenge or jump back in:
-              </p>
-
-              {/* Dynamic Up Next recommendation grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8 w-full max-w-2xl px-2">
-                {(relatedGames && relatedGames.length > 0 ? relatedGames.slice(0, 4) : []).map((game: any) => (
-                  <Link
-                    key={game.slug}
-                    href={`/games/${game.slug}`}
-                    className="flex flex-col bg-slate-900 border border-white/10 hover:border-[#6366F1] rounded-xl overflow-hidden group transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-                  >
-                    <div className="relative aspect-video w-full overflow-hidden bg-black/40">
-                      {game.image ? (
-                        <img
-                          src={game.image}
-                          alt={game.title}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center font-bold text-xs text-slate-500">
-                          {game.title?.substring(0, 2).toUpperCase()}
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                        <Play size={24} className="text-white fill-white" />
-                      </div>
-                    </div>
-                    <div className="p-2.5">
-                      <span className="text-white font-bold text-xs truncate block group-hover:text-[#6366F1] transition-colors">
-                        {game.title}
-                      </span>
-                      <span className="text-slate-400 text-[10px] block mt-0.5">
-                        {game.category} • ★ {Number(game.rating || 4.8).toFixed(1)}
-                      </span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => {
-                    setPlayerState('playing');
-                    setSessionTime(0);
-                    refocusGame();
-                  }}
-                  className="px-8 py-3 bg-[#6366F1] text-white rounded-xl font-bold hover:bg-[#5457DF] hover:scale-105 active:scale-95 transition-all flex items-center gap-2 shadow-[0_0_25px_rgba(99,102,241,0.5)]"
-                >
-                  <RotateCcw size={18} /> Play Again
-                </button>
-              </div>
-            </motion.div>
+            <PlayerGameOverScreen
+              liveScore={liveScore}
+              isNewRecord={isNewRecord}
+              sessionTime={sessionTime}
+              personalBest={personalBest}
+              relatedGames={relatedGames}
+              onPlayAgain={() => {
+                setPlayerState('playing');
+                setSessionTime(0);
+                refocusGame();
+              }}
+            />
           )}
-
         </AnimatePresence>
       </div>
 
       {/* Docked Pro Control Deck (Standard View) */}
       {!isTheater && !isFullscreen && !isWebFullscreen && (
-        <div className="w-full mt-3 bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/10 rounded-2xl p-3 sm:p-4 shadow-xl flex items-center justify-between gap-3 transition-colors">
-
-          {/* Left: Identity + Timer + Personal Best */}
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            {image && (
-              <img
-                src={image}
-                alt={title}
-                className="w-10 h-10 rounded-xl object-cover shrink-0 border border-gray-200 dark:border-white/10 hidden xs:block shadow-sm"
-              />
-            )}
-            <div className="min-w-0">
-              <h3 className="text-sm font-bold text-gray-900 dark:text-white truncate font-outfit">{title}</h3>
-              <div className="flex items-center gap-2.5 flex-wrap">
-                {category && <span className="text-[11px] font-semibold text-[#6366F1]">{category}</span>}
-                {playerState === 'playing' && sessionTime > 0 && (
-                  <span className="text-[11px] text-gray-400 dark:text-gray-500 font-mono flex items-center gap-1">
-                    <Timer size={10} /> {fmtTime(sessionTime)}
-                  </span>
-                )}
-                {personalBest && (
-                  <span className="text-[11px] text-amber-500/90 font-bold hidden sm:flex items-center gap-1">
-                    <Award size={11} /> {personalBest.toLocaleString()} pts
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Right: Tiered Control Suite */}
-          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-
-            {/* Tier 1: Always Visible Actions */}
-
-            {/* Pause / Resume */}
-            {playerState === 'playing' && (
-              <button
-                onClick={togglePause}
-                className="p-2 min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] justify-center rounded-xl text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all flex items-center gap-1.5 text-xs font-semibold"
-                title="Pause Game (P)"
-                aria-label="Pause Game"
-              >
-                <Pause size={15} />
-                <span className="hidden xl:inline">Pause</span>
-              </button>
-            )}
-
-            {/* Restart */}
-            <button
-              onClick={handleReload}
-              disabled={isReloading}
-              className="p-2 min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] justify-center rounded-xl text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all flex items-center gap-1.5 text-xs font-semibold"
-              title="Restart Game (R)"
-              aria-label="Restart Game"
-            >
-              <RotateCcw size={15} className={isReloading ? 'animate-spin text-[#6366F1]' : ''} />
-              <span className="hidden xl:inline">Restart</span>
-            </button>
-
-            {/* Interactive Volume Slider */}
-            <div className="relative" ref={volumeMenuRef}>
-              <button
-                onClick={handleToggleMute}
-                onMouseEnter={() => setShowVolumeSlider(true)}
-                className="p-2 min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] justify-center rounded-xl text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all flex items-center gap-1.5 text-xs font-semibold"
-                title={isMuted ? 'Unmute Sound (M)' : 'Mute Sound (M)'}
-                aria-label="Toggle Sound"
-              >
-                {isMuted ? <VolumeX size={15} className="text-red-400" /> : <Volume2 size={15} />}
-              </button>
-
-              <AnimatePresence>
-                {showVolumeSlider && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: 5 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: 5 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute bottom-full mb-2 right-0 z-50 bg-white dark:bg-[#1a1b38] border border-gray-200 dark:border-white/10 rounded-xl p-3 shadow-2xl w-36 flex flex-col gap-2"
-                  >
-                    <div className="flex items-center justify-between w-full text-[11px] font-bold text-gray-700 dark:text-gray-300">
-                      <span>Volume</span>
-                      <span>{isMuted ? '0%' : `${volume}%`}</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={isMuted ? 0 : volume}
-                      onChange={e => handleVolumeChange(Number(e.target.value))}
-                      className="w-full accent-[#6366F1] cursor-pointer"
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Fullscreen */}
-            <button
-              onClick={toggleFullscreen}
-              className="p-2 min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] justify-center rounded-xl text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all flex items-center gap-1.5 text-xs font-semibold"
-              title="Fullscreen (F)"
-              aria-label="Fullscreen"
-            >
-              <Maximize2 size={15} />
-              <span className="hidden xl:inline">Fullscreen</span>
-            </button>
-
-            {/* Virtual Gamepad Toggle (Promoted to mobile toolbar for instant thumb access) */}
-            {playerState === 'playing' && (
-              <button
-                onClick={() => {
-                  setShowVirtualPad(p => !p);
-                  refocusGame();
-                }}
-                className={`flex p-2 min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] justify-center rounded-xl transition-all items-center gap-1.5 text-xs font-semibold ${
-                  showVirtualPad
-                    ? 'bg-[#6366F1] text-white shadow-md shadow-[#6366F1]/30'
-                    : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10'
-                }`}
-                title="Virtual Touch Gamepad"
-                aria-label="Toggle Mobile Virtual Gamepad"
-              >
-                <Gamepad2 size={16} />
-              </button>
-            )}
-
-            {/* Aspect Ratio Selector */}
-            <div className="hidden sm:block relative">
-              <button
-                onClick={() => setShowArMenu(p => !p)}
-                className="p-2 rounded-xl text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all flex items-center gap-1.5 text-xs font-semibold"
-                title="Aspect Ratio"
-              >
-                <LayoutTemplate size={15} />
-              </button>
-              <AnimatePresence>
-                {showArMenu && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.92, y: 4 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.92, y: 4 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute bottom-full mb-2 right-0 z-50 bg-white dark:bg-[#1a1b38] border border-gray-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden min-w-[138px]"
-                  >
-                    {(['16:9', '4:3', '9:16', 'auto'] as AspectRatio[]).map(ar => (
-                      <button
-                        key={ar}
-                        onClick={() => {
-                          handleSelectAspectRatio(ar);
-                          setShowArMenu(false);
-                          refocusGame();
-                        }}
-                        className={`w-full text-left px-3 py-2.5 text-xs font-semibold flex items-center gap-2 transition-colors ${
-                          aspectRatio === ar
-                            ? 'bg-[#6366F1] text-white'
-                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5'
-                        }`}
-                      >
-                        {aspectRatio === ar ? <Check size={11} /> : <span className="w-[11px]" />}
-                        <span>{ar === 'auto' ? 'Auto' : ar}</span>
-                        <span className="ml-auto text-[10px] opacity-60">
-                          {ar === '16:9' ? 'Standard' : ar === '4:3' ? 'Retro' : ar === '9:16' ? 'Vertical' : 'Fill'}
-                        </span>
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Theater Mode */}
-            <button
-              onClick={() => {
-                setIsTheater(!isTheater);
-                refocusGame();
-              }}
-              className={`hidden md:flex p-2 rounded-xl transition-all items-center gap-1.5 text-xs font-semibold ${
-                isTheater
-                  ? 'bg-[#6366F1] text-white shadow-md shadow-[#6366F1]/30'
-                  : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10'
-              }`}
-              title="Theater Mode (T)"
-            >
-              <Monitor size={15} />
-            </button>
-
-            <div className="w-px h-5 bg-gray-200 dark:bg-white/10 mx-0.5 hidden sm:block" />
-
-            {/* Tier 3: Pro Tools (Mini-Player Pin, Screenshot, Help) */}
-
-            {/* Mini-Player Pin Button (100% stable, zero crash) */}
-            {(playerState === 'playing' || playerState === 'paused') && (
-              <button
-                onClick={toggleMiniPlayer}
-                className={`hidden md:flex p-2 rounded-xl transition-all ${
-                  isMiniPlayer
-                    ? 'bg-[#6366F1] text-white shadow-md shadow-[#6366F1]/30'
-                    : 'text-gray-700 dark:text-gray-300 hover:text-[#6366F1] bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10'
-                }`}
-                title={isMiniPlayer ? 'Unpin Mini-Player' : 'Pin to Corner (Mini-Player)'}
-              >
-                {isMiniPlayer ? <PinOff size={15} /> : <Pin size={15} />}
-              </button>
-            )}
-
-            {/* Screenshot */}
-            {(playerState === 'playing' || playerState === 'paused') && (
-              <button
-                onClick={handleScreenshot}
-                className="hidden md:flex p-2 rounded-xl text-gray-700 dark:text-gray-300 hover:text-[#6366F1] bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all"
-                title="Save Gameplay Snapshot (Camera)"
-              >
-                <Camera size={15} />
-              </button>
-            )}
-
-            {/* Add to Custom Mixtape */}
-            <button
-              onClick={() => {
-                arcadeAudio.playSelect();
-                setIsMixtapeModalOpen(true);
-              }}
-              className="p-2 rounded-xl text-gray-700 dark:text-gray-300 hover:text-pink-500 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all"
-              title="Add to Custom Mixtape"
-            >
-              <ListPlus size={15} />
-            </button>
-
-            {/* Low-Spec Turbo Mode & Live FPS Monitor */}
-            <div className="hidden sm:flex items-center">
-              <PerformanceToggle showFps={true} />
-            </div>
-
-            {/* Shortcuts Guide */}
-            <button
-              onClick={() => setShowShortcuts(p => !p)}
-              className="hidden md:flex p-2 rounded-xl text-gray-700 dark:text-gray-300 hover:text-[#6366F1] bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all"
-              title="Keyboard Shortcuts (?)"
-            >
-              <HelpCircle size={15} />
-            </button>
-
-            {/* Social & Save Tools (Visible on sm+, in 3-dot menu on mobile) */}
-            <button
-              onClick={handleToggleFavorite}
-              disabled={isPendingFav}
-              className={`hidden sm:flex p-2 rounded-xl transition-all ${
-                isFavorited
-                  ? 'text-red-500 bg-red-50 dark:bg-red-500/10'
-                  : 'text-gray-700 dark:text-gray-300 hover:text-red-500 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10'
-              }`}
-              title={isFavorited ? 'Favorited' : 'Add to Favorites'}
-            >
-              <Heart size={15} className={isFavorited ? 'fill-red-500' : ''} />
-            </button>
-
-            <button
-              onClick={handleShare}
-              className="hidden sm:flex p-2 rounded-xl text-gray-700 dark:text-gray-300 hover:text-[#6366F1] bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all"
-              title="Share Game & Score"
-            >
-              {shareToast ? <Check size={15} className="text-emerald-500" /> : <Share2 size={15} />}
-            </button>
-
-            {/* Cloud Save Button */}
-            <button
-              onClick={handleToolbarCloudSave}
-              disabled={cloudSaveStatus === 'saving' || cloudSaveStatus === 'loading'}
-              className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                cloudSaveStatus === 'saved'
-                  ? 'text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-500/20'
-                  : cloudSaveStatus === 'saving'
-                  ? 'text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-500/20'
-                  : 'text-gray-700 dark:text-gray-300 hover:text-[#6366F1] bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10'
-              }`}
-              title={cloudSaveStatus === 'saved' ? 'Cloud Save Synced!' : 'Save Progress to Cloud'}
-            >
-              <Cloud size={15} className={cloudSaveStatus === 'saving' ? 'animate-spin text-[#6366F1]' : ''} />
-              <span className="hidden md:inline">
-                {cloudSaveStatus === 'saving' ? 'Saving...' : cloudSaveStatus === 'saved' ? 'Synced' : 'Cloud Save'}
-              </span>
-            </button>
-
-            {/* Viral Challenge Button */}
-            <button
-              onClick={() => {
-                arcadeAudio.playBlip();
-                setShowChallengeModal(true);
-              }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-[#6366F1] via-[#8B5CF6] to-[#EC4899] hover:opacity-95 active:scale-95 transition-all cursor-pointer shrink-0 ${
-                hasBeatenChallenge
-                  ? 'ring-2 ring-emerald-400 shadow-lg shadow-emerald-500/50 animate-pulse'
-                  : isNewRecord
-                  ? 'ring-2 ring-pink-400 shadow-lg shadow-pink-500/50 animate-pulse'
-                  : 'shadow-md shadow-pink-500/20'
-              }`}
-              title="Challenge a Friend to beat your score!"
-            >
-              <Swords size={14} className="text-yellow-300" />
-              <span>{hasBeatenChallenge ? '⚔️ Counter-Challenge!' : isNewRecord ? '⚔️ Challenge Now!' : 'Challenge'}</span>
-            </button>
-
-            {/* Play Next Button */}
-            <button
-              onClick={() => setShowPlayNext(true)}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-gray-700 dark:text-gray-300 hover:text-[#6366F1] bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all cursor-pointer"
-              title="Play Next Game"
-            >
-              <Sparkles size={14} className="text-yellow-400" />
-              <span className="hidden xl:inline">Next Game</span>
-            </button>
-
-            {/* Overflow 3-Dot Menu for Mobile & Extended Tools */}
-            <div className="relative" ref={overflowMenuRef}>
-              <button
-                onClick={() => setShowOverflowMenu(p => !p)}
-                className={`p-2 rounded-xl transition-all ${
-                  showOverflowMenu
-                    ? 'bg-[#6366F1] text-white'
-                    : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10'
-                }`}
-                title="More Options"
-              >
-                <MoreHorizontal size={15} />
-              </button>
-
-              <AnimatePresence>
-                {showOverflowMenu && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.92, y: 4 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.92, y: 4 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute bottom-full mb-2 right-0 z-50 bg-white dark:bg-[#1a1b38] border border-gray-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden min-w-[200px]"
-                  >
-                    {/* Play Next (Mobile) */}
-                    <button
-                      onClick={() => {
-                        setShowPlayNext(true);
-                        setShowOverflowMenu(false);
-                      }}
-                      className="w-full px-4 py-2.5 text-xs font-semibold flex items-center gap-3 text-indigo-400 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors sm:hidden"
-                    >
-                      <Sparkles size={14} className="text-yellow-400" /> Play Next Game
-                    </button>
-
-                    {/* Challenge (Mobile) */}
-                    <button
-                      onClick={() => {
-                        setShowChallengeModal(true);
-                        setShowOverflowMenu(false);
-                      }}
-                      className="w-full px-4 py-2.5 text-xs font-black flex items-center gap-3 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors"
-                    >
-                      <Swords size={14} className="text-rose-500" /> Challenge a Friend
-                    </button>
-
-                    {/* Cloud Save (Mobile) */}
-                    <button
-                      onClick={() => {
-                        handleToolbarCloudSave();
-                        setShowOverflowMenu(false);
-                      }}
-                      className="w-full px-4 py-2.5 text-xs font-semibold flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors sm:hidden"
-                    >
-                      <Cloud size={14} /> Cloud Save Progress
-                    </button>
-
-                    {/* Favorite (Mobile) */}
-                    <button
-                      onClick={() => {
-                        handleToggleFavorite();
-                        setShowOverflowMenu(false);
-                      }}
-                      className="w-full px-4 py-2.5 text-xs font-semibold flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors sm:hidden"
-                    >
-                      <Heart size={14} className={isFavorited ? 'fill-red-500 text-red-500' : ''} /> {isFavorited ? 'Favorited' : 'Add to Favorites'}
-                    </button>
-
-                    {/* Share (Mobile) */}
-                    <button
-                      onClick={() => {
-                        handleShare();
-                        setShowOverflowMenu(false);
-                      }}
-                      className="w-full px-4 py-2.5 text-xs font-semibold flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors sm:hidden"
-                    >
-                      <Share2 size={14} /> Share Game & Score
-                    </button>
-
-                    {/* Aspect Ratio Selector (Direct inline picker for mobile) */}
-                    <div className="px-4 py-2.5 border-b border-gray-100 dark:border-white/5 sm:hidden">
-                      <span className="text-[10px] uppercase font-bold text-gray-400 dark:text-gray-500 block mb-1.5 flex items-center gap-1.5">
-                        <LayoutTemplate size={12} /> Aspect Ratio
-                      </span>
-                      <div className="grid grid-cols-4 gap-1">
-                        {(['16:9', '4:3', '9:16', 'auto'] as AspectRatio[]).map(ar => (
-                          <button
-                            key={ar}
-                            onClick={() => {
-                              handleSelectAspectRatio(ar);
-                              setShowOverflowMenu(false);
-                              refocusGame();
-                            }}
-                            className={`px-1 py-1 rounded-lg text-[10px] font-bold text-center transition-colors ${
-                              aspectRatio === ar
-                                ? 'bg-[#6366F1] text-white shadow-sm'
-                                : 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-200'
-                            }`}
-                          >
-                            {ar}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Gamepad toggle */}
-                    <button
-                      onClick={() => {
-                        setShowVirtualPad(p => !p);
-                        setShowOverflowMenu(false);
-                        refocusGame();
-                      }}
-                      className="w-full px-4 py-2.5 text-xs font-semibold flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors sm:hidden"
-                    >
-                      <Gamepad2 size={14} /> {showVirtualPad ? 'Hide Gamepad' : 'Show Gamepad'}
-                    </button>
-
-                    {/* Theater */}
-                    <button
-                      onClick={() => {
-                        setIsTheater(!isTheater);
-                        setShowOverflowMenu(false);
-                        refocusGame();
-                      }}
-                      className="w-full px-4 py-2.5 text-xs font-semibold flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors md:hidden"
-                    >
-                      <Monitor size={14} /> {isTheater ? 'Exit Theater' : 'Theater Mode'}
-                    </button>
-
-                    {/* Screenshot */}
-                    <button
-                      onClick={() => {
-                        handleScreenshot();
-                        setShowOverflowMenu(false);
-                      }}
-                      className="w-full px-4 py-2.5 text-xs font-semibold flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors md:hidden"
-                    >
-                      <Camera size={14} /> Take Screenshot
-                    </button>
-
-                    {/* Add to Mixtape */}
-                    <button
-                      onClick={() => {
-                        arcadeAudio.playSelect();
-                        setIsMixtapeModalOpen(true);
-                        setShowOverflowMenu(false);
-                      }}
-                      className="w-full px-4 py-2.5 text-xs font-semibold flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors md:hidden"
-                    >
-                      <ListPlus size={14} /> Add to Mixtape
-                    </button>
-
-                    {/* Mini-Player Pin */}
-                    {(playerState === 'playing' || playerState === 'paused') && (
-                      <button
-                        onClick={() => {
-                          toggleMiniPlayer();
-                          setShowOverflowMenu(false);
-                        }}
-                        className="w-full px-4 py-2.5 text-xs font-semibold flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors md:hidden"
-                      >
-                        <Pin size={14} /> {isMiniPlayer ? 'Unpin Player' : 'Pin to Corner (Mini-Player)'}
-                      </button>
-                    )}
-
-                    {/* Shortcuts Guide */}
-                    <button
-                      onClick={() => {
-                        setShowShortcuts(true);
-                        setShowOverflowMenu(false);
-                      }}
-                      className="w-full px-4 py-2.5 text-xs font-semibold flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors md:hidden"
-                    >
-                      <HelpCircle size={14} /> Keyboard Shortcuts
-                    </button>
-
-                    <div className="h-px bg-gray-200 dark:bg-white/10" />
-
-                    {/* Report */}
-                    <button
-                      onClick={() => {
-                        handleReport();
-                        setShowOverflowMenu(false);
-                      }}
-                      className="w-full px-4 py-2.5 text-xs font-semibold flex items-center gap-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
-                    >
-                      <Flag size={14} /> Report Issue
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Cloud Save status pill in Control Deck */}
-            <AnimatePresence>
-              {cloudSaveStatus !== 'idle' && (
-                <motion.div
-                  key="cloud-deck"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  className={`px-2.5 py-1.5 rounded-xl text-[11px] font-bold border flex items-center gap-1.5 ${
-                    cloudSaveStatus === 'error'
-                      ? 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400'
-                      : 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400'
-                  }`}
-                >
-                  {cloudSaveStatus === 'saving' || cloudSaveStatus === 'loading' ? (
-                    <Loader2 size={11} className="animate-spin" />
-                  ) : cloudSaveStatus === 'error' ? (
-                    <CloudOff size={11} />
-                  ) : (
-                    <Cloud size={11} />
-                  )}
-                  <span className="hidden sm:inline">
-                    {cloudSaveStatus === 'saving' && 'Saving...'}
-                    {cloudSaveStatus === 'saved' && 'Synced'}
-                    {cloudSaveStatus === 'loading' && 'Loading...'}
-                    {cloudSaveStatus === 'loaded' && 'Loaded'}
-                    {cloudSaveStatus === 'error' && 'Error'}
-                  </span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
+        <PlayerControlDeck
+          title={title}
+          image={image}
+          category={category}
+          playerState={playerState}
+          sessionTime={sessionTime}
+          personalBest={personalBest}
+          isReloading={isReloading}
+          isMuted={isMuted}
+          volume={volume}
+          showVirtualPad={showVirtualPad}
+          aspectRatio={aspectRatio}
+          isTheater={isTheater}
+          isMiniPlayer={isMiniPlayer}
+          isFavorited={isFavorited}
+          isPendingFav={isPendingFav}
+          shareToast={shareToast}
+          cloudSaveStatus={cloudSaveStatus}
+          hasBeatenChallenge={hasBeatenChallenge}
+          isNewRecord={isNewRecord}
+          onTogglePause={togglePause}
+          onReload={handleReload}
+          onToggleMute={handleToggleMute}
+          onVolumeChange={handleVolumeChange}
+          onToggleFullscreen={toggleFullscreen}
+          onToggleVirtualPad={() => {
+            setShowVirtualPad(p => !p);
+            refocusGame();
+          }}
+          onSelectAspectRatio={handleSelectAspectRatio}
+          onToggleTheater={() => {
+            setIsTheater(!isTheater);
+            refocusGame();
+          }}
+          onToggleMiniPlayer={toggleMiniPlayer}
+          onScreenshot={handleScreenshot}
+          onOpenMixtape={() => {
+            arcadeAudio.playSelect();
+            setIsMixtapeModalOpen(true);
+          }}
+          onOpenShortcuts={() => setShowShortcuts(p => !p)}
+          onToggleFavorite={handleToggleFavorite}
+          onShare={handleShare}
+          onToolbarCloudSave={handleToolbarCloudSave}
+          onOpenChallenge={() => {
+            arcadeAudio.playBlip();
+            setShowChallengeModal(true);
+          }}
+          onPlayNext={() => setShowPlayNext(true)}
+          onReportBug={handleReport}
+        />
       )}
 
       {/* Dedicated In-Player Cloud Save Control Bar */}
-      <CloudSaveBar
-        slug={slug}
-        title={title}
-        iframeRef={iframeRef}
-        className="mt-4"
-      />
+      <CloudSaveBar slug={slug} title={title} iframeRef={iframeRef} className="mt-4" />
 
       {/* High-Score Viral Challenge Modal */}
       <ScoreChallengeModal
@@ -2752,6 +1447,9 @@ export default function GamePlayer({
         gameTitle={title}
       />
 
+      {/* Keyboard Shortcuts Guide Modal */}
+      <PlayerKeyboardGuide isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
+
       {/* Shimmer animation keyframe */}
       <style>{`
         @keyframes shimmer {
@@ -2759,7 +1457,6 @@ export default function GamePlayer({
           100% { background-position: 200% 0; }
         }
       `}</style>
-
     </div>
   );
 }

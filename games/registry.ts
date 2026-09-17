@@ -21,7 +21,7 @@ export interface GameConfig {
   platform?: string;
 }
 
-export const gamesRegistry: Record<string, { config: GameConfig, component: any }> = {
+export const gamesRegistry: Record<string, { config: GameConfig, component?: any }> = {
   "2048": {
     config: {
       "title": "2048",

@@ -110,9 +110,9 @@ export default async function HomePage() {
     ]);
 
     if (exactCount) totalActiveGames = exactCount;
-    if (trendingGames && trendingGames.length > 0) trending = trendingGames;
-    if (newArrivals && newArrivals.length > 0) newGames = newArrivals;
-    if (topRatedGames && topRatedGames.length > 0) topRated = topRatedGames;
+    if (trendingGames && trendingGames.length > 0) trending = trendingGames as any;
+    if (newArrivals && newArrivals.length > 0) newGames = newArrivals as any;
+    if (topRatedGames && topRatedGames.length > 0) topRated = topRatedGames as any;
   } catch (error) {
     console.error('Edge Supabase fetch fallback engaged:', error);
   }

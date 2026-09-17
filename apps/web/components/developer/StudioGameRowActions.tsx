@@ -74,7 +74,7 @@ export default function StudioGameRowActions({ game }: GameRowProps) {
 
     const tags = editForm.tagsString
       .split(',')
-      .map(t => t.trim())
+      .map((t: string) => t.trim())
       .filter(Boolean);
 
     const res = await updateDeveloperGame(game.id, {
