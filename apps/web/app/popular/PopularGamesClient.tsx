@@ -5,6 +5,7 @@ import { Gamepad2, Calendar, Clock, Star, LayoutGrid, List, CheckSquare, Square,
 import Link from 'next/link';
 import Image from 'next/image';
 import GameCard from '@/components/GameCard';
+import Pagination from '@/components/Pagination';
 import { subscribeToNewsletter } from '@/app/newsletter/actions';
 
 // ─── UTILS ────────────────────────────────────────────────
@@ -424,48 +425,13 @@ export default function PopularGamesClient({ initialGames = [] }: PopularGamesCl
             </div>
           )}
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center space-x-2 mt-6">
-              <button 
-                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-                className="w-9 h-9 rounded-lg bg-white dark:bg-[#111221] border border-gray-200 dark:border-white/5 text-gray-600 dark:text-gray-400 flex items-center justify-center transition-all hover:bg-gray-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              
-              {Array.from({ length: totalPages }).map((_, idx) => {
-                const page = idx + 1;
-                if (totalPages > 7 && page > 2 && page < totalPages - 1 && Math.abs(currentPage - page) > 1) {
-                  if (page === 3 || page === totalPages - 2) return <span key={page} className="text-gray-500 px-1">...</span>;
-                  return null;
-                }
-                
-                return (
-                  <button 
-                    key={page}
-                    onClick={() => handlePageChange(page)}
-                    className={`w-9 h-9 rounded-lg text-sm font-bold flex items-center justify-center transition-all border border-gray-200 dark:border-white/5 ${
-                      page === currentPage 
-                        ? 'bg-purple-600 text-white' 
-                        : 'bg-white dark:bg-[#111221] text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                );
-              })}
-              
-              <button 
-                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
-                className="w-9 h-9 rounded-lg bg-white dark:bg-[#111221] border border-gray-200 dark:border-white/5 text-gray-600 dark:text-gray-400 flex items-center justify-center transition-all hover:bg-gray-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          )}
+          {/* Unified Enterprise Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            scrollToTop={500}
+          />
 
         </div>
 

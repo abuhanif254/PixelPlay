@@ -6,6 +6,7 @@ import GameCard from '@/components/GameCard';
 import GameCardSkeleton from '@/components/GameCardSkeleton';
 import EmptyState from '@/components/EmptyState';
 import NewsletterBanner from '@/components/NewsletterBanner';
+import Pagination from '@/components/Pagination';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -174,23 +175,6 @@ export default function AllGamesClient({
     }
     const qs = params.toString();
     return qs ? `${pathname}?${qs}` : pathname;
-  };
-
-  // Generate pagination page numbers
-  const generatePagination = () => {
-    const pages = [];
-    if (totalPages <= 7) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      if (currentPage <= 4) {
-        pages.push(1, 2, 3, 4, 5, '...', totalPages);
-      } else if (currentPage >= totalPages - 3) {
-        pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
-      } else {
-        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
-      }
-    }
-    return pages;
   };
 
   const FiltersContent = (
@@ -426,62 +410,17 @@ export default function AllGamesClient({
           </div>
         )}
 
-        {/* Pagination */}
-        {(!isLoading && totalPages > 1) && (
-          <div className="flex items-center justify-center space-x-1.5 mt-10 mb-6">
-            <Link 
-              href={getPageUrl(Math.max(1, currentPage - 1))}
-              onClick={() => {
-                setCurrentPage(Math.max(1, currentPage - 1));
-                window.scrollTo({ top: 400, behavior: 'smooth' });
-              }}
-              aria-disabled={currentPage === 1}
-              aria-label="Previous Page"
-              className={`w-9 h-9 rounded-lg bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 flex items-center justify-center transition-all ${
-                currentPage === 1 ? 'opacity-50 pointer-events-none text-gray-400 dark:text-gray-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 dark:hover:border-white/20'
-              }`}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Link>
-            
-            {generatePagination().map((page, idx) => (
-              page === '...' ? (
-                <span key={`dots-${idx}`} className="w-9 h-9 flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm">...</span>
-              ) : (
-                <Link 
-                  key={page}
-                  href={getPageUrl(page as number)}
-                  onClick={() => {
-                    setCurrentPage(page as number);
-                    window.scrollTo({ top: 400, behavior: 'smooth' });
-                  }}
-                  className={`w-9 h-9 rounded-lg text-sm font-bold flex items-center justify-center transition-all ${
-                    page === currentPage 
-                      ? 'bg-gradient-to-br from-[#6366F1] to-[#4F46E5] text-white shadow-[0_0_15px_rgba(99,102,241,0.5)] border-none' 
-                      : 'bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 dark:hover:border-white/20'
-                  }`}
-                >
-                  {page}
-                </Link>
-              )
-            ))}
-            
-            <Link 
-              href={getPageUrl(Math.min(totalPages, currentPage + 1))}
-              onClick={() => {
-                setCurrentPage(Math.min(totalPages, currentPage + 1));
-                window.scrollTo({ top: 400, behavior: 'smooth' });
-              }}
-              aria-disabled={currentPage === totalPages}
-              aria-label="Next Page"
-              className={`w-9 h-9 rounded-lg bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 flex items-center justify-center transition-all ${
-                currentPage === totalPages ? 'opacity-50 pointer-events-none text-gray-400 dark:text-gray-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 dark:hover:border-white/20'
-              }`}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Link>
-          </div>
-        )}
+        {/* Unified Enterprise Pagination with Zero-CLS Skeleton Loader */}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          isLoading={isLoading}
+          getPageUrl={getPageUrl}
+          onPageChange={(page) => {
+            setCurrentPage(page);
+          }}
+          scrollToTop={400}
+        />
 
         <NewsletterBanner />
 
