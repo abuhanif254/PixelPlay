@@ -103,9 +103,40 @@ const nextConfig = {
   },
   async redirects() {
     return [
+      // Core Route Aliases & Singular/Plural Normalization
       {
         source: '/search',
         destination: '/games',
+        permanent: true,
+      },
+      {
+        source: '/leaderboards',
+        destination: '/leaderboard',
+        permanent: true,
+      },
+      {
+        source: '/game/:slug',
+        destination: '/games/:slug',
+        permanent: true,
+      },
+      {
+        source: '/game',
+        destination: '/games',
+        permanent: true,
+      },
+      {
+        source: '/play/:slug',
+        destination: '/games/:slug',
+        permanent: true,
+      },
+      {
+        source: '/play',
+        destination: '/games',
+        permanent: true,
+      },
+      {
+        source: '/category',
+        destination: '/categories',
         permanent: true,
       },
       {
@@ -113,6 +144,58 @@ const nextConfig = {
         destination: '/categories/:slug',
         permanent: true,
       },
+      {
+        source: '/category-games/:slug',
+        destination: '/categories/:slug',
+        permanent: true,
+      },
+      {
+        source: '/genres',
+        destination: '/categories',
+        permanent: true,
+      },
+      {
+        source: '/genres/:slug',
+        destination: '/categories/:slug',
+        permanent: true,
+      },
+      {
+        source: '/tag/:tag',
+        destination: '/games/tags/:tag',
+        permanent: true,
+      },
+      {
+        source: '/tags/:tag',
+        destination: '/games/tags/:tag',
+        permanent: true,
+      },
+      {
+        source: '/tags',
+        destination: '/categories',
+        permanent: true,
+      },
+      {
+        source: '/developer',
+        destination: '/developers',
+        permanent: true,
+      },
+      {
+        source: '/tournament',
+        destination: '/tournaments',
+        permanent: true,
+      },
+      {
+        source: '/party-games',
+        destination: '/party',
+        permanent: true,
+      },
+      {
+        source: '/playlist',
+        destination: '/playlists',
+        permanent: true,
+      },
+
+      // Short & Alternate Category Slugs
       {
         source: '/categories/board',
         destination: '/categories/board-games',
@@ -152,7 +235,52 @@ const nextConfig = {
         source: '/categories/adventure',
         destination: '/categories/adventure-games',
         permanent: true,
-      }
+      },
+      {
+        source: '/categories/car',
+        destination: '/categories/car-games',
+        permanent: true,
+      },
+      {
+        source: '/categories/zombie',
+        destination: '/categories/zombie-games',
+        permanent: true,
+      },
+      {
+        source: '/categories/shooting',
+        destination: '/categories/shooting-games',
+        permanent: true,
+      },
+      {
+        source: '/categories/unblocked',
+        destination: '/categories/unblocked-games',
+        permanent: true,
+      },
+      {
+        source: '/categories/multiplayer',
+        destination: '/categories/2-player-games',
+        permanent: true,
+      },
+      {
+        source: '/categories/2-player',
+        destination: '/categories/2-player-games',
+        permanent: true,
+      },
+      {
+        source: '/categories/stickman',
+        destination: '/categories/stickman-games',
+        permanent: true,
+      },
+      {
+        source: '/categories/runner',
+        destination: '/categories/runner-games',
+        permanent: true,
+      },
+      {
+        source: '/categories/escape',
+        destination: '/categories/escape-games',
+        permanent: true,
+      },
     ];
   }
 };

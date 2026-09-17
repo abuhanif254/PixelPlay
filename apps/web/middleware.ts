@@ -4,6 +4,20 @@ import { updateSession } from '@/lib/supabase/middleware'
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
+  // 0. Canonical Path Case Normalization (Big Tech SEO Best Practice)
+  // If the path contains uppercase characters and is not an API/asset route,
+  // 301-redirect to lowercase to eliminate duplicate content & case-sensitive 404s.
+  if (
+    /[A-Z]/.test(pathname) &&
+    !pathname.startsWith('/api') &&
+    !pathname.startsWith('/_next') &&
+    !pathname.startsWith('/embed')
+  ) {
+    const url = request.nextUrl.clone()
+    url.pathname = pathname.toLowerCase()
+    return NextResponse.redirect(url, 301)
+  }
+
   // 1. Ultra Fast-Path: Static SEO, feeds, search APIs, public assets
   if (
     pathname.startsWith('/sitemap') ||

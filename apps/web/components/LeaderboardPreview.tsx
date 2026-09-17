@@ -16,7 +16,7 @@ export default function LeaderboardPreview() {
         <h3 className="font-outfit text-xl font-bold flex items-center">
           <Trophy className="w-5 h-5 text-warning mr-2" /> Global Top Players
         </h3>
-        <Link href="/leaderboards" className="text-sm font-semibold text-primary hover:underline">
+        <Link href="/leaderboard" className="text-sm font-semibold text-primary hover:underline">
           Full Rankings
         </Link>
       </div>

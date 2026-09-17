@@ -1,5 +1,5 @@
 import React, { cache } from 'react';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { gamesRegistry } from '@spielcade/games/registry';
 import { Star, ChevronRight, Heart, Clock, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Gamepad2 } from 'lucide-react';
 import Link from 'next/link';
@@ -25,10 +25,52 @@ import {
 export const runtime = 'edge';
 export const revalidate = 600;
 
-const getCachedGame = cache(async (slug: string) => {
+const COMMON_SLUG_SUFFIXES = ['-game', '-games', '-online', '-free', '-unblocked', '-html5'];
+
+const getLocalGame = (rawSlug: string) => {
+  const slug = (rawSlug || '').trim().toLowerCase();
+  if (!slug) return { game: null, canonicalSlug: '' };
+
+  if (gamesRegistry[slug]) return { game: gamesRegistry[slug], canonicalSlug: slug };
+
+  for (const sfx of COMMON_SLUG_SUFFIXES) {
+    if (slug.endsWith(sfx)) {
+      const stripped = slug.slice(0, -sfx.length);
+      if (gamesRegistry[stripped]) {
+        return { game: gamesRegistry[stripped], canonicalSlug: stripped };
+      }
+    }
+  }
+
+  return { game: null, canonicalSlug: slug };
+};
+
+const getCachedGame = cache(async (rawSlug: string) => {
+  const slug = (rawSlug || '').trim().toLowerCase();
+  if (!slug) return null;
+
   const supabase = createClient();
-  const { data } = await supabase.from('games').select('*').eq('slug', slug).maybeSingle();
-  return data;
+
+  // 1. Direct exact match
+  const { data: exactMatch } = await supabase.from('games').select('*').eq('slug', slug).maybeSingle();
+  if (exactMatch) return exactMatch;
+
+  // 2. Case-insensitive ilike match
+  const { data: ilikeMatch } = await supabase.from('games').select('*').ilike('slug', slug).maybeSingle();
+  if (ilikeMatch) return ilikeMatch;
+
+  // 3. Suffix-stripping match for external referrals (e.g., subway-surfers-game -> subway-surfers)
+  for (const sfx of COMMON_SLUG_SUFFIXES) {
+    if (slug.endsWith(sfx)) {
+      const stripped = slug.slice(0, -sfx.length);
+      if (stripped.length > 2) {
+        const { data: strippedMatch } = await supabase.from('games').select('*').eq('slug', stripped).maybeSingle();
+        if (strippedMatch) return strippedMatch;
+      }
+    }
+  }
+
+  return null;
 });
 
 interface GamePageProps {
@@ -48,8 +90,8 @@ export async function generateMetadata(
   const { slug } = params;
   
   const dbGame = await getCachedGame(slug);
-  
-  const localGame = gamesRegistry[slug];
+  const localResult = getLocalGame(slug);
+  const localGame = localResult.game;
 
   if (!dbGame && !localGame) {
     return {
@@ -156,10 +198,41 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
   const dbGame = await getCachedGame(slug);
   const supabase = createClient();
   
-  const localGame = gamesRegistry[slug];
+  const localResult = getLocalGame(slug);
+  const localGame = localResult.game;
 
   if (!dbGame && !localGame) {
     notFound();
+  }
+
+  // Canonical slug redirection if user accessed via non-canonical variant (e.g. slope-game -> slope)
+  const canonicalSlug = dbGame?.slug || localResult.canonicalSlug;
+  if (canonicalSlug && params.slug !== canonicalSlug) {
+    redirect(`/games/${canonicalSlug}`);
+  }
+
+  // Handle Maintenance state
+  if (dbGame?.status === 'maintenance') {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center p-4">
+        <div className="max-w-md w-full text-center p-8 bg-white dark:bg-[#111228] border border-amber-500/30 rounded-2xl shadow-xl">
+          <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mx-auto mb-4">
+            <Clock size={24} />
+          </div>
+          <h2 className="text-xl font-bold font-outfit text-slate-900 dark:text-white mb-2">Game Maintenance</h2>
+          <p className="text-xs text-slate-600 dark:text-slate-300 mb-6">
+            &quot;{dbGame.title}&quot; is currently undergoing server updates or performance improvements. Check back shortly!
+          </p>
+          <Link
+            href="/games"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition-all"
+          >
+            <Gamepad2 size={16} />
+            <span>Discover Other Games</span>
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   // Fetch real community reviews
