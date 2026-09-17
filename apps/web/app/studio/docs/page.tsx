@@ -119,7 +119,7 @@ export default function StudioDocsPage() {
                 <Code className="text-[#6366F1] shrink-0" size={20} />
                 <div>
                   <p className="font-bold text-gray-900 dark:text-white font-mono text-sm">Spielcade.unlockAchievement(key: string)</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Future feature: unlocks a specific platform achievement for the user.</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Unlocks a specific platform achievement for the active player.</p>
                 </div>
               </div>
             </div>
@@ -127,6 +127,171 @@ export default function StudioDocsPage() {
 
         </div>
       </div>
+
+      {/* Developer REST API v1 Reference Card */}
+      <div className="bg-white dark:bg-[#111228] rounded-2xl border border-gray-200 dark:border-white/5 shadow-xl overflow-hidden">
+        <div className="p-6 border-b border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-black/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-bold font-outfit text-gray-900 dark:text-white flex items-center gap-2">
+              <Terminal size={20} className="text-emerald-500" />
+              Developer REST API v1 (Server-to-Server)
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Direct REST endpoints for Unity, Godot, Unreal, Construct 3, and dedicated game servers.
+            </p>
+          </div>
+          <a
+            href="/studio/keys"
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-colors shrink-0 flex items-center gap-1.5"
+          >
+            Manage Master Key &rarr;
+          </a>
+        </div>
+
+        <div className="p-6 flex flex-col gap-8">
+          {/* Authentication */}
+          <section>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Authentication</h3>
+            <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-4">
+              All REST API endpoints require your Master API Key passed as a Bearer token or custom header:
+            </p>
+            <div className="bg-gray-900 rounded-xl p-4 overflow-x-auto border border-gray-800 font-mono text-sm text-emerald-400">
+              <code>Authorization: Bearer sp_live_YOUR_64_CHAR_KEY</code>
+              <div className="text-gray-400 mt-1">or</div>
+              <code>x-api-key: sp_live_YOUR_64_CHAR_KEY</code>
+            </div>
+          </section>
+
+          {/* Endpoints */}
+          <section className="flex flex-col gap-6">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">API Endpoints</h3>
+
+            {/* 1. GET /api/v1/developer/me */}
+            <div className="border border-gray-200 dark:border-white/5 rounded-xl p-5 bg-gray-50/50 dark:bg-black/20">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="px-2 py-0.5 rounded text-xs font-bold uppercase bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 font-mono">
+                  GET
+                </span>
+                <code className="text-sm font-mono font-bold text-gray-900 dark:text-white">
+                  /api/v1/developer/me
+                </code>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                Returns developer profile, payout status, published game catalog summary, and key metadata.
+              </p>
+              <div className="bg-gray-900 rounded-lg p-3 text-xs font-mono text-gray-300 overflow-x-auto">
+                <span className="text-gray-500">curl -H &quot;Authorization: Bearer sp_live_...&quot; \</span><br />
+                <span>  https://spielcade.com/api/v1/developer/me</span>
+              </div>
+            </div>
+
+            {/* 2. GET /api/v1/developer/games */}
+            <div className="border border-gray-200 dark:border-white/5 rounded-xl p-5 bg-gray-50/50 dark:bg-black/20">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="px-2 py-0.5 rounded text-xs font-bold uppercase bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 font-mono">
+                  GET
+                </span>
+                <code className="text-sm font-mono font-bold text-gray-900 dark:text-white">
+                  /api/v1/developer/games
+                </code>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                Retrieves all games owned by your account with live play counts, estimated ad impressions, and lifetime 70% rev-share cut.
+              </p>
+              <div className="bg-gray-900 rounded-lg p-3 text-xs font-mono text-gray-300 overflow-x-auto">
+                <span className="text-gray-500">curl -H &quot;Authorization: Bearer sp_live_...&quot; \</span><br />
+                <span>  https://spielcade.com/api/v1/developer/games</span>
+              </div>
+            </div>
+
+            {/* 3. POST /api/v1/developer/games/:slug/scores */}
+            <div className="border border-gray-200 dark:border-white/5 rounded-xl p-5 bg-gray-50/50 dark:bg-black/20">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="px-2 py-0.5 rounded text-xs font-bold uppercase bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-mono">
+                  POST
+                </span>
+                <code className="text-sm font-mono font-bold text-gray-900 dark:text-white">
+                  /api/v1/developer/games/:slug/scores
+                </code>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                Server-authoritative score submission. Perfect for backend game servers, Unity builds, or protected game loops.
+              </p>
+              <div className="bg-gray-900 rounded-lg p-3 text-xs font-mono text-gray-300 overflow-x-auto mb-3">
+                <span className="text-gray-500">curl -X POST https://spielcade.com/api/v1/developer/games/neon-blaster/scores \</span><br />
+                <span className="text-gray-500">  -H &quot;Authorization: Bearer sp_live_...&quot; \</span><br />
+                <span className="text-gray-500">  -H &quot;Content-Type: application/json&quot; \</span><br />
+                <span>  -d &apos;{JSON.stringify({ score: 14500, username: "SpeedyPlayer", metadata: { stage: 4, combo: 18 } })}&apos;</span>
+              </div>
+              <div className="text-xs text-gray-500">
+                <strong>Payload:</strong> <code>score</code> (integer, 0 to 10,000,000), optional <code>username</code> or <code>user_id</code>, optional <code>metadata</code> object.
+              </div>
+            </div>
+
+            {/* 4. GET /api/v1/developer/revenue */}
+            <div className="border border-gray-200 dark:border-white/5 rounded-xl p-5 bg-gray-50/50 dark:bg-black/20">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="px-2 py-0.5 rounded text-xs font-bold uppercase bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 font-mono">
+                  GET
+                </span>
+                <code className="text-sm font-mono font-bold text-gray-900 dark:text-white">
+                  /api/v1/developer/revenue?days=30
+                </code>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                Fetches your financial ledger including settled daily records, real-time pending accruals, and impressions breakdown.
+              </p>
+              <div className="bg-gray-900 rounded-lg p-3 text-xs font-mono text-gray-300 overflow-x-auto">
+                <span className="text-gray-500">curl -H &quot;Authorization: Bearer sp_live_...&quot; \</span><br />
+                <span>  https://spielcade.com/api/v1/developer/revenue?days=30</span>
+              </div>
+            </div>
+          </section>
+
+          {/* Unity C# Integration Example */}
+          <section>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Unity C# Integration Example</h3>
+            <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-3">
+              Submit scores directly from Unity games using <code>UnityWebRequest</code>:
+            </p>
+            <div className="bg-gray-900 rounded-xl p-4 overflow-x-auto border border-gray-800">
+              <pre className="text-xs font-mono text-blue-300 leading-relaxed">
+                <code>{`using System.Collections;
+using System.Text;
+using UnityEngine;
+using UnityEngine.Networking;
+
+public class SpielcadeServerApi : MonoBehaviour {
+    private const string ApiKey = "sp_live_YOUR_KEY_HERE";
+    private const string GameSlug = "your-game-slug";
+
+    public IEnumerator SubmitScore(int score, string playerName) {
+        string url = $"https://spielcade.com/api/v1/developer/games/{GameSlug}/scores";
+        string json = $"{{\\"score\\": {score}, \\"username\\": \\"{playerName}\\"}}";
+
+        using (UnityWebRequest req = new UnityWebRequest(url, "POST")) {
+            byte[] bodyRaw = Encoding.UTF8.GetBytes(json);
+            req.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            req.downloadHandler = new DownloadHandlerBuffer();
+            req.SetRequestHeader("Content-Type", "application/json");
+            req.SetRequestHeader("Authorization", "Bearer " + ApiKey);
+
+            yield return req.SendWebRequest();
+
+            if (req.result == UnityWebRequest.Result.Success) {
+                Debug.Log("Score submitted to Spielcade: " + req.downloadHandler.text);
+            } else {
+                Debug.LogError("Error submitting score: " + req.error);
+            }
+        }
+    }
+}`}</code>
+              </pre>
+            </div>
+          </section>
+        </div>
+      </div>
     </div>
   );
 }
+

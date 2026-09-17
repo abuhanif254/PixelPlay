@@ -91,8 +91,9 @@ export default function KeysClient({ keys }: { keys: any[] }) {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50/50 dark:bg-black/20 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                <th className="px-6 py-4">Key Hash</th>
+                <th className="px-6 py-4">Key / Identifier</th>
                 <th className="px-6 py-4">Created At</th>
+                <th className="px-6 py-4">Last Used</th>
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
@@ -101,14 +102,29 @@ export default function KeysClient({ keys }: { keys: any[] }) {
                 <tr key={k.id} className="hover:bg-gray-50/50 dark:hover:bg-white/5 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <Key className="text-yellow-500" size={18} />
-                      <code className="text-sm font-mono text-gray-800 dark:text-gray-300 bg-gray-100 dark:bg-white/10 px-2 py-1 rounded">
-                        sp_live_...{k.key_hash.substring(0, 8)}
-                      </code>
+                      <Key className="text-yellow-500 shrink-0" size={18} />
+                      <div>
+                        <p className="text-xs font-bold text-gray-900 dark:text-white">
+                          {k.name || 'Master API Key'}
+                        </p>
+                        <code className="text-xs font-mono text-gray-800 dark:text-gray-300 bg-gray-100 dark:bg-white/10 px-1.5 py-0.5 rounded">
+                          sp_live_...{k.key_hash.substring(0, 8)}
+                        </code>
+                      </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                  <td className="px-6 py-4 text-xs text-gray-500 dark:text-gray-400">
                     {new Date(k.created_at).toLocaleDateString()}
+                  </td>
+                  <td className="px-6 py-4 text-xs">
+                    {k.last_used_at ? (
+                      <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                        {new Date(k.last_used_at).toLocaleDateString()}{' '}
+                        {new Date(k.last_used_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 dark:text-gray-500 italic">Never</span>
+                    )}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button
@@ -130,7 +146,7 @@ export default function KeysClient({ keys }: { keys: any[] }) {
           <Key className="mx-auto text-gray-400 mb-3" size={32} />
           <h3 className="text-gray-900 dark:text-white font-bold mb-2">No API Key</h3>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            You don't have an active Master Key. Generate one to use the Spielcade SDK.
+            You don't have an active Master Key. Generate one to authenticate with the Spielcade SDK and Developer REST API.
           </p>
           <button
             onClick={handleGenerate}
@@ -142,13 +158,17 @@ export default function KeysClient({ keys }: { keys: any[] }) {
         </div>
       )}
 
-      {hasKey && (
-        <div className="mt-4">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            You can only have 1 Master Key at a time. To generate a new one, you must revoke the current one.
-          </p>
-        </div>
-      )}
+      <div className="p-4 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 rounded-xl text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <p className="text-indigo-900 dark:text-indigo-200">
+          <strong>Authenticate REST Requests:</strong> Pass your key in HTTP headers: <code>Authorization: Bearer sp_live_...</code> or <code>x-api-key: sp_live_...</code>
+        </p>
+        <a
+          href="/studio/docs"
+          className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline shrink-0"
+        >
+          View API Docs &rarr;
+        </a>
+      </div>
     </div>
   );
 }
