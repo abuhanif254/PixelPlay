@@ -6,10 +6,24 @@
   "id": "/",
   "scope": "/",
   "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui",
+    "browser"
+  ],
   "background_color": "#05050F",
   "theme_color": "#6366F1",
   "orientation": "any",
-  "categories": ["games", "entertainment"],
+  "lang": "en-US",
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "categories": [
+    "games",
+    "entertainment",
+    "arcade",
+    "puzzle"
+  ],
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
@@ -22,6 +36,73 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Neon Snake (Offline Ready)",
+      "short_name": "Snake",
+      "description": "Play Neon Snake with glowing trails and instant controls",
+      "url": "/games/snake",
+      "icons": [
+        {
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "2048 Classic (Offline Ready)",
+      "short_name": "2048",
+      "description": "Play 2048 Classic tile merger math puzzle",
+      "url": "/games/2048",
+      "icons": [
+        {
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Neon Flyer (Offline Ready)",
+      "short_name": "Flyer",
+      "description": "Play Neon Flyer tap-to-fly obstacle runner",
+      "url": "/games/flappy-bird",
+      "icons": [
+        {
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Offline Games Hub",
+      "short_name": "Offline",
+      "description": "Browse and launch offline-ready games without internet",
+      "url": "/offline",
+      "icons": [
+        {
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Global Leaderboards",
+      "short_name": "Leaderboard",
+      "description": "View top scoring players and daily arcade rankings",
+      "url": "/leaderboard",
+      "icons": [
+        {
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }

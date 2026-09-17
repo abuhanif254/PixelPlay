@@ -171,6 +171,50 @@ class ArcadeAudioEngine {
       });
     } catch {}
   }
+
+  // Standard UI selection tap
+  public playSelect(): void {
+    this.playBlip();
+  }
+
+  // Game launch / Action start
+  public playStart(): void {
+    this.playCoin();
+  }
+
+  // Achievement unlock chime
+  public playAchievement(): void {
+    this.playLevelUp();
+  }
+
+  // Countdown tick
+  public playCountdownTick(): void {
+    this.playBlip();
+  }
+
+  // Game over descending tone
+  public playGameOver(): void {
+    if (this.muted) return;
+    const ctx = this.initContext();
+    if (!ctx) return;
+    try {
+      const now = ctx.currentTime;
+      const notes = [440, 370, 311, 261.63];
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        const start = now + idx * 0.1;
+        osc.frequency.setValueAtTime(freq, start);
+        gain.gain.setValueAtTime(0.1, start);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.15);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(start);
+        osc.stop(start + 0.15);
+      });
+    } catch {}
+  }
 }
 
 export const arcadeAudio = new ArcadeAudioEngine();
