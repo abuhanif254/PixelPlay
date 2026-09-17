@@ -46,7 +46,10 @@ export async function fetchFeedPreview(
       rawGames = await fetchGameDistributionFeed({
         collection: options?.category
       });
-    } else if (provider === 'custom' && options?.customUrl) {
+    } else if (provider === 'custom') {
+      if (!options?.customUrl) {
+        return { success: false, error: 'Custom Feed URL is required.' };
+      }
       rawGames = await fetchCustomJsonFeed(options.customUrl);
     }
 

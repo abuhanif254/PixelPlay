@@ -1,3 +1,5 @@
+import { validateSafeFeedUrl } from './ssrf-validator';
+
 export interface RawGameFeedItem {
   id?: string;
   title: string;
@@ -117,22 +119,79 @@ export async function fetchGameDistributionFeed(options?: {
 }
 
 /**
- * Fetch games from Custom Feed URL
+ * Fetch games from Custom Feed URL with comprehensive SSRF protection,
+ * strict redirect rejection, request timeout, and payload size capping.
  */
 export async function fetchCustomJsonFeed(feedUrl: string): Promise<RawGameFeedItem[]> {
+  // Gate: Pre-flight SSRF Validation
+  const validation = validateSafeFeedUrl(feedUrl);
+  if (!validation.safe) {
+    console.warn(`[SSRF Security] Blocked outbound request to: "${feedUrl}". Reason: ${validation.error}`);
+    throw new Error(`SSRF Protection Rejection: ${validation.error}`);
+  }
+
   try {
+    const timeoutSignal = AbortSignal.timeout(10000); // 10-second timeout
+
     const response = await fetch(feedUrl, {
+      signal: timeoutSignal,
+      redirect: 'error', // Reject HTTP redirects to prevent SSRF pivot attacks
       headers: {
         'User-Agent': 'Spielcade-Feed-Engine/1.0',
-        'Accept': 'application/json'
+        'Accept': 'application/json, text/plain, */*'
       }
     });
 
     if (!response.ok) {
-      throw new Error(`Custom Feed error: ${response.status}`);
+      throw new Error(`Custom Feed server responded with error status: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const contentType = response.headers.get('content-type') || '';
+    if (
+      contentType &&
+      !contentType.includes('json') &&
+      !contentType.includes('text') &&
+      !contentType.includes('octet-stream')
+    ) {
+      throw new Error(`Invalid feed Content-Type "${contentType}". Expected JSON payload.`);
+    }
+
+    // Enforce 5 MB maximum payload cap via streaming reader to prevent memory exhaustion
+    const MAX_BYTES = 5 * 1024 * 1024;
+    let receivedBytes = 0;
+    const chunks: Uint8Array[] = [];
+
+    if (response.body) {
+      const reader = response.body.getReader();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (value) {
+          receivedBytes += value.byteLength;
+          if (receivedBytes > MAX_BYTES) {
+            await reader.cancel();
+            throw new Error('Custom feed payload exceeded maximum permitted size (5 MB).');
+          }
+          chunks.push(value);
+        }
+      }
+    }
+
+    const fullBuffer = new Uint8Array(receivedBytes);
+    let offset = 0;
+    for (const chunk of chunks) {
+      fullBuffer.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+
+    const text = new TextDecoder().decode(fullBuffer);
+    let data: any;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      throw new Error('Failed to parse custom feed payload as valid JSON.');
+    }
+
     const rawList = Array.isArray(data) ? data : data.games || data.items || [];
 
     return rawList.map((item: any) => ({
@@ -149,8 +208,8 @@ export async function fetchCustomJsonFeed(feedUrl: string): Promise<RawGameFeedI
       rating: parseFloat(item.rating) || 4.7,
       plays: parseInt(item.plays, 10) || 10000
     }));
-  } catch (error) {
-    console.error('Error fetching Custom JSON feed:', error);
+  } catch (error: any) {
+    console.error('Error fetching Custom JSON feed:', error?.message || error);
     throw error;
   }
 }
