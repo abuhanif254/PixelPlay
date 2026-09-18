@@ -22,6 +22,7 @@ export async function middleware(request: NextRequest) {
   if (
     pathname.startsWith('/sitemap') ||
     pathname === '/robots.txt' ||
+    pathname === '/ads.txt' ||
     pathname === '/feed.xml' ||
     pathname.startsWith('/api/search') ||
     pathname.startsWith('/api/og') ||

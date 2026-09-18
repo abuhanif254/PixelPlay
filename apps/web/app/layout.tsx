@@ -72,7 +72,10 @@ export const metadata: Metadata = {
   },
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || 'G-SPIELCADE-VERIFICATION',
-  }
+  },
+  other: {
+    'google-adsense-account': 'ca-pub-9824094207004107',
+  },
 };
 
 const jsonLd = {

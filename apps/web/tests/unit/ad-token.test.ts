@@ -140,4 +140,24 @@ describe('Anti-Cheat Ad Impression Token Engine (RFC-AD-001)', () => {
       expect((await verifyImpressionToken(undefined as any)).valid).toBe(false);
     });
   });
+
+  describe('3. AdSense Ownership Verification & ads.txt Compliance (IAB Standards)', () => {
+    it('should contain the verified Google AdSense publisher DIRECT entry in public/ads.txt', async () => {
+      const fs = await import('fs');
+      const path = await import('path');
+      const adsTxtPath = path.resolve(process.cwd(), 'public/ads.txt');
+      expect(fs.existsSync(adsTxtPath)).toBe(true);
+
+      const content = fs.readFileSync(adsTxtPath, 'utf-8');
+      const requiredLine = 'google.com, pub-9824094207004107, DIRECT, f08c47fec0942fa0';
+
+      expect(content).toContain(requiredLine);
+
+      // Verify it appears in the primary publisher section
+      const lines = content.split('\n').map((l) => l.trim());
+      const pubIndex = lines.indexOf(requiredLine);
+      expect(pubIndex).toBeGreaterThanOrEqual(0);
+      expect(pubIndex).toBeLessThan(10); // Guaranteed in the top 10 lines
+    });
+  });
 });
