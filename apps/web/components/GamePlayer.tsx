@@ -170,6 +170,8 @@ export default function GamePlayer({
   const [resumedCheckpointToast, setResumedCheckpointToast] = useState(false);
   const [isPointerLocked, setIsPointerLocked] = useState(false);
   const [isWebGLContextLost, setIsWebGLContextLost] = useState(false);
+  const [showControlsPill, setShowControlsPill] = useState(false);
+  const controlsPillTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Speculative pre-warming of iframe CDN connections on component mount
   useEffect(() => {
@@ -217,17 +219,23 @@ export default function GamePlayer({
     };
   }, [playerState]);
 
-  // Check stored virtual gamepad preference (touch devices only)
+  // Check stored virtual gamepad preference (touch devices & local games only)
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
+      if (sourceUrl) {
+        // External cross-origin games cannot receive synthetic DOM events due to browser security.
+        setShowVirtualPad(false);
+        localStorage.removeItem('spielcade_virtual_pad_enabled');
+        return;
+      }
       const isTouch = 'ontouchstart' in window || (navigator && navigator.maxTouchPoints > 0);
       const storedPad = localStorage.getItem('spielcade_virtual_pad_enabled');
       if (storedPad === 'true' && isTouch) {
         setShowVirtualPad(true);
       }
     } catch {}
-  }, []);
+  }, [sourceUrl]);
 
   // Mobile portrait orientation detector
   useEffect(() => {
@@ -459,6 +467,13 @@ export default function GamePlayer({
         })
       );
     } catch {}
+
+    // Show temporary driving/movement controls pill on desktop external games
+    if (sourceUrl) {
+      setShowControlsPill(true);
+      if (controlsPillTimerRef.current) clearTimeout(controlsPillTimerRef.current);
+      controlsPillTimerRef.current = setTimeout(() => setShowControlsPill(false), 4500);
+    }
 
     // Auto-focus the game iframe immediately
     setTimeout(() => {
@@ -1319,14 +1334,43 @@ export default function GamePlayer({
                 />
               )}
 
-              {/* Multi-Touch Virtual Controls Overlay */}
+              {/* Multi-Touch Virtual Controls Overlay (Local Same-Origin Games Only) */}
               <AnimatePresence>
-                {showVirtualPad && !isMiniPlayer && (
+                {showVirtualPad && !isMiniPlayer && !sourceUrl && (
                   <VirtualControlsOverlay
                     onClose={() => setShowVirtualPad(false)}
                     refocusGame={refocusGame}
-                    isExternalGame={Boolean(sourceUrl)}
+                    isExternalGame={false}
                   />
+                )}
+              </AnimatePresence>
+
+              {/* Dynamic Driving & Movement Keyboard Guidance Pill for External Games */}
+              <AnimatePresence>
+                {playerState === 'playing' && showControlsPill && Boolean(sourceUrl) && !isMiniPlayer && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 14, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 14, scale: 0.95 }}
+                    transition={{ duration: 0.25 }}
+                    className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 bg-black/85 backdrop-blur-md border border-white/20 px-4 py-2 rounded-full shadow-2xl flex items-center gap-2.5 text-xs pointer-events-none text-white font-medium"
+                  >
+                    <span className="flex items-center gap-1 font-mono font-bold">
+                      <kbd className="px-1.5 py-0.5 bg-white/15 border border-white/25 rounded text-[11px]">W</kbd>
+                      <kbd className="px-1.5 py-0.5 bg-white/15 border border-white/25 rounded text-[11px]">A</kbd>
+                      <kbd className="px-1.5 py-0.5 bg-white/15 border border-white/25 rounded text-[11px]">S</kbd>
+                      <kbd className="px-1.5 py-0.5 bg-white/15 border border-white/25 rounded text-[11px]">D</kbd>
+                    </span>
+                    <span className="text-gray-400 text-[11px]">or</span>
+                    <span className="flex items-center gap-1 font-mono font-bold">
+                      <kbd className="px-1.5 py-0.5 bg-white/15 border border-white/25 rounded text-[11px]">↑</kbd>
+                      <kbd className="px-1.5 py-0.5 bg-white/15 border border-white/25 rounded text-[11px]">←</kbd>
+                      <kbd className="px-1.5 py-0.5 bg-white/15 border border-white/25 rounded text-[11px]">↓</kbd>
+                      <kbd className="px-1.5 py-0.5 bg-white/15 border border-white/25 rounded text-[11px]">→</kbd>
+                    </span>
+                    <span className="w-1 h-1 rounded-full bg-white/30" />
+                    <span className="text-emerald-400 font-bold text-[11px]">Drive</span>
+                  </motion.div>
                 )}
               </AnimatePresence>
 
@@ -1354,7 +1398,11 @@ export default function GamePlayer({
                   }}
                   onToggleFullscreen={toggleFullscreen}
                   onToggleVirtualPad={() => {
-                    setShowVirtualPad(p => !p);
+                    if (sourceUrl) {
+                      setShowShortcuts(true);
+                    } else {
+                      setShowVirtualPad(p => !p);
+                    }
                     refocusGame();
                   }}
                   onToggleFavorite={handleToggleFavorite}
@@ -1401,6 +1449,7 @@ export default function GamePlayer({
           isMuted={isMuted}
           volume={volume}
           showVirtualPad={showVirtualPad}
+          isExternalGame={Boolean(sourceUrl)}
           aspectRatio={aspectRatio}
           isTheater={isTheater}
           isMiniPlayer={isMiniPlayer}
@@ -1416,7 +1465,11 @@ export default function GamePlayer({
           onVolumeChange={handleVolumeChange}
           onToggleFullscreen={toggleFullscreen}
           onToggleVirtualPad={() => {
-            setShowVirtualPad(p => !p);
+            if (sourceUrl) {
+              setShowShortcuts(true);
+            } else {
+              setShowVirtualPad(p => !p);
+            }
             refocusGame();
           }}
           onSelectAspectRatio={handleSelectAspectRatio}

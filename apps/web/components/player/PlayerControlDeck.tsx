@@ -43,6 +43,7 @@ export interface PlayerControlDeckProps {
   isMuted: boolean;
   volume: number;
   showVirtualPad: boolean;
+  isExternalGame?: boolean;
   aspectRatio: AspectRatio;
   isTheater: boolean;
   isMiniPlayer: boolean;
@@ -83,6 +84,7 @@ export default function PlayerControlDeck({
   isMuted,
   volume,
   showVirtualPad,
+  isExternalGame = false,
   aspectRatio,
   isTheater,
   isMiniPlayer,
@@ -216,8 +218,8 @@ export default function PlayerControlDeck({
           <span className="hidden lg:inline text-[11px]">Controls</span>
         </button>
 
-        {/* 6. Virtual Gamepad Toggle (Promoted on touch devices) */}
-        {playerState === 'playing' && (
+        {/* 6. Virtual Gamepad Toggle (Promoted on touch devices for local games) */}
+        {playerState === 'playing' && !isExternalGame && (
           <button
             onClick={onToggleVirtualPad}
             className={`flex p-2 min-w-[40px] min-h-[40px] sm:min-w-[36px] sm:min-h-[36px] justify-center rounded-xl transition-all items-center gap-1.5 text-xs font-semibold cursor-pointer sm:hidden ${
@@ -339,17 +341,30 @@ export default function PlayerControlDeck({
                   <span>{cloudSaveStatus === 'saved' ? 'Cloud Synced' : 'Cloud Save Checkpoint'}</span>
                 </button>
 
-                {/* Virtual Touch Gamepad */}
-                <button
-                  onClick={() => {
-                    onToggleVirtualPad();
-                    setShowProTools(false);
-                  }}
-                  className="w-full px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors text-left cursor-pointer"
-                >
-                  <Gamepad2 size={15} className={showVirtualPad ? 'text-[#6366F1]' : ''} />
-                  <span>{showVirtualPad ? 'Hide Virtual Touch Gamepad' : 'Show Virtual Touch Gamepad'}</span>
-                </button>
+                {/* Virtual Touch Gamepad (Local Games) or Controls & Gamepad Guide (External Games) */}
+                {!isExternalGame ? (
+                  <button
+                    onClick={() => {
+                      onToggleVirtualPad();
+                      setShowProTools(false);
+                    }}
+                    className="w-full px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors text-left cursor-pointer"
+                  >
+                    <Gamepad2 size={15} className={showVirtualPad ? 'text-[#6366F1]' : ''} />
+                    <span>{showVirtualPad ? 'Hide Touch Screen Gamepad' : 'Show Touch Screen Gamepad'}</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      onOpenShortcuts();
+                      setShowProTools(false);
+                    }}
+                    className="w-full px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors text-left cursor-pointer"
+                  >
+                    <Gamepad2 size={15} className="text-[#6366F1]" />
+                    <span>Game Controls & Gamepad Guide</span>
+                  </button>
+                )}
 
                 {/* Screenshot & Gamer Card Studio */}
                 {(playerState === 'playing' || playerState === 'paused') && (
