@@ -51,7 +51,7 @@ export default function VirtualControlsOverlay({
   const [stickMode, setStickMode] = useState<StickMode>('dpad');
   const [opacity, setOpacity] = useState<OpacityLevel>('medium');
   const [isMinimized, setIsMinimized] = useState(false);
-  const [directTouchMode, setDirectTouchMode] = useState(false);
+  const [directTouchMode, setDirectTouchMode] = useState(Boolean(isExternalGame));
 
   // Active pressed buttons state for visual feedback
   const [activeButtons, setActiveButtons] = useState<Record<string, boolean>>({});

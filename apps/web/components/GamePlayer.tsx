@@ -12,7 +12,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRecentGames } from '@/hooks/useRecentGames';
 import { saveGameState, loadGameState, submitScore } from '@/app/games/actions';
 import { toggleFavoriteGame } from '@/app/profile/actions';
-import AdBanner from '@/components/AdBanner';
 import CloudSaveBar from '@/components/CloudSaveBar';
 import ScoreChallengeModal from '@/components/ScoreChallengeModal';
 import PlayNextOverlay from '@/components/PlayNextOverlay';
@@ -37,8 +36,6 @@ import {
 } from './player/types';
 import {
   PlayerIdleOverlay,
-  PlayerAdOverlay,
-  PlayerRewardedAdOverlay,
   PlayerLoadingOverlay,
   PlayerPauseOverlay,
   PlayerRotateHint,
@@ -79,8 +76,6 @@ export default function GamePlayer({
   const [isMiniPlayer, setIsMiniPlayer] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const [isReloading, setIsReloading] = useState(false);
-  const [adCountdown, setAdCountdown] = useState(5);
-  const [rewardedAdMsgId, setRewardedAdMsgId] = useState<number | null>(null);
   const [isFavorited, setIsFavorited] = useState(initialFavorited);
   const [isPendingFav, startTransition] = useTransition();
   const [shareToast, setShareToast] = useState(false);
@@ -222,12 +217,13 @@ export default function GamePlayer({
     };
   }, [playerState]);
 
-  // Check stored virtual gamepad preference
+  // Check stored virtual gamepad preference (touch devices only)
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
+      const isTouch = 'ontouchstart' in window || (navigator && navigator.maxTouchPoints > 0);
       const storedPad = localStorage.getItem('spielcade_virtual_pad_enabled');
-      if (storedPad === 'true') {
+      if (storedPad === 'true' && isTouch) {
         setShowVirtualPad(true);
       }
     } catch {}
@@ -447,11 +443,11 @@ export default function GamePlayer({
     }
   }, [isTheater, isFullscreen, isWebFullscreen]);
 
-  // Play button click
+  // Play button click (Instant 1-click play matching Poki & CrazyGames)
   const handlePlay = () => {
     arcadeAudio.playBlip();
     unlockAudioContext();
-    setPlayerState('ad');
+    setPlayerState('playing');
     setIsIframeLoading(true);
     if (iframeLoadTimeoutRef.current) clearTimeout(iframeLoadTimeoutRef.current);
     iframeLoadTimeoutRef.current = setTimeout(() => setIsIframeLoading(false), 5000);
@@ -463,6 +459,11 @@ export default function GamePlayer({
         })
       );
     } catch {}
+
+    // Auto-focus the game iframe immediately
+    setTimeout(() => {
+      refocusGame();
+    }, 80);
 
     // Mobile Viewport Auto-Dock (Poki / CrazyGames ergonomic standard)
     if (typeof window !== 'undefined' && window.innerWidth < 768 && containerRef.current) {
@@ -479,21 +480,6 @@ export default function GamePlayer({
     }
   }, [slug, title, image, addRecentGame]);
 
-  // Pre-roll Ad countdown
-  useEffect(() => {
-    if (playerState === 'ad') {
-      if (adCountdown > 0) {
-        const t = setTimeout(() => setAdCountdown(p => p - 1), 1000);
-        return () => clearTimeout(t);
-      } else if (adCountdown === 0) {
-        skipAd();
-      }
-    } else if (playerState === 'rewarded_ad' && adCountdown > 0) {
-      const t = setTimeout(() => setAdCountdown(p => p - 1), 1000);
-      return () => clearTimeout(t);
-    }
-  }, [playerState, adCountdown]);
-
   // Audio Engine
   const broadcastAudioState = useCallback((muted: boolean, volLevel: number) => {
     const iframe = iframeRef.current || containerRef.current?.querySelector('iframe');
@@ -508,12 +494,6 @@ export default function GamePlayer({
       iframe.contentWindow.postMessage(JSON.stringify({ action: muted ? 'mute' : 'unmute', volume: normalizedVol }), '*');
     }
   }, []);
-
-  const skipAd = () => {
-    setPlayerState('playing');
-    broadcastAudioState(isMuted, volume);
-    setTimeout(() => refocusGame(), 100);
-  };
 
   const handleIframeLoad = () => {
     if (iframeLoadTimeoutRef.current) clearTimeout(iframeLoadTimeoutRef.current);
@@ -542,26 +522,6 @@ export default function GamePlayer({
     setIsIframeLoading(false);
     refocusGame();
     broadcastAudioState(isMuted, volume);
-  };
-
-  const completeRewardedAd = () => {
-    setPlayerState('playing');
-    if (rewardedAdMsgId !== null) {
-      const iframe = iframeRef.current || containerRef.current?.querySelector('iframe');
-      if (iframe?.contentWindow) {
-        iframe.contentWindow.postMessage(
-          {
-            source: 'SPIELCADE_WRAPPER',
-            type: 'REWARDED_AD_COMPLETE',
-            payload: { success: true },
-            msgId: rewardedAdMsgId,
-          },
-          '*'
-        );
-      }
-      setRewardedAdMsgId(null);
-    }
-    refocusGame();
   };
 
   const handleToggleMute = () => {
@@ -844,9 +804,20 @@ export default function GamePlayer({
             break;
 
           case 'SHOW_REWARDED_AD':
-            setAdCountdown(5);
-            setRewardedAdMsgId(event.data.msgId);
-            setPlayerState('rewarded_ad');
+            // In-player ads are removed: grant reward immediately with zero delay
+            if (event.source) {
+              try {
+                (event.source as any).postMessage(
+                  {
+                    source: 'SPIELCADE_WRAPPER',
+                    type: 'REWARDED_AD_COMPLETE',
+                    payload: { success: true },
+                    msgId: event.data.msgId,
+                  },
+                  '*'
+                );
+              } catch {}
+            }
             break;
 
           case 'SAVE_DATA': {
@@ -1243,20 +1214,7 @@ export default function GamePlayer({
             <PlayerIdleOverlay title={title} image={image} onPlay={handlePlay} />
           )}
 
-          {/* 2. PRE-ROLL AD STATE */}
-          {playerState === 'ad' && (
-            <PlayerAdOverlay title={title} adCountdown={adCountdown} onSkipAd={skipAd} />
-          )}
-
-          {/* 2.5 REWARDED AD STATE */}
-          {playerState === 'rewarded_ad' && (
-            <PlayerRewardedAdOverlay
-              adCountdown={adCountdown}
-              onCompleteRewardedAd={completeRewardedAd}
-            />
-          )}
-
-          {/* 3. ACTIVE PLAYING CANVAS (100% Pure Edge-to-Edge Canvas like Poki & CrazyGames) */}
+          {/* 2. ACTIVE PLAYING CANVAS (100% Pure Edge-to-Edge Canvas like Poki & CrazyGames) */}
           {(playerState === 'playing' || playerState === 'paused') && (
             <motion.div
               key="playing"
@@ -1530,8 +1488,12 @@ export default function GamePlayer({
         gameTitle={title}
       />
 
-      {/* Keyboard Shortcuts Guide Modal */}
-      <PlayerKeyboardGuide isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
+      {/* Controls & Gamepad Guide Modal */}
+      <PlayerKeyboardGuide
+        isOpen={showShortcuts}
+        onClose={() => setShowShortcuts(false)}
+        onFocusGame={refocusGame}
+      />
 
       {/* Shimmer animation keyframe */}
       <style>{`

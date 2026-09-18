@@ -23,7 +23,6 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import AdBanner from '@/components/AdBanner';
 import { PlayerState, AspectRatio, fmtTime } from './types';
 
 // 1. Idle Overlay
@@ -75,95 +74,7 @@ export function PlayerIdleOverlay({ title, image, onPlay }: PlayerIdleOverlayPro
   );
 }
 
-// 2. Pre-roll Ad Overlay
-export interface PlayerAdOverlayProps {
-  title: string;
-  adCountdown: number;
-  onSkipAd: () => void;
-}
-
-export function PlayerAdOverlay({ title, adCountdown, onSkipAd }: PlayerAdOverlayProps) {
-  return (
-    <motion.div
-      key="ad"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="absolute inset-0 flex flex-col items-center justify-center bg-gray-950 z-20 p-4 sm:p-6"
-    >
-      <div className="absolute top-4 left-4 sm:top-6 sm:left-6 text-white/60 text-xs tracking-widest uppercase font-bold flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" /> Loading Game Assets
-      </div>
-      <div className="w-full max-w-md p-2 sm:p-4 flex flex-col items-center text-center">
-        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-4 border-[#6366F1] border-t-transparent animate-spin mb-3 shadow-[0_0_20px_rgba(99,102,241,0.5)]" />
-        <h3 className="text-white font-bold text-base sm:text-xl mb-1 font-outfit">Starting {title}...</h3>
-        <p className="text-gray-400 text-xs max-w-xs mb-3">
-          Your game is initializing. Support independent game creators by viewing sponsor announcements.
-        </p>
-        <div className="w-full flex justify-center my-1 max-w-[320px]">
-          <AdBanner id="5a3fd317f38a51c8553f75f8c2a547ef" width={300} height={250} className="rounded-xl shadow-lg" />
-        </div>
-      </div>
-      <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6">
-        {adCountdown > 2 ? (
-          <div className="px-4 py-2 bg-black/60 border border-white/10 text-white/70 rounded-full text-xs font-bold backdrop-blur-md">
-            Skip in {adCountdown}s
-          </div>
-        ) : (
-          <button
-            onClick={onSkipAd}
-            className="px-5 py-2 sm:px-6 sm:py-2.5 bg-white text-black hover:bg-gray-200 hover:scale-105 active:scale-95 rounded-full text-xs sm:text-sm font-bold shadow-2xl transition-all flex items-center gap-2"
-          >
-            Play Now <Play size={14} className="fill-black" />
-          </button>
-        )}
-      </div>
-    </motion.div>
-  );
-}
-
-// 3. Rewarded Ad Overlay
-export interface PlayerRewardedAdOverlayProps {
-  adCountdown: number;
-  onCompleteRewardedAd: () => void;
-}
-
-export function PlayerRewardedAdOverlay({ adCountdown, onCompleteRewardedAd }: PlayerRewardedAdOverlayProps) {
-  return (
-    <motion.div
-      key="rewarded_ad"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="absolute inset-0 flex flex-col items-center justify-center bg-black/95 z-40 backdrop-blur-sm p-6"
-    >
-      <div className="absolute top-6 left-6 text-white/60 text-xs tracking-widest uppercase font-bold flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" /> Rewarded Sponsor
-      </div>
-      <div className="w-full max-w-md p-6 flex flex-col items-center text-center">
-        <div className="w-16 h-16 rounded-full border-4 border-yellow-400 border-t-transparent animate-spin mb-6 shadow-[0_0_20px_rgba(234,179,8,0.5)]" />
-        <h3 className="text-white font-bold text-lg sm:text-xl mb-2 font-outfit">Claiming In-Game Reward...</h3>
-        <p className="text-gray-400 text-xs sm:text-sm">Please do not close this window while the reward verifies.</p>
-      </div>
-      <div className="absolute bottom-6 right-6">
-        {adCountdown > 0 ? (
-          <div className="px-5 py-2.5 bg-black/60 border border-white/10 text-white/70 rounded-full text-xs font-bold backdrop-blur-md">
-            Reward in {adCountdown}s
-          </div>
-        ) : (
-          <button
-            onClick={onCompleteRewardedAd}
-            className="px-6 py-2.5 bg-yellow-400 text-black hover:bg-yellow-300 hover:scale-105 active:scale-95 rounded-full text-xs sm:text-sm font-bold shadow-[0_0_25px_rgba(234,179,8,0.5)] transition-all flex items-center gap-2"
-          >
-            Claim Reward <Play size={14} className="fill-black" />
-          </button>
-        )}
-      </div>
-    </motion.div>
-  );
-}
-
-// 4. Iframe Loading Overlay
+// 2. Iframe Loading Overlay
 export interface PlayerLoadingOverlayProps {
   title: string;
   image?: string;

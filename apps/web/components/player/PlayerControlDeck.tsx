@@ -205,14 +205,15 @@ export default function PlayerControlDeck({
           <Monitor size={15} />
         </button>
 
-        {/* 5. Controls & Shortcuts Guide */}
+        {/* 5. Controls & Gamepad Guide */}
         <button
           onClick={onOpenShortcuts}
-          className="hidden sm:flex p-2 rounded-xl text-gray-700 dark:text-gray-300 hover:text-[#6366F1] bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all cursor-pointer"
-          title="Controls & Shortcuts (?)"
-          aria-label="Open Keyboard Shortcuts Guide"
+          className="hidden sm:flex px-2.5 py-2 rounded-xl text-gray-700 dark:text-gray-300 hover:text-[#6366F1] bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all cursor-pointer items-center gap-1.5 text-xs font-semibold active:scale-95"
+          title="Game Controls & Gamepad (?)"
+          aria-label="Open Game Controls and Gamepad Guide"
         >
-          <HelpCircle size={15} />
+          <Gamepad2 size={15} />
+          <span className="hidden lg:inline text-[11px]">Controls</span>
         </button>
 
         {/* 6. Virtual Gamepad Toggle (Promoted on touch devices) */}

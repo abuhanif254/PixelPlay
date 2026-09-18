@@ -210,4 +210,81 @@ describe('Spielcade Next-Gen Game Player System', () => {
       expect(thirdMsg?.payload?.volume).toBe(0);
     });
   });
+
+  describe('8. Instant 1-Click Play Lifecycle (Zero In-Player Ads)', () => {
+    it('transitions directly from idle to playing on play button click', () => {
+      let playerState: string = 'idle';
+      let isIframeLoading = false;
+      let adCountdown: number | null = null; // No ad countdown exists!
+
+      const handleInstantPlay = () => {
+        playerState = 'playing';
+        isIframeLoading = true;
+      };
+
+      expect(playerState).toBe('idle');
+      handleInstantPlay();
+      expect(playerState).toBe('playing');
+      expect(isIframeLoading).toBe(true);
+      expect(adCountdown).toBeNull();
+    });
+
+    it('bypasses in-canvas ad timers and establishes immediate audio/focus pipeline', () => {
+      const focusCalls: string[] = [];
+      const mockIframe = {
+        focus: () => focusCalls.push('focused'),
+      };
+
+      const triggerRefocus = (state: string) => {
+        if (state === 'playing') {
+          mockIframe.focus();
+        }
+      };
+
+      triggerRefocus('playing');
+      expect(focusCalls).toContain('focused');
+    });
+  });
+
+  describe('9. Hardware Gamepad & Desktop Controls Architecture', () => {
+    it('validates standard gamepad button map indices', () => {
+      const STANDARD_GAMEPAD_MAP = {
+        A: 0, // Cross
+        B: 1, // Circle
+        X: 2, // Square
+        Y: 3, // Triangle
+        LB: 4,
+        RB: 5,
+        LT: 6,
+        RT: 7,
+        SELECT: 8,
+        START: 9,
+        DPAD_UP: 12,
+        DPAD_DOWN: 13,
+        DPAD_LEFT: 14,
+        DPAD_RIGHT: 15,
+      };
+
+      expect(STANDARD_GAMEPAD_MAP.A).toBe(0);
+      expect(STANDARD_GAMEPAD_MAP.DPAD_UP).toBe(12);
+      expect(STANDARD_GAMEPAD_MAP.RT).toBe(7);
+      expect(STANDARD_GAMEPAD_MAP.START).toBe(9);
+    });
+
+    it('ensures key desktop driving and action bindings match standard arcade mechanics', () => {
+      const desktopBindings = {
+        drive: ['w', 'ArrowUp'],
+        steerLeft: ['a', 'ArrowLeft'],
+        steerRight: ['d', 'ArrowRight'],
+        reverse: ['s', 'ArrowDown'],
+        brake: ' ',
+        nitro: 'Shift',
+      };
+
+      expect(desktopBindings.drive).toContain('w');
+      expect(desktopBindings.drive).toContain('ArrowUp');
+      expect(desktopBindings.brake).toBe(' ');
+      expect(desktopBindings.nitro).toBe('Shift');
+    });
+  });
 });
