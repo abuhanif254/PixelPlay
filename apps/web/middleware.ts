@@ -4,7 +4,17 @@ import { updateSession } from '@/lib/supabase/middleware'
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // 0. Canonical Path Case Normalization (Big Tech SEO Best Practice)
+  // 0. Canonical Host Normalization (www.* -> apex domain 301 redirect for Googlebot & AdSense)
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || request.nextUrl.host || ''
+  if (host.startsWith('www.')) {
+    const apexHost = host.replace(/^www\./, '')
+    const url = request.nextUrl.clone()
+    url.host = apexHost
+    url.protocol = 'https:'
+    return NextResponse.redirect(url, 301)
+  }
+
+  // 0.1 Canonical Path Case Normalization (Big Tech SEO Best Practice)
   // If the path contains uppercase characters and is not an API/asset route,
   // 301-redirect to lowercase to eliminate duplicate content & case-sensitive 404s.
   if (
