@@ -189,15 +189,18 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
     "@type": "ItemList",
     "name": "Global Leaderboard - Spielcade",
     "description": "Top players on Spielcade across all games.",
-    "itemListElement": mappedPlayers.slice(0, 50).map((player, index) => ({
-      "@type": "ListItem",
-      "position": index + 1,
-      "item": {
-        "@type": "Person",
-        "name": player.name,
-        "url": `https://spielcade.com/profile/${player.name}`
-      }
-    }))
+    "itemListElement": mappedPlayers.slice(0, 50).map((player, index) => {
+      const isReal = player.userId && !String(player.userId).startsWith('seed-');
+      return {
+        "@type": "ListItem",
+        "position": index + 1,
+        "item": {
+          "@type": "Person",
+          "name": player.name,
+          "url": isReal ? `https://spielcade.com/profile/${player.name}` : 'https://spielcade.com/leaderboard'
+        }
+      };
+    })
   };
 
   return (

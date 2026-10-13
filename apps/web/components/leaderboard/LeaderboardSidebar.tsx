@@ -93,8 +93,11 @@ export default function LeaderboardSidebar({ games = [], topPlayers = [] }: { ga
           {topPlayers.length === 0 ? (
             <p className="text-xs text-gray-500 px-2">No players yet.</p>
           ) : (
-            topPlayers.map((player, idx) => (
-              <Link href={`/profile/${player.name}`} key={player.name} className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition-colors cursor-pointer">
+            topPlayers.map((player, idx) => {
+              const isRealProfile = (player as any).userId && !String((player as any).userId).startsWith('seed-');
+              const targetHref = isRealProfile ? `/profile/${player.name}` : '/leaderboard';
+              return (
+                <Link href={targetHref} key={player.name} className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition-colors cursor-pointer">
                 <div className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs overflow-hidden shrink-0`}>
                     <img src={player.avatar} alt={player.name} className="w-full h-full object-cover" />
@@ -103,7 +106,8 @@ export default function LeaderboardSidebar({ games = [], topPlayers = [] }: { ga
                 </div>
                 <span className="text-xs font-bold text-gray-500 dark:text-gray-400">{player.score}</span>
               </Link>
-            ))
+              );
+            })
           )}
         </div>
       </div>

@@ -20,6 +20,7 @@ import TagsWidget from '@/components/article/TagsWidget';
 import { createPublicClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import { getComments, getLikeCount } from '../actions';
+import { getBlogPost, getAllBlogPosts } from '@/lib/blogData';
 
 type Props = {
   params: { slug: string };
@@ -27,26 +28,50 @@ type Props = {
 
 // Fetch post helper (deduplicated per request via React.cache)
 const getPostData = cache(async (slug: string) => {
-  const supabase = createPublicClient();
-  const { data: post } = await supabase
-    .from('blog_posts')
-    .select(`
-      id, title, slug, content, excerpt, cover_image, tags,
-      read_time, created_at, status,
-      profiles:author_id(username, avatar_url)
-    `)
-    .eq('slug', slug)
-    .maybeSingle();
+  try {
+    const supabase = createPublicClient();
+    const { data: post } = await supabase
+      .from('blog_posts')
+      .select(`
+        id, title, slug, content, excerpt, cover_image, tags,
+        read_time, created_at, status,
+        profiles:author_id(username, avatar_url)
+      `)
+      .eq('slug', slug)
+      .maybeSingle();
 
-  if (!post || post.status !== 'published') return null;
+    if (post && post.status === 'published') {
+      const profiles = post.profiles as any;
+      return {
+        ...post,
+        author: profiles?.username || 'Spielcade Team',
+        author_avatar: profiles?.avatar_url || '',
+      };
+    }
+  } catch (err) {
+    console.warn('[BlogPost] Supabase query error:', err);
+  }
 
-  const profiles = post.profiles as any;
+  // Fallback to static curated blog articles registry
+  const curated = getBlogPost(slug);
+  if (curated) {
+    return {
+      id: `curated-${curated.slug}`,
+      title: curated.title,
+      slug: curated.slug,
+      content: curated.content,
+      excerpt: curated.description,
+      cover_image: curated.coverImage,
+      tags: curated.keywords,
+      read_time: 5,
+      created_at: curated.date,
+      status: 'published',
+      author: curated.author.name,
+      author_avatar: curated.author.avatar || '',
+    };
+  }
 
-  return {
-    ...post,
-    author: profiles?.username || 'Spielcade Team',
-    author_avatar: profiles?.avatar_url || '',
-  };
+  return null;
 });
 
 export async function generateMetadata(
@@ -134,9 +159,36 @@ export default async function SingleArticlePage({ params }: Props) {
   ]);
 
   const userHasLiked = false;
-  const relatedPosts = relatedRes.data || [];
-  const prevPost = prevRes.data || null;
-  const nextPost = nextRes.data || null;
+  const allCurated = getAllBlogPosts();
+  const otherCurated = allCurated.filter(p => p.slug !== params.slug);
+
+  const relatedPosts = (relatedRes.data && relatedRes.data.length > 0)
+    ? relatedRes.data
+    : otherCurated.slice(0, 4).map(p => ({
+        id: `curated-${p.slug}`,
+        title: p.title,
+        slug: p.slug,
+        cover_image: p.coverImage,
+        tags: p.keywords,
+        created_at: p.date,
+      }));
+
+  const currentIndex = allCurated.findIndex(p => p.slug === params.slug);
+  const prevPost = prevRes.data || (currentIndex > 0 ? {
+    title: allCurated[currentIndex - 1].title,
+    slug: allCurated[currentIndex - 1].slug,
+    cover_image: allCurated[currentIndex - 1].coverImage,
+  } : null);
+
+  const nextPost = nextRes.data || (currentIndex >= 0 && currentIndex < allCurated.length - 1 ? {
+    title: allCurated[currentIndex + 1].title,
+    slug: allCurated[currentIndex + 1].slug,
+    cover_image: allCurated[currentIndex + 1].coverImage,
+  } : (currentIndex === -1 && allCurated.length > 0 ? {
+    title: allCurated[0].title,
+    slug: allCurated[0].slug,
+    cover_image: allCurated[0].coverImage,
+  } : null));
 
   const coverImage = post.cover_image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200&q=80';
 

@@ -54,6 +54,7 @@ export async function toggleLike(postId: string) {
 }
 
 export async function getLikeCount(postId: string) {
+  if (!postId || postId.startsWith('curated-')) return 0;
   const supabase = createPublicClient();
   const { count } = await supabase
     .from('blog_likes')
@@ -105,6 +106,7 @@ export async function addComment(postId: string, content: string) {
 }
 
 export async function getComments(postId: string) {
+  if (!postId || postId.startsWith('curated-')) return [];
   const supabase = createPublicClient();
   const { data, error } = await supabase
     .from('blog_comments')

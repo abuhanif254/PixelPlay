@@ -1,6 +1,6 @@
 import React from 'react';
 import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import CategoryHero from '@/components/category/CategoryHero';
 import CategorySidebar from '@/components/category/CategorySidebar';
 import CategoryGameGrid from '@/components/category/CategoryGameGrid';
@@ -14,10 +14,39 @@ import { getCachedCategoryCounts, getCachedCategoryTopGames } from '@/lib/catalo
 export const runtime = 'edge';
 export const revalidate = 600; // 10-minute Edge CDN ISR caching
 
+const CATEGORY_SLUG_ALIASES: Record<string, string> = {
+  'retro-games': 'retro-arcade-games',
+  'retro': 'retro-arcade-games',
+  'skill-games': 'arcade-games',
+  'skill': 'arcade-games',
+  'classic-games': 'arcade-games',
+  'classic': 'arcade-games',
+  'endless-games': 'runner-games',
+  'endless': 'runner-games',
+  'all': '/categories',
+  'all-games': '/categories',
+  'more': '/categories',
+  'more-games': '/categories',
+  'html5-games': '/games',
+  'html5': '/games',
+  'sports': 'sports-games',
+};
+
 // Dynamic metadata generation based on slug
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const category = categoriesData[params.slug as keyof typeof categoriesData];
-  if (!category) return { title: 'Category Not Found | Spielcade' };
+  const alias = CATEGORY_SLUG_ALIASES[params.slug];
+  const targetSlug = alias && !alias.startsWith('/') ? alias : params.slug;
+  const category = categoriesData[targetSlug as keyof typeof categoriesData] || categoriesData[params.slug as keyof typeof categoriesData];
+  if (!category) {
+    if (alias) {
+      const canonicalTarget = alias.startsWith('/') ? `https://spielcade.com${alias}` : `https://spielcade.com/categories/${alias}`;
+      return {
+        title: 'Redirecting Category | Spielcade',
+        alternates: { canonical: canonicalTarget },
+      };
+    }
+    return { title: 'Category Not Found | Spielcade' };
+  }
   
   return {
     title: `${category.title} | Spielcade`,
@@ -143,6 +172,11 @@ async function getCachedCategorySlugGames(
 }
 
 export default async function CategoryPage({ params }: { params: { slug: string } }) {
+  const alias = CATEGORY_SLUG_ALIASES[params.slug];
+  if (alias) {
+    permanentRedirect(alias.startsWith('/') ? alias : `/categories/${alias}`);
+  }
+
   const category = categoriesData[params.slug as keyof typeof categoriesData];
   
   if (!category) {

@@ -36,6 +36,33 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 301)
   }
 
+  // 0.05 Cloudflare Email Protection & Malformed Root Base64 Hash Handlers (Return 410 Gone to clear search crawl queues)
+  if (pathname.startsWith('/cdn-cgi/')) {
+    return new NextResponse('Resource Gone', {
+      status: 410,
+      headers: {
+        'X-Robots-Tag': 'noindex, nofollow',
+        'Cache-Control': 'public, max-age=86400, s-maxage=604800',
+      },
+    })
+  }
+
+  // Intercept malformed root tokens (e.g. Base64 strings with spaces, \n, = or length > 35 at root path)
+  const isMalformedRootHash =
+    pathname.length > 35 &&
+    !pathname.slice(1).includes('/') &&
+    (/[=\s\n%]/.test(pathname) || /^[a-zA-Z0-9+/=]{35,}$/.test(pathname.slice(1)))
+
+  if (isMalformedRootHash) {
+    return new NextResponse('Resource Gone', {
+      status: 410,
+      headers: {
+        'X-Robots-Tag': 'noindex, nofollow',
+        'Cache-Control': 'public, max-age=86400, s-maxage=604800',
+      },
+    })
+  }
+
   // 0.1 Non-HTML OpenGraph / Twitter Image Preview Endpoints: attach X-Robots-Tag: noindex
   if (pathname.endsWith('/opengraph-image') || pathname.endsWith('/twitter-image')) {
     const res = NextResponse.next()
@@ -50,14 +77,20 @@ export async function middleware(request: NextRequest) {
     arcade: '/categories/arcade-games',
     board: '/categories/board-games',
     puzzle: '/categories/puzzle-games',
+    'puzzle games': '/categories/puzzle-games',
     racing: '/categories/racing-games',
     sports: '/categories/sports-games',
     strategy: '/categories/strategy-games',
     skill: '/categories/arcade-games',
+    'skill-games': '/categories/arcade-games',
+    classic: '/categories/arcade-games',
+    'classic-games': '/categories/arcade-games',
     endless: '/categories/runner-games',
+    'endless-games': '/categories/runner-games',
     runner: '/categories/runner-games',
     running: '/categories/runner-games',
     car: '/categories/car-games',
+    'car games': '/categories/car-games',
     shooting: '/categories/shooting-games',
     stickman: '/categories/stickman-games',
     zombie: '/categories/zombie-games',
@@ -71,6 +104,7 @@ export async function middleware(request: NextRequest) {
     '4 player': '/categories/4-player-games',
     '4-player': '/categories/4-player-games',
     retro: '/categories/retro-arcade-games',
+    'retro-games': '/categories/retro-arcade-games',
     'retro-arcade': '/categories/retro-arcade-games',
     platformer: '/categories/arcade-games',
     platformers: '/categories/arcade-games',
@@ -96,6 +130,15 @@ export async function middleware(request: NextRequest) {
     drift: '/categories/drift-games',
     'battle-royale': '/categories/battle-royale-games',
     '3d': '/categories/3d-games',
+    'dress up': '/categories/dress-up-games',
+    'dress-up': '/categories/dress-up-games',
+    simulation: '/categories/simulation-games',
+    all: '/categories',
+    'all-games': '/categories',
+    more: '/categories',
+    'more-games': '/categories',
+    html5: '/games',
+    'html5-games': '/games',
   }
 
   if (pathname === '/search') {
@@ -237,7 +280,22 @@ export async function middleware(request: NextRequest) {
     (c) => c.name.includes('-auth-token') || c.name.startsWith('sb-')
   )
 
-  // 3. If unauthenticated user tries to access protected route, redirect to /login immediately without hitting DB
+  // Developer Studio Legacy Subroutes Redirect (/developers/:slug -> /developers)
+  if (pathname.startsWith('/developers/') && pathname !== '/developers') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/developers'
+    url.search = ''
+    return NextResponse.redirect(url, 301)
+  }
+
+  // 3. If unauthenticated user or search crawler tries to access studio routes, redirect to /developers
+  if (!hasAuthCookie && (pathname === '/studio' || pathname.startsWith('/studio/'))) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/developers'
+    return NextResponse.redirect(url, 301)
+  }
+
+  // If unauthenticated user tries to access protected admin/profile route, redirect to /login
   if (!hasAuthCookie && isProtectedRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
@@ -249,6 +307,11 @@ export async function middleware(request: NextRequest) {
   if (!hasAuthCookie && !isProtectedRoute) {
     const response = NextResponse.next()
     
+    // Disallow indexing of private gamer profiles
+    if (pathname.startsWith('/profile')) {
+      response.headers.set('X-Robots-Tag', 'noindex, nofollow')
+    }
+
     // Inject Cloudflare / Edge CDN Stale-While-Revalidate caching on public content routes
     if (!pathname.startsWith('/api') && !pathname.startsWith('/auth')) {
       const cacheDirective = 'public, max-age=60, s-maxage=3600, stale-while-revalidate=86400'

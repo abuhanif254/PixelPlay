@@ -1,5 +1,5 @@
 import React, { cache } from 'react';
-import { notFound, redirect } from 'next/navigation';
+import { notFound, redirect, permanentRedirect } from 'next/navigation';
 import { gamesRegistry } from '@spielcade/games/registry';
 import { Star, ChevronRight, Heart, Clock, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Gamepad2 } from 'lucide-react';
 import Link from 'next/link';
@@ -27,6 +27,46 @@ export const runtime = 'edge';
 export const revalidate = 600;
 
 const COMMON_SLUG_SUFFIXES = ['-game', '-games', '-online', '-free', '-unblocked', '-html5'];
+
+const GAME_SLUG_ALIASES: Record<string, string> = {
+  'subway-surfers': 'train-subway-surfers',
+  'subway-surfer': 'train-subway-surfers',
+};
+
+const KEYWORD_CATEGORY_MAP: Record<string, string> = {
+  tank: '/categories/tank-games',
+  tanks: '/categories/tank-games',
+  war: '/categories/war-games',
+  zombie: '/categories/zombie-games',
+  zombies: '/categories/zombie-games',
+  car: '/categories/car-games',
+  cars: '/categories/car-games',
+  drift: '/categories/drift-games',
+  moto: '/categories/moto-games',
+  bike: '/categories/moto-games',
+  subway: '/categories/runner-games',
+  runner: '/categories/runner-games',
+  racing: '/categories/racing-games',
+  race: '/categories/racing-games',
+  puzzle: '/categories/puzzle-games',
+  chess: '/categories/chess-games',
+  mahjong: '/categories/mahjong-games',
+  solitaire: '/categories/solitaire-games',
+  escape: '/categories/escape-games',
+  ninja: '/categories/ninja-games',
+  stickman: '/categories/stickman-games',
+  cooking: '/categories/cooking-games',
+  cook: '/categories/cooking-games',
+  dress: '/categories/dress-up-games',
+  football: '/categories/football-games',
+  soccer: '/categories/football-games',
+  basketball: '/categories/basketball-games',
+  cricket: '/categories/cricket-games',
+  fps: '/categories/fps-games',
+  shooter: '/categories/shooting-games',
+  shooting: '/categories/shooting-games',
+  multiplayer: '/categories/2-player-games',
+};
 
 interface CachedGameDetailEntry {
   game: any | null;
@@ -208,6 +248,24 @@ export async function generateMetadata(
   const localGame = localResult.game;
 
   if (!dbGame && !localGame) {
+    if (GAME_SLUG_ALIASES[slug]) {
+      return {
+        title: 'Redirecting Game - Spielcade',
+        alternates: { canonical: `https://spielcade.com/games/${GAME_SLUG_ALIASES[slug]}` },
+      };
+    }
+
+    const slugTokens = slug.split('-');
+    for (const token of slugTokens) {
+      const targetCategory = KEYWORD_CATEGORY_MAP[token];
+      if (targetCategory) {
+        return {
+          title: 'Redirecting Game - Spielcade',
+          alternates: { canonical: `https://spielcade.com${targetCategory}` },
+        };
+      }
+    }
+
     return {
       title: 'Game Not Found - Spielcade',
       robots: { index: false, follow: false },
@@ -323,6 +381,18 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
   const localGame = localResult.game;
 
   if (!dbGame && !localGame) {
+    if (GAME_SLUG_ALIASES[slug]) {
+      permanentRedirect(`/games/${GAME_SLUG_ALIASES[slug]}`);
+    }
+
+    const slugTokens = slug.split('-');
+    for (const token of slugTokens) {
+      const targetCategory = KEYWORD_CATEGORY_MAP[token];
+      if (targetCategory) {
+        permanentRedirect(targetCategory);
+      }
+    }
+
     notFound();
   }
 

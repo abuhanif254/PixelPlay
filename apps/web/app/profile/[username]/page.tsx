@@ -1,6 +1,6 @@
 export const runtime = 'edge';
 import React from 'react';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
@@ -21,8 +21,11 @@ export async function generateMetadata({ params }: { params: { username: string 
 
   if (!profile) {
     return {
-      title: `User Not Found | Spielcade`,
-      robots: { index: false, follow: false },
+      title: 'Redirecting Profile | Spielcade',
+      alternates: {
+        canonical: 'https://spielcade.com/leaderboard',
+      },
+      robots: { index: false, follow: true },
     };
   }
 
@@ -145,7 +148,9 @@ export default async function PublicProfilePage({ params }: { params: { username
     .eq('username', username)
     .maybeSingle();
 
-  if (!profile) notFound();
+  if (!profile) {
+    permanentRedirect('/leaderboard');
+  }
 
   // Check if viewing own profile
   const { data: authData } = await supabase.auth.getUser();
