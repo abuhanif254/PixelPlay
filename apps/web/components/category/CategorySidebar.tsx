@@ -52,7 +52,7 @@ export default function CategorySidebar({
           return (
             <Link
               key={idx}
-              href={`/categories/${cat.slug}`}
+              href={cat.slug === 'all' ? '/categories' : `/categories/${cat.slug}`}
               className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
                 isActive 
                   ? 'bg-[#6366F1]/20 text-[#6366F1] font-bold' 
@@ -69,9 +69,12 @@ export default function CategorySidebar({
             </Link>
           );
         })}
-        <button className="w-full mt-3 py-2 border border-gray-200 dark:border-white/10 hover:border-[#6366F1] text-[#6366F1] hover:text-white hover:bg-[#6366F1] text-xs font-bold rounded-lg transition-all">
+        <Link 
+          href="/categories" 
+          className="w-full mt-3 py-2 text-center border border-gray-200 dark:border-white/10 hover:border-[#6366F1] text-[#6366F1] hover:text-white hover:bg-[#6366F1] text-xs font-bold rounded-lg transition-all block"
+        >
           View All Categories
-        </button>
+        </Link>
       </div>
 
       {/* Filter Games */}

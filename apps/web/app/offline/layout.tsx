@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   alternates: {
     canonical: 'https://spielcade.com/offline',
   },
+  robots: {
+    index: false,
+    follow: true,
+  },
 };
 
 export default function OfflineLayout({ children }: { children: React.ReactNode }) {

@@ -18,7 +18,6 @@ export async function GET() {
     { url: `${baseUrl}/blog`, priority: '0.8', changefreq: 'daily' },
     { url: `${baseUrl}/about`, priority: '0.8', changefreq: 'monthly' },
     { url: `${baseUrl}/developers`, priority: '0.9', changefreq: 'weekly' },
-    { url: `${baseUrl}/offline`, priority: '0.7', changefreq: 'monthly' },
     { url: `${baseUrl}/help`, priority: '0.6', changefreq: 'monthly' },
     { url: `${baseUrl}/contact`, priority: '0.6', changefreq: 'monthly' },
     { url: `${baseUrl}/privacy`, priority: '0.4', changefreq: 'yearly' },
@@ -53,6 +52,7 @@ ${staticRoutes
       'Cache-Control': 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800',
       'CDN-Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
       'Cloudflare-CDN-Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
+      'X-Robots-Tag': 'noindex',
     },
   });
 }

@@ -36,52 +36,175 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 301)
   }
 
-  // 0.2 Canonical Query-Param Normalization on /games (?category=... and ?page=1)
+  // 0.1 Non-HTML OpenGraph / Twitter Image Preview Endpoints: attach X-Robots-Tag: noindex
+  if (pathname.endsWith('/opengraph-image') || pathname.endsWith('/twitter-image')) {
+    const res = NextResponse.next()
+    res.headers.set('X-Robots-Tag', 'noindex, nofollow')
+    return res
+  }
+
+  // 0.2 Canonical Query-Param Normalization on /games and /search (?category=..., ?page=1)
+  const CATEGORY_QUERY_MAP: Record<string, string> = {
+    action: '/categories/action-games',
+    adventure: '/categories/adventure-games',
+    arcade: '/categories/arcade-games',
+    board: '/categories/board-games',
+    puzzle: '/categories/puzzle-games',
+    racing: '/categories/racing-games',
+    sports: '/categories/sports-games',
+    strategy: '/categories/strategy-games',
+    skill: '/categories/arcade-games',
+    endless: '/categories/runner-games',
+    runner: '/categories/runner-games',
+    running: '/categories/runner-games',
+    car: '/categories/car-games',
+    shooting: '/categories/shooting-games',
+    stickman: '/categories/stickman-games',
+    zombie: '/categories/zombie-games',
+    unblocked: '/categories/unblocked-games',
+    multiplayer: '/categories/2-player-games',
+    'multiplayer games': '/categories/2-player-games',
+    '2 player': '/categories/2-player-games',
+    '2-player': '/categories/2-player-games',
+    '3 player': '/categories/3-player-games',
+    '3-player': '/categories/3-player-games',
+    '4 player': '/categories/4-player-games',
+    '4-player': '/categories/4-player-games',
+    retro: '/categories/retro-arcade-games',
+    'retro-arcade': '/categories/retro-arcade-games',
+    platformer: '/categories/arcade-games',
+    platformers: '/categories/arcade-games',
+    escape: '/categories/escape-games',
+    tank: '/categories/tank-games',
+    war: '/categories/war-games',
+    horror: '/categories/horror-games',
+    fps: '/categories/fps-games',
+    cricket: '/categories/cricket-games',
+    boxing: '/categories/boxing-games',
+    bowling: '/categories/bowling-games',
+    pool: '/categories/pool-games',
+    golf: '/categories/golf-games',
+    tennis: '/categories/tennis-games',
+    casual: '/categories/casual-games',
+    physics: '/categories/physics-games',
+    'tower-defense': '/categories/tower-defense-games',
+    'tower defense': '/categories/tower-defense-games',
+    io: '/categories/io-games',
+    chromebook: '/categories/chromebook-games',
+    clicker: '/categories/clicker-games',
+    moto: '/categories/moto-games',
+    drift: '/categories/drift-games',
+    'battle-royale': '/categories/battle-royale-games',
+    '3d': '/categories/3d-games',
+  }
+
+  if (pathname === '/search') {
+    const q = request.nextUrl.searchParams.get('q')?.trim().toLowerCase() || ''
+    const url = request.nextUrl.clone()
+    url.search = ''
+    url.pathname = CATEGORY_QUERY_MAP[q] || '/games'
+    return NextResponse.redirect(url, 301)
+  }
+
   if (pathname === '/games') {
     const searchParams = request.nextUrl.searchParams
     const rawCat = searchParams.get('category')?.trim()
     const rawPage = searchParams.get('page')?.trim()
     const hasSearch = Boolean(searchParams.get('q') || searchParams.get('search'))
 
-    const CATEGORY_QUERY_MAP: Record<string, string> = {
-      action: '/categories/action-games',
-      adventure: '/categories/adventure-games',
-      arcade: '/categories/arcade-games',
-      board: '/categories/board-games',
-      puzzle: '/categories/puzzle-games',
-      racing: '/categories/racing-games',
-      sports: '/categories/sports-games',
-      strategy: '/categories/strategy-games',
-      skill: '/categories/arcade-games',
-      endless: '/categories/runner-games',
-      runner: '/categories/runner-games',
-      car: '/categories/car-games',
-      shooting: '/categories/shooting-games',
-      stickman: '/categories/stickman-games',
-      zombie: '/categories/zombie-games',
-      unblocked: '/categories/unblocked-games',
-      multiplayer: '/categories/multiplayer-games',
-      '2 player': '/categories/2-player-games',
-    }
-
     if (rawCat && !hasSearch) {
       const catKey = rawCat.toLowerCase()
-      const targetHub = CATEGORY_QUERY_MAP[catKey]
-      if (targetHub) {
-        const url = request.nextUrl.clone()
-        url.pathname = targetHub
-        url.searchParams.delete('category')
-        if (rawPage === '1') {
-          url.searchParams.delete('page')
-        }
-        return NextResponse.redirect(url, 301)
+      const targetHub = CATEGORY_QUERY_MAP[catKey] || `/categories/${catKey.replace(/\s+/g, '-')}-games`
+      const url = request.nextUrl.clone()
+      url.pathname = targetHub
+      url.searchParams.delete('category')
+      if (rawPage === '1') {
+        url.searchParams.delete('page')
       }
+      return NextResponse.redirect(url, 301)
     }
 
     if (rawPage === '1') {
       const url = request.nextUrl.clone()
       url.searchParams.delete('page')
       return NextResponse.redirect(url, 301)
+    }
+  }
+
+  // 0.3 Single-Hop Category Slug Normalization (/category/:slug & /categories/:shortSlug -> /categories/:slug-games)
+  if (pathname.startsWith('/category/') || pathname.startsWith('/categories/')) {
+    const segments = pathname.split('/').filter(Boolean)
+    if (segments.length === 2) {
+      const rawSlug = segments[1].toLowerCase()
+      const mappedHub = CATEGORY_QUERY_MAP[rawSlug]
+      if (mappedHub && pathname !== mappedHub) {
+        const url = request.nextUrl.clone()
+        url.pathname = mappedHub
+        return NextResponse.redirect(url, 301)
+      }
+      if (segments[0] === 'category') {
+        const url = request.nextUrl.clone()
+        url.pathname = `/categories/${rawSlug.endsWith('-games') ? rawSlug : `${rawSlug}-games`}`
+        return NextResponse.redirect(url, 301)
+      }
+    }
+  }
+
+  // 0.4 Synthetic Per-Game & Category Tag Consolidation (/games/tags/...)
+  if (pathname.startsWith('/games/tags/')) {
+    const rawSegment = pathname.slice('/games/tags/'.length)
+    let decodedTag = rawSegment
+    try {
+      decodedTag = decodeURIComponent(rawSegment)
+    } catch {
+      decodedTag = rawSegment
+    }
+
+    const cleanedTag = decodedTag
+      .replace(/[\u200B-\u200F\u202A-\u202E\uFEFF]/g, '')
+      .toLowerCase()
+      .trim()
+
+    // 1. Direct category hub match (e.g., /games/tags/2-player -> /categories/2-player-games)
+    const targetCategoryHub = CATEGORY_QUERY_MAP[cleanedTag]
+    if (targetCategoryHub) {
+      const url = request.nextUrl.clone()
+      url.pathname = targetCategoryHub
+      url.search = ''
+      return NextResponse.redirect(url, 301)
+    }
+
+    // 2. Synthetic per-game SEO modifier tags (free-*, *-unblocked, *-online, *-for-chromebook, *-no-download)
+    const hasSyntheticAffix =
+      cleanedTag.startsWith('free-') ||
+      cleanedTag.endsWith('-unblocked') ||
+      cleanedTag.endsWith('-online') ||
+      cleanedTag.endsWith('-for-chromebook') ||
+      cleanedTag.endsWith('-no-download')
+
+    if (hasSyntheticAffix) {
+      let baseSlug = cleanedTag
+        .replace(/^free-/, '')
+        .replace(/-(unblocked|for-chromebook|no-download)$/, '')
+      // Handle "-online-online" where the base game slug itself ends with "-online" (e.g. chess-multiplayer-online-online)
+      if (baseSlug.endsWith('-online-online')) {
+        baseSlug = baseSlug.replace(/-online$/, '')
+      } else {
+        baseSlug = baseSlug.replace(/-online$/, '')
+      }
+      baseSlug = baseSlug
+        .replace(/[:|,!?'"]+/g, '')
+        .replace(/\.io\b/g, 'io')
+        .replace(/[^a-z0-9-]+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+
+      if (baseSlug) {
+        const url = request.nextUrl.clone()
+        url.pathname = `/games/${baseSlug}`
+        url.search = ''
+        return NextResponse.redirect(url, 301)
+      }
     }
   }
 

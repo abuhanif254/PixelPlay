@@ -4,31 +4,26 @@ export const revalidate = 3600;
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://spielcade.com';
 
 const HIGH_INTENT_TAGS = [
-  'unblocked',
-  'multiplayer',
-  'car',
-  'racing',
-  'zombie',
-  'stickman',
-  '2-player',
-  'shooting',
-  'action',
-  'puzzle',
-  'arcade',
-  'strategy',
-  'adventure',
-  'sports',
-  'board',
-  'escape',
-  'runner',
-  'clicker',
-  'moto',
-  'drift',
-  '3d',
-  'chromebook',
-  'retro',
-  'physics',
-  'battle-royale'
+  '2048',
+  'checkers',
+  'ludo',
+  'dominoes',
+  'monster-truck',
+  'parking',
+  'archery',
+  'aircraft',
+  'pixel',
+  'merge',
+  'obby',
+  'skibidi',
+  'brawl-stars',
+  'fnf',
+  'squid-game',
+  'minecraft',
+  'stickman-archery',
+  'penalty',
+  'pinball',
+  'water-slide',
 ];
 
 export async function GET() {
@@ -41,8 +36,8 @@ ${HIGH_INTENT_TAGS
     (tag) => `  <url>
     <loc>${baseUrl}/games/tags/${tag}</loc>
     <lastmod>${today}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.85</priority>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
   </url>`
   )
   .join('\n')}
@@ -54,6 +49,7 @@ ${HIGH_INTENT_TAGS
       'Cache-Control': 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800',
       'CDN-Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
       'Cloudflare-CDN-Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
+      'X-Robots-Tag': 'noindex',
     },
   });
 }

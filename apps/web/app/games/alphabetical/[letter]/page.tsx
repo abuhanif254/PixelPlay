@@ -12,6 +12,9 @@ interface AlphabeticalPageProps {
   params: {
     letter: string;
   };
+  searchParams?: {
+    page?: string;
+  };
 }
 
 const ALPHABET = [
@@ -20,13 +23,20 @@ const ALPHABET = [
   'u', 'v', 'w', 'x', 'y', 'z', '0-9'
 ];
 
-export async function generateMetadata({ params }: AlphabeticalPageProps): Promise<Metadata> {
+const PAGE_SIZE = 120;
+
+export async function generateMetadata({ params, searchParams }: AlphabeticalPageProps): Promise<Metadata> {
   const cleanLetter = (params.letter || 'a').toLowerCase();
   const displayLetter = cleanLetter === '0-9' ? '0–9 (Numbers)' : cleanLetter.toUpperCase();
+  const pageNum = Math.max(1, parseInt(searchParams?.page || '1', 10) || 1);
 
-  const title = `Games Starting with "${displayLetter}" — Free Online Games | Spielcade`;
-  const description = `Browse and play free online browser games starting with the letter ${displayLetter}. Instant unblocked HTML5 games with zero download on PC, mobile, and Chromebook.`;
-  const canonicalUrl = `https://spielcade.com/games/alphabetical/${cleanLetter}`;
+  const title = pageNum > 1
+    ? `Games Starting with "${displayLetter}" (Page ${pageNum}) — Free Online Games | Spielcade`
+    : `Games Starting with "${displayLetter}" — Free Online Games | Spielcade`;
+  const description = `Browse and play free online browser games starting with the letter ${displayLetter}${pageNum > 1 ? ` (Page ${pageNum})` : ''}. Instant unblocked HTML5 games with zero download on PC, mobile, and Chromebook.`;
+  const canonicalUrl = pageNum > 1
+    ? `https://spielcade.com/games/alphabetical/${cleanLetter}?page=${pageNum}`
+    : `https://spielcade.com/games/alphabetical/${cleanLetter}`;
 
   return {
     title,
@@ -57,14 +67,17 @@ export async function generateMetadata({ params }: AlphabeticalPageProps): Promi
   };
 }
 
-export default async function AlphabeticalPage({ params }: AlphabeticalPageProps) {
+export default async function AlphabeticalPage({ params, searchParams }: AlphabeticalPageProps) {
   const cleanLetter = (params.letter || 'a').toLowerCase();
   const displayLetter = cleanLetter === '0-9' ? '0–9' : cleanLetter.toUpperCase();
+  const currentPage = Math.max(1, parseInt(searchParams?.page || '1', 10) || 1);
+  const from = (currentPage - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
   const supabase = createPublicClient();
 
   let query = supabase
     .from('games')
-    .select('id, title, slug, image_url, category, rating, total_plays')
+    .select('id, title, slug, image_url, category, rating, total_plays', { count: 'exact' })
     .eq('status', 'active');
 
   if (cleanLetter === '0-9') {
@@ -73,11 +86,13 @@ export default async function AlphabeticalPage({ params }: AlphabeticalPageProps
     query = query.ilike('title', `${cleanLetter}%`);
   }
 
-  const { data: gamesData } = await query
+  const { data: gamesData, count } = await query
     .order('total_plays', { ascending: false })
-    .limit(72);
+    .range(from, to);
 
   const games = gamesData || [];
+  const totalCount = count || games.length;
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   const breadcrumbSchema = {
     '@context': 'https://schema.org',
@@ -178,24 +193,63 @@ export default async function AlphabeticalPage({ params }: AlphabeticalPageProps
 
         {/* Games Grid */}
         {games.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {games.map((game) => (
-              <div key={game.id} className="h-full">
-                <GameCard
-                  title={game.title}
-                  slug={game.slug}
-                  imageUrl={game.image_url}
-                  category={game.category}
-                  rating={game.rating || 4.8}
-                  plays={
-                    game.total_plays >= 1000000
-                      ? `${(game.total_plays / 1000000).toFixed(1)}M`
-                      : `${Math.floor((game.total_plays || 10000) / 1000)}K`
-                  }
-                />
-              </div>
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {games.map((game) => (
+                <div key={game.id} className="h-full">
+                  <GameCard
+                    title={game.title}
+                    slug={game.slug}
+                    imageUrl={game.image_url}
+                    category={game.category}
+                    rating={game.rating || 4.8}
+                    plays={
+                      game.total_plays >= 1000000
+                        ? `${(game.total_plays / 1000000).toFixed(1)}M`
+                        : `${Math.floor((game.total_plays || 10000) / 1000)}K`
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+
+            {totalPages > 1 && (
+              <nav aria-label={`Pagination for letter ${displayLetter}`} className="mt-10 flex flex-wrap items-center justify-center gap-2">
+                {currentPage > 1 && (
+                  <Link
+                    href={currentPage === 2 ? `/games/alphabetical/${cleanLetter}` : `/games/alphabetical/${cleanLetter}?page=${currentPage - 1}`}
+                    prefetch={false}
+                    className="px-4 py-2 rounded-xl bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/10 text-xs font-bold hover:border-[#6366F1] transition-colors"
+                  >
+                    ← Previous
+                  </Link>
+                )}
+                {Array.from({ length: Math.min(totalPages, 12) }, (_, idx) => idx + 1).map((pageNum) => (
+                  <Link
+                    key={pageNum}
+                    href={pageNum === 1 ? `/games/alphabetical/${cleanLetter}` : `/games/alphabetical/${cleanLetter}?page=${pageNum}`}
+                    prefetch={false}
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold transition-colors ${
+                      pageNum === currentPage
+                        ? 'bg-[#6366F1] text-white shadow-md shadow-[#6366F1]/25'
+                        : 'bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:border-[#6366F1]'
+                    }`}
+                  >
+                    {pageNum}
+                  </Link>
+                ))}
+                {currentPage < totalPages && (
+                  <Link
+                    href={`/games/alphabetical/${cleanLetter}?page=${currentPage + 1}`}
+                    prefetch={false}
+                    className="px-4 py-2 rounded-xl bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/10 text-xs font-bold hover:border-[#6366F1] transition-colors"
+                  >
+                    Next →
+                  </Link>
+                )}
+              </nav>
+            )}
+          </>
         ) : (
           <div className="p-16 text-center rounded-2xl bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5">
             <h3 className="text-xl font-bold mb-2">No games found for letter {displayLetter}</h3>

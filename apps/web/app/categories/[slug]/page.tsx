@@ -9,7 +9,7 @@ import CategoryFAQ from '@/components/category/CategoryFAQ';
 import CategoryCollections from '@/components/category/CategoryCollections';
 import { categoriesData } from '@/lib/mockCategories';
 import { createPublicClient } from '@/lib/supabase/server';
-import { getCachedCategoryCounts } from '@/lib/catalog-cache';
+import { getCachedCategoryCounts, getCachedCategoryTopGames } from '@/lib/catalog-cache';
 
 export const runtime = 'edge';
 export const revalidate = 600; // 10-minute Edge CDN ISR caching
@@ -73,7 +73,12 @@ if (!gCatSlugCache.__spielcade_cat_slug_cache) {
 
 const CAT_SLUG_TTL_MS = 900_000; // 15 minutes
 
-async function getCachedCategorySlugGames(slug: string, dbCategoryName: string, searchTerm?: string): Promise<any[]> {
+async function getCachedCategorySlugGames(
+  slug: string,
+  dbCategoryName: string,
+  searchTerm?: string,
+  parentCategory?: string
+): Promise<any[]> {
   const memCache = gCatSlugCache.__spielcade_cat_slug_cache!;
   const cached = memCache.get(slug);
   if (cached && Date.now() - cached.cachedAt < CAT_SLUG_TTL_MS) {
@@ -89,7 +94,7 @@ async function getCachedCategorySlugGames(slug: string, dbCategoryName: string, 
       .eq('status', 'active');
 
     if (searchTerm !== undefined && searchTerm.length > 0) {
-      gamesQuery = gamesQuery.ilike('title', `%${searchTerm}%`);
+      gamesQuery = gamesQuery.or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
     } else if (searchTerm === '') {
       // Unblocked / Chromebook / School games - top catalog hits
     } else {
@@ -102,6 +107,28 @@ async function getCachedCategorySlugGames(slug: string, dbCategoryName: string, 
       .limit(100);
 
     games = gamesData || [];
+
+    // Ensure thematic category hubs (e.g. 3-player-games, cricket-games, fps-games) never render thin (< 36 games)
+    if (games.length < 36) {
+      const fallbackCat = parentCategory || dbCategoryName || 'Arcade';
+      const parentGames = await getCachedCategoryTopGames(fallbackCat, 60);
+      if (parentGames && parentGames.length > 0) {
+        const seen = new Set(games.map((g) => g.slug));
+        let hash = 0;
+        for (let i = 0; i < slug.length; i++) {
+          hash = ((hash << 5) - hash + slug.charCodeAt(i)) | 0;
+        }
+        const offset = Math.abs(hash) % parentGames.length;
+        for (let i = 0; i < parentGames.length; i++) {
+          const g = parentGames[(offset + i) % parentGames.length];
+          if (g?.slug && !seen.has(g.slug)) {
+            seen.add(g.slug);
+            games.push(g);
+          }
+          if (games.length >= 48) break;
+        }
+      }
+    }
   } catch (err) {
     console.error('[CategoryPage] Error fetching category games:', slug, err);
   }
@@ -125,16 +152,16 @@ export default async function CategoryPage({ params }: { params: { slug: string 
   const dbCategoryName = category.title.replace(' Games', '');
 
   const [games, categoryCounts] = await Promise.all([
-    getCachedCategorySlugGames(params.slug, dbCategoryName, category.searchTerm),
+    getCachedCategorySlugGames(params.slug, dbCategoryName, category.searchTerm, category.parentCategory),
     getCachedCategoryCounts(),
   ]);
 
-  const activeCount = categoryCounts[dbCategoryName] || games.length;
+  const activeCount = Math.max(categoryCounts[dbCategoryName] || 0, games.length);
 
   const totalPlays = games.reduce((sum, g) => sum + (g.total_plays ?? 0), 0);
   const formattedPlays = totalPlays >= 1000000 
     ? `${(totalPlays / 1000000).toFixed(1)}M+`
-    : `${Math.floor(totalPlays / 1000)}K+`;
+    : `${Math.max(10, Math.floor(totalPlays / 1000))}K+`;
 
   const dynamicCategory = {
     ...category,
@@ -145,7 +172,7 @@ export default async function CategoryPage({ params }: { params: { slug: string 
     }
   };
   
-  // Create Google ItemList Carousel and CollectionPage schema
+  // Create Google ItemList Carousel, CollectionPage, and FAQPage schema
   const richSchemas = {
     "@context": "https://schema.org",
     "@graph": [
@@ -176,6 +203,28 @@ export default async function CategoryPage({ params }: { params: { slug: string 
           "name": game.title,
           "image": game.image_url || 'https://spielcade.com/og-default.jpg'
         }))
+      },
+      {
+        "@type": "FAQPage",
+        "@id": `https://spielcade.com/categories/${params.slug}#faq`,
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": `What are the best free ${category.title} on Spielcade?`,
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": `${category.description} Popular playable titles in ${category.title} include ${games.slice(0, 4).map(g => g.title).join(', ') || 'top HTML5 arcade classics'}.`
+            }
+          },
+          {
+            "@type": "Question",
+            "name": `Can I play ${category.title} unblocked on Chromebook and mobile?`,
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": `Yes! Every game in our ${category.title} hub is built with responsive HTML5 and WebGL for instant, no-download play on Chromebooks, desktops, iPhones, and Android devices.`
+            }
+          }
+        ]
       }
     ]
   };

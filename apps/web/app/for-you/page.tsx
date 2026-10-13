@@ -1,14 +1,14 @@
 import React from 'react';
 import Link from 'next/link';
 import { Sparkles, ArrowLeft } from 'lucide-react';
-import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/server';
 import ForYouFeed from '@/components/ForYouFeed';
 
 export const runtime = 'edge';
-export const revalidate = 120;
+export const revalidate = 600;
 
 export default async function ForYouPage() {
-  const supabase = createClient();
+  const supabase = createPublicClient();
 
   const { data: games } = await supabase
     .from('games')

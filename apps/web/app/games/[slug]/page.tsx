@@ -128,6 +128,64 @@ const getCachedGame = cache(async (rawSlug: string) => {
   return foundGame;
 });
 
+interface CachedNeighborsEntry {
+  neighbors: any[];
+  cachedAt: number;
+}
+
+const gGameNeighbors = globalThis as unknown as { __spielcade_game_neighbors_cache?: Map<string, CachedNeighborsEntry> };
+if (!gGameNeighbors.__spielcade_game_neighbors_cache) {
+  gGameNeighbors.__spielcade_game_neighbors_cache = new Map();
+}
+
+const getCachedCatalogNeighbors = cache(async (rawSlug: string) => {
+  const slug = safeDecodeSlug(rawSlug).trim().toLowerCase();
+  if (!slug) return [];
+
+  const memCache = gGameNeighbors.__spielcade_game_neighbors_cache!;
+  const cached = memCache.get(slug);
+  if (cached && Date.now() - cached.cachedAt < GAME_DETAIL_TTL_MS) {
+    return cached.neighbors;
+  }
+
+  let neighbors: any[] = [];
+  try {
+    const supabase = createPublicClient();
+    const { data: nextGames } = await supabase
+      .from('games')
+      .select('id, title, slug, image_url, category, rating, total_plays')
+      .eq('status', 'active')
+      .gt('slug', slug)
+      .order('slug', { ascending: true })
+      .limit(8);
+
+    neighbors = nextGames || [];
+
+    if (neighbors.length < 8) {
+      const { data: wrapGames } = await supabase
+        .from('games')
+        .select('id, title, slug, image_url, category, rating, total_plays')
+        .eq('status', 'active')
+        .order('slug', { ascending: true })
+        .limit(8 - neighbors.length);
+
+      if (wrapGames) {
+        neighbors = [...neighbors, ...wrapGames];
+      }
+    }
+  } catch (err) {
+    console.warn('[GamePage] Error fetching catalog neighbors:', slug, err);
+  }
+
+  if (memCache.size >= MAX_GAME_CACHE_ENTRIES) {
+    const oldestKey = memCache.keys().next().value;
+    if (oldestKey) memCache.delete(oldestKey);
+  }
+  memCache.set(slug, { neighbors, cachedAt: Date.now() });
+
+  return neighbors;
+});
+
 
 interface GamePageProps {
   params: {
@@ -314,11 +372,12 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
     : generateGameFaqs(rawTitle, rawCat);
   const finalTags = generateGameTags(rawTitle, rawCat);
 
-  // Fetch community reviews, cached category top games, and cached platform catalog in parallel
-  const [initialReviews, catGamesData, catalogData, devProfRes] = await Promise.all([
+  // Fetch community reviews, cached category top games, platform catalog, and Hamiltonian catalog neighbors in parallel
+  const [initialReviews, catGamesData, catalogData, catalogNeighbors, devProfRes] = await Promise.all([
     getGameReviews(slug, dbGame?.id),
     getCachedCategoryTopGames(rawCat, 48),
     getCachedCatalogData(),
+    getCachedCatalogNeighbors(slug),
     dbGame?.developer_id
       ? supabase
           .from('profiles')
@@ -483,7 +542,7 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
   const catList = catGamesData || [];
   const startOffset = catList.length > 0 ? Math.abs(slugHash) % catList.length : 0;
 
-  // Prioritize games in the same category (from warm Edge cache)
+  // 1. Prioritize games in the same category (from warm Edge cache)
   for (let i = 0; i < catList.length; i++) {
     const g = catList[(startOffset + i) % catList.length];
     if (g?.slug && !seenSlugs.has(g.slug)) {
@@ -498,10 +557,27 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
         totalPlays: g.total_plays ?? 0,
       });
     }
+    if (relatedGames.length >= 8) break;
+  }
+
+  // 2. Circulant Hamiltonian Ring: guarantee 8 incoming internal links across all 17,125 games in the catalog
+  for (const n of (catalogNeighbors || [])) {
+    if (n?.slug && !seenSlugs.has(n.slug)) {
+      seenSlugs.add(n.slug);
+      relatedGames.push({
+        id: n.id,
+        slug: n.slug,
+        title: n.title,
+        image: n.image_url || n.image || '',
+        category: n.category,
+        rating: n.rating || 4.8,
+        totalPlays: n.total_plays ?? 0,
+      });
+    }
     if (relatedGames.length >= 16) break;
   }
 
-  // Backfill with top-rated & trending games from warm catalog cache
+  // 3. Backfill with top-rated & trending games from warm catalog cache
   const backfillPool = [...(catalogData.topRated || []), ...(catalogData.trending || [])];
   const backfillOffset = backfillPool.length > 0 ? Math.abs(slugHash) % backfillPool.length : 0;
   for (let i = 0; i < backfillPool.length; i++) {

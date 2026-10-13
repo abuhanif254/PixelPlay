@@ -1,6 +1,7 @@
 import React from 'react';
 import { Metadata } from 'next';
 import Link from 'next/link';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { createPublicClient } from '@/lib/supabase/server';
 import { getCachedCatalogData } from '@/lib/catalog-cache';
 import GameCard from '@/components/GameCard';
@@ -277,9 +278,28 @@ async function getCachedTagData(rawTagParam: string): Promise<CachedTagEntry> {
   return entry;
 }
 
+const BLOCKLISTED_TAGS = new Set([
+  'adult',
+  'nsfw',
+  'porn',
+  'sex',
+  'xxx',
+  'casino',
+  'gambling',
+  'instant-play',
+  'super',
+]);
+
 export async function generateMetadata({ params }: TagPageProps): Promise<Metadata> {
   const tagName = formatTag(params.tag);
   const tagData = await getCachedTagData(params.tag);
+
+  if (BLOCKLISTED_TAGS.has(tagData.cleanTagSlug)) {
+    return {
+      title: 'Tag Not Found | Spielcade',
+      robots: { index: false, follow: false },
+    };
+  }
 
   // Consolidate canonical URL to prevent per-game tag duplication:
   // 1) If tag matches a specific game (e.g. /games/tags/tanks-1944 or /games/tags/coastal-defense-unblocked), canonicalize to /games/[slug]
@@ -308,6 +328,10 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
     alternates: {
       canonical: canonicalUrl,
     },
+    robots: {
+      index: !tagData.matchedGameSlug && !tagData.matchedCategoryHref,
+      follow: true,
+    },
     openGraph: {
       title,
       description,
@@ -334,7 +358,21 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
 
 export default async function TagPage({ params }: TagPageProps) {
   const formattedTag = formatTag(params.tag);
-  const { games } = await getCachedTagData(params.tag);
+  const tagData = await getCachedTagData(params.tag);
+
+  if (BLOCKLISTED_TAGS.has(tagData.cleanTagSlug)) {
+    notFound();
+  }
+
+  if (tagData.matchedCategoryHref) {
+    permanentRedirect(tagData.matchedCategoryHref);
+  }
+
+  if (tagData.matchedGameSlug) {
+    permanentRedirect(`/games/${tagData.matchedGameSlug}`);
+  }
+
+  const { games } = tagData;
 
   const breadcrumbSchema = {
     '@context': 'https://schema.org',
