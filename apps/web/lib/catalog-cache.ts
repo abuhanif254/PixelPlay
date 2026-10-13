@@ -193,3 +193,95 @@ export async function getCachedCatalogData(): Promise<CatalogCachePayload> {
 
   return cache.revalidatingPromise;
 }
+
+const DEFAULT_CATEGORY_COUNTS: Record<string, number> = {
+  Action: 3250,
+  Arcade: 4120,
+  Racing: 1680,
+  Puzzle: 3450,
+  Adventure: 1340,
+  Sports: 1050,
+  Strategy: 1280,
+  Board: 520,
+};
+
+interface CategoryCacheContainer {
+  counts: Record<string, number> | null;
+  countsCachedAt: number;
+  categoryTopGames: Map<string, { games: CachedGameItem[]; cachedAt: number }>;
+}
+
+const gCat = globalThis as unknown as { __spielcade_category_cache?: CategoryCacheContainer };
+if (!gCat.__spielcade_category_cache) {
+  gCat.__spielcade_category_cache = {
+    counts: null,
+    countsCachedAt: 0,
+    categoryTopGames: new Map(),
+  };
+}
+
+const CATEGORY_COUNTS_TTL_MS = 1_800_000; // 30 minutes
+const CATEGORY_GAMES_TTL_MS = 600_000; // 10 minutes
+
+export async function getCachedCategoryCounts(): Promise<Record<string, number>> {
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    return { ...DEFAULT_CATEGORY_COUNTS };
+  }
+
+  const c = gCat.__spielcade_category_cache!;
+  if (c.counts && Date.now() - c.countsCachedAt < CATEGORY_COUNTS_TTL_MS) {
+    return { ...c.counts };
+  }
+
+  const counts = { ...DEFAULT_CATEGORY_COUNTS };
+  try {
+    const supabase = getPublicCatalogClient();
+    const { data: dbCounts } = await supabase.rpc('get_category_counts');
+    if (dbCounts && Array.isArray(dbCounts)) {
+      dbCounts.forEach((row: any) => {
+        if (row.category && typeof row.count !== 'undefined') {
+          counts[row.category] = Number(row.count);
+        }
+      });
+    }
+    c.counts = counts;
+    c.countsCachedAt = Date.now();
+  } catch {}
+
+  return { ...counts };
+}
+
+export async function getCachedCategoryTopGames(category: string, limit = 20): Promise<CachedGameItem[]> {
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    return getLocalFallbackCatalog().trending.slice(0, limit);
+  }
+
+  const key = `${category.toLowerCase()}:${limit}`;
+  const map = gCat.__spielcade_category_cache!.categoryTopGames;
+  const cached = map.get(key);
+  if (cached && Date.now() - cached.cachedAt < CATEGORY_GAMES_TTL_MS) {
+    return cached.games;
+  }
+
+  try {
+    const supabase = getPublicCatalogClient();
+    const { data } = await supabase
+      .from('games')
+      .select('id, title, slug, image_url, category, rating, total_plays')
+      .eq('status', 'active')
+      .eq('category', category)
+      .order('total_plays', { ascending: false })
+      .limit(limit);
+
+    const games = (data || []) as CachedGameItem[];
+    if (map.size > 40) {
+      const oldestKey = map.keys().next().value;
+      if (oldestKey) map.delete(oldestKey);
+    }
+    map.set(key, { games, cachedAt: Date.now() });
+    return games;
+  } catch {
+    return [];
+  }
+}
+

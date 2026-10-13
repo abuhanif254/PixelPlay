@@ -1,7 +1,7 @@
 import React from 'react';
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/server';
 import GameCard from '@/components/GameCard';
 import { ChevronRight, Tag } from 'lucide-react';
 
@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
 export default async function TagPage({ params }: TagPageProps) {
   const rawTag = decodeURIComponent(params.tag).replace(/-/g, ' ').toLowerCase();
   const formattedTag = formatTag(params.tag);
-  const supabase = createClient();
+  const supabase = createPublicClient();
 
   // Search for active games matching the tag in title or category or metadata
   const { data: gamesData } = await supabase

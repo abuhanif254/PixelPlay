@@ -15,7 +15,7 @@ export default function CategoryCard({ name, gameCount, icon, colorClass = "text
   const slug = name.toLowerCase().replace(/\s+/g, '-') + (name.toLowerCase().endsWith('games') ? '' : '-games');
   
   return (
-    <Link href={`/categories/${slug}`} className="block h-full">
+    <Link href={`/categories/${slug}`} prefetch={false} className="block h-full">
       <motion.div 
         whileHover={{ y: -8, scale: 1.03 }}
         whileTap={{ scale: 0.96 }}

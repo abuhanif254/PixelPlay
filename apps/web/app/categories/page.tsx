@@ -21,7 +21,7 @@ import Link from 'next/link';
 import CategoryCard from '@/components/CategoryCard';
 import { SectionHeader } from '@/components/SectionHeader';
 import { categoriesData } from '@/lib/mockCategories';
-import { createClient } from '@/lib/supabase/server';
+import { getCachedCategoryCounts } from '@/lib/catalog-cache';
 
 export const metadata: Metadata = {
   title: "All Game Categories & Thematic Hubs | Spielcade",
@@ -40,28 +40,8 @@ export const runtime = 'edge';
 export const revalidate = 3600; // Cache for 1 hour
 
 export default async function CategoriesIndexPage() {
-  const categoryCounts: Record<string, number> = {
-    'Action': 3250,
-    'Arcade': 4120,
-    'Racing': 1680,
-    'Puzzle': 3450,
-    'Adventure': 1340,
-    'Sports': 1050,
-    'Strategy': 1280,
-    'Board': 520,
-  };
+  const categoryCounts = await getCachedCategoryCounts();
 
-  try {
-    const supabase = createClient();
-    const { data: dbCounts } = await supabase.rpc('get_category_counts');
-    if (dbCounts && Array.isArray(dbCounts)) {
-      dbCounts.forEach((row: any) => {
-        if (row.category && typeof row.count !== 'undefined') {
-          categoryCounts[row.category] = Number(row.count);
-        }
-      });
-    }
-  } catch {}
 
   const canonicalCards = [
     { name: "Puzzle", icon: <Puzzle className="w-8 h-8" />, colorClass: "text-indigo-500", key: "Puzzle" },

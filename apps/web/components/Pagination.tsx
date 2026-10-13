@@ -73,6 +73,7 @@ export default function Pagination({
         {getPageUrl ? (
           <Link
             href={getPageUrl(prevPage)}
+            prefetch={false}
             onClick={(e) => {
               if (prevDisabled) {
                 e.preventDefault();
@@ -126,6 +127,7 @@ export default function Pagination({
             <Link
               key={`page-${page}`}
               href={getPageUrl(page as number)}
+              prefetch={false}
               onClick={(e) => handlePageClick(page as number, e)}
               aria-current={isCurrent ? 'page' : undefined}
               aria-label={`Page ${page}`}
@@ -159,6 +161,7 @@ export default function Pagination({
         {getPageUrl ? (
           <Link
             href={getPageUrl(nextPage)}
+            prefetch={false}
             onClick={(e) => {
               if (nextDisabled) {
                 e.preventDefault();
@@ -200,6 +203,7 @@ export default function Pagination({
         {getPageUrl ? (
           <Link
             href={getPageUrl(prevPage)}
+            prefetch={false}
             onClick={(e) => {
               if (prevDisabled) {
                 e.preventDefault();
@@ -252,6 +256,7 @@ export default function Pagination({
         {getPageUrl ? (
           <Link
             href={getPageUrl(nextPage)}
+            prefetch={false}
             onClick={(e) => {
               if (nextDisabled) {
                 e.preventDefault();

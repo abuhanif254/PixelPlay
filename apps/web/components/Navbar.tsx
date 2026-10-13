@@ -153,7 +153,15 @@ export default function Navbar() {
   useEffect(() => {
     setMounted(true);
     
-    // Check active session (deferred via idle callback to allow initial paint to finish with zero thread blocking)
+    // Only check active session with Supabase if an auth cookie actually exists (skips network/auth work for 99%+ of anonymous guests & bots)
+    const hasAuthCookie = typeof document !== 'undefined' && (
+      document.cookie.includes('sb-') || document.cookie.includes('-auth-token')
+    );
+
+    if (!hasAuthCookie) {
+      return;
+    }
+
     const checkSession = () => {
       supabase.auth.getUser().then(({ data: { user } }) => {
         setUser(user);

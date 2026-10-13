@@ -8,7 +8,8 @@ import CategoryInfoBanner from '@/components/category/CategoryInfoBanner';
 import CategoryFAQ from '@/components/category/CategoryFAQ';
 import CategoryCollections from '@/components/category/CategoryCollections';
 import { categoriesData } from '@/lib/mockCategories';
-import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/server';
+import { getCachedCategoryCounts } from '@/lib/catalog-cache';
 
 export const runtime = 'edge';
 export const revalidate = 600; // 10-minute Edge CDN ISR caching
@@ -42,11 +43,20 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       url: `https://spielcade.com/categories/${params.slug}`,
       siteName: 'Spielcade Games',
       type: 'website',
+      images: [
+        {
+          url: 'https://spielcade.com/og-default.jpg',
+          width: 1200,
+          height: 630,
+          alt: `${category.title} on Spielcade`,
+        },
+      ],
     },
     twitter: {
       card: 'summary_large_image',
       title: `${category.title} | Spielcade`,
       description: category.description,
+      images: ['https://spielcade.com/og-default.jpg'],
     },
   };
 }
@@ -58,7 +68,7 @@ export default async function CategoryPage({ params }: { params: { slug: string 
     notFound();
   }
 
-  const supabase = createClient();
+  const supabase = createPublicClient();
   const dbCategoryName = category.title.replace(' Games', '');
   
   // Build query for games
@@ -67,57 +77,23 @@ export default async function CategoryPage({ params }: { params: { slug: string 
     .select('id, title, slug, description, category, image_url, total_plays, rating')
     .eq('status', 'active');
 
-  let countQuery = supabase
-    .from('games')
-    .select('*', { count: 'exact', head: true })
-    .eq('status', 'active');
-
   if (category.searchTerm !== undefined && category.searchTerm.length > 0) {
     gamesQuery = gamesQuery.or(`title.ilike.%${category.searchTerm}%,description.ilike.%${category.searchTerm}%`);
-    countQuery = countQuery.or(`title.ilike.%${category.searchTerm}%,description.ilike.%${category.searchTerm}%`);
   } else if (category.searchTerm === '') {
     // Unblocked games - entire catalog
   } else {
     // Canonical root category
     gamesQuery = gamesQuery.eq('category', dbCategoryName);
-    countQuery = countQuery.eq('category', dbCategoryName);
   }
 
-  const [{ data: gamesData }, { count: totalMatchCount }] = await Promise.all([
+  const [{ data: gamesData }, categoryCounts] = await Promise.all([
     gamesQuery.order('total_plays', { ascending: false }).limit(100),
-    countQuery
+    getCachedCategoryCounts(),
   ]);
 
   const games = gamesData || [];
+  const activeCount = categoryCounts[dbCategoryName] || games.length;
 
-  // Default baseline category counts for sidebar
-  const categoryCounts: Record<string, number> = {
-    'Action': 3250,
-    'Arcade': 4120,
-    'Racing': 1680,
-    'Puzzle': 3450,
-    'Adventure': 1340,
-    'Sports': 1050,
-    'Strategy': 1280,
-    'Board': 520,
-  };
-
-  try {
-    const { data: dbCounts } = await supabase.rpc('get_category_counts');
-    if (dbCounts && Array.isArray(dbCounts)) {
-      dbCounts.forEach((row: any) => {
-        if (row.category && typeof row.count !== 'undefined') {
-          categoryCounts[row.category] = Number(row.count);
-        }
-      });
-    }
-  } catch {}
-
-  if (totalMatchCount && categoryCounts[dbCategoryName]) {
-    categoryCounts[dbCategoryName] = totalMatchCount;
-  }
-
-  const activeCount = totalMatchCount || games.length;
   const totalPlays = games.reduce((sum, g) => sum + (g.total_plays ?? 0), 0);
   const formattedPlays = totalPlays >= 1000000 
     ? `${(totalPlays / 1000000).toFixed(1)}M+`

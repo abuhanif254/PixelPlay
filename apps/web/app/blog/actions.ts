@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createPublicClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
 function safeRevalidate(path: string) {
@@ -54,7 +54,7 @@ export async function toggleLike(postId: string) {
 }
 
 export async function getLikeCount(postId: string) {
-  const supabase = createClient();
+  const supabase = createPublicClient();
   const { count } = await supabase
     .from('blog_likes')
     .select('id', { count: 'exact', head: true })
@@ -105,7 +105,7 @@ export async function addComment(postId: string, content: string) {
 }
 
 export async function getComments(postId: string) {
-  const supabase = createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from('blog_comments')
     .select(`
@@ -118,4 +118,5 @@ export async function getComments(postId: string) {
   if (error) return [];
   return data;
 }
+
 

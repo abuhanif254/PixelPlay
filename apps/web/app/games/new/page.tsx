@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import NewGamesClient from './NewGamesClient';
-import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/server';
 
 export const runtime = 'edge';
 export const revalidate = 300; // 5-minute Edge CDN caching
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 };
 
 export default async function NewGamesPage() {
-  const supabase = createClient();
+  const supabase = createPublicClient();
   
   // Fetch up to 100 newest active games with targeted projection
   const { data: games } = await supabase

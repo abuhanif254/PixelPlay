@@ -1,7 +1,7 @@
 import React from 'react';
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/server';
 import GameCard from '@/components/GameCard';
 import { ChevronRight, Compass } from 'lucide-react';
 
@@ -60,7 +60,7 @@ export async function generateMetadata({ params }: AlphabeticalPageProps): Promi
 export default async function AlphabeticalPage({ params }: AlphabeticalPageProps) {
   const cleanLetter = (params.letter || 'a').toLowerCase();
   const displayLetter = cleanLetter === '0-9' ? '0–9' : cleanLetter.toUpperCase();
-  const supabase = createClient();
+  const supabase = createPublicClient();
 
   let query = supabase
     .from('games')
@@ -162,6 +162,7 @@ export default async function AlphabeticalPage({ params }: AlphabeticalPageProps
                 <Link
                   key={item}
                   href={`/games/alphabetical/${item}`}
+                  prefetch={false}
                   className={`w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl text-xs sm:text-sm font-bold uppercase transition-all ${
                     isActive
                       ? 'bg-[#6366F1] text-white shadow-md shadow-[#6366F1]/30 scale-105'

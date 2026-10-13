@@ -49,35 +49,49 @@ export default function AdBanner({ id, width, height, className = '', gameId, sl
 
   // Anti-Cheat Cryptographic Ad Impression Token & Viewability Tracking (RFC-AD-001)
   const tokenRef = useRef<string | null>(null);
+  const tokenPromiseRef = useRef<Promise<string | null> | null>(null);
   const impressionClaimedRef = useRef<boolean>(false);
   const visibleSinceRef = useRef<number | null>(null);
 
   useEffect(() => {
-    let isMounted = true;
-    fetchAdImpressionToken({ slotId: id, gameId }).then((token) => {
-      if (isMounted && token) {
-        tokenRef.current = token;
-      }
-    });
-    return () => {
-      isMounted = false;
-    };
-  }, [id, gameId]);
-
-  useEffect(() => {
     if (!containerRef.current || isBlocked) return;
 
+    let isMounted = true;
     let dwellTimer: NodeJS.Timeout | null = null;
 
+    const ensureToken = () => {
+      if (tokenRef.current) return Promise.resolve(tokenRef.current);
+      if (!tokenPromiseRef.current) {
+        tokenPromiseRef.current = fetchAdImpressionToken({ slotId: id, gameId }).then((token) => {
+          if (isMounted && token) {
+            tokenRef.current = token;
+          }
+          return token;
+        });
+      }
+      return tokenPromiseRef.current;
+    };
+
     const checkAndDispatch = (elapsedMs: number) => {
-      if (impressionClaimedRef.current || !tokenRef.current) return;
-      if (elapsedMs >= 1000) {
-        impressionClaimedRef.current = true;
+      if (impressionClaimedRef.current || elapsedMs < 1000) return;
+      impressionClaimedRef.current = true;
+      if (tokenRef.current) {
         sendAdImpressionBeacon({
           token: tokenRef.current,
           viewabilityMs: elapsedMs,
           gameId,
           slotId: id,
+        });
+      } else {
+        ensureToken().then((token) => {
+          if (token) {
+            sendAdImpressionBeacon({
+              token,
+              viewabilityMs: elapsedMs,
+              gameId,
+              slotId: id,
+            });
+          }
         });
       }
     };
@@ -104,6 +118,7 @@ export default function AdBanner({ id, width, height, className = '', gameId, sl
           document.visibilityState === 'visible';
 
         if (isVisible) {
+          ensureToken();
           if (!visibleSinceRef.current) {
             visibleSinceRef.current = Date.now();
           }
@@ -134,6 +149,7 @@ export default function AdBanner({ id, width, height, className = '', gameId, sl
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
+      isMounted = false;
       observer.disconnect();
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (dwellTimer) clearInterval(dwellTimer);

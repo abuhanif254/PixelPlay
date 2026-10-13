@@ -13,7 +13,8 @@ import TournamentMatchRibbon from '@/components/TournamentMatchRibbon';
 import OfflineReadyBadge from '@/components/OfflineReadyBadge';
 import { Metadata, ResolvingMetadata } from 'next';
 import { getGameReviews } from '../reviews-data';
-import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/server';
+import { getCachedCatalogData, getCachedCategoryTopGames } from '@/lib/catalog-cache';
 import { 
   generateEnrichedDescription, 
   generateStrategyContent, 
@@ -26,6 +27,20 @@ export const runtime = 'edge';
 export const revalidate = 600;
 
 const COMMON_SLUG_SUFFIXES = ['-game', '-games', '-online', '-free', '-unblocked', '-html5'];
+
+interface CachedGameDetailEntry {
+  game: any | null;
+  cachedAt: number;
+}
+
+const gGameDetail = globalThis as unknown as { __spielcade_game_detail_cache?: Map<string, CachedGameDetailEntry> };
+if (!gGameDetail.__spielcade_game_detail_cache) {
+  gGameDetail.__spielcade_game_detail_cache = new Map();
+}
+
+const GAME_DETAIL_TTL_MS = 600_000; // 10 minutes for found games
+const GAME_NOT_FOUND_TTL_MS = 120_000; // 2 minutes for 404 slugs
+const MAX_GAME_CACHE_ENTRIES = 400;
 
 const getLocalGame = (rawSlug: string) => {
   const slug = (rawSlug || '').trim().toLowerCase();
@@ -49,29 +64,51 @@ const getCachedGame = cache(async (rawSlug: string) => {
   const slug = (rawSlug || '').trim().toLowerCase();
   if (!slug) return null;
 
-  const supabase = createClient();
+  const memCache = gGameDetail.__spielcade_game_detail_cache!;
+  const cached = memCache.get(slug);
+  if (cached) {
+    const ttl = cached.game ? GAME_DETAIL_TTL_MS : GAME_NOT_FOUND_TTL_MS;
+    if (Date.now() - cached.cachedAt < ttl) {
+      return cached.game;
+    }
+  }
 
-  // 1. Direct exact match
-  const { data: exactMatch } = await supabase.from('games').select('*').eq('slug', slug).maybeSingle();
-  if (exactMatch) return exactMatch;
+  const supabase = createPublicClient();
 
-  // 2. Case-insensitive ilike match
-  const { data: ilikeMatch } = await supabase.from('games').select('*').ilike('slug', slug).maybeSingle();
-  if (ilikeMatch) return ilikeMatch;
-
-  // 3. Suffix-stripping match for external referrals (e.g., subway-surfers-game -> subway-surfers)
+  // Build candidate slugs (exact + stripped suffixes) to resolve in a single indexed query
+  const candidates = [slug];
   for (const sfx of COMMON_SLUG_SUFFIXES) {
     if (slug.endsWith(sfx)) {
       const stripped = slug.slice(0, -sfx.length);
-      if (stripped.length > 2) {
-        const { data: strippedMatch } = await supabase.from('games').select('*').eq('slug', stripped).maybeSingle();
-        if (strippedMatch) return strippedMatch;
+      if (stripped.length > 2 && !candidates.includes(stripped)) {
+        candidates.push(stripped);
       }
     }
   }
 
-  return null;
+  const { data: matches } = await supabase
+    .from('games')
+    .select('*')
+    .in('slug', candidates)
+    .limit(2);
+
+  let foundGame: any | null = null;
+  if (matches && matches.length > 0) {
+    foundGame = matches.find((g: any) => g.slug === slug) || matches[0];
+  }
+
+  if (memCache.size >= MAX_GAME_CACHE_ENTRIES) {
+    const oldestKey = memCache.keys().next().value;
+    if (oldestKey) memCache.delete(oldestKey);
+  }
+  memCache.set(slug, { game: foundGame, cachedAt: Date.now() });
+  if (foundGame && foundGame.slug && foundGame.slug !== slug) {
+    memCache.set(foundGame.slug, { game: foundGame, cachedAt: Date.now() });
+  }
+
+  return foundGame;
 });
+
 
 interface GamePageProps {
   params: {
@@ -196,7 +233,7 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
   const { slug } = params;
   
   const dbGame = await getCachedGame(slug);
-  const supabase = createClient();
+  const supabase = createPublicClient();
   
   const localResult = getLocalGame(slug);
   const localGame = localResult.game;
@@ -235,9 +272,6 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
     );
   }
 
-  // Fetch real community reviews
-  const initialReviews = await getGameReviews(slug, dbGame?.id);
-
   const rawTitle = dbGame?.title || localGame?.config?.title || 'Unknown Game';
   const rawCat = dbGame?.category || (dbGame?.metadata as any)?.category || localGame?.config?.category || 'Arcade';
   const rawGameDesc = dbGame?.description || localGame?.config?.description || '';
@@ -257,6 +291,20 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
     : ((localGame?.config as any)?.tags && (localGame?.config as any)?.tags.length > 0)
       ? (localGame?.config as any)?.tags
       : generateGameTags(rawTitle, rawCat);
+
+  // Fetch community reviews, cached category top games, and cached platform catalog in parallel
+  const [initialReviews, catGamesData, catalogData, devProfRes] = await Promise.all([
+    getGameReviews(slug, dbGame?.id),
+    getCachedCategoryTopGames(rawCat, 20),
+    getCachedCatalogData(),
+    dbGame?.developer_id
+      ? supabase
+          .from('profiles')
+          .select('username, full_name, avatar_url')
+          .eq('id', dbGame.developer_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
 
   // Merge database and local configs (DB takes precedence if available)
   const config = {
@@ -280,33 +328,9 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
   const sourceUrl = config.sourceUrl || ((config as any).type === 'html5' ? `/games/${slug}/index.html` : null);
   const isLocalGame = !sourceUrl && !!localGame;
 
-  // Check if current user favorited this game
-  let isFavorited = false;
-  if (dbGame) {
-    const { data: authData } = await supabase.auth.getUser();
-    if (authData?.user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('favorite_game_ids')
-        .eq('id', authData.user.id)
-        .maybeSingle();
-      if (profile?.favorite_game_ids) {
-        isFavorited = profile.favorite_game_ids.includes(dbGame.id);
-      }
-    }
-  }
-
-  let developerProfile: { username: string; full_name?: string; avatar_url?: string } | null = null;
-  if (dbGame?.developer_id) {
-    const { data: devProf } = await supabase
-      .from('profiles')
-      .select('username, full_name, avatar_url')
-      .eq('id', dbGame.developer_id)
-      .maybeSingle();
-    if (devProf) {
-      developerProfile = devProf;
-    }
-  }
+  // Favorite state is hydrated client-side in FavoriteButton via localStorage to keep page 100% CDN-cacheable
+  const isFavorited = false;
+  const developerProfile: { username: string; full_name?: string; avatar_url?: string } | null = devProfRes?.data || null;
 
   const totalPlaysNum = dbGame?.total_plays ?? (localGame ? 25000 : 0);
   const formattedPlays = totalPlaysNum >= 1000000 
@@ -418,26 +442,7 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
     }))
   } : null;
 
-  // Smart Recommendation Engine: Fetch category games & top platform hits concurrently
-  const [catGamesRes, topGamesRes] = await Promise.all([
-    supabase
-      .from('games')
-      .select('id, title, slug, image_url, category, rating, total_plays')
-      .eq('status', 'active')
-      .eq('category', config.category)
-      .neq('slug', slug)
-      .order('total_plays', { ascending: false })
-      .limit(16),
-    supabase
-      .from('games')
-      .select('id, title, slug, image_url, category, rating, total_plays')
-      .eq('status', 'active')
-      .neq('slug', slug)
-      .order('rating', { ascending: false })
-      .limit(16),
-  ]);
-
-  const seenSlugs = new Set<string>();
+  const seenSlugs = new Set<string>([slug]);
   const relatedGames: Array<{
     id: string;
     slug: string;
@@ -448,31 +453,32 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
     totalPlays: number;
   }> = [];
 
-  // Prioritize games in the same category
-  for (const g of (catGamesRes.data || [])) {
-    if (!seenSlugs.has(g.slug)) {
+  // Prioritize games in the same category (from warm Edge cache)
+  for (const g of (catGamesData || [])) {
+    if (g.slug && !seenSlugs.has(g.slug)) {
       seenSlugs.add(g.slug);
       relatedGames.push({
         id: g.id,
         slug: g.slug,
         title: g.title,
-        image: g.image_url,
+        image: g.image_url || g.image || '',
         category: g.category,
         rating: g.rating || 4.8,
         totalPlays: g.total_plays ?? 0,
       });
     }
+    if (relatedGames.length >= 16) break;
   }
 
-  // Backfill with top-rated games across the platform
-  for (const g of (topGamesRes.data || [])) {
-    if (!seenSlugs.has(g.slug)) {
+  // Backfill with top-rated & trending games from warm catalog cache
+  for (const g of [...(catalogData.topRated || []), ...(catalogData.trending || [])]) {
+    if (g.slug && !seenSlugs.has(g.slug)) {
       seenSlugs.add(g.slug);
       relatedGames.push({
         id: g.id,
         slug: g.slug,
         title: g.title,
-        image: g.image_url,
+        image: g.image_url || g.image || '',
         category: g.category,
         rating: g.rating || 4.8,
         totalPlays: g.total_plays ?? 0,
@@ -480,6 +486,7 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
     }
     if (relatedGames.length >= 18) break;
   }
+
 
   return (
     <>
@@ -786,6 +793,7 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
                 </div>
                 <Link
                   href={`/categories/${config.category.toLowerCase().replace(/\s+/g, '-')}-games`}
+                  prefetch={false}
                   className="inline-flex items-center gap-2 text-xs font-bold text-[#6366F1] hover:text-white bg-[#6366F1]/10 hover:bg-[#6366F1] px-4 py-2.5 rounded-xl transition-all self-start md:self-auto shrink-0"
                 >
                   More {config.category} Games →
@@ -797,6 +805,7 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
                   <Link
                     key={similarGame.slug}
                     href={`/games/${similarGame.slug}`}
+                    prefetch={false}
                     className="group flex flex-col bg-gray-50 dark:bg-[#0A0B1A] border border-gray-200 dark:border-white/5 hover:border-[#6366F1]/50 rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
                   >
                     <div className="relative aspect-video w-full overflow-hidden bg-gray-200 dark:bg-black/30">

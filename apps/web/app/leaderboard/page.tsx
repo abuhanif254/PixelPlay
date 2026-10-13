@@ -8,7 +8,7 @@ import TopChampionCard from '@/components/leaderboard/TopChampionCard';
 import LeaderboardFilters from '@/components/leaderboard/LeaderboardFilters';
 import UserRankCard from '@/components/leaderboard/UserRankCard';
 import DailyCupBanner from '@/components/DailyCupBanner';
-import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/server';
 
 export const runtime = 'edge';
 
@@ -20,10 +20,10 @@ export const metadata: Metadata = {
   },
 };
 
-export const revalidate = 0; // Dynamic route for live scores
+export const revalidate = 300; // 5-minute Edge CDN caching
 
 export default async function LeaderboardPage({ searchParams }: { searchParams: { game?: string, time?: string, region?: string } }) {
-  const supabase = createClient();
+  const supabase = createPublicClient();
   
   // Resolve filters
   const gameSlug = searchParams.game;
@@ -179,30 +179,9 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
   const remainingPlayers = mappedPlayers.slice(3);
   const topChampion = mappedPlayers.length > 0 ? mappedPlayers[0] : null;
 
-  // Get current user's rank
-  const { data: authData } = await supabase.auth.getUser();
-  const user = authData?.user || null;
-  let userRankData = null;
+  const user = null;
+  const userRankData = null;
 
-  if (user) {
-    const userInLeaderboard = mappedPlayers.find(p => p.userId === user.id);
-    if (userInLeaderboard) {
-      userRankData = userInLeaderboard;
-    } else {
-      const { data: profile } = await supabase.from('profiles').select('username, avatar_url, xp, level').eq('id', user.id).maybeSingle();
-      if (profile) {
-        userRankData = {
-          rank: 0,
-          userId: user.id,
-          name: profile.username || 'Player',
-          score: ((profile.xp || 0) * 10).toLocaleString(),
-          topGame: targetGameTitle,
-          gamesPlayed: Math.floor((profile.xp || 0) / 50),
-          avatar: profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username || 'Player'}`
-        };
-      }
-    }
-  }
 
   // SEO JSON-LD Schema
   const itemListSchema = {

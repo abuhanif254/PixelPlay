@@ -1,12 +1,13 @@
 import React from 'react';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/server';
 import LocalGameWrapper from '@/components/LocalGameWrapper';
 import { gamesRegistry } from '@spielcade/games/registry';
 import { GAME_IFRAME_SANDBOX, GAME_IFRAME_PERMISSIONS } from '@/lib/constants';
 
 export const runtime = 'edge';
+export const revalidate = 3600;
 
 interface EmbedPageProps {
   params: { slug: string };
@@ -40,7 +41,7 @@ export default async function EmbedGamePage({ params }: EmbedPageProps) {
   }
 
   // Database lookup for HTML5 source_url
-  const supabase = createClient();
+  const supabase = createPublicClient();
   const { data: game } = await supabase
     .from('games')
     .select('id, title, source_url')

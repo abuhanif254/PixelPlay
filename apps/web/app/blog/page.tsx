@@ -1,5 +1,5 @@
 export const runtime = 'edge';
-export const revalidate = 60; // ISR cache for 60 seconds
+export const revalidate = 300; // ISR cache for 5 minutes
 
 import React from 'react';
 import { Metadata } from 'next';
@@ -7,7 +7,7 @@ import BlogHero from '@/components/blog/BlogHero';
 import FeaturedArticles from '@/components/blog/FeaturedArticles';
 import LatestArticles from '@/components/blog/LatestArticles';
 import BlogSidebar from '@/components/blog/BlogSidebar';
-import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/server';
 
 import { getAllBlogPosts } from '@/lib/blogData';
 
@@ -25,7 +25,7 @@ type BlogPageProps = {
 };
 
 export default async function BlogPage({ searchParams }: BlogPageProps) {
-  const supabase = createClient();
+  const supabase = createPublicClient();
   const q = searchParams?.q?.trim();
   const category = searchParams?.category?.trim();
   const tag = searchParams?.tag?.trim();

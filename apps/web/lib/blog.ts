@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/server';
 
 export interface BlogPost {
   slug: string;
@@ -91,12 +91,30 @@ const MOCK_POSTS: BlogPost[] = [
   },
 ];
 
+interface GlobalBlogCache {
+  posts: BlogPost[] | null;
+  cachedAt: number;
+}
+
+const gBlog = globalThis as unknown as { __spielcade_blog_cache?: GlobalBlogCache };
+if (!gBlog.__spielcade_blog_cache) {
+  gBlog.__spielcade_blog_cache = { posts: null, cachedAt: 0 };
+}
+
+const BLOG_CACHE_TTL_MS = 300_000; // 5 minutes
+
 export async function getAllPosts(): Promise<BlogPost[]> {
   if (process.env.NEXT_PHASE === 'phase-production-build') {
     return MOCK_POSTS;
   }
+
+  const cache = gBlog.__spielcade_blog_cache!;
+  if (cache.posts && Date.now() - cache.cachedAt < BLOG_CACHE_TTL_MS) {
+    return cache.posts;
+  }
+
   try {
-    const supabase = createClient();
+    const supabase = createPublicClient();
     const { data: rawPosts, error } = await supabase
       .from('blog_posts')
       .select(`
@@ -108,7 +126,7 @@ export async function getAllPosts(): Promise<BlogPost[]> {
       .order('created_at', { ascending: false });
 
     if (!error && rawPosts && rawPosts.length > 0) {
-      return rawPosts.map((p: any) => ({
+      const mapped = rawPosts.map((p: any) => ({
         slug: p.slug,
         title: p.title,
         excerpt: p.excerpt || '',
@@ -122,16 +140,21 @@ export async function getAllPosts(): Promise<BlogPost[]> {
           avatar: p.profiles?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Spielcade',
         },
       }));
+      cache.posts = mapped;
+      cache.cachedAt = Date.now();
+      return mapped;
     }
   } catch (err) {
     console.error('Failed to fetch dynamic blog posts from Supabase:', err);
   }
+  cache.posts = MOCK_POSTS;
+  cache.cachedAt = Date.now();
   return MOCK_POSTS;
 }
 
 export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
   try {
-    const supabase = createClient();
+    const supabase = createPublicClient();
     const { data: p, error } = await supabase
       .from('blog_posts')
       .select(`
@@ -165,3 +188,4 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
   const post = MOCK_POSTS.find(p => p.slug === slug);
   return post || null;
 }
+

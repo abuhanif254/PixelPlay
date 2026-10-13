@@ -1,7 +1,7 @@
 export const runtime = 'edge';
-export const revalidate = 60;
+export const revalidate = 600;
 
-import React from 'react';
+import React, { cache } from 'react';
 import { Metadata, ResolvingMetadata } from 'next';
 import ArticleHeader from '@/components/article/ArticleHeader';
 import ArticleHeroImage from '@/components/article/ArticleHeroImage';
@@ -17,17 +17,17 @@ import TableOfContentsWidget from '@/components/article/TableOfContentsWidget';
 import NewsletterWidget from '@/components/article/NewsletterWidget';
 import TagsWidget from '@/components/article/TagsWidget';
 
-import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
-import { getComments, getLikeCount, hasUserLiked } from '../actions';
+import { getComments, getLikeCount } from '../actions';
 
 type Props = {
   params: { slug: string };
 };
 
-// Fetch post helper
-async function getPostData(slug: string) {
-  const supabase = createClient();
+// Fetch post helper (deduplicated per request via React.cache)
+const getPostData = cache(async (slug: string) => {
+  const supabase = createPublicClient();
   const { data: post } = await supabase
     .from('blog_posts')
     .select(`
@@ -47,7 +47,7 @@ async function getPostData(slug: string) {
     author: profiles?.username || 'Spielcade Team',
     author_avatar: profiles?.avatar_url || '',
   };
-}
+});
 
 export async function generateMetadata(
   { params }: Props,
@@ -104,12 +104,11 @@ export default async function SingleArticlePage({ params }: Props) {
     notFound();
   }
 
-  // Fetch engagement data and adjacent/related posts in parallel
-  const supabase = createClient();
-  const [comments, likeCount, userHasLiked, relatedRes, prevRes, nextRes] = await Promise.all([
+  // Fetch public engagement data and adjacent/related posts in parallel without cookies()
+  const supabase = createPublicClient();
+  const [comments, likeCount, relatedRes, prevRes, nextRes] = await Promise.all([
     getComments(post.id),
     getLikeCount(post.id),
-    hasUserLiked(post.id),
     supabase
       .from('blog_posts')
       .select('id, title, slug, cover_image, tags, created_at')
@@ -134,16 +133,10 @@ export default async function SingleArticlePage({ params }: Props) {
       .maybeSingle(),
   ]);
 
+  const userHasLiked = false;
   const relatedPosts = relatedRes.data || [];
   const prevPost = prevRes.data || null;
   const nextPost = nextRes.data || null;
-
-  // Handle views count increment
-  try {
-    await supabase.rpc('increment_blog_views', { post_id: post.id });
-  } catch (err) {
-    console.error('Failed to increment views:', err);
-  }
 
   const coverImage = post.cover_image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200&q=80';
 

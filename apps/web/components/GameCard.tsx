@@ -4,7 +4,6 @@ import React from 'react';
 import { Play, Star, Trophy, Zap } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { arcadeAudio } from '@/lib/arcade-audio';
 import { isWhitelistedImage } from '@/lib/image-helpers';
 
@@ -46,8 +45,6 @@ export default function GameCard({
   rank,
   priority = false,
 }: GameCardProps) {
-  const router = useRouter();
-
   // Determine badge styling based on rank
   let rankBadge = null;
   if (rank === 1) {
@@ -66,11 +63,6 @@ export default function GameCard({
 
   const handlePrewarm = () => {
     prewarmGameOrigins();
-    if (destinationHref && destinationHref !== '/games') {
-      try {
-        router.prefetch(destinationHref);
-      } catch {}
-    }
   };
 
   const cleanSlug = slug.replace(/^\/games\//, '').replace(/^#/, '');
@@ -79,6 +71,7 @@ export default function GameCard({
   return (
     <Link 
       href={destinationHref} 
+      prefetch={false}
       title={`Play ${title} - Free Online Browser Game`} 
       className="block group h-full select-none"
       onMouseEnter={handlePrewarm}

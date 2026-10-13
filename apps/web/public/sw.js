@@ -5,15 +5,11 @@
 //           Network-First Navigation with 2.5s Offline Fallback, Dynamic Cache Cleanup
 // ============================================================================
 
-const CACHE_NAME = 'spielcade-v4';
+const CACHE_NAME = 'spielcade-v5';
 
-// Critical core assets and offline flagship games precached on install
+// Critical static offline core assets precached on install (avoid dynamic SSR routes with no-cache)
 const PRECACHE_ASSETS = [
-  '/',
   '/offline',
-  '/games/snake',
-  '/games/2048',
-  '/games/flappy-bird',
   '/manifest.json',
   '/favicon.ico',
   '/logo.png',
@@ -32,7 +28,7 @@ self.addEventListener('install', (event) => {
       await Promise.allSettled(
         PRECACHE_ASSETS.map(async (url) => {
           try {
-            const response = await fetch(url, { cache: 'no-cache' });
+            const response = await fetch(url);
             if (response.ok) {
               await cache.put(url, response);
             }

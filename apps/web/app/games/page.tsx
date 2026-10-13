@@ -1,13 +1,14 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import React, { Suspense } from 'react';
-import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/server';
+import { getCachedCatalogData, getCachedCategoryCounts } from '@/lib/catalog-cache';
 import AllGamesClient from './AllGamesClient';
 import { Metadata } from 'next';
 import DynamicSEOBlock from '@/components/DynamicSEOBlock';
 
 export const runtime = 'edge';
-export const revalidate = 60;
+export const revalidate = 300;
 
 type Props = {
   searchParams: { [key: string]: string | string[] | undefined }
@@ -51,7 +52,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 
 export default async function AllGamesPage({ searchParams }: Props) {
   try {
-    const supabase = createClient();
+    const supabase = createPublicClient();
     const activeCategory = typeof searchParams.category === 'string' ? searchParams.category : 'All Games';
     const searchQuery = typeof searchParams.q === 'string' ? searchParams.q : (typeof searchParams.search === 'string' ? searchParams.search : '');
     const currentPage = Math.max(1, parseInt(typeof searchParams.page === 'string' ? searchParams.page : '1', 10) || 1);
@@ -87,20 +88,7 @@ export default async function AllGamesPage({ searchParams }: Props) {
         totalCount = rawGames.length;
       }
     } else {
-      // 1. Get exact total count for active category filter
-      let countQuery = supabase
-        .from('games')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'active');
-
-      if (activeCategory !== 'All Games') {
-        countQuery = countQuery.eq('category', activeCategory);
-      }
-
-      const { count } = await countQuery;
-      totalCount = count || 0;
-
-      // 2. Fetch current page slice with index-friendly order
+      // 1. Use cached catalog/category counts instead of running a full table count: 'exact' query on every request
       let query = supabase
         .from('games')
         .select('id, title, slug, description, category, image_url, total_plays, rating, created_at')
@@ -110,12 +98,22 @@ export default async function AllGamesPage({ searchParams }: Props) {
         query = query.eq('category', activeCategory);
       }
 
-      query = query.order('created_at', { ascending: false }).range(from, to);
-      const { data } = await query;
-      rawGames = data || [];
+      const [pageRes, catalog, catCounts] = await Promise.all([
+        query.order('created_at', { ascending: false }).range(from, to),
+        activeCategory === 'All Games' ? getCachedCatalogData() : Promise.resolve(null),
+        activeCategory !== 'All Games' ? getCachedCategoryCounts() : Promise.resolve(null),
+      ]);
+
+      rawGames = pageRes.data || [];
+      if (activeCategory === 'All Games') {
+        totalCount = catalog?.totalActiveGames || 17125;
+      } else {
+        totalCount = catCounts?.[activeCategory] || rawGames.length || 500;
+      }
     }
 
     const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+
 
     const allGames = (rawGames || []).map(game => ({
       id: game.id,

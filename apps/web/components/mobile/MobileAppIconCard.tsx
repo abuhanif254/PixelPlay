@@ -3,7 +3,6 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 import { RotateCw, Video, Sparkles, Flame } from 'lucide-react';
 import { arcadeAudio } from '@/lib/arcade-audio';
 import { isWhitelistedImage } from '@/lib/image-helpers';
@@ -20,23 +19,13 @@ export default function MobileAppIconCard({
   badge = 'none',
   priority = false,
 }: MobileAppIconCardProps) {
-  const router = useRouter();
   const imageUrl = game.image_url || game.image || '';
   const destinationHref = !game.slug || game.slug === '#' ? '/games' : `/games/${game.slug}`;
-
-  const handlePrewarm = () => {
-    if (destinationHref && destinationHref !== '/games') {
-      try {
-        router.prefetch(destinationHref);
-      } catch {}
-    }
-  };
 
   return (
     <Link
       href={destinationHref}
-      onMouseEnter={handlePrewarm}
-      onTouchStart={handlePrewarm}
+      prefetch={false}
       onClick={() => arcadeAudio.playBlip()}
       className="group flex flex-col active:scale-95 transition-transform duration-150 select-none"
     >

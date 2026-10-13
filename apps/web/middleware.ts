@@ -71,10 +71,10 @@ export async function middleware(request: NextRequest) {
     
     // Inject Cloudflare / Edge CDN Stale-While-Revalidate caching on public content routes
     if (!pathname.startsWith('/api') && !pathname.startsWith('/auth')) {
-      response.headers.set(
-        'Cache-Control',
-        'public, max-age=60, s-maxage=600, stale-while-revalidate=86400'
-      )
+      const cacheDirective = 'public, max-age=60, s-maxage=3600, stale-while-revalidate=86400'
+      response.headers.set('Cache-Control', cacheDirective)
+      response.headers.set('CDN-Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400')
+      response.headers.set('Cloudflare-CDN-Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400')
     }
     return response
   }
@@ -89,9 +89,9 @@ export const config = {
      * Match all request paths except for the ones starting with:
      * - _next/static (static files)
      * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
+     * - favicon.ico, sw.js, manifest.json, ads.txt, robots.txt, sitemap*, feed.xml
+     * - static file extensions (.svg, .png, .jpg, .jpeg, .gif, .webp, .ico, .js, .css, .txt, .xml, .json, .woff, .woff2)
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon\\.ico|sw\\.js|manifest\\.json|ads\\.txt|robots\\.txt|sitemap\\.xml|sitemap/|feed\\.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|js|css|txt|xml|json|woff2?)$).*)',
   ],
 }

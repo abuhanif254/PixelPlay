@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/server';
 
 export interface ReviewItem {
   id: string;
@@ -13,8 +13,62 @@ export interface ReviewItem {
   isVerified?: boolean;
 }
 
+const SEED_REVIEWS: ReviewItem[] = [
+  {
+    id: 'seed-1',
+    author: 'GameMaster99',
+    date: '2 days ago',
+    rating: 5,
+    content: `Smooth performance and addictive mechanics! Works beautifully on both desktop and mobile browser.`,
+    helpful: 24,
+    isVerified: true,
+    level: 14,
+  },
+  {
+    id: 'seed-2',
+    author: 'PixelNinja',
+    date: '5 days ago',
+    rating: 5,
+    content: `Solid gameplay loop and no latency at all. Highly recommended for quick sessions during study or work breaks.`,
+    helpful: 18,
+    isVerified: true,
+    level: 9,
+  },
+  {
+    id: 'seed-3',
+    author: 'RetroGamer42',
+    date: '1 week ago',
+    rating: 4,
+    content: `Fun and challenging! Took a few tries to master the rhythm, but very rewarding once you get into the flow.`,
+    helpful: 12,
+    isVerified: false,
+    level: 6,
+  }
+];
+
+interface CachedReviewsEntry {
+  items: ReviewItem[];
+  cachedAt: number;
+}
+
+const gReviews = globalThis as unknown as { __spielcade_reviews_cache?: Map<string, CachedReviewsEntry> };
+if (!gReviews.__spielcade_reviews_cache) {
+  gReviews.__spielcade_reviews_cache = new Map();
+}
+
+const REVIEWS_TTL_MS = 600_000; // 10 minutes
+const MAX_REVIEWS_CACHE_ENTRIES = 250;
+
 export async function getGameReviews(slug: string, gameId?: string): Promise<ReviewItem[]> {
-  const supabase = createClient();
+  const cacheKey = gameId || slug;
+  const cache = gReviews.__spielcade_reviews_cache!;
+  const cached = cache.get(cacheKey);
+
+  if (cached && Date.now() - cached.cachedAt < REVIEWS_TTL_MS) {
+    return cached.items;
+  }
+
+  const supabase = createPublicClient();
 
   try {
     let query = supabase
@@ -45,42 +99,15 @@ export async function getGameReviews(slug: string, gameId?: string): Promise<Rev
     const { data, error } = await query;
 
     if (error || !data || data.length === 0) {
-      // Return curated authentic seed reviews if table is empty or unpopulated
-      return [
-        {
-          id: 'seed-1',
-          author: 'GameMaster99',
-          date: '2 days ago',
-          rating: 5,
-          content: `Smooth performance and addictive mechanics! Works beautifully on both desktop and mobile browser.`,
-          helpful: 24,
-          isVerified: true,
-          level: 14,
-        },
-        {
-          id: 'seed-2',
-          author: 'PixelNinja',
-          date: '5 days ago',
-          rating: 5,
-          content: `Solid gameplay loop and no latency at all. Highly recommended for quick sessions during study or work breaks.`,
-          helpful: 18,
-          isVerified: true,
-          level: 9,
-        },
-        {
-          id: 'seed-3',
-          author: 'RetroGamer42',
-          date: '1 week ago',
-          rating: 4,
-          content: `Fun and challenging! Took a few tries to master the rhythm, but very rewarding once you get into the flow.`,
-          helpful: 12,
-          isVerified: false,
-          level: 6,
-        }
-      ];
+      if (cache.size >= MAX_REVIEWS_CACHE_ENTRIES) {
+        const oldestKey = cache.keys().next().value;
+        if (oldestKey) cache.delete(oldestKey);
+      }
+      cache.set(cacheKey, { items: SEED_REVIEWS, cachedAt: Date.now() });
+      return SEED_REVIEWS;
     }
 
-    return data.map((r: any) => {
+    const items: ReviewItem[] = data.map((r: any) => {
       const createdAt = new Date(r.created_at);
       const diffDays = Math.floor((Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
       const timeStr = diffDays === 0 ? 'Today' : diffDays === 1 ? 'Yesterday' : `${diffDays} days ago`;
@@ -98,18 +125,15 @@ export async function getGameReviews(slug: string, gameId?: string): Promise<Rev
         isVerified: !!r.user_id,
       };
     });
+
+    if (cache.size >= MAX_REVIEWS_CACHE_ENTRIES) {
+      const oldestKey = cache.keys().next().value;
+      if (oldestKey) cache.delete(oldestKey);
+    }
+    cache.set(cacheKey, { items, cachedAt: Date.now() });
+    return items;
   } catch {
-    return [
-      {
-        id: 'seed-1',
-        author: 'GameMaster99',
-        date: '2 days ago',
-        rating: 5,
-        content: `Smooth performance and addictive mechanics! Works beautifully on both desktop and mobile browser.`,
-        helpful: 24,
-        isVerified: true,
-        level: 14,
-      }
-    ];
+    return SEED_REVIEWS;
   }
 }
+
