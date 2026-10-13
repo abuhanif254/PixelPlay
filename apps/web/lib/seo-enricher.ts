@@ -290,27 +290,43 @@ export function generateGameFaqs(title: string, category: string): Array<{ q: st
  * Generate a list of SEO tags and search keywords
  */
 export function generateGameTags(title: string, category: string, rawTags: string = ''): string[] {
+  const lowerTitle = (title || '').toLowerCase();
+  const matchedTopics: string[] = [];
+
+  const topicKeywords = [
+    'stickman', 'zombie', 'sniper', 'drift', 'car', 'bike', 'moto', 'truck', 'bus',
+    'basketball', 'football', 'soccer', 'tennis', 'pool', 'billiards', 'bowling', 'golf',
+    'chess', 'mahjong', 'solitaire', '2048', 'jigsaw', 'bubble', 'match', 'word', 'math',
+    'escape', 'horror', 'parkour', 'runner', 'ninja', 'tank', 'war', 'defense', 'clicker',
+    'idle', 'merge', 'dress up', 'cooking', '2 player', 'multiplayer', 'io', '3d', 'physics'
+  ];
+
+  for (const kw of topicKeywords) {
+    if (lowerTitle.includes(kw)) {
+      matchedTopics.push(kw);
+    }
+  }
+
   const baseTags = [
-    title.toLowerCase(),
-    `${title.toLowerCase()} online`,
-    `free ${title.toLowerCase()}`,
-    `${title.toLowerCase()} unblocked`,
-    `${title.toLowerCase()} for chromebook`,
     `${category.toLowerCase()} games`,
+    ...matchedTopics,
+    'unblocked games',
+    'chromebook games',
+    'no download games',
     'free online games',
     'html5 games',
-    'no download games',
-    'unblocked games',
     'browser games',
-    'instant play'
   ];
 
   if (rawTags) {
-    const split = rawTags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
-    return Array.from(new Set([...baseTags, ...split])).slice(0, 12);
+    const split = rawTags
+      .split(',')
+      .map((t) => t.trim().toLowerCase())
+      .filter((t) => t.length >= 3 && t.length <= 24 && t.split(/\s+/).length <= 2);
+    return Array.from(new Set([...baseTags, ...split])).slice(0, 10);
   }
 
-  return baseTags;
+  return Array.from(new Set(baseTags)).slice(0, 10);
 }
 
 /**

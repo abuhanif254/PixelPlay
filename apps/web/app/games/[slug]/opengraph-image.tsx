@@ -1,7 +1,5 @@
 import { ImageResponse } from 'next/og';
 import { gamesRegistry } from '@spielcade/games/registry';
-import { createClient } from '@supabase/supabase-js';
-import { siteConfig } from '@/lib/seo';
 
 export const runtime = 'edge';
 export const alt = 'Game preview';
@@ -15,31 +13,11 @@ export default async function Image({ params }: { params: { slug: string } }) {
   const localGame = gamesRegistry[params.slug];
   
   let title = localGame?.config?.title;
-  let category = localGame?.config?.category || 'Arcade';
-  let rating = localGame?.config?.rating || 4.8;
-  let imageUrl = localGame?.config?.image;
+  const category = localGame?.config?.category || 'Arcade';
+  const rating = localGame?.config?.rating || 4.8;
 
   if (!title) {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder'
-    );
-    const { data: dbGame } = await supabase
-      .from('games')
-      .select('title, category, rating, image_url')
-      .eq('slug', params.slug)
-      .maybeSingle();
-
-    if (dbGame) {
-      title = dbGame.title;
-      category = dbGame.category || 'Arcade';
-      rating = dbGame.rating || 4.8;
-      imageUrl = dbGame.image_url;
-    }
-  }
-
-  if (!title) {
-    title = params.slug
+    title = (params.slug || 'Game')
       .split('-')
       .map(w => w.charAt(0).toUpperCase() + w.slice(1))
       .join(' ');

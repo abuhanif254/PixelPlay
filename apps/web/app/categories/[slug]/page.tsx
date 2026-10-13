@@ -61,6 +61,60 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
+interface CachedCategorySlugEntry {
+  games: any[];
+  cachedAt: number;
+}
+
+const gCatSlugCache = globalThis as unknown as { __spielcade_cat_slug_cache?: Map<string, CachedCategorySlugEntry> };
+if (!gCatSlugCache.__spielcade_cat_slug_cache) {
+  gCatSlugCache.__spielcade_cat_slug_cache = new Map();
+}
+
+const CAT_SLUG_TTL_MS = 900_000; // 15 minutes
+
+async function getCachedCategorySlugGames(slug: string, dbCategoryName: string, searchTerm?: string): Promise<any[]> {
+  const memCache = gCatSlugCache.__spielcade_cat_slug_cache!;
+  const cached = memCache.get(slug);
+  if (cached && Date.now() - cached.cachedAt < CAT_SLUG_TTL_MS) {
+    return cached.games;
+  }
+
+  let games: any[] = [];
+  try {
+    const supabase = createPublicClient();
+    let gamesQuery = supabase
+      .from('games')
+      .select('id, title, slug, description, category, image_url, total_plays, rating')
+      .eq('status', 'active');
+
+    if (searchTerm !== undefined && searchTerm.length > 0) {
+      gamesQuery = gamesQuery.ilike('title', `%${searchTerm}%`);
+    } else if (searchTerm === '') {
+      // Unblocked / Chromebook / School games - top catalog hits
+    } else {
+      // Canonical root category
+      gamesQuery = gamesQuery.eq('category', dbCategoryName);
+    }
+
+    const { data: gamesData } = await gamesQuery
+      .order('total_plays', { ascending: false })
+      .limit(100);
+
+    games = gamesData || [];
+  } catch (err) {
+    console.error('[CategoryPage] Error fetching category games:', slug, err);
+  }
+
+  if (memCache.size >= 100) {
+    const oldestKey = memCache.keys().next().value;
+    if (oldestKey) memCache.delete(oldestKey);
+  }
+  memCache.set(slug, { games, cachedAt: Date.now() });
+
+  return games;
+}
+
 export default async function CategoryPage({ params }: { params: { slug: string } }) {
   const category = categoriesData[params.slug as keyof typeof categoriesData];
   
@@ -68,30 +122,13 @@ export default async function CategoryPage({ params }: { params: { slug: string 
     notFound();
   }
 
-  const supabase = createPublicClient();
   const dbCategoryName = category.title.replace(' Games', '');
-  
-  // Build query for games
-  let gamesQuery = supabase
-    .from('games')
-    .select('id, title, slug, description, category, image_url, total_plays, rating')
-    .eq('status', 'active');
 
-  if (category.searchTerm !== undefined && category.searchTerm.length > 0) {
-    gamesQuery = gamesQuery.or(`title.ilike.%${category.searchTerm}%,description.ilike.%${category.searchTerm}%`);
-  } else if (category.searchTerm === '') {
-    // Unblocked games - entire catalog
-  } else {
-    // Canonical root category
-    gamesQuery = gamesQuery.eq('category', dbCategoryName);
-  }
-
-  const [{ data: gamesData }, categoryCounts] = await Promise.all([
-    gamesQuery.order('total_plays', { ascending: false }).limit(100),
+  const [games, categoryCounts] = await Promise.all([
+    getCachedCategorySlugGames(params.slug, dbCategoryName, category.searchTerm),
     getCachedCategoryCounts(),
   ]);
 
-  const games = gamesData || [];
   const activeCount = categoryCounts[dbCategoryName] || games.length;
 
   const totalPlays = games.reduce((sum, g) => sum + (g.total_plays ?? 0), 0);

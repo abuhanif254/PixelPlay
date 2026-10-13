@@ -2,6 +2,7 @@ import React from 'react';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { createPublicClient } from '@/lib/supabase/server';
+import { getCachedCatalogData } from '@/lib/catalog-cache';
 import GameCard from '@/components/GameCard';
 import { ChevronRight, Tag } from 'lucide-react';
 
@@ -14,17 +15,159 @@ interface TagPageProps {
   };
 }
 
+interface CachedTagEntry {
+  games: any[];
+  cachedAt: number;
+}
+
+const gTagCache = globalThis as unknown as { __spielcade_tag_cache?: Map<string, CachedTagEntry> };
+if (!gTagCache.__spielcade_tag_cache) {
+  gTagCache.__spielcade_tag_cache = new Map();
+}
+
+const TAG_CACHE_TTL_MS = 1800_000; // 30 minutes
+const MAX_TAG_CACHE_ENTRIES = 300;
+
+function safeDecodeTag(rawTag: string): string {
+  try {
+    return decodeURIComponent(rawTag || '');
+  } catch {
+    return rawTag || '';
+  }
+}
+
+function cleanTagWords(rawTag: string): string {
+  const decoded = safeDecodeTag(rawTag)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[\u200B-\u200F\uFEFF]/g, '')
+    .replace(/&amp;/gi, ' ')
+    .toLowerCase()
+    .replace(/[-_]+/g, ' ')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // Strip synthetic prefixes/suffixes so e.g. "free-stickman-sniper-3d" or "maze-speed-for-chromebook" finds matching games
+  const cleaned = decoded
+    .replace(/^(free|play)\s+/i, '')
+    .replace(/\s+(for chromebook|unblocked|online|free|games|game)$/i, '')
+    .replace(/\s+(for chromebook|unblocked|online|free|games|game)$/i, '')
+    .trim();
+
+  return cleaned || decoded || 'arcade';
+}
+
 function formatTag(rawTag: string): string {
-  return decodeURIComponent(rawTag)
-    .replace(/-/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+  const cleaned = safeDecodeTag(rawTag)
+    .replace(/[\u200B-\u200F\uFEFF]/g, '')
+    .replace(/&amp;/gi, '&')
+    .replace(/[-_]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!cleaned) return 'Arcade';
+  return cleaned.replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+async function getCachedTagGames(rawTagParam: string): Promise<any[]> {
+  const searchPhrase = cleanTagWords(rawTagParam);
+  const memCache = gTagCache.__spielcade_tag_cache!;
+  const cached = memCache.get(searchPhrase);
+  if (cached && Date.now() - cached.cachedAt < TAG_CACHE_TTL_MS) {
+    return cached.games;
+  }
+
+  let games: any[] = [];
+
+  try {
+    const supabase = createPublicClient();
+
+    if (searchPhrase.length >= 2) {
+      const { data: gamesData } = await supabase
+        .from('games')
+        .select('id, title, slug, image_url, category, rating, total_plays')
+        .eq('status', 'active')
+        .or(`title.ilike.%${searchPhrase}%,category.ilike.%${searchPhrase}%`)
+        .order('total_plays', { ascending: false })
+        .limit(36);
+
+      if (gamesData && gamesData.length > 0) {
+        games = gamesData;
+      }
+    }
+
+    // If full phrase yielded < 6 matches and has multiple words, query by primary significant token
+    if (games.length < 6) {
+      const stopWords = new Set(['the', 'and', 'for', 'in', 'of', 'to', 'vs', 'with', '3d', '2d', 'io']);
+      const tokens = searchPhrase
+        .split(' ')
+        .filter((w) => w.length >= 3 && !stopWords.has(w));
+
+      if (tokens.length > 0) {
+        const primaryToken = tokens[0];
+        const { data: tokenMatches } = await supabase
+          .from('games')
+          .select('id, title, slug, image_url, category, rating, total_plays')
+          .eq('status', 'active')
+          .ilike('title', `%${primaryToken}%`)
+          .order('total_plays', { ascending: false })
+          .limit(36);
+
+        if (tokenMatches && tokenMatches.length > 0) {
+          const seen = new Set(games.map((g) => g.slug));
+          for (const g of tokenMatches) {
+            if (g.slug && !seen.has(g.slug)) {
+              seen.add(g.slug);
+              games.push(g);
+            }
+            if (games.length >= 36) break;
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[TagPage] Error fetching tag games:', err);
+  }
+
+  // Fast in-memory fallback from warm catalog cache (0 extra DB queries)
+  if (games.length < 12) {
+    try {
+      const catalog = await getCachedCatalogData();
+      const seen = new Set(games.map((g) => g.slug));
+      for (const g of [...(catalog.trending || []), ...(catalog.topRated || [])]) {
+        if (g.slug && !seen.has(g.slug)) {
+          seen.add(g.slug);
+          games.push({
+            id: g.id,
+            title: g.title,
+            slug: g.slug,
+            image_url: g.image_url || g.image || '',
+            category: g.category,
+            rating: g.rating || 4.8,
+            total_plays: g.total_plays ?? 15000,
+          });
+        }
+        if (games.length >= 24) break;
+      }
+    } catch {
+      // Ignore fallback errors
+    }
+  }
+
+  if (memCache.size >= MAX_TAG_CACHE_ENTRIES) {
+    const oldestKey = memCache.keys().next().value;
+    if (oldestKey) memCache.delete(oldestKey);
+  }
+  memCache.set(searchPhrase, { games, cachedAt: Date.now() });
+
+  return games;
 }
 
 export async function generateMetadata({ params }: TagPageProps): Promise<Metadata> {
   const tagName = formatTag(params.tag);
   const title = `${tagName} Games — Play Free Online | Spielcade`;
   const description = `Play the best free online ${tagName} games with no downloads required. Enjoy instant browser play on desktop, mobile, and Chromebook!`;
-  const canonicalUrl = `https://spielcade.com/games/tags/${params.tag}`;
+  const canonicalUrl = `https://spielcade.com/games/tags/${encodeURIComponent(safeDecodeTag(params.tag).toLowerCase().replace(/\s+/g, '-'))}`;
 
   return {
     title,
@@ -46,37 +189,27 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
       url: canonicalUrl,
       siteName: 'Spielcade',
       type: 'website',
+      images: [
+        {
+          url: 'https://spielcade.com/og-default.jpg',
+          width: 1200,
+          height: 630,
+          alt: `${tagName} Games on Spielcade`,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: ['https://spielcade.com/og-default.jpg'],
     },
   };
 }
 
 export default async function TagPage({ params }: TagPageProps) {
-  const rawTag = decodeURIComponent(params.tag).replace(/-/g, ' ').toLowerCase();
   const formattedTag = formatTag(params.tag);
-  const supabase = createPublicClient();
-
-  // Search for active games matching the tag in title or category or metadata
-  const { data: gamesData } = await supabase
-    .from('games')
-    .select('id, title, slug, image_url, category, rating, total_plays')
-    .eq('status', 'active')
-    .or(`title.ilike.%${rawTag}%,category.ilike.%${rawTag}%`)
-    .order('total_plays', { ascending: false })
-    .limit(48);
-
-  let games = gamesData || [];
-
-  // Fallback to top games if search yields few results
-  if (games.length < 6) {
-    const { data: fallbackGames } = await supabase
-      .from('games')
-      .select('id, title, slug, image_url, category, rating, total_plays')
-      .eq('status', 'active')
-      .order('total_plays', { ascending: false })
-      .limit(24);
-
-    games = fallbackGames || [];
-  }
+  const games = await getCachedTagGames(params.tag);
 
   const breadcrumbSchema = {
     '@context': 'https://schema.org',

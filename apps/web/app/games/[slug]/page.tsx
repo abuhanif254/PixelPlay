@@ -42,8 +42,16 @@ const GAME_DETAIL_TTL_MS = 600_000; // 10 minutes for found games
 const GAME_NOT_FOUND_TTL_MS = 120_000; // 2 minutes for 404 slugs
 const MAX_GAME_CACHE_ENTRIES = 400;
 
+function safeDecodeSlug(rawSlug: string): string {
+  try {
+    return decodeURIComponent(rawSlug || '');
+  } catch {
+    return rawSlug || '';
+  }
+}
+
 const getLocalGame = (rawSlug: string) => {
-  const slug = (rawSlug || '').trim().toLowerCase();
+  const slug = safeDecodeSlug(rawSlug).trim().toLowerCase();
   if (!slug) return { game: null, canonicalSlug: '' };
 
   if (gamesRegistry[slug]) return { game: gamesRegistry[slug], canonicalSlug: slug };
@@ -61,7 +69,7 @@ const getLocalGame = (rawSlug: string) => {
 };
 
 const getCachedGame = cache(async (rawSlug: string) => {
-  const slug = (rawSlug || '').trim().toLowerCase();
+  const slug = safeDecodeSlug(rawSlug).trim().toLowerCase();
   if (!slug) return null;
 
   const memCache = gGameDetail.__spielcade_game_detail_cache!;
@@ -73,9 +81,7 @@ const getCachedGame = cache(async (rawSlug: string) => {
     }
   }
 
-  const supabase = createPublicClient();
-
-  // Build candidate slugs (exact + stripped suffixes) to resolve in a single indexed query
+  // Build candidate slugs (exact + stripped suffixes + -game/game variants like slope -> slope-game / slopegame)
   const candidates = [slug];
   for (const sfx of COMMON_SLUG_SUFFIXES) {
     if (slug.endsWith(sfx)) {
@@ -85,16 +91,29 @@ const getCachedGame = cache(async (rawSlug: string) => {
       }
     }
   }
-
-  const { data: matches } = await supabase
-    .from('games')
-    .select('*')
-    .in('slug', candidates)
-    .limit(2);
+  if (slug.endsWith('game') && !slug.endsWith('-game') && slug.length > 6) {
+    const base = slug.slice(0, -4);
+    if (!candidates.includes(base)) candidates.push(base);
+    if (!candidates.includes(`${base}-game`)) candidates.push(`${base}-game`);
+  } else if (!slug.endsWith('-game') && !slug.endsWith('game')) {
+    candidates.push(`${slug}-game`);
+    candidates.push(`${slug}game`);
+  }
 
   let foundGame: any | null = null;
-  if (matches && matches.length > 0) {
-    foundGame = matches.find((g: any) => g.slug === slug) || matches[0];
+  try {
+    const supabase = createPublicClient();
+    const { data: matches } = await supabase
+      .from('games')
+      .select('*')
+      .in('slug', candidates)
+      .limit(3);
+
+    if (matches && matches.length > 0) {
+      foundGame = matches.find((g: any) => g.slug === slug) || matches[0];
+    }
+  } catch (err) {
+    console.error('[GamePage] Error fetching game by slug:', slug, err);
   }
 
   if (memCache.size >= MAX_GAME_CACHE_ENTRIES) {
@@ -134,6 +153,13 @@ export async function generateMetadata(
     return {
       title: 'Game Not Found - Spielcade',
       robots: { index: false, follow: false },
+      openGraph: {
+        images: ['https://spielcade.com/og-default.jpg'],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        images: ['https://spielcade.com/og-default.jpg'],
+      },
     };
   }
 

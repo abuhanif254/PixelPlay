@@ -4,27 +4,35 @@ import { updateSession } from '@/lib/supabase/middleware'
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // 0. Canonical Host Normalization (www.* -> apex domain 301 redirect for Googlebot & AdSense)
+  // 0. Single-Hop Canonical Host (www.* -> apex) & Path Case Normalization
+  // IMPORTANT: Exclude %XX percent-encoded hex sequences (e.g., %3A, %2C, %7C, %C3%A9) when checking/lowercasing
+  // because RFC 3986 / WHATWG URL parsers normalize %XX hex digits to uppercase, which would otherwise cause an infinite 301 loop.
   const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || request.nextUrl.host || ''
-  if (host.startsWith('www.')) {
-    const apexHost = host.replace(/^www\./, '')
-    const url = request.nextUrl.clone()
-    url.host = apexHost
-    url.protocol = 'https:'
-    return NextResponse.redirect(url, 301)
-  }
+  const isWww = host.startsWith('www.')
 
-  // 0.1 Canonical Path Case Normalization (Big Tech SEO Best Practice)
-  // If the path contains uppercase characters and is not an API/asset route,
-  // 301-redirect to lowercase to eliminate duplicate content & case-sensitive 404s.
-  if (
-    /[A-Z]/.test(pathname) &&
+  const isCaseNormalizedRoute =
     !pathname.startsWith('/api') &&
     !pathname.startsWith('/_next') &&
     !pathname.startsWith('/embed')
-  ) {
+
+  const pathnameWithoutPercent = pathname.replace(/%[0-9A-Fa-f]{2}/g, '')
+  const hasUppercaseAscii = isCaseNormalizedRoute && /[A-Z]/.test(pathnameWithoutPercent)
+
+  if (isWww || hasUppercaseAscii) {
     const url = request.nextUrl.clone()
-    url.pathname = pathname.toLowerCase()
+    if (isWww) {
+      url.host = host.replace(/^www\./, '')
+      url.protocol = 'https:'
+    }
+    if (hasUppercaseAscii) {
+      const normalizedPathname = pathname.replace(/%[0-9A-Fa-f]{2}|[A-Z]+/g, (match) =>
+        match.startsWith('%') ? match.toUpperCase() : match.toLowerCase()
+      )
+      if (normalizedPathname === pathname && !isWww) {
+        return NextResponse.next()
+      }
+      url.pathname = normalizedPathname
+    }
     return NextResponse.redirect(url, 301)
   }
 
