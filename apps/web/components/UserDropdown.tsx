@@ -146,6 +146,7 @@ export default function UserDropdown({ userId }: { userId: string }) {
                   <Link 
                     key={index} 
                     href={item.href}
+                    rel="nofollow"
                     onClick={() => setIsOpen(false)}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                       item.label === 'Admin Dashboard' 

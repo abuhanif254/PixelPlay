@@ -266,17 +266,7 @@ export async function generateMetadata(
       }
     }
 
-    return {
-      title: 'Game Not Found - Spielcade',
-      robots: { index: false, follow: false },
-      openGraph: {
-        images: ['https://spielcade.com/og-default.jpg'],
-      },
-      twitter: {
-        card: 'summary_large_image',
-        images: ['https://spielcade.com/og-default.jpg'],
-      },
-    };
+    notFound();
   }
 
   const title = dbGame?.title || localGame?.config?.title || 'Game';

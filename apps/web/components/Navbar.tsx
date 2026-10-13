@@ -739,6 +739,7 @@ export default function Navbar() {
             ) : (
               <Link 
                 href="/login" 
+                rel="nofollow"
                 className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-bold shadow-md hover:shadow-indigo-500/30 hover:scale-105 active:scale-95 transition-all shrink-0"
               >
                 <User className="w-3.5 h-3.5" />
@@ -818,6 +819,7 @@ export default function Navbar() {
           </button>
           <Link 
             href="/profile" 
+            rel="nofollow"
             title="Profile" 
             className={`flex flex-col items-center justify-center w-full min-h-[44px] transition-colors ${
               pathname?.startsWith('/profile') 

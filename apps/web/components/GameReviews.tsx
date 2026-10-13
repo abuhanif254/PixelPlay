@@ -604,6 +604,7 @@ export default function GameReviews({
                 <div className="flex items-center gap-3 mt-6">
                   <Link
                     href={`/login?next=/games/${slug}`}
+                    rel="nofollow"
                     className="px-6 py-2.5 bg-[#6366F1] hover:bg-[#5558E6] text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-500/20 transition-all flex items-center gap-2"
                   >
                     Sign In / Create Account

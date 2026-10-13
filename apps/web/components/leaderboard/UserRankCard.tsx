@@ -7,7 +7,7 @@ export default function UserRankCard({ userRank = null, isLoggedIn = false }: { 
       <div className="bg-white dark:bg-transparent border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-xl mb-6">
         <h3 className="text-xl font-bold font-outfit text-gray-900 dark:text-white mb-4">Your Rank</h3>
         <p className="text-sm text-gray-500 mb-6">Log in to see your global rank and compete with others.</p>
-        <Link href="/login" className="flex items-center justify-center w-full py-3 bg-[#6366F1] hover:bg-[#5457DF] text-white text-sm font-bold rounded-xl transition-all">
+        <Link href="/login" rel="nofollow" className="flex items-center justify-center w-full py-3 bg-[#6366F1] hover:bg-[#5457DF] text-white text-sm font-bold rounded-xl transition-all">
           Log In
         </Link>
       </div>

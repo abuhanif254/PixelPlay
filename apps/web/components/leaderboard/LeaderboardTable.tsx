@@ -98,6 +98,7 @@ export default function LeaderboardTable({ players = [] }: { players?: PlayerSco
                   {player.userId && !player.userId.startsWith('seed-') ? (
                     <Link
                       href={`/profile/${player.name}`}
+                      rel="nofollow"
                       prefetch={false}
                       className="px-2 sm:px-2.5 py-1 text-[11px] sm:text-xs font-semibold text-purple-600 dark:text-purple-400 border border-purple-500/20 hover:bg-purple-500/10 rounded-lg transition-colors whitespace-nowrap"
                     >

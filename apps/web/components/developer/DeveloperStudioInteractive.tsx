@@ -553,6 +553,7 @@ export default function DeveloperStudioInteractive() {
 
                     <a
                       href="/studio/submit"
+                      rel="nofollow"
                       className="w-full bg-[#6366F1] hover:bg-[#5457DF] text-white font-bold py-3.5 px-6 rounded-xl transition-all text-center shadow-[0_0_20px_rgba(99,102,241,0.4)] hover:shadow-[0_0_30px_rgba(99,102,241,0.6)]"
                     >
                       Start Monetizing Your Game Now

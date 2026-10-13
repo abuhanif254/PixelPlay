@@ -251,6 +251,55 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // 0.45 Synthetic /games/free-* Game URLs Consolidation (Direct 301 to Canonical Hub or Catalog)
+  if (pathname.startsWith('/games/free-')) {
+    const rawSlug = pathname.slice('/games/'.length).toLowerCase()
+    
+    // Check if it's generic 'free-online-game', 'free-games', etc.
+    if (rawSlug === 'free-online-game' || rawSlug === 'free-online-games' || rawSlug === 'free-game' || rawSlug === 'free-games') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/games'
+      url.search = ''
+      return NextResponse.redirect(url, 301)
+    }
+
+    // Check category keywords in synthetic game URLs
+    if (rawSlug.includes('bubble') || rawSlug.includes('bubbloe')) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/categories/bubble-shooter-games'
+      url.search = ''
+      return NextResponse.redirect(url, 301)
+    }
+
+    if (rawSlug.includes('runner')) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/categories/runner-games'
+      url.search = ''
+      return NextResponse.redirect(url, 301)
+    }
+
+    if (rawSlug.includes('tank')) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/categories/tank-games'
+      url.search = ''
+      return NextResponse.redirect(url, 301)
+    }
+
+    if (rawSlug.includes('car') || rawSlug.includes('drift')) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/categories/car-games'
+      url.search = ''
+      return NextResponse.redirect(url, 301)
+    }
+
+    // Strip free- and redirect to the base game slug
+    const cleanSlug = rawSlug.replace(/^free-/, '').replace(/-game$/, '').replace(/-online$/, '')
+    const url = request.nextUrl.clone()
+    url.pathname = cleanSlug ? `/games/${cleanSlug}` : '/games'
+    url.search = ''
+    return NextResponse.redirect(url, 301)
+  }
+
   // 1. Ultra Fast-Path: Static SEO, feeds, search APIs, public assets
   if (
     pathname.startsWith('/sitemap') ||
