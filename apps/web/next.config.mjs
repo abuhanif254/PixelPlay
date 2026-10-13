@@ -280,23 +280,8 @@ const nextConfig = {
         permanent: true,
       },
       {
-        source: '/category/:slug',
-        destination: '/categories/:slug',
-        permanent: true,
-      },
-      {
-        source: '/category-games/:slug',
-        destination: '/categories/:slug',
-        permanent: true,
-      },
-      {
         source: '/genres',
         destination: '/categories',
-        permanent: true,
-      },
-      {
-        source: '/genres/:slug',
-        destination: '/categories/:slug',
         permanent: true,
       },
       {
