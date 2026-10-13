@@ -12,8 +12,18 @@ import { createPublicClient } from '@/lib/supabase/server';
 import { getAllBlogPosts } from '@/lib/blogData';
 
 export const metadata: Metadata = {
-  title: 'Blog & Guides | Spielcade Games',
+  title: 'Blog & Guides — Gaming Tips, Walkthroughs & News',
   description: 'Tips, guides, news and strategies to level up your gaming experience on Spielcade.',
+  alternates: {
+    canonical: 'https://spielcade.com/blog',
+  },
+  openGraph: {
+    title: 'Blog & Guides | Spielcade Games',
+    description: 'Tips, guides, news and strategies to level up your gaming experience on Spielcade.',
+    url: 'https://spielcade.com/blog',
+    siteName: 'Spielcade',
+    type: 'website',
+  },
 };
 
 type BlogPageProps = {
@@ -30,28 +40,34 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
   const category = searchParams?.category?.trim();
   const tag = searchParams?.tag?.trim();
 
-  let query = supabase
-    .from('blog_posts')
-    .select(`
-      id, title, slug, excerpt, cover_image, tags,
-      read_time, created_at,
-      profiles:author_id(username, avatar_url)
-    `)
-    .eq('status', 'published');
+  let rawPosts: any[] | null = null;
+  try {
+    let query = supabase
+      .from('blog_posts')
+      .select(`
+        id, title, slug, excerpt, cover_image, tags,
+        read_time, created_at,
+        profiles:author_id(username, avatar_url)
+      `)
+      .eq('status', 'published');
 
-  if (q) {
-    query = query.or(`title.ilike.%${q}%,excerpt.ilike.%${q}%`);
+    if (q) {
+      query = query.or(`title.ilike.%${q}%,excerpt.ilike.%${q}%`);
+    }
+
+    if (category && category.toLowerCase() !== 'all posts') {
+      query = query.or(`title.ilike.%${category}%,excerpt.ilike.%${category}%`);
+    }
+
+    if (tag) {
+      query = query.or(`title.ilike.%${tag}%,excerpt.ilike.%${tag}%`);
+    }
+
+    const res = await query.order('created_at', { ascending: false });
+    rawPosts = res.data;
+  } catch {
+    rawPosts = [];
   }
-
-  if (category && category.toLowerCase() !== 'all posts') {
-    query = query.or(`title.ilike.%${category}%,excerpt.ilike.%${category}%`);
-  }
-
-  if (tag) {
-    query = query.or(`title.ilike.%${tag}%,excerpt.ilike.%${tag}%`);
-  }
-
-  const { data: rawPosts } = await query.order('created_at', { ascending: false });
 
   // Map to the expected UI format
   let posts = (rawPosts || []).map((p: any) => ({
@@ -67,21 +83,35 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
     created_at: p.created_at,
   }));
 
-  // If table has no posts yet and no specific search query was made, fallback to curated articles
-  if (posts.length === 0 && !q && !category && !tag) {
-    const fallbackList = getAllBlogPosts();
-    posts = fallbackList.map((p, idx) => ({
+  // Fallback to curated articles if DB query returned no posts (including for ?category= or ?tag= filters)
+  if (posts.length === 0) {
+    const fallbackList = getAllBlogPosts().map((p, idx) => ({
       id: `fallback-${idx}`,
       title: p.title,
       slug: p.slug,
       excerpt: p.description,
       cover_image: p.coverImage,
       tags: p.keywords,
+      categoryName: (p as any).category || '',
       read_time: 5,
       author: p.author.name,
       author_avatar: p.author.avatar || '',
       created_at: p.date,
     }));
+
+    const filterTerm = (q || category || tag || '').toLowerCase();
+    if (filterTerm && filterTerm !== 'all posts') {
+      const filtered = fallbackList.filter(
+        (p) =>
+          p.title.toLowerCase().includes(filterTerm) ||
+          p.excerpt.toLowerCase().includes(filterTerm) ||
+          (p.categoryName && p.categoryName.toLowerCase().includes(filterTerm)) ||
+          p.tags.some((t) => t.toLowerCase().includes(filterTerm))
+      );
+      posts = filtered.length > 0 ? filtered : fallbackList;
+    } else {
+      posts = fallbackList;
+    }
   }
 
   // SEO JSON-LD Schema

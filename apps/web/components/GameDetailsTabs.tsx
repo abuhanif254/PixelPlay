@@ -93,19 +93,39 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
             {/* Tips Section */}
             <div id="tips" className={`scroll-mt-32 ${activeTab === 'tips' ? 'block' : 'hidden md:block'}`}>
               <div className="hidden md:block w-full h-px bg-gray-200 dark:bg-white/5 my-8" />
-              <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white font-outfit">Tips & Tricks</h3>
-              {config.tips && config.tips.length > 0 ? (
-                <ul className="space-y-2 list-disc pl-5 text-gray-600 dark:text-gray-400 text-sm md:text-base">
-                  {config.tips.map((tip: string, idx: number) => (
-                    <li key={idx} className="pl-1">{tip}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-gray-600 dark:text-gray-400 text-sm">No tips available for this game yet.</p>
-              )}
-              {config.strategy && (
-                <div dangerouslySetInnerHTML={{ __html: config.strategy }} className="text-sm md:text-base text-gray-600 dark:text-gray-400 leading-relaxed mt-4" />
-              )}
+              <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white font-outfit">Tips &amp; Tricks for {config.title}</h3>
+              {(() => {
+                const defaultTipsPool = [
+                  `Start ${config.title} at a steady pace to learn the movement timing and hitbox boundaries before pushing for speed records.`,
+                  `Keep an eye on visual cues and obstacle patterns in ${config.title}—most stages telegraph upcoming hazards half a second in advance.`,
+                  `Use fullscreen mode while playing ${config.title} (${config.category || 'Arcade'}) to widen your peripheral vision and prevent accidental clicks outside the canvas.`,
+                  `Practice short runs to master the core ${config.category || 'Arcade'} mechanics rather than restarting immediately after a minor mistake.`,
+                  `On desktop, keyboard inputs often provide tighter frame-level precision in ${config.title} compared to trackpad gestures.`,
+                  `Conserve power-ups, boosts, or special moves in ${config.title} for high-density waves where recovery space is limited.`,
+                  `Take advantage of browser local storage in ${config.title} to track your progression and beat your personal best incrementally.`,
+                ];
+                let seed = 0;
+                const keyStr = `${config.slug || ''}:${config.title || ''}`;
+                for (let i = 0; i < keyStr.length; i++) {
+                  seed = ((seed << 5) - seed + keyStr.charCodeAt(i)) | 0;
+                }
+                const absSeed = Math.abs(seed);
+                const generatedTips = [
+                  defaultTipsPool[absSeed % defaultTipsPool.length],
+                  defaultTipsPool[(absSeed + 2) % defaultTipsPool.length],
+                  defaultTipsPool[(absSeed + 4) % defaultTipsPool.length],
+                ];
+                const tipsToShow: string[] =
+                  config.tips && config.tips.length > 0 ? config.tips : generatedTips;
+
+                return (
+                  <ul className="space-y-2.5 list-disc pl-5 text-gray-600 dark:text-gray-400 text-sm md:text-base">
+                    {tipsToShow.map((tip: string, idx: number) => (
+                      <li key={idx} className="pl-1 leading-relaxed">{tip}</li>
+                    ))}
+                  </ul>
+                );
+              })()}
             </div>
 
             {/* Reviews Section */}

@@ -439,6 +439,8 @@ export default function TournamentsPage() {
                           href={`/games/${tournament.game.slug}?challenger=${encodeURIComponent(
                             player.username
                           )}&score=${player.score}`}
+                          rel="nofollow"
+                          prefetch={false}
                           onClick={() => arcadeAudio.playSelect()}
                           className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-500 dark:text-indigo-400 transition-all border border-indigo-500/20 active:scale-95"
                         >

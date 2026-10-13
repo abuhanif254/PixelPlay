@@ -75,129 +75,174 @@ function stringHash(str: string): number {
 }
 
 /**
+ * Strip legacy hardcoded boilerplate paragraphs and markdown asterisks that were stored in DB rows
+ */
+export function stripLegacyBoilerplate(rawDescription: string = ''): string {
+  if (!rawDescription) return '';
+  return rawDescription
+    .replace(/<[^>]*>?/gm, '')
+    .replace(/Featuring smooth mechanics,\s*dynamic gameplay,[\s\S]*$/i, '')
+    .replace(/Play\s+\*\*.*?\*\*\s+online for free on Spielcade today[\s\S]*$/i, '')
+    .replace(/\*\*Unblocked & Chromebook Ready:\*\*[\s\S]*$/i, '')
+    .replace(/\*\*/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
  * Generate rich, multi-variant, high-ranking SEO description
- * Uses varied sentence architectures to prevent algorithmic duplicate-content penalties
+ * Uses varied sentence architectures and strips legacy boilerplate to prevent algorithmic duplicate-content penalties
  */
 export function generateEnrichedDescription(title: string, category: string, rawDescription: string = ''): string {
-  const cleanRaw = rawDescription.replace(/<[^>]*>?/gm, '').trim();
-  const hash = stringHash(title + category);
+  const cleanRaw = stripLegacyBoilerplate(rawDescription);
+  const hash = stringHash(`${title}::${category}`);
+  const catLower = (category || 'Arcade').toLowerCase();
 
   const introTemplates = [
-    `Immerse yourself in **${title}**, a premier ${category.toLowerCase()} web game engineered for fast, responsive action directly in your browser with zero installation needed.`,
-    `Looking for top-tier free online gaming? **${title}** delivers an engaging ${category.toLowerCase()} experience packed with fluid mechanics, challenging milestones, and instant browser accessibility.`,
-    `Take control in **${title}**, an exhilarating free-to-play ${category.toLowerCase()} title where precision timing, strategic planning, and quick reflexes lead directly to leaderboard dominance.`,
-    `Jump into **${title}**—a highly rated ${category.toLowerCase()} game playable on desktops, tablets, and mobile devices without downloading any software or creating an account.`
+    `Immerse yourself in ${title}, a premier ${catLower} web game engineered for fast, responsive action directly in your browser with zero installation needed.`,
+    `Looking for top-tier free online gaming? ${title} delivers an engaging ${catLower} experience packed with fluid mechanics, challenging milestones, and instant browser accessibility.`,
+    `Take control in ${title}, an exhilarating free-to-play ${catLower} title where precision timing, tactical awareness, and quick reflexes lead directly to high-score mastery.`,
+    `Jump into ${title}—a standout ${catLower} game playable on desktops, tablets, and mobile phones without downloading any software or creating an account.`,
+    `Step into the arena of ${title}, an instant-play HTML5 ${catLower} adventure crafted for players who appreciate tight controls and rewarding progression.`,
+    `Experience ${title}, a community-favorite ${catLower} browser challenge that blends approachable pick-up-and-play mechanics with deep replayability.`,
   ];
 
   const categoryFeatures: Record<string, string[]> = {
     Racing: [
-      `Take tight corners, test tire-burning drifting physics, and push high-speed supercars to their limits across meticulously crafted courses.`,
+      `Take tight corners, test tire-burning drifting physics, and push high-speed vehicles to their limits across winding courses.`,
       `Master acceleration curves, out-maneuver rival racers, and shave split-seconds off your lap times in pulse-pounding vehicular action.`,
-      `Experience responsive steering, turbo boost mechanics, and dynamic track layouts designed to reward fearless driving.`
+      `Experience responsive steering, nitro boost timing, and dynamic track layouts designed to reward fearless driving.`,
+      `Balance grip and drift angles across tricky chicanes while avoiding traffic hazards and chasing the checkered flag.`,
     ],
     Puzzle: [
       `Engage your cognitive logic, decipher intricate pattern relationships, and discover clever solutions across multi-stage spatial challenges.`,
       `Sharpen your mental agility, plan several moves in advance, and unleash high-scoring cascade combos with satisfying chain reactions.`,
-      `Exercise problem-solving reflexes through progressively complex puzzles that balance relaxed exploration with high-stakes brain teasers.`
+      `Exercise problem-solving reflexes through progressively complex stages that balance relaxed exploration with brain-teasing depth.`,
+      `Analyze board layouts carefully, spot hidden symmetries, and clear tricky obstacles using smart sequence planning.`,
     ],
     Action: [
       `Dodge enemy barrages, execute precise combat combos, and navigate intense arena hazards where every split-second decision counts.`,
-      `Battle waves of hostile forces, upgrade tactical abilities, and survive escalating combat encounters in an adrenaline-fueled battleground.`,
-      `Harness fluid movement mechanics, rapid-fire attacks, and tactical positioning to overcome formidable bosses and record-breaking challenges.`
+      `Battle waves of hostile forces, upgrade tactical abilities, and survive escalating encounters in an adrenaline-fueled battleground.`,
+      `Harness fluid movement mechanics, rapid-fire attacks, and smart positioning to overcome formidable bosses and stage hazards.`,
+      `Chain together agile dodges and counter-strikes as the pace intensifies across action-packed combat zones.`,
     ],
     Strategy: [
-      `Formulate tactical roadmaps, manage critical resources under pressure, and outthink your opponents across calculated turns.`,
-      `Build, expand, and defend your positions through smart decision-making, adaptive defenses, and ruthless tactical foresight.`,
-      `Deploy strategic counter-measures, analyze the battlefield, and coordinate victorious campaigns against relentless competitors.`
+      `Formulate tactical roadmaps, manage critical resources under pressure, and outthink your opponents across calculated engagements.`,
+      `Build, expand, and defend your positions through smart decision-making, adaptive defenses, and long-term foresight.`,
+      `Deploy strategic counter-measures, analyze the battlefield, and coordinate victorious campaigns against relentless waves.`,
+      `Balance offensive pushes with fortified defenses to control key territory and outlast rival commanders.`,
     ],
     Sports: [
       `Experience the thrill of championship tournaments, master authentic ball physics, and execute game-winning plays with pinpoint accuracy.`,
-      `Compete in realistic athletic showdowns, time your moves perfectly, and lead your squad to trophy glory across global sports arenas.`,
-      `Fine-tune shot power, read incoming trajectory angles, and celebrate clutch moments in high-energy competitive athletic matchups.`
+      `Compete in athletic showdowns, time your releases perfectly, and lead your squad to trophy glory across competitive arenas.`,
+      `Fine-tune shot power, read incoming trajectory angles, and celebrate clutch moments in high-energy sporting matchups.`,
+      `Outplay defenders with crisp footwork, accurate passing, and decisive finishing under scoreboard pressure.`,
     ],
     Board: [
-      `Enjoy modernized digital board game mechanics, out-wit artificial intelligence or live rivals, and enjoy classic tactical depth.`,
-      `Calculate every roll, anticipate opponent moves, and implement time-tested master strategies on a clean virtual game board.`,
-      `Combine luck with sharp tactical insight to dominate traditional tabletop challenges crafted for rapid browser play.`
+      `Enjoy modernized digital tabletop mechanics, outwit artificial intelligence or live rivals, and explore classic tactical depth.`,
+      `Calculate every move, anticipate opponent traps, and implement time-tested strategies on a clean virtual game board.`,
+      `Combine probability management with sharp tactical insight to dominate traditional board challenges crafted for browser play.`,
+      `Control the center of the board, set multi-turn traps, and convert small positional edges into decisive victories.`,
     ],
     Adventure: [
       `Traverse mysterious terrains, uncover hidden secrets, and navigate immersive quests designed with rich atmosphere and exploration.`,
-      `Collect rare relics, solve environmental riddles, and embark on an unforgettable hero's voyage through dangerous forgotten realms.`,
-      `Unravel rich lore, conquer treacherous obstacles, and write your own legend across beautifully illustrated landscape zones.`
+      `Collect rare relics, solve environmental riddles, and embark on an unforgettable hero's journey through dangerous realms.`,
+      `Conquer treacherous platforming obstacles, unlock new pathways, and test your courage across handcrafted world zones.`,
+      `Interact with dynamic environments, evade ancient traps, and piece together clues to reach the final objective.`,
     ],
     Arcade: [
-      `Relive the golden era of arcade gaming with modern responsive polish, addictive gameplay loops, and endless high-score chasing.`,
-      `Collect valuable score multipliers, survive relentless hazard escalation, and prove your lightning-quick reflexes against global players.`,
-      `Enjoy pure, unfiltered gaming excitement featuring vibrant visuals, instant restarts, and intuitive one-click control mechanics.`
-    ]
+      `Relive the golden spirit of arcade gaming with modern responsive polish, addictive gameplay loops, and endless high-score chasing.`,
+      `Collect valuable score multipliers, survive relentless hazard escalation, and test your hand-eye coordination in fast sessions.`,
+      `Enjoy pure, unfiltered gaming excitement featuring vibrant visuals, instant restarts, and intuitive control mechanics.`,
+      `Build unstoppable combo streaks, weave through shifting obstacle patterns, and set a new personal record on every run.`,
+    ],
   };
 
   const catOptions = categoryFeatures[category] || categoryFeatures['Arcade'];
   const featureText = catOptions[hash % catOptions.length];
 
   const valueProps = [
-    `Whether you have a 5-minute break at the office or an afternoon free at home, ${title} offers an ideal balance of casual pickup-and-play ease and deep mastery potential.`,
-    `Compete against your friends, track your performance metrics, and push your personal high score higher with every attempt in this addictive community favorite.`,
-    `Optimized with cutting-edge HTML5 and WebGL engines, the game delivers buttery-smooth 60 FPS performance without heating up your device or draining battery life.`
+    `Whether you have a quick 5-minute break or a longer gaming session, ${title} offers an ideal balance of accessibility and skill ceiling.`,
+    `Track your personal bests, refine your timing on each replay, and see how far you can push your score in ${title}.`,
+    `Built on lightweight HTML5 and WebGL web standards, ${title} loads in seconds and runs smoothly across desktop PCs, Chromebooks, iPhones, iPads, and Android devices.`,
+    `With zero downloads or plugins required, you can launch ${title} directly in Chrome, Safari, Edge, or Firefox whenever you want to play.`,
+    `Every round in ${title} introduces fresh tactical moments that reward patience, pattern recognition, and steady execution.`,
   ];
-  const valueText = valueProps[(hash >> 2) % valueProps.length];
-
-  const unblockedNote = `**Unblocked & Chromebook Ready:** Play **${title}** 100% free on Spielcade today. Designed to run seamlessly across all major browsers (Google Chrome, Microsoft Edge, Mozilla Firefox, Safari) with zero downloads required and full accessibility at school, work, or home.`;
+  const valueText = valueProps[(hash >> 3) % valueProps.length];
 
   let primaryIntro = cleanRaw;
-  if (!primaryIntro || primaryIntro.length < 40) {
+  if (!primaryIntro || primaryIntro.length < 35) {
     primaryIntro = introTemplates[hash % introTemplates.length];
   }
 
-  return `${primaryIntro}\n\n${featureText} ${valueText}\n\n${unblockedNote}`;
+  return `${primaryIntro} ${featureText} ${valueText}`;
 }
 
 /**
  * Generate structured Strategy & How to Play content with Pro Tips
  */
 export function generateStrategyContent(title: string, category: string, rawInstructions: string = ''): string {
-  const cleanInstructions = rawInstructions ? rawInstructions.replace(/<[^>]*>?/gm, '').trim() : '';
+  const cleanInstructions = stripLegacyBoilerplate(rawInstructions);
+  const hash = stringHash(`strategy::${title}::${category}`);
 
   const tipsMap: Record<string, string[]> = {
     Racing: [
-      'Brake slightly before apex turns to maintain maximum exit velocity down straightaways.',
-      'Feather your nitro boost out of tight corners rather than dumping it all on straight paths.',
-      'Learn the optimal racing line—inside lines minimize overall distance traveled per lap.'
+      'Brake slightly before entering tight corners so you can accelerate earlier on the exit.',
+      'Save your nitro boost for recovery after collisions or long straightaways.',
+      'Hug the inside apex on curved tracks to minimize total travel distance.',
+      'Watch upcoming track markers early to anticipate hairpins and obstacles.',
+      'Feather steering inputs at top speed to prevent over-drifting into barriers.',
     ],
     Puzzle: [
-      'Scan the entire board before making your first move to uncover multi-layer combo sequences.',
-      'Prioritize clearing obstacles on lower rows to trigger cascade falls and automatic matches.',
-      'Save power-ups and special items for moments when no natural moves remain.'
+      'Scan the entire board before making your first move to spot multi-step chain reactions.',
+      'Focus on clearing bottom or corner blockers first to open up space for new pieces.',
+      'Reserve special boosters and hints for high-density board states.',
+      'Look two moves ahead so each placement sets up your next combination.',
+      'Avoid rushing early turns—accuracy builds higher combo multipliers than speed alone.',
     ],
     Action: [
-      'Keep constantly in motion—stationary players become easy targets for projectile barrages.',
-      'Master the timing of your defensive dodge or jump to exploit enemy attack cooldowns.',
-      'Focus fire on weaker perimeter foes first to reduce total incoming damage.'
+      'Keep moving laterally—standing still makes you an easy target for ranged attacks.',
+      'Learn enemy attack wind-ups so you can dodge or counter during their cooldown window.',
+      'Clear fast perimeter enemies first before focusing damage on heavy bosses.',
+      'Use terrain cover and corners to break line-of-sight when outnumbered.',
+      'Prioritize mobility and defense upgrades early to survive longer waves.',
     ],
     Strategy: [
-      'Invest early resources into economy generators to sustain long-term army production.',
-      'Scout opponent positioning continuously to deploy appropriate counter-units.',
-      'Maintain flexible defensive lines rather than over-committing to a single frontline.'
+      'Invest early resources into economy or unit generation to build a sustainable advantage.',
+      'Place ranged defense units behind choke points to maximize their firing time.',
+      'Scout incoming wave compositions and mix unit types to counter armor and speed.',
+      'Upgrade core defensive structures in key lanes before expanding outward.',
+      'Keep a small reserve of resources ready for emergency reinforcements.',
     ],
     Sports: [
-      'Watch opponent movement momentum to pass or shoot against their running direction.',
-      'Practice power meter release timing to achieve consistent sweet-spot accuracy.',
-      'Utilize tactical pauses to reset team formation before critical offensive pushes.'
+      'Read defender momentum and pass or shoot into open space against their movement.',
+      'Practice your release timing to hit the green accuracy window consistently.',
+      'Mix up short passes and long shots to keep AI defenders off balance.',
+      'Position your player early before the ball arrives for cleaner one-touch shots.',
+      'Protect your stamina or boost meter for the final stretch of close matches.',
     ],
     Arcade: [
-      'Prioritize survival over risky point pickups—longer runs yield exponential score multipliers.',
-      'Stay near the center of the playfield to leave maximum reaction room for random hazards.',
-      'Rhythm and steady breathing help maintain peak hand-eye coordination during speed spikes.'
-    ]
+      'Prioritize survival over risky pickups—staying alive longer multiplies your score faster.',
+      'Stay near the center of the play area to give yourself maximum reaction time.',
+      'Focus on rhythm and pattern recognition as obstacle speed ramps up.',
+      'Chain consecutive pickups without missing to keep your score multiplier active.',
+      'Make small, controlled adjustments rather than holding directional keys too long.',
+    ],
   };
 
-  const selectedTips = tipsMap[category] || tipsMap['Arcade'];
-  const instructionsHtml = cleanInstructions 
-    ? `<p class="mb-3"><strong>Core Objective:</strong> ${cleanInstructions}</p>` 
-    : `<p class="mb-3"><strong>Core Objective:</strong> Guide your character or pieces through progressive challenges, react quickly to environmental hazards, and rack up the highest score possible in <strong>${title}</strong>.</p>`;
+  const pool = tipsMap[category] || tipsMap['Arcade'];
+  const selectedTips = [
+    pool[hash % pool.length],
+    pool[(hash + 1) % pool.length],
+    pool[(hash + 2) % pool.length],
+  ];
+
+  const instructionsHtml = cleanInstructions && cleanInstructions.length > 20
+    ? `<p class="mb-3"><strong>How to Play ${title}:</strong> ${cleanInstructions}</p>`
+    : `<p class="mb-3"><strong>Objective:</strong> Master the controls in <strong>${title}</strong>, react to dynamic ${category.toLowerCase()} challenges, and build streaks to achieve a top score.</p>`;
 
   const tipsListHtml = `
-    <h4 class="font-bold text-base mt-4 mb-2 text-indigo-600 dark:text-indigo-400">Pro Tips for High Scores:</h4>
+    <h4 class="font-bold text-base mt-4 mb-2 text-indigo-600 dark:text-indigo-400">Key Tactics:</h4>
     <ul class="list-disc pl-5 space-y-1.5 text-sm">
       ${selectedTips.map(t => `<li>${t}</li>`).join('')}
     </ul>
@@ -251,39 +296,60 @@ export function generateControlsMatrix(rawInstructions: string = '', category: s
 }
 
 /**
- * Generate 7 high-intent FAQ items for rich Google Search results
+ * Generate game-specific FAQ items selected deterministically from a 12-question pool to avoid duplicate FAQ boilerplate across games
  */
 export function generateGameFaqs(title: string, category: string): Array<{ q: string; a: string }> {
-  return [
+  const hash = stringHash(`faq::${title}::${category}`);
+  const catLower = (category || 'Arcade').toLowerCase();
+
+  const faqPool: Array<{ q: string; a: string }> = [
     {
-      q: `How can I play ${title} online for free?`,
-      a: `You can play ${title} completely free on Spielcade. No downloads, app store installations, or paid subscriptions are required. Just launch the game directly in any modern browser window and enjoy immediate gameplay.`
+      q: `How do I play ${title} online for free?`,
+      a: `Click the Play button at the top of this page to launch ${title} directly in your web browser. It is 100% free on Spielcade with no downloads, installations, or sign-ups required.`,
     },
     {
-      q: `Is ${title} unblocked to play at school or on Chromebooks?`,
-      a: `Yes! ${title} is hosted over secure SSL/HTTPS and built on lightweight HTML5 technology. Because it does not require administrative installations or third-party executable files, it runs smoothly on school Chromebooks, library computers, and office networks.`
+      q: `What genre is ${title} and what are the main mechanics?`,
+      a: `${title} is an HTML5 ${catLower} game. Players use keyboard, mouse, or touchscreen inputs to complete stages, overcome ${catLower} obstacles, and aim for a high score.`,
     },
     {
-      q: `Can I play ${title} on mobile phones and tablets?`,
-      a: `Yes, ${title} features responsive design that automatically scales to touchscreen displays on Apple iOS (iPhone, iPad) and Android devices, as well as Windows PCs and Mac laptops.`
+      q: `Can I play ${title} unblocked on a school Chromebook?`,
+      a: `Yes, ${title} runs over standard HTTPS using native HTML5 and WebGL without external plugins or executables, making it fully compatible with school Chromebooks and restricted networks.`,
     },
     {
-      q: `What are the best tips to achieve a high score in ${title}?`,
-      a: `To maximize your score in ${title}, study the timing of obstacles, chain consecutive achievements for combo multipliers, and take advantage of keyboard shortcuts or precise touch inputs described in our controls section.`
+      q: `Does ${title} work on mobile phones and tablets?`,
+      a: `Yes! ${title} supports responsive touchscreen controls on iOS (iPhone and iPad) and Android smartphones as well as desktop browsers.`,
     },
     {
-      q: `Does ${title} require Flash Player to run?`,
-      a: `No. Flash Player is obsolete and unsupported. ${title} is developed with modern HTML5, Canvas, and WebGL web standards, guaranteeing safe, high-speed execution without any external plugins.`
+      q: `How do I get a higher score in ${title}?`,
+      a: `Focus on consistent timing, avoid early mistakes to preserve your combo multiplier, and check the Controls and Tips sections on this page to master ${title}'s core mechanics.`,
     },
     {
-      q: `Do I need an account to save my game progress?`,
-      a: `You can play immediately as a guest with local progress saved in your browser cache. Signing up for a free Spielcade account enables automatic cloud backup, cross-device synchronization, and global leaderboard rankings.`
+      q: `Is Flash Player needed to run ${title}?`,
+      a: `No. ${title} is built with modern HTML5 canvas and WebGL technology, so it plays smoothly in Chrome, Safari, Edge, and Firefox without Flash or extra extensions.`,
     },
     {
-      q: `Can I play ${title} in full screen mode?`,
-      a: `Yes. Click the Fullscreen icon located in the bottom control bar of the game player to expand ${title} to your full display for an immersive, distraction-free gaming session.`
-    }
+      q: `How is my progress saved in ${title}?`,
+      a: `${title} automatically stores your local progress and high scores in your browser storage. You can also sign in to a free Spielcade account to track XP and leaderboard stats.`,
+    },
+    {
+      q: `Can I play ${title} in fullscreen mode?`,
+      a: `Yes. Use the Fullscreen button on the bottom toolbar of the game player to expand ${title} across your entire screen.`,
+    },
+    {
+      q: `What other games are similar to ${title}?`,
+      a: `If you enjoy ${title}, check out the "Games Like ${title}" section below or browse our ${category} Games hub for dozens of related free browser titles.`,
+    },
+    {
+      q: `Why is ${title} not loading or running slowly?`,
+      a: `If ${title} feels slow, try closing unused browser tabs, enabling hardware acceleration in your browser settings, or refreshing the page to reload the HTML5 assets.`,
+    },
   ];
+
+  const selected: Array<{ q: string; a: string }> = [];
+  for (let i = 0; i < 4; i++) {
+    selected.push(faqPool[(hash + i * 2) % faqPool.length]);
+  }
+  return selected;
 }
 
 /**

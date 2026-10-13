@@ -50,7 +50,7 @@ export const metadata: Metadata = {
   },
   title: {
     default: 'Spielcade | Best Free Online Browser Games',
-    template: '%s | Spielcade Games',
+    template: '%s',
   },
   description: 'Play the best free online browser games instantly. No downloads required. Join millions of players worldwide on Spielcade.',
   keywords: ['browser games', 'free games', 'online games', 'html5 games', 'play now'],

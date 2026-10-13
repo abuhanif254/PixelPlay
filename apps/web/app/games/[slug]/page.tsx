@@ -166,32 +166,32 @@ export async function generateMetadata(
   const title = dbGame?.title || localGame?.config?.title || 'Game';
   const category = dbGame?.category || (dbGame?.metadata as any)?.category || localGame?.config?.category || 'Arcade';
   const rawGameDesc = dbGame?.description || localGame?.config?.description || '';
-  const description = (rawGameDesc && rawGameDesc.length >= 80)
-    ? rawGameDesc
-    : generateEnrichedDescription(title, category, rawGameDesc);
+  const description = generateEnrichedDescription(title, category, rawGameDesc);
   const image = dbGame?.image_url || localGame?.config?.image || 'https://spielcade.com/og-default.jpg';
   const status = dbGame?.status || 'active'; // local games are considered approved
-  const tags = (dbGame?.metadata as any)?.tags || localGame?.config?.tags || generateGameTags(title, category);
+  const tags = generateGameTags(title, category);
 
   const shouldIndex = status === 'approved' || status === 'active';
   
   // Dynamic viral challenge detection
-  const isChallenge = Boolean(searchParams?.challenger && searchParams?.score);
+  const isChallenge = Boolean(searchParams?.challenger || searchParams?.score);
   const challengerName = searchParams?.challenger || '';
   const rawScore = searchParams?.score || '';
   const formattedScore = !isNaN(Number(rawScore)) ? Number(rawScore).toLocaleString() : rawScore;
 
-  const challengeOgUrl = `https://spielcade.com/api/og/challenge?slug=${slug}&challenger=${encodeURIComponent(challengerName)}&score=${encodeURIComponent(rawScore)}`;
+  const canonicalSlug = dbGame?.slug || localResult.canonicalSlug || slug;
+  const canonicalUrl = `https://spielcade.com/games/${canonicalSlug}`;
+  const shouldIndexPage = shouldIndex && !isChallenge;
+
+  const challengeOgUrl = `https://spielcade.com/api/og/challenge?slug=${canonicalSlug}&challenger=${encodeURIComponent(challengerName)}&score=${encodeURIComponent(rawScore)}`;
 
   const pageTitle = isChallenge
     ? `⚔️ ${challengerName} scored ${formattedScore} in ${title}! Can you beat it? | Spielcade`
-    : `${title} — Play Free Online Game Unblocked | Spielcade`;
+    : `${title} (${category}) — Play Free Online Unblocked | Spielcade`;
 
   const pageDescription = isChallenge
     ? `${challengerName} just challenged you to beat their high score of ${formattedScore} in ${title}. Play free online with zero downloads on Spielcade!`
     : (description.length > 160 ? description.slice(0, 157).trimEnd() + "..." : description);
-
-  const canonicalUrl = `https://spielcade.com/games/${slug}`;
 
   const ogImages = isChallenge
     ? [
@@ -230,10 +230,10 @@ export async function generateMetadata(
       canonical: canonicalUrl,
     },
     robots: {
-      index: shouldIndex,
+      index: shouldIndexPage,
       follow: true,
       googleBot: {
-        index: shouldIndex,
+        index: shouldIndexPage,
         follow: true,
         "max-image-preview": "large",
       },
@@ -241,7 +241,7 @@ export async function generateMetadata(
     openGraph: {
       title: pageTitle,
       description: pageDescription,
-      url: isChallenge ? `${canonicalUrl}?challenger=${encodeURIComponent(challengerName)}&score=${encodeURIComponent(rawScore)}` : canonicalUrl,
+      url: canonicalUrl,
       siteName: 'Spielcade',
       type: 'website',
       images: ogImages,
@@ -301,27 +301,23 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
   const rawTitle = dbGame?.title || localGame?.config?.title || 'Unknown Game';
   const rawCat = dbGame?.category || (dbGame?.metadata as any)?.category || localGame?.config?.category || 'Arcade';
   const rawGameDesc = dbGame?.description || localGame?.config?.description || '';
-  const finalDesc = (rawGameDesc && rawGameDesc.length >= 80)
-    ? rawGameDesc
-    : generateEnrichedDescription(rawTitle, rawCat, rawGameDesc);
+  const finalDesc = generateEnrichedDescription(rawTitle, rawCat, rawGameDesc);
 
-  const finalStrategy = (dbGame?.metadata as any)?.strategy || (localGame?.config as any)?.strategy || generateStrategyContent(rawTitle, rawCat);
+  const finalStrategy = generateStrategyContent(
+    rawTitle,
+    rawCat,
+    (dbGame?.metadata as any)?.strategy || (localGame?.config as any)?.strategy
+  );
   const finalControls = (dbGame?.metadata as any)?.keyboardControls || (localGame?.config as any)?.keyboardControls || generateControlsMatrix('', rawCat);
-  const finalFaqs = ((dbGame?.metadata as any)?.faqs && (dbGame?.metadata as any)?.faqs.length > 0)
-    ? (dbGame?.metadata as any)?.faqs
-    : ((localGame?.config as any)?.faqs && (localGame?.config as any)?.faqs.length > 0)
-      ? (localGame?.config as any)?.faqs
-      : generateGameFaqs(rawTitle, rawCat);
-  const finalTags = ((dbGame?.metadata as any)?.tags && (dbGame?.metadata as any)?.tags.length > 0)
-    ? (dbGame?.metadata as any)?.tags
-    : ((localGame?.config as any)?.tags && (localGame?.config as any)?.tags.length > 0)
-      ? (localGame?.config as any)?.tags
-      : generateGameTags(rawTitle, rawCat);
+  const finalFaqs = ((localGame?.config as any)?.faqs && (localGame?.config as any)?.faqs.length > 0)
+    ? (localGame?.config as any)?.faqs
+    : generateGameFaqs(rawTitle, rawCat);
+  const finalTags = generateGameTags(rawTitle, rawCat);
 
   // Fetch community reviews, cached category top games, and cached platform catalog in parallel
   const [initialReviews, catGamesData, catalogData, devProfRes] = await Promise.all([
     getGameReviews(slug, dbGame?.id),
-    getCachedCategoryTopGames(rawCat, 20),
+    getCachedCategoryTopGames(rawCat, 48),
     getCachedCatalogData(),
     dbGame?.developer_id
       ? supabase
@@ -479,9 +475,18 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
     totalPlays: number;
   }> = [];
 
+  // Deterministically rotate the starting offset using the game slug so every game in the category gets a distinct related games mix
+  let slugHash = 0;
+  for (let i = 0; i < slug.length; i++) {
+    slugHash = ((slugHash << 5) - slugHash + slug.charCodeAt(i)) | 0;
+  }
+  const catList = catGamesData || [];
+  const startOffset = catList.length > 0 ? Math.abs(slugHash) % catList.length : 0;
+
   // Prioritize games in the same category (from warm Edge cache)
-  for (const g of (catGamesData || [])) {
-    if (g.slug && !seenSlugs.has(g.slug)) {
+  for (let i = 0; i < catList.length; i++) {
+    const g = catList[(startOffset + i) % catList.length];
+    if (g?.slug && !seenSlugs.has(g.slug)) {
       seenSlugs.add(g.slug);
       relatedGames.push({
         id: g.id,
@@ -497,8 +502,11 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
   }
 
   // Backfill with top-rated & trending games from warm catalog cache
-  for (const g of [...(catalogData.topRated || []), ...(catalogData.trending || [])]) {
-    if (g.slug && !seenSlugs.has(g.slug)) {
+  const backfillPool = [...(catalogData.topRated || []), ...(catalogData.trending || [])];
+  const backfillOffset = backfillPool.length > 0 ? Math.abs(slugHash) % backfillPool.length : 0;
+  for (let i = 0; i < backfillPool.length; i++) {
+    const g = backfillPool[(backfillOffset + i) % backfillPool.length];
+    if (g?.slug && !seenSlugs.has(g.slug)) {
       seenSlugs.add(g.slug);
       relatedGames.push({
         id: g.id,

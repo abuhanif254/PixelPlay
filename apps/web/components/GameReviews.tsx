@@ -14,38 +14,121 @@ interface GameReviewsProps {
   initialReviews?: ReviewItem[];
 }
 
-const DEFAULT_SEED_REVIEWS: ReviewItem[] = [
-  {
-    id: 'seed-1',
-    author: 'GameMaster99',
-    date: '2 days ago',
-    rating: 5,
-    content: "One of my absolute favorites! The mechanics are super responsive, the controls feel great, and it runs without any lag even on a Chromebook.",
-    helpful: 24,
-    isVerified: true,
-    level: 14,
-  },
-  {
-    id: 'seed-2',
-    author: 'CasualPlayer',
-    date: '1 week ago',
-    rating: 4,
-    content: "Really good game, works perfectly on mobile browser too. Great graphics and very entertaining soundtrack!",
-    helpful: 12,
-    isVerified: false,
-    level: 5,
-  },
-  {
-    id: 'seed-3',
-    author: 'RetroGamer',
-    date: '2 weeks ago',
-    rating: 5,
-    content: "Classic gameplay loop with high replay value. Love the cloud save feature so I don't lose my personal records.",
-    helpful: 8,
-    isVerified: true,
-    level: 9,
+function getSeedReviewsForGame(title: string, slug: string): ReviewItem[] {
+  const pool: Array<Omit<ReviewItem, 'id' | 'content'> & { template: (t: string) => string }> = [
+    {
+      author: 'GameMaster99',
+      date: '2 days ago',
+      rating: 5,
+      template: (t) => `${t} is one of my favorites on here! The mechanics are super responsive, the controls feel crisp, and it runs without any lag on my Chromebook.`,
+      helpful: 24,
+      isVerified: true,
+      level: 14,
+    },
+    {
+      author: 'CasualPlayer',
+      date: '1 week ago',
+      rating: 4,
+      template: (t) => `Really solid experience playing ${t} in a mobile browser. Fast loading times and the difficulty curve keeps it interesting.`,
+      helpful: 12,
+      isVerified: false,
+      level: 5,
+    },
+    {
+      author: 'RetroGamer',
+      date: '2 weeks ago',
+      rating: 5,
+      template: (t) => `Classic arcade gameplay loop in ${t} with high replay value. Love that progress saves automatically in the browser between sessions.`,
+      helpful: 8,
+      isVerified: true,
+      level: 9,
+    },
+    {
+      author: 'PixelDrifter',
+      date: '3 days ago',
+      rating: 5,
+      template: (t) => `Did not expect ${t} to be this addictive. Simple to pick up in the first minute, but getting a top score takes real focus.`,
+      helpful: 19,
+      isVerified: true,
+      level: 11,
+    },
+    {
+      author: 'NovaStrike',
+      date: '5 days ago',
+      rating: 5,
+      template: (t) => `Runs at a locked 60 FPS in fullscreen mode. ${t} is my go-to quick break game between study sessions.`,
+      helpful: 15,
+      isVerified: true,
+      level: 8,
+    },
+    {
+      author: 'ArcadeVortex',
+      date: '1 week ago',
+      rating: 4,
+      template: (t) => `Great pacing in ${t}! The later rounds get pretty intense once you figure out the movement timing.`,
+      helpful: 7,
+      isVerified: false,
+      level: 6,
+    },
+    {
+      author: 'KBM_Tactician',
+      date: '4 days ago',
+      rating: 5,
+      template: (t) => `Keyboard controls in ${t} feel super tight with zero input delay. Definitely recommend playing in fullscreen.`,
+      helpful: 16,
+      isVerified: true,
+      level: 17,
+    },
+    {
+      author: 'ZephyrPlays',
+      date: '3 weeks ago',
+      rating: 5,
+      template: (t) => `Zero downloads and instant load—${t} works right out of the box on both my laptop and phone.`,
+      helpful: 11,
+      isVerified: true,
+      level: 10,
+    },
+    {
+      author: 'ShadowRunnerX',
+      date: '6 days ago',
+      rating: 4,
+      template: (t) => `Fun challenge! Took me a few tries to get the hang of ${t}, now I'm trying to beat my personal record every day.`,
+      helpful: 9,
+      isVerified: false,
+      level: 4,
+    },
+    {
+      author: 'CozyController',
+      date: '2 weeks ago',
+      rating: 5,
+      template: (t) => `Clean visuals and smooth animations. ${t} is super satisfying to play when you just want instant browser action.`,
+      helpful: 14,
+      isVerified: true,
+      level: 12,
+    },
+  ];
+
+  const key = `${slug}:${title}`;
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) {
+    hash = ((hash << 5) - hash + key.charCodeAt(i)) | 0;
   }
-];
+  const abs = Math.abs(hash);
+
+  return [0, 1, 2].map((offset) => {
+    const picked = pool[(abs + offset * 3) % pool.length];
+    return {
+      id: `seed-${offset + 1}`,
+      author: picked.author,
+      date: picked.date,
+      rating: picked.rating,
+      content: picked.template(title || 'This game'),
+      helpful: picked.helpful + ((abs + offset) % 5),
+      isVerified: picked.isVerified,
+      level: picked.level,
+    };
+  });
+}
 
 const QUICK_TAGS = [
   '🎮 Super Smooth Controls',
@@ -64,7 +147,7 @@ export default function GameReviews({
   initialReviews = [],
 }: GameReviewsProps) {
   const [reviews, setReviews] = useState<ReviewItem[]>(() => {
-    return initialReviews.length > 0 ? initialReviews : DEFAULT_SEED_REVIEWS;
+    return initialReviews.length > 0 ? initialReviews : getSeedReviewsForGame(title, slug);
   });
 
   const [currentUser, setCurrentUser] = useState<{ id: string; username?: string; avatar_url?: string } | null>(null);
@@ -90,6 +173,10 @@ export default function GameReviews({
     let isMounted = true;
     const loadUserData = async () => {
       try {
+        if (typeof document !== 'undefined') {
+          const hasAuthCookie = document.cookie.includes('sb-') || document.cookie.includes('-auth-token');
+          if (!hasAuthCookie) return;
+        }
         const supabase = createClient();
         const { data: authData } = await supabase.auth.getUser();
         if (!authData?.user || !isMounted) {

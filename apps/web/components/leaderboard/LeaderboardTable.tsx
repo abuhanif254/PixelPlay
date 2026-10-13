@@ -86,6 +86,8 @@ export default function LeaderboardTable({ players = [] }: { players?: PlayerSco
                 <div className="col-span-4 sm:col-span-4 md:col-span-2 flex items-center justify-end gap-1.5 sm:gap-2">
                   <Link
                     href={`/games/${targetSlug}?challenger=${encodeURIComponent(player.name)}&score=${rawScore}`}
+                    rel="nofollow"
+                    prefetch={false}
                     className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] sm:text-xs font-black text-amber-500 dark:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg transition-all shadow-sm active:scale-95 whitespace-nowrap"
                     title={`Challenge ${player.name} to beat ${player.score}`}
                   >
@@ -93,12 +95,23 @@ export default function LeaderboardTable({ players = [] }: { players?: PlayerSco
                     <span>Fight</span>
                   </Link>
 
-                  <Link
-                    href={`/profile/${player.name}`}
-                    className="px-2 sm:px-2.5 py-1 text-[11px] sm:text-xs font-semibold text-purple-600 dark:text-purple-400 border border-purple-500/20 hover:bg-purple-500/10 rounded-lg transition-colors whitespace-nowrap"
-                  >
-                    Card
-                  </Link>
+                  {player.userId && !player.userId.startsWith('seed-') ? (
+                    <Link
+                      href={`/profile/${player.name}`}
+                      prefetch={false}
+                      className="px-2 sm:px-2.5 py-1 text-[11px] sm:text-xs font-semibold text-purple-600 dark:text-purple-400 border border-purple-500/20 hover:bg-purple-500/10 rounded-lg transition-colors whitespace-nowrap"
+                    >
+                      Card
+                    </Link>
+                  ) : (
+                    <Link
+                      href={`/games/${targetSlug}`}
+                      prefetch={false}
+                      className="px-2 sm:px-2.5 py-1 text-[11px] sm:text-xs font-semibold text-purple-600 dark:text-purple-400 border border-purple-500/20 hover:bg-purple-500/10 rounded-lg transition-colors whitespace-nowrap"
+                    >
+                      Play
+                    </Link>
+                  )}
                 </div>
               </div>
             );

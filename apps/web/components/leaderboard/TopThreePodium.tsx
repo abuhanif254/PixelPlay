@@ -54,9 +54,13 @@ export default function TopThreePodium({ topThree = [] }: { topThree?: PlayerSco
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 items-end">
-      {themedPlayers.map((player) => (
+      {themedPlayers.map((player) => {
+        const isRealProfile = player.userId && !player.userId.startsWith('seed-');
+        const targetHref = isRealProfile ? `/profile/${player.name}` : `/games/${player.gameSlug || 'slope'}`;
+        return (
         <Link 
-          href={`/profile/${player.name}`}
+          href={targetHref}
+          prefetch={false}
           key={player.rank}
           className={`relative rounded-2xl flex flex-col items-center justify-center p-6 border transition-transform hover:-translate-y-2 cursor-pointer ${player.theme.bg} ${player.theme.border} ${player.theme.shadow} ${player.rank === 1 ? 'md:-mt-8 md:mb-4 h-64 z-10' : 'h-56'}`}
         >
@@ -102,7 +106,8 @@ export default function TopThreePodium({ topThree = [] }: { topThree?: PlayerSco
           </p>
 
         </Link>
-      ))}
+        );
+      })}
     </div>
   );
 }

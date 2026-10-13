@@ -32,6 +32,8 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     ? (pageNum > 1 ? `/categories/${category.toLowerCase().replace(/\s+/g, '-')}-games?page=${pageNum}` : `/categories/${category.toLowerCase().replace(/\s+/g, '-')}-games`)
     : (pageNum > 1 ? `/games?page=${pageNum}` : '/games');
 
+  const shouldIndex = !searchQuery && (category === 'All Games' || !category);
+
   return {
     title,
     description: `Explore our collection of the best free online ${category.toLowerCase()} games. No downloads, no installs - click and play instantly!`,
@@ -39,10 +41,10 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
       canonical: `https://spielcade.com${canonicalPath}`,
     },
     robots: {
-      index: true,
+      index: shouldIndex,
       follow: true,
       googleBot: {
-        index: true,
+        index: shouldIndex,
         follow: true,
         'max-image-preview': 'large',
       },

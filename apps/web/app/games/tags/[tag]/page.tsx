@@ -17,6 +17,9 @@ interface TagPageProps {
 
 interface CachedTagEntry {
   games: any[];
+  matchedGameSlug: string | null;
+  matchedCategoryHref: string | null;
+  cleanTagSlug: string;
   cachedAt: number;
 }
 
@@ -27,6 +30,77 @@ if (!gTagCache.__spielcade_tag_cache) {
 
 const TAG_CACHE_TTL_MS = 1800_000; // 30 minutes
 const MAX_TAG_CACHE_ENTRIES = 300;
+
+const TAG_TO_CATEGORY_HUB: Record<string, string> = {
+  action: '/categories/action-games',
+  adventure: '/categories/adventure-games',
+  arcade: '/categories/arcade-games',
+  board: '/categories/board-games',
+  puzzle: '/categories/puzzle-games',
+  racing: '/categories/racing-games',
+  sports: '/categories/sports-games',
+  strategy: '/categories/strategy-games',
+  car: '/categories/car-games',
+  drift: '/categories/drift-games',
+  moto: '/categories/moto-games',
+  bike: '/categories/moto-games',
+  zombie: '/categories/zombie-games',
+  zombies: '/categories/zombie-games',
+  stickman: '/categories/stickman-games',
+  '2 player': '/categories/2-player-games',
+  multiplayer: '/categories/multiplayer-games',
+  escape: '/categories/escape-games',
+  shooting: '/categories/shooting-games',
+  shooter: '/categories/shooting-games',
+  sniper: '/categories/sniper-games',
+  fps: '/categories/fps-games',
+  'dress up': '/categories/dress-up-games',
+  cooking: '/categories/cooking-games',
+  football: '/categories/football-games',
+  soccer: '/categories/football-games',
+  basketball: '/categories/basketball-games',
+  tennis: '/categories/tennis-games',
+  pool: '/categories/pool-games',
+  billiards: '/categories/pool-games',
+  bowling: '/categories/bowling-games',
+  golf: '/categories/golf-games',
+  boxing: '/categories/boxing-games',
+  cricket: '/categories/cricket-games',
+  clicker: '/categories/clicker-games',
+  idle: '/categories/clicker-games',
+  runner: '/categories/runner-games',
+  parkour: '/categories/parkour-games',
+  ninja: '/categories/ninja-games',
+  chess: '/categories/chess-games',
+  mahjong: '/categories/mahjong-games',
+  solitaire: '/categories/solitaire-games',
+  brain: '/categories/brain-games',
+  horror: '/categories/horror-games',
+  tank: '/categories/tank-games',
+  tanks: '/categories/tank-games',
+  war: '/categories/war-games',
+  defense: '/categories/tower-defense-games',
+  'tower defense': '/categories/tower-defense-games',
+  match: '/categories/match-3-games',
+  bubble: '/categories/bubble-shooter-games',
+  jigsaw: '/categories/jigsaw-puzzle-games',
+  word: '/categories/word-games',
+  io: '/categories/io-games',
+  physics: '/categories/physics-games',
+  casual: '/categories/casual-games',
+  retro: '/categories/retro-arcade-games',
+  unblocked: '/categories/unblocked-games',
+  chromebook: '/categories/chromebook-games',
+};
+
+function tagHash(str: string): number {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = (h << 5) - h + str.charCodeAt(i);
+    h |= 0;
+  }
+  return Math.abs(h);
+}
 
 function safeDecodeTag(rawTag: string): string {
   try {
@@ -69,18 +143,35 @@ function formatTag(rawTag: string): string {
   return cleaned.replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-async function getCachedTagGames(rawTagParam: string): Promise<any[]> {
+async function getCachedTagData(rawTagParam: string): Promise<CachedTagEntry> {
   const searchPhrase = cleanTagWords(rawTagParam);
+  const cleanTagSlug = searchPhrase.replace(/\s+/g, '-');
   const memCache = gTagCache.__spielcade_tag_cache!;
   const cached = memCache.get(searchPhrase);
   if (cached && Date.now() - cached.cachedAt < TAG_CACHE_TTL_MS) {
-    return cached.games;
+    return cached;
   }
 
   let games: any[] = [];
+  let matchedGameSlug: string | null = null;
+  const matchedCategoryHref: string | null = TAG_TO_CATEGORY_HUB[searchPhrase] || null;
 
   try {
     const supabase = createPublicClient();
+
+    // 1. Check if this tag is actually a specific game's slug (e.g. /games/tags/tanks-1944 or /games/tags/coastal-defense-unblocked)
+    const slugCandidates = [cleanTagSlug, `${cleanTagSlug}-game`];
+    const { data: exactGame } = await supabase
+      .from('games')
+      .select('id, title, slug, image_url, category, rating, total_plays')
+      .eq('status', 'active')
+      .in('slug', slugCandidates)
+      .limit(1);
+
+    if (exactGame && exactGame.length > 0) {
+      matchedGameSlug = exactGame[0].slug;
+      games.push(exactGame[0]);
+    }
 
     if (searchPhrase.length >= 2) {
       const { data: gamesData } = await supabase
@@ -92,7 +183,17 @@ async function getCachedTagGames(rawTagParam: string): Promise<any[]> {
         .limit(36);
 
       if (gamesData && gamesData.length > 0) {
-        games = gamesData;
+        const seen = new Set(games.map((g) => g.slug));
+        for (const g of gamesData) {
+          if (g.slug && !seen.has(g.slug)) {
+            seen.add(g.slug);
+            games.push(g);
+          }
+        }
+        // If only 1 game matched the multi-word phrase, this tag is a per-game tag for that game
+        if (!matchedGameSlug && gamesData.length <= 2 && searchPhrase.split(' ').length >= 2) {
+          matchedGameSlug = gamesData[0].slug;
+        }
       }
     }
 
@@ -129,45 +230,69 @@ async function getCachedTagGames(rawTagParam: string): Promise<any[]> {
     console.error('[TagPage] Error fetching tag games:', err);
   }
 
-  // Fast in-memory fallback from warm catalog cache (0 extra DB queries)
+  // Fast in-memory fallback from warm catalog cache with deterministic hash offset so tag pages never share identical game grids
   if (games.length < 12) {
     try {
       const catalog = await getCachedCatalogData();
-      const seen = new Set(games.map((g) => g.slug));
-      for (const g of [...(catalog.trending || []), ...(catalog.topRated || [])]) {
-        if (g.slug && !seen.has(g.slug)) {
-          seen.add(g.slug);
-          games.push({
-            id: g.id,
-            title: g.title,
-            slug: g.slug,
-            image_url: g.image_url || g.image || '',
-            category: g.category,
-            rating: g.rating || 4.8,
-            total_plays: g.total_plays ?? 15000,
-          });
+      const pool = [...(catalog.trending || []), ...(catalog.topRated || []), ...(catalog.newGames || [])];
+      if (pool.length > 0) {
+        const seen = new Set(games.map((g) => g.slug));
+        const offset = tagHash(searchPhrase) % pool.length;
+        for (let i = 0; i < pool.length; i++) {
+          const g = pool[(offset + i) % pool.length];
+          if (g && g.slug && !seen.has(g.slug)) {
+            seen.add(g.slug);
+            games.push({
+              id: g.id,
+              title: g.title,
+              slug: g.slug,
+              image_url: g.image_url || g.image || '',
+              category: g.category,
+              rating: g.rating || 4.8,
+              total_plays: g.total_plays ?? 15000,
+            });
+          }
+          if (games.length >= 24) break;
         }
-        if (games.length >= 24) break;
       }
     } catch {
       // Ignore fallback errors
     }
   }
 
+  const entry: CachedTagEntry = {
+    games,
+    matchedGameSlug,
+    matchedCategoryHref,
+    cleanTagSlug,
+    cachedAt: Date.now(),
+  };
+
   if (memCache.size >= MAX_TAG_CACHE_ENTRIES) {
     const oldestKey = memCache.keys().next().value;
     if (oldestKey) memCache.delete(oldestKey);
   }
-  memCache.set(searchPhrase, { games, cachedAt: Date.now() });
+  memCache.set(searchPhrase, entry);
 
-  return games;
+  return entry;
 }
 
 export async function generateMetadata({ params }: TagPageProps): Promise<Metadata> {
   const tagName = formatTag(params.tag);
+  const tagData = await getCachedTagData(params.tag);
+
+  // Consolidate canonical URL to prevent per-game tag duplication:
+  // 1) If tag matches a specific game (e.g. /games/tags/tanks-1944 or /games/tags/coastal-defense-unblocked), canonicalize to /games/[slug]
+  // 2) If tag matches a canonical category hub (e.g. /games/tags/sniper), canonicalize to /categories/[slug]
+  // 3) Otherwise canonicalize to the clean normalized tag slug
+  const canonicalUrl = tagData.matchedGameSlug
+    ? `https://spielcade.com/games/${tagData.matchedGameSlug}`
+    : tagData.matchedCategoryHref
+      ? `https://spielcade.com${tagData.matchedCategoryHref}`
+      : `https://spielcade.com/games/tags/${tagData.cleanTagSlug}`;
+
   const title = `${tagName} Games — Play Free Online | Spielcade`;
   const description = `Play the best free online ${tagName} games with no downloads required. Enjoy instant browser play on desktop, mobile, and Chromebook!`;
-  const canonicalUrl = `https://spielcade.com/games/tags/${encodeURIComponent(safeDecodeTag(params.tag).toLowerCase().replace(/\s+/g, '-'))}`;
 
   return {
     title,
@@ -209,7 +334,7 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
 
 export default async function TagPage({ params }: TagPageProps) {
   const formattedTag = formatTag(params.tag);
-  const games = await getCachedTagGames(params.tag);
+  const { games } = await getCachedTagData(params.tag);
 
   const breadcrumbSchema = {
     '@context': 'https://schema.org',

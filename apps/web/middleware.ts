@@ -36,6 +36,55 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 301)
   }
 
+  // 0.2 Canonical Query-Param Normalization on /games (?category=... and ?page=1)
+  if (pathname === '/games') {
+    const searchParams = request.nextUrl.searchParams
+    const rawCat = searchParams.get('category')?.trim()
+    const rawPage = searchParams.get('page')?.trim()
+    const hasSearch = Boolean(searchParams.get('q') || searchParams.get('search'))
+
+    const CATEGORY_QUERY_MAP: Record<string, string> = {
+      action: '/categories/action-games',
+      adventure: '/categories/adventure-games',
+      arcade: '/categories/arcade-games',
+      board: '/categories/board-games',
+      puzzle: '/categories/puzzle-games',
+      racing: '/categories/racing-games',
+      sports: '/categories/sports-games',
+      strategy: '/categories/strategy-games',
+      skill: '/categories/arcade-games',
+      endless: '/categories/runner-games',
+      runner: '/categories/runner-games',
+      car: '/categories/car-games',
+      shooting: '/categories/shooting-games',
+      stickman: '/categories/stickman-games',
+      zombie: '/categories/zombie-games',
+      unblocked: '/categories/unblocked-games',
+      multiplayer: '/categories/multiplayer-games',
+      '2 player': '/categories/2-player-games',
+    }
+
+    if (rawCat && !hasSearch) {
+      const catKey = rawCat.toLowerCase()
+      const targetHub = CATEGORY_QUERY_MAP[catKey]
+      if (targetHub) {
+        const url = request.nextUrl.clone()
+        url.pathname = targetHub
+        url.searchParams.delete('category')
+        if (rawPage === '1') {
+          url.searchParams.delete('page')
+        }
+        return NextResponse.redirect(url, 301)
+      }
+    }
+
+    if (rawPage === '1') {
+      const url = request.nextUrl.clone()
+      url.searchParams.delete('page')
+      return NextResponse.redirect(url, 301)
+    }
+  }
+
   // 1. Ultra Fast-Path: Static SEO, feeds, search APIs, public assets
   if (
     pathname.startsWith('/sitemap') ||

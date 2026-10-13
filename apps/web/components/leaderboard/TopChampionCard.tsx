@@ -51,8 +51,12 @@ export default function TopChampionCard({ champion = null }: { champion?: any })
         </span>
       </div>
 
-      <Link href={`/profile/${champion.name}`} className="w-full py-3 bg-[#6366F1] hover:bg-[#5457DF] text-white text-sm font-bold rounded-xl transition-all shadow-lg z-10">
-        View Profile
+      <Link
+        href={champion.userId && !String(champion.userId).startsWith('seed-') ? `/profile/${champion.name}` : `/games/${champion.gameSlug || 'slope'}`}
+        prefetch={false}
+        className="w-full py-3 bg-[#6366F1] hover:bg-[#5457DF] text-white text-sm font-bold rounded-xl transition-all shadow-lg z-10"
+      >
+        {champion.userId && !String(champion.userId).startsWith('seed-') ? 'View Profile' : 'Play Top Game'}
       </Link>
     </div>
   );
