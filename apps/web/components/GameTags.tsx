@@ -107,6 +107,29 @@ const CANONICAL_CATEGORY_HUBS: Record<string, string> = {
   'instant play': '/popular',
 };
 
+const HIGH_INTENT_TAGS = new Set([
+  '2048',
+  'checkers',
+  'ludo',
+  'dominoes',
+  'monster-truck',
+  'parking',
+  'archery',
+  'aircraft',
+  'pixel',
+  'merge',
+  'obby',
+  'skibidi',
+  'brawl-stars',
+  'fnf',
+  'squid-game',
+  'minecraft',
+  'stickman-archery',
+  'penalty',
+  'pinball',
+  'water-slide',
+]);
+
 function normalizeAndFilterTags(rawTags: string[], category: string): Array<{ label: string; href: string }> {
   const results: Array<{ label: string; href: string }> = [];
   const seenHrefs = new Set<string>();
@@ -159,7 +182,8 @@ function normalizeAndFilterTags(rawTags: string[], category: string): Array<{ la
     }
 
     const cleanSlug = lower.replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-    if (cleanSlug.length >= 3 && cleanSlug.length <= 24) {
+    // Only link to curated high-intent tags to preserve Googlebot crawl budget
+    if (HIGH_INTENT_TAGS.has(cleanSlug)) {
       addTag(raw.replace(/\b\w/g, (c) => c.toUpperCase()), `/games/tags/${cleanSlug}`);
     }
   }
