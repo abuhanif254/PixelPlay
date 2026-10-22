@@ -253,20 +253,14 @@ export async function generateMetadata(
 
   if (!dbGame && !localGame) {
     if (GAME_SLUG_ALIASES[slug]) {
-      return {
-        title: 'Redirecting Game - Spielcade',
-        alternates: { canonical: `https://spielcade.com/games/${GAME_SLUG_ALIASES[slug]}` },
-      };
+      permanentRedirect(`/games/${GAME_SLUG_ALIASES[slug]}`);
     }
 
     const slugTokens = slug.split('-');
     for (const token of slugTokens) {
       const targetCategory = KEYWORD_CATEGORY_MAP[token];
       if (targetCategory) {
-        return {
-          title: 'Redirecting Game - Spielcade',
-          alternates: { canonical: `https://spielcade.com${targetCategory}` },
-        };
+        permanentRedirect(targetCategory);
       }
     }
 

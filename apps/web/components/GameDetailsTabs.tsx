@@ -33,9 +33,7 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
 
   const handleTabClick = (id: string) => {
     setActiveTab(id);
-    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
-      scrollToSection(id);
-    }
+    scrollToSection(id);
   };
 
   return (
@@ -70,7 +68,7 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
           <div className="bg-transparent">
             
             {/* About Section */}
-            <div id="about" className={`scroll-mt-32 ${activeTab === 'about' ? 'block' : 'hidden md:block'}`}>
+            <div id="about" className="scroll-mt-32">
               <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white font-outfit">About {config.title}</h3>
               <p className="text-sm md:text-base leading-relaxed text-gray-600 dark:text-gray-400">
                 {config.description || `${config.title} is a free online game that you can play directly in your browser. No downloads or installations required.`}
@@ -81,8 +79,8 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
             </div>
 
             {/* Media Section */}
-            <div id="media" className={`scroll-mt-32 ${activeTab === 'media' ? 'block' : 'hidden md:block'}`}>
-              <div className="hidden md:block w-full h-px bg-gray-200 dark:bg-white/5 my-8" />
+            <div id="media" className="scroll-mt-32">
+              <div className="w-full h-px bg-gray-200 dark:bg-white/5 my-8" />
               <GameMedia 
                 title={config.title} 
                 trailerUrl={config.trailerUrl} 
@@ -91,8 +89,8 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
             </div>
 
             {/* Tips Section */}
-            <div id="tips" className={`scroll-mt-32 ${activeTab === 'tips' ? 'block' : 'hidden md:block'}`}>
-              <div className="hidden md:block w-full h-px bg-gray-200 dark:bg-white/5 my-8" />
+            <div id="tips" className="scroll-mt-32">
+              <div className="w-full h-px bg-gray-200 dark:bg-white/5 my-8" />
               <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white font-outfit">Tips &amp; Tricks for {config.title}</h3>
               {(() => {
                 const defaultTipsPool = [
@@ -129,8 +127,8 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
             </div>
 
             {/* Reviews Section */}
-            <div id="reviews" className={`scroll-mt-32 ${activeTab === 'reviews' ? 'block' : 'hidden md:block'}`}>
-              <div className="hidden md:block w-full h-px bg-gray-200 dark:bg-white/5 my-8" />
+            <div id="reviews" className="scroll-mt-32">
+              <div className="w-full h-px bg-gray-200 dark:bg-white/5 my-8" />
               <GameReviews 
                 title={config.title} 
                 slug={config.slug}
@@ -141,8 +139,8 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
             </div>
 
             {/* FAQ Section */}
-            <div id="faq" className={`scroll-mt-32 ${activeTab === 'faq' ? 'block' : 'hidden md:block'}`}>
-              <div className="hidden md:block w-full h-px bg-gray-200 dark:bg-white/5 my-8" />
+            <div id="faq" className="scroll-mt-32">
+              <div className="w-full h-px bg-gray-200 dark:bg-white/5 my-8" />
               <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white font-outfit">Frequently Asked Questions</h3>
               {config.faqs && config.faqs.length > 0 ? (
                 <div className="space-y-3">

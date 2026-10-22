@@ -290,27 +290,47 @@ const BLOCKLISTED_TAGS = new Set([
   'super',
 ]);
 
+const HIGH_INTENT_TAGS = new Set([
+  '2048',
+  'checkers',
+  'ludo',
+  'dominoes',
+  'monster-truck',
+  'parking',
+  'archery',
+  'aircraft',
+  'pixel',
+  'merge',
+  'obby',
+  'skibidi',
+  'brawl-stars',
+  'fnf',
+  'squid-game',
+  'minecraft',
+  'stickman-archery',
+  'penalty',
+  'pinball',
+  'water-slide',
+]);
+
 export async function generateMetadata({ params }: TagPageProps): Promise<Metadata> {
   const tagName = formatTag(params.tag);
   const tagData = await getCachedTagData(params.tag);
 
   if (BLOCKLISTED_TAGS.has(tagData.cleanTagSlug)) {
-    return {
-      title: 'Tag Not Found | Spielcade',
-      robots: { index: false, follow: false },
-    };
+    notFound();
   }
 
-  // Consolidate canonical URL to prevent per-game tag duplication:
-  // 1) If tag matches a specific game (e.g. /games/tags/tanks-1944 or /games/tags/coastal-defense-unblocked), canonicalize to /games/[slug]
-  // 2) If tag matches a canonical category hub (e.g. /games/tags/sniper), canonicalize to /categories/[slug]
-  // 3) Otherwise canonicalize to the clean normalized tag slug
-  const canonicalUrl = tagData.matchedGameSlug
-    ? `https://spielcade.com/games/${tagData.matchedGameSlug}`
-    : tagData.matchedCategoryHref
-      ? `https://spielcade.com${tagData.matchedCategoryHref}`
-      : `https://spielcade.com/games/tags/${tagData.cleanTagSlug}`;
+  if (tagData.matchedCategoryHref) {
+    permanentRedirect(tagData.matchedCategoryHref);
+  }
 
+  if (tagData.matchedGameSlug) {
+    permanentRedirect(`/games/${tagData.matchedGameSlug}`);
+  }
+
+  const isHighIntent = HIGH_INTENT_TAGS.has(tagData.cleanTagSlug);
+  const canonicalUrl = `https://spielcade.com/games/tags/${tagData.cleanTagSlug}`;
   const title = `${tagName} Games — Play Free Online | Spielcade`;
   const description = `Play the best free online ${tagName} games with no downloads required. Enjoy instant browser play on desktop, mobile, and Chromebook!`;
 
@@ -329,8 +349,13 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
       canonical: canonicalUrl,
     },
     robots: {
-      index: !tagData.matchedGameSlug && !tagData.matchedCategoryHref,
+      index: isHighIntent,
       follow: true,
+      googleBot: {
+        index: isHighIntent,
+        follow: true,
+        'max-image-preview': 'large',
+      },
     },
     openGraph: {
       title,
