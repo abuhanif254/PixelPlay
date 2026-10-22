@@ -12,13 +12,29 @@ import { createPublicClient } from '@/lib/supabase/server';
 
 export const runtime = 'edge';
 
-export const metadata: Metadata = {
-  title: 'Global Leaderboard | Spielcade',
-  description: 'Compete with players around the world and become the ultimate champion!',
-  alternates: {
-    canonical: 'https://spielcade.com/leaderboard',
-  },
-};
+export async function generateMetadata({ searchParams }: { searchParams: { game?: string, time?: string, region?: string } }): Promise<Metadata> {
+  const hasFilter = Boolean(searchParams?.game || searchParams?.time || searchParams?.region);
+  const title = searchParams?.game
+    ? `${searchParams.game.replace(/-/g, ' ')} Leaderboard — High Scores | Spielcade`
+    : 'Global Leaderboard — Top Players & High Scores | Spielcade';
+
+  return {
+    title,
+    description: 'Compete with players around the world, beat verified high scores, and become the ultimate champion on Spielcade!',
+    alternates: {
+      canonical: 'https://spielcade.com/leaderboard',
+    },
+    robots: {
+      index: !hasFilter,
+      follow: true,
+      googleBot: {
+        index: !hasFilter,
+        follow: true,
+        'max-image-preview': 'large',
+      },
+    },
+  };
+}
 
 export const revalidate = 300; // 5-minute Edge CDN caching
 

@@ -178,6 +178,15 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 301)
   }
 
+  if (pathname === '/leaderboard') {
+    const rawPage = request.nextUrl.searchParams.get('page')?.trim()
+    if (rawPage === '1') {
+      const url = request.nextUrl.clone()
+      url.searchParams.delete('page')
+      return NextResponse.redirect(url, 301)
+    }
+  }
+
   if (pathname === '/games') {
     const searchParams = request.nextUrl.searchParams
     const rawCat = searchParams.get('category')?.trim()

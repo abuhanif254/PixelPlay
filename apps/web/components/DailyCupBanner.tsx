@@ -113,6 +113,8 @@ export default function DailyCupBanner({ className = '', variant = 'full' }: Dai
           {/* Quick Launch CTA Button */}
           <Link
             href={`/games/${game.slug}?tournament=daily-cup`}
+            rel="nofollow"
+            prefetch={false}
             onClick={handlePlayClick}
             className="group flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs sm:text-sm tracking-wide transition-all duration-200 shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_25px_rgba(245,158,11,0.5)] active:scale-95"
           >

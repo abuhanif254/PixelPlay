@@ -136,6 +136,8 @@ export default function PlaylistDetailPage({ params }: PlaylistPageProps) {
             <div className="mt-8 pt-6 border-t border-gray-100 dark:border-white/5 flex items-center justify-between">
               <Link
                 href={`/games/${firstGame.slug}?playlist=${playlist.slug}&queueIndex=0`}
+                rel="nofollow"
+                prefetch={false}
                 onClick={() => arcadeAudio.playStart()}
                 className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-black text-sm sm:text-base flex items-center gap-2 shadow-[0_0_25px_rgba(99,102,241,0.4)] transform hover:scale-105 active:scale-95 transition-all"
               >
@@ -191,6 +193,8 @@ export default function PlaylistDetailPage({ params }: PlaylistPageProps) {
 
                   <Link
                     href={`/games/${game.slug}?playlist=${playlist.slug}&queueIndex=${index}`}
+                    rel="nofollow"
+                    prefetch={false}
                     onClick={() => arcadeAudio.playSelect()}
                     className="p-2.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500 text-indigo-500 hover:text-white transition-all shadow-sm active:scale-95"
                     title={`Play ${game.title}`}

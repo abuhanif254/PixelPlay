@@ -226,6 +226,8 @@ export default function TournamentsPage() {
               <div className="flex flex-wrap items-center gap-4 pt-4">
                 <Link
                   href={`/games/${tournament.game.slug}?tournament=${tournament.editionCode}`}
+                  rel="nofollow"
+                  prefetch={false}
                   onClick={() => arcadeAudio.playStart()}
                   className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-amber-950 font-black text-sm sm:text-base flex items-center gap-2 shadow-[0_0_25px_rgba(245,158,11,0.4)] hover:shadow-[0_0_35px_rgba(245,158,11,0.6)] transform hover:scale-105 active:scale-95 transition-all"
                 >
@@ -367,6 +369,8 @@ export default function TournamentsPage() {
 
               <Link
                 href={`/games/${tournament.game.slug}?tournament=${tournament.editionCode}`}
+                rel="nofollow"
+                prefetch={false}
                 className="px-4 py-2 text-xs font-bold rounded-xl bg-amber-500 text-amber-950 hover:bg-amber-400 transition-all flex items-center gap-1.5 shadow-sm"
               >
                 <Swords size={14} />

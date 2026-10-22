@@ -234,6 +234,10 @@ interface GamePageProps {
   searchParams?: {
     challenger?: string;
     score?: string;
+    playlist?: string;
+    tournament?: string;
+    queueIndex?: string;
+    [key: string]: string | undefined;
   };
 }
 
@@ -279,7 +283,14 @@ export async function generateMetadata(
 
   const shouldIndex = status === 'approved' || status === 'active';
   
-  // Dynamic viral challenge detection
+  // Dynamic viral challenge & queue/tournament parameter detection
+  const isTrackingParam = Boolean(
+    searchParams?.challenger ||
+    searchParams?.score ||
+    searchParams?.playlist ||
+    searchParams?.tournament ||
+    searchParams?.queueIndex
+  );
   const isChallenge = Boolean(searchParams?.challenger || searchParams?.score);
   const challengerName = searchParams?.challenger || '';
   const rawScore = searchParams?.score || '';
@@ -287,7 +298,7 @@ export async function generateMetadata(
 
   const canonicalSlug = dbGame?.slug || localResult.canonicalSlug || slug;
   const canonicalUrl = `https://spielcade.com/games/${canonicalSlug}`;
-  const shouldIndexPage = shouldIndex && !isChallenge;
+  const shouldIndexPage = shouldIndex && !isTrackingParam;
 
   const challengeOgUrl = `https://spielcade.com/api/og/challenge?slug=${canonicalSlug}&challenger=${encodeURIComponent(challengerName)}&score=${encodeURIComponent(rawScore)}`;
 

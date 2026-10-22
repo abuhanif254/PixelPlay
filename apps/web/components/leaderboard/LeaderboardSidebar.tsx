@@ -70,6 +70,8 @@ export default function LeaderboardSidebar({ games = [], topPlayers = [] }: { ga
         {games.slice(0, 8).map((game, idx) => (
           <Link 
             href={`/leaderboard?game=${game.slug}`} 
+            rel="nofollow"
+            prefetch={false}
             key={game.id} 
             className={`flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
               gameParam === game.slug ? 'bg-[#6366F1]/10 text-[#6366F1]' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5'
