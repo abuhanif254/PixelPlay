@@ -5,6 +5,7 @@ import { createPublicClient } from '@/lib/supabase/server';
 import { getCachedCatalogData, getCachedCategoryCounts } from '@/lib/catalog-cache';
 import AllGamesClient from './AllGamesClient';
 import { Metadata } from 'next';
+import { permanentRedirect } from 'next/navigation';
 import DynamicSEOBlock from '@/components/DynamicSEOBlock';
 
 export const runtime = 'edge';
@@ -16,9 +17,39 @@ type Props = {
 
 const VALID_CATEGORIES = ['Action', 'Adventure', 'Arcade', 'Board', 'Puzzle', 'Racing', 'Sports', 'Strategy'];
 
+const CATEGORY_MAP: Record<string, string> = {
+  action: '/categories/action-games',
+  adventure: '/categories/adventure-games',
+  arcade: '/categories/arcade-games',
+  board: '/categories/board-games',
+  puzzle: '/categories/puzzle-games',
+  racing: '/categories/racing-games',
+  sports: '/categories/sports-games',
+  strategy: '/categories/strategy-games',
+  physics: '/categories/physics-games',
+  classic: '/categories/retro-arcade-games',
+  cyberpunk: '/categories/action-games',
+  html5: '/games',
+  shooting: '/categories/shooting-games',
+  car: '/categories/car-games',
+  zombie: '/categories/zombie-games',
+  zombies: '/categories/zombie-games',
+  multiplayer: '/categories/2-player-games',
+};
+
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const category = typeof searchParams.category === 'string' ? searchParams.category : 'All Games';
   const searchQuery = typeof searchParams.q === 'string' ? searchParams.q : (typeof searchParams.search === 'string' ? searchParams.search : '');
+
+  if (searchQuery.includes('{search_term_string}') || searchQuery.includes('%7Bsearch_term_string%7D') || searchQuery.includes('%7bsearch_term_string%7d')) {
+    permanentRedirect('/games');
+  }
+
+  if (category && category !== 'All Games') {
+    const catKey = category.toLowerCase().trim();
+    const targetCategoryHub = CATEGORY_MAP[catKey] || `/categories/${catKey.replace(/\s+/g, '-')}-games`;
+    permanentRedirect(targetCategoryHub);
+  }
   const isCanonicalCategory = VALID_CATEGORIES.includes(category);
   const pageNum = parseInt(typeof searchParams.page === 'string' ? searchParams.page : '1', 10) || 1;
 
@@ -53,10 +84,21 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 }
 
 export default async function AllGamesPage({ searchParams }: Props) {
+  const activeCategory = typeof searchParams.category === 'string' ? searchParams.category : 'All Games';
+  const searchQuery = typeof searchParams.q === 'string' ? searchParams.q : (typeof searchParams.search === 'string' ? searchParams.search : '');
+
+  if (searchQuery.includes('{search_term_string}') || searchQuery.includes('%7Bsearch_term_string%7D') || searchQuery.includes('%7bsearch_term_string%7d')) {
+    permanentRedirect('/games');
+  }
+
+  if (activeCategory && activeCategory !== 'All Games') {
+    const catKey = activeCategory.toLowerCase().trim();
+    const targetCategoryHub = CATEGORY_MAP[catKey] || `/categories/${catKey.replace(/\s+/g, '-')}-games`;
+    permanentRedirect(targetCategoryHub);
+  }
+
   try {
     const supabase = createPublicClient();
-    const activeCategory = typeof searchParams.category === 'string' ? searchParams.category : 'All Games';
-    const searchQuery = typeof searchParams.q === 'string' ? searchParams.q : (typeof searchParams.search === 'string' ? searchParams.search : '');
     const currentPage = Math.max(1, parseInt(typeof searchParams.page === 'string' ? searchParams.page : '1', 10) || 1);
     const PAGE_SIZE = 40;
     const from = (currentPage - 1) * PAGE_SIZE;
