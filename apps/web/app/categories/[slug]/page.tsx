@@ -30,6 +30,9 @@ const CATEGORY_SLUG_ALIASES: Record<string, string> = {
   'html5-games': '/games',
   'html5': '/games',
   'sports': 'sports-games',
+  'simulation': 'simulation-games',
+  'cyberpunk': 'action-games',
+  'cyberpunk-games': 'action-games',
 };
 
 // Dynamic metadata generation based on slug

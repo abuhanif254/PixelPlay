@@ -649,6 +649,16 @@ export const categoriesData: Record<string, CategoryItem> = {
     searchTerm: 'defense',
     parentCategory: 'Strategy',
   },
+  'simulation-games': {
+    title: 'Simulation Games',
+    slug: 'simulation-games',
+    icon: '🚜',
+    description: 'Immerse yourself in realistic life, vehicle driving, flying, and tycoon simulation games playable directly in your browser.',
+    stats: { games: '210+', plays: '3.2M+', rating: '4.7' },
+    color: '#0284C7',
+    searchTerm: 'sim',
+    parentCategory: 'Strategy',
+  },
 };
 
 export type CategoryData = CategoryItem;

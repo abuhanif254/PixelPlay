@@ -142,13 +142,39 @@ export async function middleware(request: NextRequest) {
     'more-games': '/categories',
     html5: '/games',
     'html5-games': '/games',
+    zombies: '/categories/zombie-games',
+    'strategy games': '/categories/strategy-games',
+    'sports games': '/categories/sports-games',
+    'car racing': '/categories/car-games',
+    'racing games': '/categories/racing-games',
+    'action rpg': '/categories/action-games',
+    'classic arcade': '/categories/retro-arcade-games',
+    'brain teasers': '/categories/brain-games',
+    'brain-teasers': '/categories/brain-games',
+    'brain games': '/categories/brain-games',
+    cyberpunk: '/categories/action-games',
+    '.io games': '/categories/io-games',
+    'io games': '/categories/io-games',
+    '.io': '/categories/io-games',
+    snake: '/games/snake',
+    '2048': '/games/2048',
+    minecraft: '/games/tags/minecraft',
+    '{search_term_string}': '/games',
+    '%7bsearch_term_string%7d': '/games',
   }
 
   if (pathname === '/search') {
-    const q = request.nextUrl.searchParams.get('q')?.trim().toLowerCase() || ''
+    const rawQ = (request.nextUrl.searchParams.get('q') || request.nextUrl.searchParams.get('search'))?.trim().toLowerCase() || ''
+    let decodedQ = rawQ
+    try {
+      decodedQ = decodeURIComponent(rawQ).toLowerCase().trim()
+    } catch {
+      decodedQ = rawQ
+    }
+
     const url = request.nextUrl.clone()
     url.search = ''
-    url.pathname = CATEGORY_QUERY_MAP[q] || '/games'
+    url.pathname = CATEGORY_QUERY_MAP[rawQ] || CATEGORY_QUERY_MAP[decodedQ] || '/games'
     return NextResponse.redirect(url, 301)
   }
 
@@ -156,11 +182,31 @@ export async function middleware(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const rawCat = searchParams.get('category')?.trim()
     const rawPage = searchParams.get('page')?.trim()
-    const hasSearch = Boolean(searchParams.get('q') || searchParams.get('search'))
+    const rawSearch = (searchParams.get('search') || searchParams.get('q'))?.trim().toLowerCase() || ''
+    const hasSearch = Boolean(rawSearch)
+
+    if (hasSearch) {
+      let decodedSearch = rawSearch
+      try {
+        decodedSearch = decodeURIComponent(rawSearch).toLowerCase().trim()
+      } catch {
+        decodedSearch = rawSearch
+      }
+
+      const targetHub = CATEGORY_QUERY_MAP[rawSearch] || CATEGORY_QUERY_MAP[decodedSearch]
+      if (targetHub) {
+        const url = request.nextUrl.clone()
+        url.pathname = targetHub
+        url.search = ''
+        return NextResponse.redirect(url, 301)
+      }
+    }
 
     if (rawCat && !hasSearch) {
       const catKey = rawCat.toLowerCase()
-      const targetHub = CATEGORY_QUERY_MAP[catKey] || `/categories/${catKey.replace(/\s+/g, '-')}-games`
+      const targetHub =
+        CATEGORY_QUERY_MAP[catKey] ||
+        (catKey === 'cyberpunk' ? '/categories/action-games' : `/categories/${catKey.replace(/\s+/g, '-')}-games`)
       const url = request.nextUrl.clone()
       url.pathname = targetHub
       url.searchParams.delete('category')
@@ -359,8 +405,8 @@ export async function middleware(request: NextRequest) {
   if (!hasAuthCookie && !isProtectedRoute) {
     const response = NextResponse.next()
     
-    // Disallow indexing of private gamer profiles
-    if (pathname.startsWith('/profile')) {
+    // Disallow indexing of private gamer profile dashboards
+    if (isProtectedProfile) {
       response.headers.set('X-Robots-Tag', 'noindex, nofollow')
     }
 

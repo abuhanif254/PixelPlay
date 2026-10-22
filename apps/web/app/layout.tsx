@@ -110,7 +110,7 @@ const jsonLd = {
         '@type': 'SearchAction',
         target: {
           '@type': 'EntryPoint',
-          urlTemplate: 'https://spielcade.com/games?q={search_term_string}'
+          urlTemplate: 'https://spielcade.com/games?search={search_term_string}'
         },
         'query-input': 'required name=search_term_string'
       }
