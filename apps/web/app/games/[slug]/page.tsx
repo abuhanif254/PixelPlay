@@ -853,7 +853,7 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
 
               {/* How to Play Box */}
               <div className="bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-xl">
-                <h3 className="text-lg font-bold font-outfit text-gray-900 dark:text-white mb-4">How to Play</h3>
+                <h2 className="text-lg font-bold font-outfit text-gray-900 dark:text-white mb-4">How to Play</h2>
                 <div className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed space-y-4">
                   {config.strategy ? (
                     <div dangerouslySetInnerHTML={{ __html: config.strategy }} />
@@ -869,7 +869,7 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
 
               {/* Controls Box */}
               <div className="bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-xl">
-                <h3 className="text-lg font-bold font-outfit text-gray-900 dark:text-white mb-4">Controls</h3>
+                <h2 className="text-lg font-bold font-outfit text-gray-900 dark:text-white mb-4">Controls</h2>
                 
                 {config.keyboardControls ? (
                   <ul className="space-y-3">
@@ -914,7 +914,7 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
 
               {/* Game Info Box */}
               <div className="bg-white dark:bg-[#111228] border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-xl flex-1">
-                <h3 className="text-lg font-bold font-outfit text-gray-900 dark:text-white mb-4">Game Info</h3>
+                <h2 className="text-lg font-bold font-outfit text-gray-900 dark:text-white mb-4">Game Info</h2>
                 <div className="grid grid-cols-2 gap-y-4 gap-x-2 text-sm">
                   
                   <div className="flex flex-col gap-1">

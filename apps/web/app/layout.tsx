@@ -143,6 +143,8 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://www.highperformanceformat.com" />
         <link rel="preconnect" href="https://html5.gamedistribution.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://html5.gamedistribution.com" />
+        <link rel="preconnect" href="https://uuaqdankeacxsivgqmly.supabase.co" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://uuaqdankeacxsivgqmly.supabase.co" />
         <link rel="alternate" type="application/rss+xml" title="Spielcade Games RSS Feed" href="/feed.xml" />
         <script
           type="application/ld+json"

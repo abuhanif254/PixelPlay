@@ -69,7 +69,7 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
             
             {/* About Section */}
             <div id="about" className="scroll-mt-32">
-              <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white font-outfit">About {config.title}</h3>
+              <h2 className="text-xl font-bold mb-3 text-gray-900 dark:text-white font-outfit">About {config.title}</h2>
               <p className="text-sm md:text-base leading-relaxed text-gray-600 dark:text-gray-400">
                 {config.description || `${config.title} is a free online game that you can play directly in your browser. No downloads or installations required.`}
               </p>
@@ -91,7 +91,7 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
             {/* Tips Section */}
             <div id="tips" className="scroll-mt-32">
               <div className="w-full h-px bg-gray-200 dark:bg-white/5 my-8" />
-              <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white font-outfit">Tips &amp; Tricks for {config.title}</h3>
+              <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white font-outfit">Tips &amp; Tricks for {config.title}</h2>
               {(() => {
                 const defaultTipsPool = [
                   `Start ${config.title} at a steady pace to learn the movement timing and hitbox boundaries before pushing for speed records.`,
@@ -141,7 +141,7 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
             {/* FAQ Section */}
             <div id="faq" className="scroll-mt-32">
               <div className="w-full h-px bg-gray-200 dark:bg-white/5 my-8" />
-              <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white font-outfit">Frequently Asked Questions</h3>
+              <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white font-outfit">Frequently Asked Questions</h2>
               {config.faqs && config.faqs.length > 0 ? (
                 <div className="space-y-3">
                   {config.faqs.map((faq: { q: string; a: string }, idx: number) => {
@@ -161,9 +161,9 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
                           className="w-full p-4 flex items-center justify-between text-left focus:outline-none"
                           aria-expanded={isOpen}
                         >
-                          <h4 className="font-bold text-gray-800 dark:text-gray-200 text-sm md:text-base pr-4">
+                          <h3 className="font-bold text-gray-800 dark:text-gray-200 text-sm md:text-base pr-4">
                             {faq.q}
-                          </h4>
+                          </h3>
                           <svg 
                             className={`w-4 h-4 text-gray-500 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180 text-[#6366F1]' : ''}`} 
                             fill="none" 
@@ -199,7 +199,7 @@ export default function GameDetailsTabs({ config, relatedGames }: GameDetailsTab
         {/* Right Column - Related Games (5 cols tablet, 4 cols desktop) */}
         <div className="md:col-span-5 lg:col-span-4">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-base font-bold text-gray-900 dark:text-white font-outfit">Related Games</h3>
+            <h2 className="text-base font-bold text-gray-900 dark:text-white font-outfit">Related Games</h2>
             <Link 
               href={`/categories/${(config.category || 'arcade').toLowerCase().replace(/\s+/g, '-')}-games`} 
               className="text-[#6366F1] text-xs font-bold hover:underline"
