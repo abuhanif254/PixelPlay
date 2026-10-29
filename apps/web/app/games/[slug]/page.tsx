@@ -499,6 +499,8 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
     "image": config.image || 'https://spielcade.com/og-default.jpg',
     "genre": config.category,
     "inLanguage": "en",
+    "datePublished": dbGame?.created_at || (localGame?.config as any)?.releaseDate || "2026-08-01",
+    "dateModified": new Date().toISOString().split('T')[0],
     "isAccessibleForFree": true,
     "playMode": "SinglePlayer",
     "applicationCategory": "Game",

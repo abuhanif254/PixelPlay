@@ -59,6 +59,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
+    alternateLocale: ['es_ES', 'pt_BR', 'fr_FR', 'de_DE'],
     url: 'https://spielcade.com',
     title: 'Spielcade | Best Free Online Browser Games',
     description: 'Play the best free online browser games instantly. No downloads required.',

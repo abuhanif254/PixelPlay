@@ -1,0 +1,17 @@
+name: Weekly IndexNow Ping
+
+on:
+  schedule:
+    # Runs every Sunday at 00:00 UTC
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+
+jobs:
+  ping-indexnow:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping IndexNow Endpoint
+        run: |
+          curl -s -X POST "https://spielcade.com/api/cron/indexnow" \
+            -H "Content-Type: application/json" \
+            || echo "IndexNow Ping Completed"
