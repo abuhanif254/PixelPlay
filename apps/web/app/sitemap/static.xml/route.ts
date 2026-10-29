@@ -52,7 +52,6 @@ ${staticRoutes
       'Cache-Control': 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800',
       'CDN-Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
       'Cloudflare-CDN-Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
-      'X-Robots-Tag': 'noindex',
     },
   });
 }

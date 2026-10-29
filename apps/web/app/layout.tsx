@@ -72,6 +72,9 @@ export const metadata: Metadata = {
   },
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || 'G-SPIELCADE-VERIFICATION',
+    other: {
+      'msvalidate.01': process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION || 'BING-SPIELCADE-VERIFICATION',
+    },
   },
   other: {
     'google-adsense-account': 'ca-pub-9824094207004107',

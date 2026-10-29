@@ -31,6 +31,8 @@ export default function robots(): MetadataRoute.Robots {
           '/settings/',
           '/favorites',
           '/favorites/',
+          '/embed',
+          '/embed/',
         ],
       },
       {

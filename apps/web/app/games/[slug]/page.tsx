@@ -499,7 +499,7 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
     "image": config.image || 'https://spielcade.com/og-default.jpg',
     "genre": config.category,
     "inLanguage": "en",
-    "isAccessibleForFree": "true",
+    "isAccessibleForFree": true,
     "playMode": "SinglePlayer",
     "applicationCategory": "Game",
     "operatingSystem": "Windows, macOS, Linux, Android, iOS, ChromeOS",
