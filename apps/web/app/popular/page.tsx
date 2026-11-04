@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import PopularGamesClient from './PopularGamesClient';
 import { createPublicClient } from '@/lib/supabase/server';
+import { isPolicyCompliantGame } from '@/lib/policy-compliance';
 
 export const runtime = 'edge';
 export const revalidate = 300; // 5-minute Edge CDN caching
@@ -26,12 +27,14 @@ export default async function PopularGamesPage() {
   // Fetch up to 100 most popular active games with targeted projection
   const { data: games } = await supabase
     .from('games')
-    .select('id, title, slug, description, category, image_url, total_plays, rating, created_at')
+    .select('id, title, slug, description, category, image_url, total_plays, rating, created_at, source_url')
     .eq('status', 'active')
     .order('total_plays', { ascending: false })
     .limit(100);
 
-  const initialGames = (games || []).map(game => ({
+  const compliantGames = (games || []).filter(isPolicyCompliantGame);
+
+  const initialGames = compliantGames.map(game => ({
     id: game.id,
     title: game.title,
     slug: game.slug,

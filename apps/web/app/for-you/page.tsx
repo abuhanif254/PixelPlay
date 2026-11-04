@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Sparkles, ArrowLeft } from 'lucide-react';
 import { createPublicClient } from '@/lib/supabase/server';
 import ForYouFeed from '@/components/ForYouFeed';
+import { isPolicyCompliantGame } from '@/lib/policy-compliance';
 
 export const runtime = 'edge';
 export const revalidate = 600;
@@ -12,12 +13,12 @@ export default async function ForYouPage() {
 
   const { data: games } = await supabase
     .from('games')
-    .select('id, title, slug, image_url, category, rating, total_plays, description')
+    .select('id, title, slug, image_url, category, rating, total_plays, description, source_url')
     .eq('status', 'active')
     .order('total_plays', { ascending: false })
     .limit(80);
 
-  const activeGames = games || [];
+  const activeGames = (games || []).filter(isPolicyCompliantGame);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#080918] text-slate-900 dark:text-white pt-20 pb-24 transition-colors">

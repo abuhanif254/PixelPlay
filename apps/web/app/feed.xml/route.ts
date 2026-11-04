@@ -2,6 +2,7 @@ export const runtime = 'edge';
 export const revalidate = 3600;
 
 import { createClient } from '@supabase/supabase-js';
+import { isPolicyCompliantGame } from '@/lib/policy-compliance';
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://spielcade.com';
 
@@ -24,10 +25,10 @@ export async function GET() {
   const [{ data: games }, { data: posts }] = await Promise.all([
     supabase
       .from('games')
-      .select('title, slug, description, category, image_url, created_at')
+      .select('title, slug, description, category, image_url, created_at, source_url')
       .eq('status', 'active')
       .order('created_at', { ascending: false })
-      .limit(40),
+      .limit(60),
     supabase
       .from('blog_posts')
       .select('title, slug, excerpt, created_at')
@@ -36,7 +37,9 @@ export async function GET() {
       .limit(10),
   ]);
 
-  const gameItems = (games || []).map((game: any) => {
+  const compliantGames = (games || []).filter(isPolicyCompliantGame).slice(0, 40);
+
+  const gameItems = compliantGames.map((game: any) => {
     const link = `${baseUrl}/games/${game.slug}`;
     const pubDate = new Date(game.created_at || Date.now()).toUTCString();
     const mediaTag = game.image_url ? `<media:thumbnail url="${escapeXml(game.image_url)}" />` : '';

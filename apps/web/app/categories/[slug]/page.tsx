@@ -123,7 +123,7 @@ async function getCachedCategorySlugGames(
     const supabase = createPublicClient();
     let gamesQuery = supabase
       .from('games')
-      .select('id, title, slug, description, category, image_url, total_plays, rating')
+      .select('id, title, slug, description, category, image_url, total_plays, rating, source_url')
       .eq('status', 'active');
 
     if (searchTerm !== undefined && searchTerm.length > 0) {

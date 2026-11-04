@@ -19,9 +19,17 @@ export const FORBIDDEN_TRADEMARK_PATTERNS: readonly string[] = [
   'fortnite',
   'brawl stars',
   'clash royale',
+  'clash of clans',
   'pubg',
   'call of duty',
   'super mario',
+  'geometry dash',
+  'five nights at freddy',
+  'fnaf',
+  'poppy playtime',
+  'skibidi',
+  'squid game',
+  'angry birds',
 ];
 
 export const BUILT_IN_GAME_SLUGS: readonly string[] = [
@@ -57,14 +65,17 @@ export function isPolicyCompliantGame(game: {
     }
   }
 
-  // 2. Exact GTA check
+  // 2. Exact GTA & Sonic checks
   if (/\bgta\b/i.test(titleLower) || /\bgta\b/i.test(slugLower)) {
     return false;
   }
+  if (/\bsonic\b/i.test(titleLower) || /\bsonic\b/i.test(slugLower)) {
+    return false;
+  }
 
-  // 3. Broken / Empty source_url check (unless it's an official built-in React/WebGL game)
+  // 3. Broken / Empty source_url check (only evaluated when source_url is included in the query)
   const isBuiltIn = BUILT_IN_GAME_SLUGS.includes(slugLower);
-  if (!isBuiltIn) {
+  if (!isBuiltIn && game.source_url !== undefined) {
     if (typeof game.source_url !== 'string' || game.source_url.trim() === '') {
       return false;
     }

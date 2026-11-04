@@ -131,11 +131,6 @@ export default async function HomePage() {
             '@type': 'Offer',
             price: '0',
             priceCurrency: 'USD'
-          },
-          aggregateRating: {
-            '@type': 'AggregateRating',
-            ratingValue: game.rating || 5.0,
-            ratingCount: 100
           }
         }))
       },

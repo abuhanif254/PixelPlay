@@ -142,6 +142,8 @@ export default function RootLayout({
         <link rel="preconnect" href="https://uuaqdankeacxsivgqmly.supabase.co" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://uuaqdankeacxsivgqmly.supabase.co" />
         <link rel="alternate" type="application/rss+xml" title="Spielcade Games RSS Feed" href="/feed.xml" />
+        <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
                 {/* Google AdSense Official Script */}
         <Script
           id="google-adsense"

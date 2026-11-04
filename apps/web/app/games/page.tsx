@@ -122,7 +122,7 @@ export default async function AllGamesPage({ searchParams }: Props) {
       } else {
         let fallbackQuery = supabase
           .from('games')
-          .select('id, title, slug, description, category, image_url, total_plays, rating, created_at')
+          .select('id, title, slug, description, category, image_url, total_plays, rating, created_at, source_url')
           .eq('status', 'active');
         if (activeCategory !== 'All Games') {
           fallbackQuery = fallbackQuery.eq('category', activeCategory);
@@ -136,7 +136,7 @@ export default async function AllGamesPage({ searchParams }: Props) {
       // 1. Use cached catalog/category counts instead of running a full table count: 'exact' query on every request
       let query = supabase
         .from('games')
-        .select('id, title, slug, description, category, image_url, total_plays, rating, created_at')
+        .select('id, title, slug, description, category, image_url, total_plays, rating, created_at, source_url')
         .eq('status', 'active');
 
       if (activeCategory !== 'All Games') {

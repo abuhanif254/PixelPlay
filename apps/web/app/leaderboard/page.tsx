@@ -9,6 +9,7 @@ import LeaderboardFilters from '@/components/leaderboard/LeaderboardFilters';
 import UserRankCard from '@/components/leaderboard/UserRankCard';
 import DailyCupBanner from '@/components/DailyCupBanner';
 import { createPublicClient } from '@/lib/supabase/server';
+import { isPolicyCompliantGame } from '@/lib/policy-compliance';
 
 export const runtime = 'edge';
 
@@ -63,11 +64,11 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
   // Fetch top 50 games for filters/sidebar
   const { data: gamesList } = await supabase
     .from('games')
-    .select('id, title, slug')
+    .select('id, title, slug, source_url')
     .eq('status', 'active')
     .order('total_plays', { ascending: false })
     .limit(50);
-  const availableGames = gamesList || [];
+  const availableGames = (gamesList || []).filter(isPolicyCompliantGame);
 
   // 1. Fetch real scores from database
   let scoresQuery = supabase

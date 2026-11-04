@@ -29,45 +29,6 @@ export const revalidate = 600;
 
 const COMMON_SLUG_SUFFIXES = ['-game', '-games', '-online', '-free', '-unblocked', '-html5'];
 
-const GAME_SLUG_ALIASES: Record<string, string> = {
-  'subway-surfers': 'train-subway-surfers',
-  'subway-surfer': 'train-subway-surfers',
-};
-
-const KEYWORD_CATEGORY_MAP: Record<string, string> = {
-  tank: '/categories/tank-games',
-  tanks: '/categories/tank-games',
-  war: '/categories/war-games',
-  zombie: '/categories/zombie-games',
-  zombies: '/categories/zombie-games',
-  car: '/categories/car-games',
-  cars: '/categories/car-games',
-  drift: '/categories/drift-games',
-  moto: '/categories/moto-games',
-  bike: '/categories/moto-games',
-  subway: '/categories/runner-games',
-  runner: '/categories/runner-games',
-  racing: '/categories/racing-games',
-  race: '/categories/racing-games',
-  puzzle: '/categories/puzzle-games',
-  chess: '/categories/chess-games',
-  mahjong: '/categories/mahjong-games',
-  solitaire: '/categories/solitaire-games',
-  escape: '/categories/escape-games',
-  ninja: '/categories/ninja-games',
-  stickman: '/categories/stickman-games',
-  cooking: '/categories/cooking-games',
-  cook: '/categories/cooking-games',
-  dress: '/categories/dress-up-games',
-  football: '/categories/football-games',
-  soccer: '/categories/football-games',
-  basketball: '/categories/basketball-games',
-  cricket: '/categories/cricket-games',
-  fps: '/categories/fps-games',
-  shooter: '/categories/shooting-games',
-  shooting: '/categories/shooting-games',
-  multiplayer: '/categories/2-player-games',
-};
 
 interface CachedGameDetailEntry {
   game: any | null;
@@ -199,7 +160,7 @@ const getCachedCatalogNeighbors = cache(async (rawSlug: string) => {
     const supabase = createPublicClient();
     const { data: nextGames } = await supabase
       .from('games')
-      .select('id, title, slug, image_url, category, rating, total_plays')
+      .select('id, title, slug, image_url, category, rating, total_plays, source_url')
       .eq('status', 'active')
       .gt('slug', slug)
       .order('slug', { ascending: true })
@@ -210,7 +171,7 @@ const getCachedCatalogNeighbors = cache(async (rawSlug: string) => {
     if (neighbors.length < 8) {
       const { data: wrapGames } = await supabase
         .from('games')
-        .select('id, title, slug, image_url, category, rating, total_plays')
+        .select('id, title, slug, image_url, category, rating, total_plays, source_url')
         .eq('status', 'active')
         .order('slug', { ascending: true })
         .limit(8 - neighbors.length);

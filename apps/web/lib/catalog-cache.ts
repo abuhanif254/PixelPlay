@@ -13,6 +13,7 @@ export interface CachedGameItem {
   total_plays: number;
   description?: string;
   created_at?: string;
+  source_url?: string;
 }
 
 export interface CatalogCachePayload {
@@ -99,21 +100,21 @@ async function fetchFreshCatalog(): Promise<CatalogCachePayload> {
     ] = await Promise.all([
       supabase
         .from('games')
-        .select('id, title, slug, image_url, category, total_plays, rating, description')
+        .select('id, title, slug, image_url, category, total_plays, rating, description, source_url')
         .eq('status', 'active')
         .order('total_plays', { ascending: false })
         .limit(36)
         .abortSignal(controller.signal),
       supabase
         .from('games')
-        .select('id, title, slug, image_url, category, total_plays, rating')
+        .select('id, title, slug, image_url, category, total_plays, rating, source_url')
         .eq('status', 'active')
         .order('created_at', { ascending: false })
         .limit(16)
         .abortSignal(controller.signal),
       supabase
         .from('games')
-        .select('id, title, slug, image_url, category, total_plays, rating')
+        .select('id, title, slug, image_url, category, total_plays, rating, source_url')
         .eq('status', 'active')
         .order('rating', { ascending: false })
         .limit(12)
@@ -272,7 +273,7 @@ export async function getCachedCategoryTopGames(category: string, limit = 20): P
     const supabase = getPublicCatalogClient();
     const { data } = await supabase
       .from('games')
-      .select('id, title, slug, image_url, category, rating, total_plays')
+      .select('id, title, slug, image_url, category, rating, total_plays, source_url')
       .eq('status', 'active')
       .eq('category', category)
       .order('total_plays', { ascending: false })
@@ -289,4 +290,3 @@ export async function getCachedCategoryTopGames(category: string, limit = 20): P
     return [];
   }
 }
-
