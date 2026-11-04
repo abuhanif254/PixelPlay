@@ -75,9 +75,12 @@ export default function CookiePolicy() {
               These cookies are used to recognize you when you return to our platform. This enables us to personalize our content for you and remember your preferences (for example, your choice of language, volume settings, or dark/light mode preference).
             </p>
 
-            <h3>D. Advertising / Targeting Cookies</h3>
+            <h3>D. Advertising / Targeting Cookies (Google AdSense)</h3>
             <p>
-              Spielcade is supported by advertising. These cookies are used to make advertising messages more relevant to you. They perform functions like preventing the same ad from continuously reappearing, ensuring that ads are properly displayed for advertisers, and in some cases selecting advertisements that are based on your interests.
+              Spielcade is supported by digital advertising, including Google AdSense. Google and other third-party vendors place and read cookies (such as DoubleClick / DART cookies) on your browser to serve advertisements based on your prior visits to our platform and other sites across the web.
+            </p>
+            <p>
+              These cookies help measure ad performance, prevent repetitive ad impressions, and deliver relevant content. You can manage or disable interest-based ads via <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer">Google Ads Settings</a> or <a href="https://www.aboutads.info" target="_blank" rel="noopener noreferrer">AboutAds</a>.
             </p>
 
             <h2>4. Third-Party Game Cookies</h2>

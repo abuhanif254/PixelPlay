@@ -1,3 +1,4 @@
+import { isPolicyCompliantGame } from '@/lib/policy-compliance';
 import React from 'react';
 import { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
@@ -138,7 +139,7 @@ async function getCachedCategorySlugGames(
       .order('total_plays', { ascending: false })
       .limit(100);
 
-    games = gamesData || [];
+    games = (gamesData || []).filter(isPolicyCompliantGame);
 
     // Ensure thematic category hubs (e.g. 3-player-games, cricket-games, fps-games) never render thin (< 36 games)
     if (games.length < 36) {

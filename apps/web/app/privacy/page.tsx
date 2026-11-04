@@ -80,12 +80,26 @@ export default function PrivacyPolicy() {
               <strong>Legal Obligations:</strong> If we believe the release of information about you is necessary to respond to legal process, to investigate or remedy potential violations of our policies, or to protect the rights, property, and safety of others.
             </p>
 
-            <h2>4. Third-Party Advertising and Cookies</h2>
+            <h2>4. Third-Party Advertising and Google AdSense</h2>
             <p>
-              We may use third-party advertising companies to serve ads when you visit the Services. These companies may use information about your visits to our platform and other websites that are contained in web cookies in order to provide advertisements about goods and services of interest to you.
+              Spielcade uses Google AdSense and other trusted third-party advertising vendors to display advertisements across our Services. We are committed to transparency regarding how advertising cookies and data are utilized to support our free gaming platform.
             </p>
+            <ul>
+              <li>
+                <strong>Google Advertising Cookies:</strong> Google, as a third-party vendor, uses cookies (including the DoubleClick / DART cookie) to serve advertisements on Spielcade. Google&apos;s use of advertising cookies enables it and its partners to serve ads to our users based on their visits to Spielcade and other sites across the Internet.
+              </li>
+              <li>
+                <strong>Personalized vs. Non-Personalized Ads:</strong> Advertisements displayed on Spielcade may be personalized based on your general browsing patterns, or non-personalized based on page context and gameplay category.
+              </li>
+              <li>
+                <strong>Opting Out of Personalized Ads:</strong> You may opt out of personalized advertising from Google by visiting <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer">Google Ads Settings</a>. You may also opt out of third-party vendor use of cookies for personalized advertising by visiting <a href="https://www.aboutads.info" target="_blank" rel="noopener noreferrer">www.aboutads.info</a> or <a href="https://www.youronlinechoices.com" target="_blank" rel="noopener noreferrer">Your Online Choices</a>.
+              </li>
+              <li>
+                <strong>How Google Uses Data:</strong> For comprehensive details on how Google collects, shares, and protects information when you visit partner sites and use our gaming platform, please review the official Google disclosure: <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer">How Google uses information from sites or apps that use our services</a>.
+              </li>
+            </ul>
             <p>
-              You can manage your cookie preferences through your browser settings. However, disabling cookies may affect your ability to use certain features of our platform, such as saving your login state or game progress.
+              You can also manage or modify your cookie consent preferences at any time using our platform&apos;s <Link href="/cookies">Cookie Policy</Link> controls or via your web browser settings.
             </p>
 
             <h2>5. Your Data Protection Rights (GDPR & CCPA)</h2>

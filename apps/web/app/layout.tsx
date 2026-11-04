@@ -130,8 +130,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const monetagZone = process.env.NEXT_PUBLIC_MONETAG_ZONE_ID;
-  const isMonetagLive = monetagZone && monetagZone !== 'mock-zone-id';
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -140,30 +138,25 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://img.gamemonetize.com" />
         <link rel="preconnect" href="https://img.gamedistribution.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://img.gamedistribution.com" />
-        <link rel="dns-prefetch" href="https://www.highperformanceformat.com" />
         <link rel="preconnect" href="https://html5.gamedistribution.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://html5.gamedistribution.com" />
         <link rel="preconnect" href="https://uuaqdankeacxsivgqmly.supabase.co" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://uuaqdankeacxsivgqmly.supabase.co" />
         <link rel="alternate" type="application/rss+xml" title="Spielcade Games RSS Feed" href="/feed.xml" />
+                {/* Google AdSense Official Script */}
+        <Script
+          id="google-adsense"
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9824094207004107"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        {isMonetagLive && (
-          <meta name="monetag" content={monetagZone} />
-        )}
       </head>
       <body className={`${inter.className} ${inter.variable} ${outfit.variable} bg-background text-foreground antialiased min-h-screen flex flex-col`}>
-        {isMonetagLive && (
-          <Script 
-            src="https://alwingulla.com/88/tag.min.js" 
-            data-zone={monetagZone} 
-            data-cfasync="false" 
-            async 
-            strategy="lazyOnload"
-          />
-        )}
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

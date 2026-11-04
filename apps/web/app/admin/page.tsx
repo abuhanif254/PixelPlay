@@ -174,7 +174,7 @@ export default async function AdminDashboardPage() {
         <div className="bg-white dark:bg-[#111228]/80 backdrop-blur-md border border-gray-200 dark:border-white/5 rounded-2xl p-6 flex flex-col shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white">Estimated Revenue</h3>
-            <span className="text-xs text-yellow-500 font-bold bg-yellow-500/10 px-2 py-1 rounded-full">Monetag</span>
+            <span className="text-xs text-blue-500 font-bold bg-blue-500/10 px-2 py-1 rounded-full">Google AdSense</span>
           </div>
           <RevenueChart />
         </div>

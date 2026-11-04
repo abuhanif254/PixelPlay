@@ -1,3 +1,4 @@
+import { isPolicyCompliantGame } from '@/lib/policy-compliance';
 import Image from 'next/image';
 import Link from 'next/link';
 import React, { Suspense } from 'react';
@@ -116,7 +117,7 @@ export default async function AllGamesPage({ searchParams }: Props) {
       });
 
       if (!rpcErr && Array.isArray(rpcResults)) {
-        rawGames = rpcResults;
+        rawGames = rpcResults.filter(isPolicyCompliantGame);
         totalCount = rpcResults.length;
       } else {
         let fallbackQuery = supabase
@@ -128,7 +129,7 @@ export default async function AllGamesPage({ searchParams }: Props) {
         }
         fallbackQuery = fallbackQuery.ilike('title', `%${searchQuery}%`).order('total_plays', { ascending: false }).range(from, to);
         const { data } = await fallbackQuery;
-        rawGames = data || [];
+        rawGames = (data || []).filter(isPolicyCompliantGame);
         totalCount = rawGames.length;
       }
     } else {
@@ -148,7 +149,7 @@ export default async function AllGamesPage({ searchParams }: Props) {
         activeCategory !== 'All Games' ? getCachedCategoryCounts() : Promise.resolve(null),
       ]);
 
-      rawGames = pageRes.data || [];
+      rawGames = (pageRes.data || []).filter(isPolicyCompliantGame);
       if (activeCategory === 'All Games') {
         totalCount = catalog?.totalActiveGames || 17125;
       } else {

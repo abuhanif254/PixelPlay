@@ -1,3 +1,4 @@
+import { isPolicyCompliantGame } from './policy-compliance';
 import { gamesRegistry } from '@spielcade/games/registry';
 import { createClient } from '@supabase/supabase-js';
 
@@ -126,10 +127,14 @@ async function fetchFreshCatalog(): Promise<CatalogCachePayload> {
 
     clearTimeout(timeoutId);
 
+    const cleanTrending = (trendingGames && trendingGames.length > 0 ? (trendingGames as any) : fallback.trending).filter(isPolicyCompliantGame);
+    const cleanNew = (newArrivals && newArrivals.length > 0 ? (newArrivals as any) : fallback.newGames).filter(isPolicyCompliantGame);
+    const cleanTop = (topRatedGames && topRatedGames.length > 0 ? (topRatedGames as any) : fallback.topRated).filter(isPolicyCompliantGame);
+
     const result: CatalogCachePayload = {
-      trending: (trendingGames && trendingGames.length > 0 ? (trendingGames as any) : fallback.trending),
-      newGames: (newArrivals && newArrivals.length > 0 ? (newArrivals as any) : fallback.newGames),
-      topRated: (topRatedGames && topRatedGames.length > 0 ? (topRatedGames as any) : fallback.topRated),
+      trending: cleanTrending.length > 0 ? cleanTrending : fallback.trending,
+      newGames: cleanNew.length > 0 ? cleanNew : fallback.newGames,
+      topRated: cleanTop.length > 0 ? cleanTop : fallback.topRated,
       totalActiveGames: exactCount || fallback.totalActiveGames,
       cachedAt: Date.now(),
     };
@@ -273,7 +278,7 @@ export async function getCachedCategoryTopGames(category: string, limit = 20): P
       .order('total_plays', { ascending: false })
       .limit(limit);
 
-    const games = (data || []) as CachedGameItem[];
+    const games = ((data || []) as CachedGameItem[]).filter(isPolicyCompliantGame);
     if (map.size > 40) {
       const oldestKey = map.keys().next().value;
       if (oldestKey) map.delete(oldestKey);

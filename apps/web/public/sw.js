@@ -82,8 +82,8 @@ self.addEventListener('fetch', (event) => {
   if (
     url.pathname.startsWith('/api/') ||
     url.hostname.includes('supabase.co') ||
-    url.hostname.includes('alwingulla.com') ||
-    url.hostname.includes('monetag.com') ||
+    url.hostname.includes('googlesyndication.com') ||
+    url.hostname.includes('doubleclick.net') ||
     url.hostname.includes('google-analytics.com')
   ) {
     return;

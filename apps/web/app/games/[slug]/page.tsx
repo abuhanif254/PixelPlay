@@ -1,3 +1,4 @@
+import { isPolicyCompliantGame } from '@/lib/policy-compliance';
 import React, { cache } from 'react';
 import { notFound, redirect, permanentRedirect } from 'next/navigation';
 import { gamesRegistry } from '@spielcade/games/registry';
@@ -150,7 +151,12 @@ const getCachedGame = cache(async (rawSlug: string) => {
       .limit(3);
 
     if (matches && matches.length > 0) {
-      foundGame = matches.find((g: any) => g.slug === slug) || matches[0];
+      const match = matches.find((g: any) => g.slug === slug) || matches[0];
+      if (match && isPolicyCompliantGame(match)) {
+        foundGame = match;
+      } else {
+        foundGame = null;
+      }
     }
   } catch (err) {
     console.error('[GamePage] Error fetching game by slug:', slug, err);
@@ -199,7 +205,7 @@ const getCachedCatalogNeighbors = cache(async (rawSlug: string) => {
       .order('slug', { ascending: true })
       .limit(8);
 
-    neighbors = nextGames || [];
+    neighbors = (nextGames || []).filter(isPolicyCompliantGame);
 
     if (neighbors.length < 8) {
       const { data: wrapGames } = await supabase
@@ -210,7 +216,7 @@ const getCachedCatalogNeighbors = cache(async (rawSlug: string) => {
         .limit(8 - neighbors.length);
 
       if (wrapGames) {
-        neighbors = [...neighbors, ...wrapGames];
+        neighbors = [...neighbors, ...wrapGames.filter(isPolicyCompliantGame)];
       }
     }
   } catch (err) {
@@ -781,13 +787,7 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
             
             {/* Left Column: Player Area (8 cols desktop, 7 cols tablet) */}
             <div className="md:col-span-7 lg:col-span-8 flex flex-col gap-6">
-              {/* Leaderboard Ad Above Game */}
-              <div className="hidden md:flex justify-center w-full">
-                <AdBanner id="2bd411e3e6c5caac36fa619ee3376222" width={728} height={90} className="w-full max-w-[728px]" />
-              </div>
-              <div className="flex md:hidden justify-center w-full">
-                <AdBanner id="5a3fd317f38a51c8553f75f8c2a547ef" width={320} height={50} />
-              </div>
+              {/* Ad placement kept below gameplay and in sidebar to strictly prevent accidental clicks (AdSense Policy) */}
 
               {/* Viral Match Challenger Banner */}
               {searchParams?.challenger && searchParams?.score && (
