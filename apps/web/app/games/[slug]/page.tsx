@@ -262,13 +262,7 @@ export async function generateMetadata(
       permanentRedirect(`/games/${GAME_SLUG_ALIASES[slug]}`);
     }
 
-    const slugTokens = slug.split('-');
-    for (const token of slugTokens) {
-      const targetCategory = KEYWORD_CATEGORY_MAP[token];
-      if (targetCategory) {
-        permanentRedirect(targetCategory);
-      }
-    }
+    // Removed soft-404 keyword redirects (Google Search Quality standard: return honest 404)
 
     notFound();
   }
@@ -386,13 +380,7 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
       permanentRedirect(`/games/${GAME_SLUG_ALIASES[slug]}`);
     }
 
-    const slugTokens = slug.split('-');
-    for (const token of slugTokens) {
-      const targetCategory = KEYWORD_CATEGORY_MAP[token];
-      if (targetCategory) {
-        permanentRedirect(targetCategory);
-      }
-    }
+    // Removed soft-404 keyword redirects (Google Search Quality standard: return honest 404)
 
     notFound();
   }
@@ -532,13 +520,13 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
       "priceCurrency": "USD",
       "availability": "https://schema.org/InStock",
     },
-    ...(config.rating ? {
+    ...(initialReviews && initialReviews.length > 0 ? {
       "aggregateRating": {
         "@type": "AggregateRating",
-        "ratingValue": Number(config.rating || 4.8).toFixed(1),
+        "ratingValue": (initialReviews.reduce((acc: number, r: any) => acc + (Number(r.rating) || 5), 0) / initialReviews.length).toFixed(1),
         "bestRating": "5",
         "worstRating": "1",
-        "ratingCount": Math.max(150, votesNum)
+        "ratingCount": initialReviews.length
       }
     } : {})
   };

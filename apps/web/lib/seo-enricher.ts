@@ -170,12 +170,17 @@ export function generateEnrichedDescription(title: string, category: string, raw
   ];
   const valueText = valueProps[(hash >> 3) % valueProps.length];
 
+  // If game has a genuine unique description from developer/feed, prioritize it to eliminate boilerplate penalties
+  if (cleanRaw && cleanRaw.length >= 60) {
+    return cleanRaw;
+  }
+
   let primaryIntro = cleanRaw;
   if (!primaryIntro || primaryIntro.length < 35) {
     primaryIntro = introTemplates[hash % introTemplates.length];
   }
 
-  return `${primaryIntro} ${featureText} ${valueText}`;
+  return `${primaryIntro} ${featureText}`;
 }
 
 /**

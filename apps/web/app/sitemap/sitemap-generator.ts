@@ -1,3 +1,4 @@
+import { isPolicyCompliantGame } from '@/lib/policy-compliance';
 import { createClient } from '@supabase/supabase-js';
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://spielcade.com';
@@ -33,7 +34,7 @@ export async function generateGameChunkXml(pageNum: number): Promise<Response> {
 
     const { data: games, error } = await supabase
       .from('games')
-      .select('slug, title, image_url, created_at')
+      .select('slug, title, image_url, created_at, source_url')
       .eq('status', 'active')
       .order('created_at', { ascending: false })
       .range(start, end);
@@ -41,7 +42,7 @@ export async function generateGameChunkXml(pageNum: number): Promise<Response> {
     if (error) {
       console.error('[Sitemap] games query error for page ' + safePageNum + ':', error);
     } else if (games) {
-      gameList = games;
+      gameList = (games || []).filter(isPolicyCompliantGame);
     }
   } catch (err) {
     console.error('[Sitemap] unexpected error for page ' + safePageNum + ':', err);
