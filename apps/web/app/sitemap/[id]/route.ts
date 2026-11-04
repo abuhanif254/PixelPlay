@@ -11,7 +11,7 @@ export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  const cleanId = (params.id || '').replace(/\.xml$/, '');
+  const cleanId = (params.id || '').replace(/\.xm[l]?$/, '');
 
   if (cleanId === 'all-games' || cleanId === 'games' || cleanId === 'all') {
     return generateAllGamesXml();

@@ -7,7 +7,7 @@ export async function GET(
   request: Request,
   { params }: { params: { page: string } }
 ) {
-  const pageParam = (params.page || '').replace(/\.xml$/, '');
+  const pageParam = (params.page || '').replace(/\.xm[l]?$/, '');
   const pageNum = parseInt(pageParam, 10) || 1;
   return generateGameChunkXml(pageNum);
 }

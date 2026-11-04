@@ -17,57 +17,64 @@ export function escapeXml(unsafe: string): string {
 
 /**
  * Generates direct 200 OK XML response for a specific 1000-game chunk.
- * Zero redirects, 100% GSC compliant.
+ * Includes automatic retry to prevent transient Supabase connection dropouts from returning empty XML.
  */
 export async function generateGameChunkXml(pageNum: number): Promise<Response> {
   const safePageNum = Math.max(1, pageNum);
   const start = (safePageNum - 1) * CHUNK_SIZE;
   const end = start + CHUNK_SIZE - 1;
 
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder'
+  );
+
   let gameList: any[] = [];
+  let attempts = 0;
+  const maxAttempts = 3;
 
-  try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder'
-    );
+  while (attempts < maxAttempts && gameList.length === 0) {
+    attempts++;
+    try {
+      const { data: games, error } = await supabase
+        .from('games')
+        .select('slug, title, image_url, created_at, source_url')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .range(start, end);
 
-    const { data: games, error } = await supabase
-      .from('games')
-      .select('slug, title, image_url, created_at, source_url')
-      .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .range(start, end);
-
-    if (error) {
-      console.error('[Sitemap] games query error for page ' + safePageNum + ':', error);
-    } else if (games) {
-      gameList = (games || []).filter(isPolicyCompliantGame);
+      if (!error && games && games.length > 0) {
+        gameList = games.filter(isPolicyCompliantGame);
+        break;
+      }
+    } catch (err) {
+      console.warn(`[Sitemap] Attempt ${attempts} failed for chunk ${safePageNum}:`, err);
     }
-  } catch (err) {
-    console.error('[Sitemap] unexpected error for page ' + safePageNum + ':', err);
+  }
+
+  // If a transient database outage occurs and no games were retrieved, return 503 so Google retries safely
+  // rather than returning an empty <urlset></urlset> which causes a "Missing XML tag" error in GSC.
+  if (gameList.length === 0 && safePageNum <= 19) {
+    return new Response('Database temporarily busy. Please retry.', {
+      status: 503,
+      headers: {
+        'Retry-After': '30',
+        'Content-Type': 'text/plain',
+      },
+    });
   }
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 ${gameList
   .map((game: any) => {
     const loc = `${baseUrl}/games/${escapeXml(game.slug)}`;
     const lastmod = new Date(game.created_at || Date.now()).toISOString();
     const imageTag = game.image_url
-      ? `\n    <image:image>
-      <image:loc>${escapeXml(game.image_url)}</image:loc>
-      <image:title>${escapeXml(game.title || game.slug)}</image:title>
-    </image:image>`
+      ? `\n    <image:image>\n      <image:loc>${escapeXml(game.image_url)}</image:loc>\n      <image:title>${escapeXml(game.title || game.slug)}</image:title>\n    </image:image>`
       : '';
 
-    return `  <url>
-    <loc>${loc}</loc>
-    <lastmod>${lastmod}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>${imageTag}
-  </url>`;
+    return `  <url>\n    <loc>${loc}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>${imageTag}\n  </url>`;
   })
   .join('\n')}
 </urlset>`;
@@ -127,25 +134,16 @@ export async function generateAllGamesXml(): Promise<Response> {
   }
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 ${allGames
   .map((game: any) => {
     const loc = `${baseUrl}/games/${escapeXml(game.slug)}`;
     const lastmod = new Date(game.created_at || Date.now()).toISOString();
     const imageTag = game.image_url
-      ? `\n    <image:image>
-      <image:loc>${escapeXml(game.image_url)}</image:loc>
-      <image:title>${escapeXml(game.title || game.slug)}</image:title>
-    </image:image>`
+      ? `\n    <image:image>\n      <image:loc>${escapeXml(game.image_url)}</image:loc>\n      <image:title>${escapeXml(game.title || game.slug)}</image:title>\n    </image:image>`
       : '';
 
-    return `  <url>
-    <loc>${loc}</loc>
-    <lastmod>${lastmod}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>${imageTag}
-  </url>`;
+    return `  <url>\n    <loc>${loc}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>${imageTag}\n  </url>`;
   })
   .join('\n')}
 </urlset>`;
