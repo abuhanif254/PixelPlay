@@ -294,6 +294,9 @@ export async function generateMetadata(
       `${title} online`,
       `play ${title}`,
       `${title} unblocked`,
+      `${title} no download`,
+      `${title} on chromebook`,
+      `${title} fullscreen`,
       'unblocked games',
       'free browser games',
       `free ${category.toLowerCase()} games`,
@@ -491,6 +494,9 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
     } : {})
   };
 
+  const categorySlugPart = config.category.toLowerCase().trim().replace(/\s+/g, '-').replace(/-games$/, '');
+  const categoryHref = `/categories/${categorySlugPart}-games`;
+
   const breadcrumbSchema = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -505,7 +511,7 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
         "@type": "ListItem",
         "position": 2,
         "name": `${config.category} Games`,
-        "item": `https://spielcade.com/categories/${config.category.toLowerCase().replace(/\s+/g, '-')}-games`
+        "item": `https://spielcade.com${categoryHref}`
       },
       {
         "@type": "ListItem",
@@ -649,7 +655,7 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
             <Link href="/" className="hover:underline">Home</Link>
             <ChevronRight size={14} className="text-gray-400 dark:text-gray-500" />
             <Link 
-              href={`/categories/${config.category.toLowerCase().replace(/\s+/g, '-')}-games`} 
+              href={categoryHref} 
               className="hover:underline"
             >
               {config.category} Games
@@ -922,7 +928,7 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
                   </p>
                 </div>
                 <Link
-                  href={`/categories/${config.category.toLowerCase().replace(/\s+/g, '-')}-games`}
+                  href={categoryHref}
                   prefetch={false}
                   className="inline-flex items-center gap-2 text-xs font-bold text-[#6366F1] hover:text-white bg-[#6366F1]/10 hover:bg-[#6366F1] px-4 py-2.5 rounded-xl transition-all self-start md:self-auto shrink-0"
                 >

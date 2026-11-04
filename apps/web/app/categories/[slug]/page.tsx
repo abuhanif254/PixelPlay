@@ -52,10 +52,23 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     return { title: 'Category Not Found | Spielcade' };
   }
   
+  const catTitle = category.title.endsWith('Games') ? category.title : `${category.title} Games`;
+  const seoTitle = `${catTitle} — Play Free Online Unblocked | Spielcade`;
+  const seoDesc = `Play the best free ${catTitle.toLowerCase()} unblocked on Spielcade! Enjoy top browser games with zero downloads, instant loading, and fullscreen mode on Chromebook or PC.`;
+
   return {
-    title: `${category.title} | Spielcade`,
-    description: category.description,
-    keywords: [`${category.title} games`, 'free browser games', 'play online', 'spielcade', category.title.toLowerCase()],
+    title: seoTitle,
+    description: seoDesc,
+    keywords: [
+      `${catTitle}`,
+      `${catTitle.toLowerCase()} unblocked`,
+      `play ${catTitle.toLowerCase()} online`,
+      'free browser games',
+      'unblocked games',
+      'chromebook games',
+      'no download games',
+      'spielcade'
+    ],
     alternates: {
       canonical: `https://spielcade.com/categories/${params.slug}`,
     },
@@ -71,8 +84,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       },
     },
     openGraph: {
-      title: `${category.title} | Spielcade`,
-      description: category.description,
+      title: seoTitle,
+      description: seoDesc,
       url: `https://spielcade.com/categories/${params.slug}`,
       siteName: 'Spielcade Games',
       type: 'website',
@@ -81,14 +94,14 @@ export async function generateMetadata({ params }: { params: { slug: string } })
           url: 'https://spielcade.com/og-default.jpg',
           width: 1200,
           height: 630,
-          alt: `${category.title} on Spielcade`,
+          alt: `${catTitle} on Spielcade`,
         },
       ],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${category.title} | Spielcade`,
-      description: category.description,
+      title: seoTitle,
+      description: seoDesc,
       images: ['https://spielcade.com/og-default.jpg'],
     },
   };
