@@ -247,7 +247,7 @@ export default function ArcadeRadio() {
   const activeConf = STATIONS[station];
 
   return (
-    <div className="fixed bottom-20 lg:bottom-6 left-4 z-40 select-none">
+    <div className="fixed bottom-[7.75rem] lg:bottom-[4.25rem] left-3 sm:left-6 z-40 select-none">
       <AnimatePresence mode="wait">
         {isExpanded ? (
           /* Expanded Cyber Deck Player */

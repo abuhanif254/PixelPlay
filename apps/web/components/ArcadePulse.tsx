@@ -42,7 +42,7 @@ export default function ArcadePulse() {
 
   if (isDismissed) {
     return (
-      <div className="fixed bottom-4 right-4 z-40">
+      <div className="fixed bottom-20 lg:bottom-4 left-3 sm:left-6 z-40">
         <button
           type="button"
           onClick={() => {
@@ -70,7 +70,7 @@ export default function ArcadePulse() {
   };
 
   return (
-    <div className="fixed bottom-3 left-3 sm:left-6 z-40 max-w-sm sm:max-w-md w-auto select-none pointer-events-auto">
+    <div className="fixed bottom-20 lg:bottom-4 left-3 sm:left-6 z-40 max-w-sm sm:max-w-md w-auto select-none pointer-events-auto">
       {/* Expanded Drawer Modal */}
       <AnimatePresence>
         {isExpanded && (
@@ -78,7 +78,7 @@ export default function ArcadePulse() {
             initial={{ opacity: 0, y: 15, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 15, scale: 0.96 }}
-            className="mb-2 w-80 sm:w-96 rounded-3xl bg-[#111227]/95 border border-white/15 shadow-2xl backdrop-blur-2xl p-4 text-white overflow-hidden"
+            className="mb-2 w-80 sm:w-96 rounded-3xl bg-[#111227]/95 border border-white/15 shadow-2xl backdrop-blur-2xl p-4 text-white overflow-hidden relative z-50"
           >
             <div className="flex items-center justify-between pb-3 border-b border-white/10">
               <div className="flex items-center gap-2">

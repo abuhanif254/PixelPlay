@@ -217,12 +217,25 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Bottom Bar: Copyright & Compliance */}
-        <div className="pt-8 border-t border-slate-200 dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 dark:text-slate-400">
+        {/* Bottom Bar: Copyright, Author & Compliance */}
+        <div className="pt-8 border-t border-slate-200 dark:border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500 dark:text-slate-400 text-center md:text-left">
           <p>
             © {new Date().getFullYear()} Spielcade Platform. All games are the property of their respective creators.
           </p>
-          <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Developed by{' '}
+            <a
+              href="https://abuhanifmia.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 underline underline-offset-2 transition-colors"
+            >
+              abuhanif
+            </a>
+          </p>
+
+          <div className="flex flex-wrap items-center justify-center md:justify-end gap-4 sm:gap-6">
             <Link href="/terms" className="hover:text-slate-900 dark:hover:text-white transition-colors">Terms of Use</Link>
             <Link href="/privacy" className="hover:text-slate-900 dark:hover:text-white transition-colors">Privacy Policy</Link>
             <Link href="/cookies" className="hover:text-slate-900 dark:hover:text-white transition-colors">Cookie Policy</Link>
