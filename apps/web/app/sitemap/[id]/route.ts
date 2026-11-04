@@ -1,7 +1,7 @@
 export const runtime = 'edge';
 export const revalidate = 3600;
 
-import { generateGameChunkXml } from '../sitemap-generator';
+import { generateGameChunkXml, generateAllGamesXml } from '../sitemap-generator';
 import { GET as getStaticSitemap } from '../static.xml/route';
 import { GET as getCategoriesSitemap } from '../categories.xml/route';
 import { GET as getTagsSitemap } from '../tags.xml/route';
@@ -12,6 +12,10 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   const cleanId = (params.id || '').replace(/\.xml$/, '');
+
+  if (cleanId === 'all-games' || cleanId === 'games' || cleanId === 'all') {
+    return generateAllGamesXml();
+  }
 
   if (cleanId === 'static') {
     return getStaticSitemap();

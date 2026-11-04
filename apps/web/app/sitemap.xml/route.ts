@@ -16,6 +16,7 @@ function buildSitemapXml(gamesCount: number): string {
     `${baseUrl}/sitemap/categories.xml`,
     `${baseUrl}/sitemap/tags.xml`,
     `${baseUrl}/sitemap/blog.xml`,
+    `${baseUrl}/sitemap/all-games.xml`,
   ];
 
   for (let i = 1; i <= numChunks; i++) {
