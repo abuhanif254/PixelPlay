@@ -219,12 +219,6 @@ export async function generateMetadata(
   const localGame = localResult.game;
 
   if (!dbGame && !localGame) {
-    if (GAME_SLUG_ALIASES[slug]) {
-      permanentRedirect(`/games/${GAME_SLUG_ALIASES[slug]}`);
-    }
-
-    // Removed soft-404 keyword redirects (Google Search Quality standard: return honest 404)
-
     notFound();
   }
 
@@ -257,13 +251,20 @@ export async function generateMetadata(
 
   const challengeOgUrl = `https://spielcade.com/api/og/challenge?slug=${canonicalSlug}&challenger=${encodeURIComponent(challengerName)}&score=${encodeURIComponent(rawScore)}`;
 
-  const pageTitle = isChallenge
-    ? `⚔️ ${challengerName} scored ${formattedScore} in ${title}! Can you beat it? | Spielcade`
-    : `${title} (${category}) — Play Free Online Unblocked | Spielcade`;
+  let pageTitle = '';
+  if (isChallenge) {
+    pageTitle = `⚔️ ${challengerName} scored ${formattedScore} in ${title}! Can you beat it? | Spielcade`;
+  } else if (title.length <= 24) {
+    pageTitle = `${title} — Play Free Online Unblocked | Spielcade`;
+  } else if (title.length <= 38) {
+    pageTitle = `${title} — Free Online Game | Spielcade`;
+  } else {
+    pageTitle = `${title.slice(0, 42).trim()} | Free Online Game`;
+  }
 
   const pageDescription = isChallenge
     ? `${challengerName} just challenged you to beat their high score of ${formattedScore} in ${title}. Play free online with zero downloads on Spielcade!`
-    : (description.length > 160 ? description.slice(0, 157).trimEnd() + "..." : description);
+    : `Play ${title} online for free on Spielcade. Enjoy unblocked ${category.toLowerCase()} gameplay directly in your browser with zero downloads, smooth controls, and fullscreen mode.`;
 
   const ogImages = isChallenge
     ? [
@@ -337,9 +338,7 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
   const localGame = localResult.game;
 
   if (!dbGame && !localGame) {
-    if (GAME_SLUG_ALIASES[slug]) {
-      permanentRedirect(`/games/${GAME_SLUG_ALIASES[slug]}`);
-    }
+    
 
     // Removed soft-404 keyword redirects (Google Search Quality standard: return honest 404)
 
@@ -683,6 +682,11 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
                   </span>
                   {isLocalGame && <OfflineReadyBadge />}
                 </div>
+                
+                {/* High-Intent Search Keyword Subtitle */}
+                <p className="text-[11px] sm:text-xs font-semibold text-indigo-600 dark:text-indigo-400 -mt-0.5">
+                  Play Free Online • Unblocked on Chromebook • No Download
+                </p>
                 
                 <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm font-medium text-gray-400">
                   <div className="flex items-center gap-1.5">
