@@ -9,6 +9,7 @@ const FALLBACK_TOTAL_GAMES = 20000;
 
 function buildSitemapXml(gamesCount: number): string {
   const numChunks = Math.max(1, Math.ceil(gamesCount / CHUNK_SIZE));
+  const lastmodDate = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD (Google W3C Datetime)
 
   const sitemaps = [
     `${baseUrl}/sitemap/static.xml`,
@@ -27,6 +28,7 @@ ${sitemaps
   .map(
     (url) => `  <sitemap>
     <loc>${url}</loc>
+    <lastmod>${lastmodDate}</lastmod>
   </sitemap>`
   )
   .join('\n')}
